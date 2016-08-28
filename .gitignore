@@ -58,5 +58,9 @@ docs/_build/
 # PyBuilder
 target/
 
+# Visual Studio Code
+launch.json
+settings.json
+
 .venv*
 .editorconfig
