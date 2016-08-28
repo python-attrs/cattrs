@@ -1,7 +1,7 @@
-cattrs
-======
+cattr
+=====
 
 .. toctree::
    :maxdepth: 4
 
-   cattrs
+   cattr

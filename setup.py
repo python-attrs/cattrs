@@ -10,7 +10,9 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    "attrs >= 16.0"
+    "attrs >= 16.0",
+    "typing >= 3.5.2; python_version<'3.5'",
+    "singledispatch >= 3.4.0.3; python_version<'3.4'",
 ]
 
 test_requirements = [

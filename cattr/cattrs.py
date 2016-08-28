@@ -1,5 +1,5 @@
 from enum import Enum
-from functools import lru_cache, singledispatch
+from functools import lru_cache
 from typing import (Callable, List, Mapping, Sequence, Type, Union, UnionMeta,
                     GenericMeta, MutableSequence, TypeVar, Any)
 
@@ -7,6 +7,12 @@ from attr import NOTHING
 from attr.validators import _InstanceOfValidator, _OptionalValidator
 
 from .disambiguators import create_uniq_field_dis_func
+
+try:
+    from functools import singledispatch
+except ImportError:
+    # We use a backport for 3.3.
+    from singledispatch import singledispatch
 
 T = TypeVar('T')
 
