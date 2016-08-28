@@ -1,7 +1,7 @@
 from enum import Enum
 from functools import lru_cache
 from typing import (Callable, List, Mapping, Sequence, Type, Union, UnionMeta,
-                    GenericMeta, MutableSequence, TypeVar, Any)
+                    GenericMeta, MutableSequence, TypeVar, Any, FrozenSet)
 
 from attr import NOTHING
 from attr.validators import _InstanceOfValidator, _OptionalValidator
@@ -161,6 +161,12 @@ class Converter(object):
                 return obj
             else:
                 return [self._loads(cl.__args__[0], e) for e in obj]
+        elif origin is FrozenSet:
+            # Convert to a frozenset.
+            if not cl.__args__:
+                return frozenset(obj)
+            else:
+                return frozenset(self._loads(cl.__args__[0], e) for e in obj)
         else:
             raise ValueError("Unsupported generic type.")
 
