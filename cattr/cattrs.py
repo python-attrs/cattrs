@@ -161,7 +161,7 @@ class Converter(object):
         if origin is List or origin is Sequence or origin is MutableSequence:
             # Convert to a list. The object must be iterable.
             if not cl.__args__ or cl.__args__[0] is Any:
-                return list(e for e in obj)
+                return [e for e in obj]
             else:
                 return [self._loads(cl.__args__[0], e) for e in obj]
         elif origin is Dict:
