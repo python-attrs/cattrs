@@ -1,7 +1,8 @@
 from enum import Enum
 from functools import lru_cache
 from typing import (Callable, List, Mapping, Sequence, Type, Union, UnionMeta,
-                    GenericMeta, MutableSequence, TypeVar, Any, FrozenSet)
+                    GenericMeta, MutableSequence, TypeVar, Any, FrozenSet,
+                    MutableSet, Set, MutableMapping, Dict, AnyMeta)
 
 from attr import NOTHING
 from attr.validators import _InstanceOfValidator, _OptionalValidator
@@ -39,6 +40,7 @@ class Converter(object):
         loads = singledispatch(self._loads)
         loads.register(GenericMeta, self._loads_generic_meta)
         loads.register(UnionMeta, self._loads_union)
+        loads.register(AnyMeta, self._loads_identity)
 
         self._loads = loads
         self._dict_factory = dict_factory
@@ -108,6 +110,7 @@ class Converter(object):
             # This is an attrs class
             return self._loads_attrs(cl, obj)
         # We don't know what this is. Just try instantiating it.
+        # This covers the basics: bools, ints, floats, strings, bytes, enums.
         return cl(obj)
 
     def _loads_attrs(self, cl, obj):
@@ -156,11 +159,42 @@ class Converter(object):
         """
         origin = cl.__origin__ or cl
         if origin is List or origin is Sequence or origin is MutableSequence:
-            # Dealing with a list.
-            if not cl.__args__:
-                return obj
+            # Convert to a list. The object must be iterable.
+            if not cl.__args__ or cl.__args__[0] is Any:
+                return list(e for e in obj)
             else:
                 return [self._loads(cl.__args__[0], e) for e in obj]
+        elif origin is Dict:
+            # Convert to a dict. The object must support .items().
+            if not cl.__args__ or cl.__args__ == (Any, Any):
+                return dict((k, v) for k, v in obj.items())
+            else:
+                key_type, val_type = cl.__args__
+                if key_type is Any:
+                    # Skip converting the key.
+                    dict((k, self._loads(val_type, v)) for k, v in obj.items())
+                elif val_type is Any:
+                    # Skip converting the value.
+                    dict((self._loads(key_type, k), v) for k, v in obj.items())
+                else:
+                    return dict((self._loads(key_type, k),
+                                 self._loads(val_type, v))
+                                for k, v in obj.items())
+        elif origin in (Mapping, MutableMapping):
+            # Convert to whatever our dict_factory is.
+            df = self._dict_factory
+            if not cl.__args__:
+                return df((k, v) for k, v in obj.items())
+            else:
+                key_type, val_type = cl.__args__
+                return df((self._loads(key_type, k), self._loads(val_type, v))
+                          for k, v in obj.items())
+        elif origin is MutableSet or origin is Set:
+            # Convert to a set.
+            if not cl.__args__:
+                return set(obj)
+            else:
+                return set(self._loads(cl.__args__[0], e) for e in obj)
         elif origin is FrozenSet:
             # Convert to a frozenset.
             if not cl.__args__:
@@ -174,6 +208,10 @@ class Converter(object):
         """Deal with converting a union."""
         # Let's support only unions of attr classes for now.
         return self._loads(self._get_dis_func(union)(obj), obj)
+
+    def _loads_identity(self, _, obj):
+        """Return the object given, with no conversion. Used for 'Any'."""
+        return obj
 
     def _get_dis_func(self, union: Type[Union]) -> Callable[..., Type]:
         """Fetch or try creating a disambiguation function for a union."""
