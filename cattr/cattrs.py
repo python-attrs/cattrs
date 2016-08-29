@@ -163,7 +163,8 @@ class Converter(object):
             if not cl.__args__ or cl.__args__[0] is Any:
                 return [e for e in obj]
             else:
-                return [self._loads(cl.__args__[0], e) for e in obj]
+                elem_type = cl.__args__[0]
+                return [self._loads(elem_type, e) for e in obj]
         elif origin is Dict:
             # Convert to a dict. The object must support .items().
             if not cl.__args__ or cl.__args__ == (Any, Any):
