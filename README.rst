@@ -1,6 +1,6 @@
-===============================
+======
 cattrs
-===============================
+======
 
 
 .. image:: https://img.shields.io/pypi/v/cattrs.svg
@@ -129,10 +129,16 @@ Credits
 Major credits to Hynek Schlawack for creating `attrs`_ and its predecessor,
 `characteristic`_.
 
+`cattrs` is testing with Hypothesis_, by David R. MacIver.
+
+`cattrs` is benchmarked using `perf`_, by Victor Stinner.
+
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
 
 .. _`attrs`: https://github.com/hynek/attrs
 .. _`characteristic`: https://github.com/hynek/characteristic
+.. _Hypothesis: http://hypothesis.readthedocs.io/en/latest/
+.. _`perf`: https://github.com/haypo/perf
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
 

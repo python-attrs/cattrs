@@ -58,14 +58,14 @@ test-all: ## run tests on every Python version with tox
 	tox
 
 coverage: ## check code coverage quickly with the default Python
-	coverage run --source cattr py.test
+	coverage run --source cattr -m pytest
 
 		coverage report -m
 		coverage html
 		$(BROWSER) htmlcov/index.html
 
 docs: ## generate Sphinx HTML documentation, including API docs
-	rm -f docs/cattrs.rst
+	rm -f docs/cattr.rst
 	rm -f docs/modules.rst
 	sphinx-apidoc -o docs/ cattr
 	$(MAKE) -C docs clean

@@ -1,4 +1,4 @@
-from .cattrs import Converter
+from .converters import Converter
 
 __author__ = 'Tin Tvrtković'
 __email__ = 'tinchester@gmail.com'

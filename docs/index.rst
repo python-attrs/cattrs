@@ -14,6 +14,9 @@ Contents:
    readme
    installation
    usage
+   converters
+   loading
+   dumping
    contributing
    history
 

@@ -1,6 +1,6 @@
 import pytest
 
-from cattrs import Converter
+from cattr import Converter
 
 
 @pytest.fixture()

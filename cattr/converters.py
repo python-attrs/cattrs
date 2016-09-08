@@ -1,8 +1,8 @@
 from enum import Enum
 from functools import lru_cache
-from typing import (Callable, List, Mapping, Sequence, Type, Union, UnionMeta,
+from typing import (Callable, List, Mapping, Sequence, Type, Union,
                     GenericMeta, MutableSequence, TypeVar, Any, FrozenSet,
-                    MutableSet, Set, MutableMapping, Dict, AnyMeta)
+                    MutableSet, Set, MutableMapping, Dict, Tuple, Iterable)
 
 from attr import NOTHING
 from attr.validators import _InstanceOfValidator, _OptionalValidator
@@ -15,7 +15,9 @@ except ImportError:
     # We use a backport for 3.3.
     from singledispatch import singledispatch
 
+NoneType = type(None)
 T = TypeVar('T')
+V = TypeVar('V')
 
 
 class Converter(object):
@@ -38,9 +40,23 @@ class Converter(object):
         # Singledispatch dispatches based on the first argument, so we
         # store the function and switch the arguments in self.loads.
         loads = singledispatch(self._loads)
-        loads.register(GenericMeta, self._loads_generic_meta)
-        loads.register(UnionMeta, self._loads_union)
-        loads.register(AnyMeta, self._loads_identity)
+        loads.register(Any, self._loads_identity)
+        loads.register(List, self._loads_list)
+        loads.register(Sequence, self._loads_list)
+        loads.register(MutableSequence, self._loads_list)
+        loads.register(MutableSet, self._loads_set)
+        loads.register(Set, self._loads_set)
+        loads.register(FrozenSet, self._loads_frozenset)
+        loads.register(Dict, self._loads_dict)
+        loads.register(Mapping, self._loads_dict)
+        loads.register(MutableMapping, self._loads_dict)
+        loads.register(Tuple, self._loads_tuple)
+        loads.register(Union, self._loads_union)
+        loads.register(str, self._loads)  # Strings are sequences.
+        loads.register(bytes, self._loads)  # Bytes are sequences.
+        loads.register(int, self._loads)
+        loads.register(float, self._loads)
+        loads.register(Enum, self._loads)
 
         self._loads = loads
         self._dict_factory = dict_factory
@@ -53,7 +69,8 @@ class Converter(object):
         """
         self.dumps.register(cls, func)
 
-    def register_loads_hook(self, cls: Type[T], func: Callable[[Any], T]):
+    def register_loads_hook(self, cls: Type[T],
+                            func: Callable[[Type, Any], T]) -> None:
         """Register a primitive-to-class converter function for a type.
 
         The converter function should take an instance of a Python primitive
@@ -63,7 +80,7 @@ class Converter(object):
 
     def loads(self, obj, cl: Type):
         """Convert unstructured Python data structures to structured data."""
-        return self._loads(cl, obj)
+        return self._loads.dispatch(cl)(cl, obj)
 
     # Classes to Python primitives.
 
@@ -143,72 +160,93 @@ class Converter(object):
         else:
             return mapping[name]
 
-    def _loads_generic_meta(self, cl: Type[GenericMeta], obj):
-        """Deal with converting a generic.
-
-        From typing, this could be:
-        * Sequence
-        * MutableSequence
-        * List
-        * MutableSet
-        * Set
-        * FrozenSet
-        * Mapping
-        * MutableMapping
-        * Dict
-        """
-        origin = cl.__origin__ or cl
-        if origin is List or origin is Sequence or origin is MutableSequence:
-            # Convert to a list. The object must be iterable.
-            if not cl.__args__ or cl.__args__[0] is Any:
-                return [e for e in obj]
-            else:
-                elem_type = cl.__args__[0]
-                return [self._loads(elem_type, e) for e in obj]
-        elif origin is Dict:
-            # Convert to a dict. The object must support .items().
-            if not cl.__args__ or cl.__args__ == (Any, Any):
-                return dict((k, v) for k, v in obj.items())
-            else:
-                key_type, val_type = cl.__args__
-                if key_type is Any:
-                    # Skip converting the key.
-                    dict((k, self._loads(val_type, v)) for k, v in obj.items())
-                elif val_type is Any:
-                    # Skip converting the value.
-                    dict((self._loads(key_type, k), v) for k, v in obj.items())
-                else:
-                    return dict((self._loads(key_type, k),
-                                 self._loads(val_type, v))
-                                for k, v in obj.items())
-        elif origin in (Mapping, MutableMapping):
-            # Convert to whatever our dict_factory is.
-            df = self._dict_factory
-            if not cl.__args__:
-                return df((k, v) for k, v in obj.items())
-            else:
-                key_type, val_type = cl.__args__
-                return df((self._loads(key_type, k), self._loads(val_type, v))
-                          for k, v in obj.items())
-        elif origin is MutableSet or origin is Set:
-            # Convert to a set.
-            if not cl.__args__:
-                return set(obj)
-            else:
-                return set(self._loads(cl.__args__[0], e) for e in obj)
-        elif origin is FrozenSet:
-            # Convert to a frozenset.
-            if not cl.__args__:
-                return frozenset(obj)
-            else:
-                return frozenset(self._loads(cl.__args__[0], e) for e in obj)
+    def _loads_list(self, cl: Type[GenericMeta], obj: Iterable[T]) -> List[T]:
+        """Convert an iterable to a potentially generic list."""
+        if not cl.__args__ or cl.__args__[0] is Any:
+            return [e for e in obj]
         else:
-            raise ValueError("Unsupported generic type.")
+            elem_type = cl.__args__[0]
+            conv = self._loads.dispatch(elem_type)
+            return [conv(elem_type, e) for e in obj]
+
+    def _loads_set(self, cl: Type[GenericMeta], obj: Iterable[T])\
+            -> MutableSet[T]:
+        """Convert an iterable into a potentially generic set."""
+        if not cl.__args__ or cl.__args__[0] is Any:
+            return set(obj)
+        else:
+            elem_type = cl.__args__[0]
+            conv = self._loads.dispatch(elem_type)
+            return {conv(elem_type, e) for e in obj}
+
+    def _loads_frozenset(self, cl: Type[GenericMeta], obj: Iterable[T])\
+            -> FrozenSet[T]:
+        """Convert an iterable into a potentially generic frozenset."""
+        if not cl.__args__ or cl.__args__[0] is Any:
+            return frozenset(obj)
+        else:
+            elem_type = cl.__args__[0]
+            conv = self._loads.dispatch(elem_type)
+            return frozenset([conv(elem_type, e) for e in obj])
+
+    def _loads_dict(self, cl: Type[GenericMeta], obj: Mapping[T, V])\
+            -> Dict[T, V]:
+        """Convert a mapping into a potentially generic dict."""
+        if not cl.__args__ or cl.__args__ == (Any, Any):
+            return dict(obj)
+        else:
+            key_type, val_type = cl.__args__
+            if key_type is Any:
+                val_conv = self._loads.dispatch(val_type)
+                return {k: val_conv(val_type, v) for k, v in obj.items()}
+            elif val_type is Any:
+                key_conv = self._loads.dispatch(key_type)
+                return {key_conv(key_type, k): v for k, v in obj.items()}
+            else:
+                key_conv = self._loads.dispatch(key_type)
+                val_conv = self._loads.dispatch(val_type)
+                return {key_conv(key_type, k): val_conv(val_type, v)
+                        for k, v in obj.items()}
 
     def _loads_union(self, union: Type[Union], obj: Union):
-        """Deal with converting a union."""
+        """Deal with converting a union.
+
+        Note that optionals are unions that contain NoneType. We check for
+        NoneType early and handle the case of obj being None, so
+        disambiguation functions don't need to handle NoneType.
+        """
+        # Unions with NoneType in them are basically optionals.
+        union_params = union.__union_params__
+        if NoneType in union_params:
+            if obj is None:
+                return None
+            if len(union_params) == 2:
+                # This is just a NoneType and something else.
+                other = (union_params[0] if union_params[1] is NoneType
+                         else union_params[1])
+                return self._loads.dispatch(other)(other, obj)
+
+        # Getting here means either this is not an optional, or it's an
+        # optional with more than one parameter.
         # Let's support only unions of attr classes for now.
         return self._loads(self._get_dis_func(union)(obj), obj)
+
+    def _loads_tuple(self, tup: Type[Tuple], obj: Iterable):
+        """Deal with converting to a tuple."""
+        tup_params = tup.__tuple_params__
+        has_ellipsis = tup.__tuple_use_ellipsis__
+        if tup_params is None or (has_ellipsis and tup_params[0] is Any):
+            # Just a Tuple. (No generic information.)
+            return tuple(obj)
+        if tup.__tuple_use_ellipsis__:
+            # We're dealing with a homogenous tuple, Tuple[int, ...]
+            tup_type = tup_params[0]
+            conv = self._loads.dispatch(tup_type)
+            return tuple(conv(tup_type, e) for e in obj)
+        else:
+            # We're dealing with a heterogenous tuple.
+            return tuple(self._loads.dispatch(t)(t, e)
+                         for t, e in zip(tup_params, obj))
 
     def _loads_identity(self, _, obj):
         """Return the object given, with no conversion. Used for 'Any'."""
