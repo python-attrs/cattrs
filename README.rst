@@ -103,15 +103,11 @@ Features
   your specification given as a type. The following types are supported:
 
   * ``typing.Optional[T]``.
-  * ``typing.List[T]``.
-  * ``typing.MutableSequence[T]`` (converts to a list).
-  * ``typing.Sequence[T]`` (converts to a list).
-  * ``typing.Tuple`` (both variants, ``Tuple[T, ...]`` and ``Tuple[X, Y, Z]``.
-  * ``typing.MutableSet[T]`` (converts to a set).
-  * ``typing.Set[T]`` (converts to a set).
+  * ``typing.List[T]``, ``typing.MutableSequence[T]``, ``typing.Sequence[T]`` (converts to a list).
+  * ``typing.Tuple`` (both variants, ``Tuple[T, ...]`` and ``Tuple[X, Y, Z]``).
+  * ``typing.MutableSet[T]``, ``typing.Set[T]`` (converts to a set).
   * ``typing.FrozenSet[T]`` (converts to a frozenset).
-  * ``typing.Dict[K, V]`` (converts to a dict).
-  * ``typing.Mapping[K, V]`` (converts to a dict).
+  * ``typing.Dict[K, V]``, ``typing.MutableMapping[K, V]``, ``typing.Mapping[K, V]`` (converts to a dict).
   * ``attrs`` classes with simple attributes and the usual ``__init__``.
 
     * Simple attributes are attributes that can be assigned unstructured data,
