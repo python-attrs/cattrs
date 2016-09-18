@@ -9,7 +9,7 @@ env:
   - TOXENV=py34
 
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-install: pip install -U tox
+install: pip install -U tox setuptools
 
 # command to run tests, e.g. python setup.py test
 script: tox -e ${TOXENV}
