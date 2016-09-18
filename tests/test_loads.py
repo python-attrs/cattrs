@@ -213,7 +213,7 @@ def test_loading_lists_of_opt(converter: Converter, list_and_type):
     l.append(None)
     args = t.__args__
 
-    if args and args[0] not in (Any, str):
+    if args and args[0] not in (Any, str, Optional):
         with raises(TypeError):
             converter.loads(l, t)
     if args:

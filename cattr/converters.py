@@ -1,6 +1,6 @@
 from enum import Enum
 from functools import lru_cache
-from typing import (Callable, List, Mapping, Sequence, Type, Union,
+from typing import (Callable, List, Mapping, Sequence, Type, Union, Optional,
                     GenericMeta, MutableSequence, TypeVar, Any, FrozenSet,
                     MutableSet, Set, MutableMapping, Dict, Tuple, Iterable)
 
@@ -39,8 +39,8 @@ class Converter(object):
         # Per-instance register of to-attrs converters.
         # Singledispatch dispatches based on the first argument, so we
         # store the function and switch the arguments in self.loads.
-        loads = singledispatch(self._loads)
-        loads.register(Any, self._loads_identity)
+        loads = singledispatch(self._loads_default)
+        loads.register(Any, self._loads_default)  # Bare optionals go here too.
         loads.register(List, self._loads_list)
         loads.register(Sequence, self._loads_list)
         loads.register(MutableSequence, self._loads_list)
@@ -52,11 +52,11 @@ class Converter(object):
         loads.register(MutableMapping, self._loads_dict)
         loads.register(Tuple, self._loads_tuple)
         loads.register(Union, self._loads_union)
-        loads.register(str, self._loads)  # Strings are sequences.
-        loads.register(bytes, self._loads)  # Bytes are sequences.
-        loads.register(int, self._loads)
-        loads.register(float, self._loads)
-        loads.register(Enum, self._loads)
+        loads.register(str, self._loads_call)  # Strings are sequences.
+        loads.register(bytes, self._loads_call)  # Bytes are sequences.
+        loads.register(int, self._loads_call)
+        loads.register(float, self._loads_call)
+        loads.register(Enum, self._loads_call)
 
         self._loads = loads
         self._dict_factory = dict_factory
@@ -121,13 +121,30 @@ class Converter(object):
 
     # Python primitives to classes.
 
-    def _loads(self, cl, obj):
-        """Things we can't recognize by isinstance."""
+    def _loads_default(self, cl, obj):
+        """This is the fallthrough case. Everything is a subclass of `Any`.
+
+        A special condition here handles ``attrs`` classes.
+
+        Bare optionals end here too (optionals with arguments are unions.) We
+        treat bare optionals as Any.
+        """
+        if cl is Any or cl is Optional:
+            return obj
         if hasattr(cl, '__attrs_attrs__'):
             # This is an attrs class
             return self._loads_attrs(cl, obj)
         # We don't know what this is. Just try instantiating it.
         # This covers the basics: bools, ints, floats, strings, bytes, enums.
+        return cl(obj)
+
+    def _loads_call(self, cl, obj):
+        """Just call ``cl`` with the given ``obj``.
+
+        This is just an optimization on the ``_loads_default`` case, when we
+        know we can skip the ``if`` s. Use for ``str``, ``bytes``, ``enum``,
+        etc.
+        """
         return cl(obj)
 
     def _loads_attrs(self, cl, obj):
@@ -156,7 +173,7 @@ class Converter(object):
             return self._handle_attr_attribute(name, val.validator, mapping)
         elif isinstance(val, _InstanceOfValidator):
             type_ = val.type
-            return self._loads(type_, mapping.get(name))
+            return self._loads.dispatch(type_)(type_, mapping.get(name))
         else:
             return mapping[name]
 
@@ -229,7 +246,8 @@ class Converter(object):
         # Getting here means either this is not an optional, or it's an
         # optional with more than one parameter.
         # Let's support only unions of attr classes for now.
-        return self._loads(self._get_dis_func(union)(obj), obj)
+        cl = self._get_dis_func(union)(obj)
+        return self._loads.dispatch(cl)(cl, obj)
 
     def _loads_tuple(self, tup: Type[Tuple], obj: Iterable):
         """Deal with converting to a tuple."""
@@ -248,9 +266,6 @@ class Converter(object):
             return tuple(self._loads.dispatch(t)(t, e)
                          for t, e in zip(tup_params, obj))
 
-    def _loads_identity(self, _, obj):
-        """Return the object given, with no conversion. Used for 'Any'."""
-        return obj
 
     def _get_dis_func(self, union: Type[Union]) -> Callable[..., Type]:
         """Fetch or try creating a disambiguation function for a union."""
