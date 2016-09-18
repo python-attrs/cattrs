@@ -138,5 +138,5 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 .. _Hypothesis: http://hypothesis.readthedocs.io/en/latest/
 .. _perf: https://github.com/haypo/perf
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
-.. _``audreyr/cookiecutter-pypackage``: https://github.com/audreyr/cookiecutter-pypackage
+.. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
 
