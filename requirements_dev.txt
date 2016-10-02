@@ -7,6 +7,6 @@ tox==2.3.1
 coverage==4.2
 Sphinx==1.4.5
 
-pytest==2.9.2
-hypothesis==3.4.2
-setuptools==26.1.1
+pytest==3.0.3
+hypothesis==3.5.2
+setuptools==28.2.0
