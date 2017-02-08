@@ -1,29 +1,37 @@
-from enum import Enum
-from functools import lru_cache
+from collections import OrderedDict
+from enum import unique, Enum
+from functools import lru_cache, singledispatch
 from typing import (Callable, List, Mapping, Sequence, Type, Union, Optional,
                     GenericMeta, MutableSequence, TypeVar, Any, FrozenSet,
-                    MutableSet, Set, MutableMapping, Dict, Tuple, Iterable)
+                    MutableSet, Set, MutableMapping, Dict, Tuple, Iterable,
+                    _Union, TupleMeta)
 
 from attr import NOTHING
 from attr.validators import _InstanceOfValidator, _OptionalValidator
 
 from .disambiguators import create_uniq_field_dis_func
 
-try:
-    from functools import singledispatch
-except ImportError:
-    # We use a backport for 3.3.
-    from singledispatch import singledispatch
-
 NoneType = type(None)
 T = TypeVar('T')
 V = TypeVar('V')
 
 
-class Converter(object):
-    """Converts between attrs and Python primitives."""
-    def __init__(self, dict_factory=dict):
+@unique
+class AttrsDumpingStrategy(str, Enum):
+    """`attrs` classes dumping strategies."""
+    AS_DICT = "asdict"
+    AS_TUPLE = "astuple"
+
+
+DumpStratType = Union[str, AttrsDumpingStrategy]
+
+
+class Converter:
+    """Converts between structured and unstructured data."""
+    def __init__(self, *, dict_factory=dict,
+                 dumping_strat: DumpStratType=AttrsDumpingStrategy.AS_DICT):
         # Create a per-instance cache.
+        self.dumping_strat = AttrsDumpingStrategy(dumping_strat)
         self._get_dis_func = lru_cache()(self._get_dis_func)
 
         # Per-instance register of to-Python converters.
@@ -51,7 +59,8 @@ class Converter(object):
         loads.register(Mapping, self._loads_dict)
         loads.register(MutableMapping, self._loads_dict)
         loads.register(Tuple, self._loads_tuple)
-        loads.register(Union, self._loads_union)
+        loads.register(tuple, self._loads_tuple)
+        loads.register(_Union, self._loads_union)
         loads.register(str, self._loads_call)  # Strings are sequences.
         loads.register(bytes, self._loads_call)  # Bytes are sequences.
         loads.register(int, self._loads_call)
@@ -60,6 +69,22 @@ class Converter(object):
 
         self._loads = loads
         self._dict_factory = dict_factory
+        # Unions are instances now, not classes. We use different registry.
+        self._union_registry = {}
+
+    @property
+    def dumping_strat(self) -> AttrsDumpingStrategy:
+        """The default way of dumping ``attrs`` classes."""
+        return (AttrsDumpingStrategy.AS_DICT
+                if self.dumps_attrs is self.dumps_attrs_asdict
+                else AttrsDumpingStrategy.AS_TUPLE)
+
+    @dumping_strat.setter
+    def dumping_strat(self, val: AttrsDumpingStrategy):
+        if val is AttrsDumpingStrategy.AS_DICT:
+            self.dumps_attrs = self.dumps_attrs_asdict
+        else:
+            self.dumps_attrs = self.dumps_attrs_astuple
 
     def register_dumps_hook(self, cls: Type[T], func: Callable[[T], Any]):
         """Register a class-to-primitive converter function for a class.
@@ -69,35 +94,46 @@ class Converter(object):
         """
         self.dumps.register(cls, func)
 
-    def register_loads_hook(self, cls: Type[T],
+    def register_loads_hook(self, cl: Type[T],
                             func: Callable[[Type, Any], T]) -> None:
         """Register a primitive-to-class converter function for a type.
 
         The converter function should take an instance of a Python primitive
         and return the instance of the class.
         """
-        self._loads.register(cls, func)
+        if isinstance(cl, _Union):
+            self._union_registry[cl] = func
+        else:
+            self._loads.register(cl, func)
 
-    def loads(self, obj, cl: Type):
+    def loads(self, obj: Any, cl: Type):
         """Convert unstructured Python data structures to structured data."""
-        return self._loads.dispatch(cl)(cl, obj)
+        # Unions aren't classes, but rather instances of typing._Union now.
+        return (self._loads.dispatch(cl)(cl, obj) if not isinstance(cl, _Union)
+                else self._loads_union(cl, obj))  # For Unions.
 
     # Classes to Python primitives.
 
     def _dumps(self, obj):
         """Convert given attrs classes to their primitive equivalents."""
-        return (self._dumps_attrs(obj)
+        return (self.dumps_attrs(obj)
                 if getattr(obj.__class__, "__attrs_attrs__", None) is not None
                 else obj)
 
-    def _dumps_attrs(self, obj):
+    def dumps_attrs_asdict(self, obj):
         """Our version of `attrs.asdict`, so we can call back to us."""
         attrs = obj.__class__.__attrs_attrs__
         rv = self._dict_factory()
         for a in attrs:
-            v = getattr(obj, a.name)
-            rv[a.name] = self.dumps(v)
+            name = a.name
+            v = getattr(obj, name)
+            rv[name] = self.dumps(v)
         return rv
+
+    def dumps_attrs_astuple(self, obj):
+        """Our version of `attrs.astuple`, so we can call back to us."""
+        attrs = obj.__class__.__attrs_attrs__
+        return tuple(self.dumps(getattr(obj, a.name)) for a in attrs)
 
     def _dumps_enum(self, obj):
         """Convert an enum to its value."""
@@ -183,7 +219,9 @@ class Converter(object):
             return [e for e in obj]
         else:
             elem_type = cl.__args__[0]
-            conv = self._loads.dispatch(elem_type)
+            conv = (self._loads.dispatch(elem_type)
+                    if not isinstance(elem_type, _Union)
+                    else self._loads_union)
             return [conv(elem_type, e) for e in obj]
 
     def _loads_set(self, cl: Type[GenericMeta], obj: Iterable[T])\
@@ -193,7 +231,9 @@ class Converter(object):
             return set(obj)
         else:
             elem_type = cl.__args__[0]
-            conv = self._loads.dispatch(elem_type)
+            conv = (self._loads.dispatch(elem_type)
+                    if not isinstance(elem_type, _Union)
+                    else self._loads_union)
             return {conv(elem_type, e) for e in obj}
 
     def _loads_frozenset(self, cl: Type[GenericMeta], obj: Iterable[T])\
@@ -203,7 +243,9 @@ class Converter(object):
             return frozenset(obj)
         else:
             elem_type = cl.__args__[0]
-            conv = self._loads.dispatch(elem_type)
+            conv = (self._loads.dispatch(elem_type)
+                    if not isinstance(elem_type, _Union)
+                    else self._loads_union)
             return frozenset([conv(elem_type, e) for e in obj])
 
     def _loads_dict(self, cl: Type[GenericMeta], obj: Mapping[T, V])\
@@ -214,26 +256,39 @@ class Converter(object):
         else:
             key_type, val_type = cl.__args__
             if key_type is Any:
-                val_conv = self._loads.dispatch(val_type)
+                val_conv = (self._loads.dispatch(val_type)
+                            if not isinstance(val_type, _Union)
+                            else self._loads_union)
                 return {k: val_conv(val_type, v) for k, v in obj.items()}
             elif val_type is Any:
-                key_conv = self._loads.dispatch(key_type)
+                key_conv = (self._loads.dispatch(key_type)
+                            if not isinstance(key_type, _Union)
+                            else self._loads_union)
                 return {key_conv(key_type, k): v for k, v in obj.items()}
             else:
-                key_conv = self._loads.dispatch(key_type)
-                val_conv = self._loads.dispatch(val_type)
+                key_conv = (self._loads.dispatch(key_type)
+                            if not isinstance(key_type, _Union)
+                            else self._loads_union)
+                val_conv = (self._loads.dispatch(val_type)
+                            if not isinstance(val_type, _Union)
+                            else self._loads_union)
                 return {key_conv(key_type, k): val_conv(val_type, v)
                         for k, v in obj.items()}
 
-    def _loads_union(self, union: Type[Union], obj: Union):
+    def _loads_union(self, union: _Union, obj: Any):
         """Deal with converting a union.
 
         Note that optionals are unions that contain NoneType. We check for
         NoneType early and handle the case of obj being None, so
         disambiguation functions don't need to handle NoneType.
         """
+        # Check the union registry first.
+        handler = self._union_registry.get(union)
+        if handler is not None:
+            return handler(union, obj)
+
         # Unions with NoneType in them are basically optionals.
-        union_params = union.__union_params__
+        union_params = union.__args__
         if NoneType in union_params:
             if obj is None:
                 return None
@@ -241,6 +296,7 @@ class Converter(object):
                 # This is just a NoneType and something else.
                 other = (union_params[0] if union_params[1] is NoneType
                          else union_params[1])
+                # We can't actually have a Union of a Union, so this is safe.
                 return self._loads.dispatch(other)(other, obj)
 
         # Getting here means either this is not an optional, or it's an
@@ -251,23 +307,26 @@ class Converter(object):
 
     def _loads_tuple(self, tup: Type[Tuple], obj: Iterable):
         """Deal with converting to a tuple."""
-        tup_params = tup.__tuple_params__
-        has_ellipsis = tup.__tuple_use_ellipsis__
+        tup_params = tup.__args__
+        has_ellipsis = (tup_params and tup_params[-1] is Ellipsis)
         if tup_params is None or (has_ellipsis and tup_params[0] is Any):
             # Just a Tuple. (No generic information.)
             return tuple(obj)
-        if tup.__tuple_use_ellipsis__:
+        if has_ellipsis:
             # We're dealing with a homogenous tuple, Tuple[int, ...]
             tup_type = tup_params[0]
-            conv = self._loads.dispatch(tup_type)
+            conv = (self._loads.dispatch(tup_type)
+                    if not isinstance(tup_type, _Union)
+                    else self._loads_union)
             return tuple(conv(tup_type, e) for e in obj)
         else:
             # We're dealing with a heterogenous tuple.
             return tuple(self._loads.dispatch(t)(t, e)
+                         if not isinstance(t, _Union)
+                         else self._loads_union(t, e)
                          for t, e in zip(tup_params, obj))
 
-
-    def _get_dis_func(self, union: Type[Union]) -> Callable[..., Type]:
+    def _get_dis_func(self, union: Type) -> Callable[..., Type]:
         """Fetch or try creating a disambiguation function for a union."""
         if not all(hasattr(e, '__attrs_attrs__')
                    for e in union.__union_params__):
