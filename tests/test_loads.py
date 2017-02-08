@@ -1,22 +1,18 @@
 """Test loading functionality."""
-from enum import Enum
-from typing import (List, Sequence, MutableSequence, Tuple, Any, Set,
-                    MutableSet, FrozenSet, MutableMapping, Mapping, Dict,
-                    Optional, Union)
+from typing import (List, Tuple, Any, Set, MutableSet, FrozenSet,
+                    Dict, Optional, Union)
 
 from pytest import raises
 
 from hypothesis import given
 from hypothesis.strategies import (integers, floats, text, one_of,
                                    sampled_from, lists, tuples, sets,
-                                   frozensets, just, binary, dictionaries,
-                                   composite, choices)
+                                   frozensets, just, binary, choices)
 
 from cattr import Converter
 
-primitive_strategies = sampled_from([(integers(), int),
-                                     (floats(allow_nan=False), float),
-                                     (text(), str)])
+from . import (primitive_strategies, seqs_of_primitives, lists_of_primitives,
+               dicts_of_primitives, enums_of_primitives)
 
 ints_and_type = tuples(integers(), just(int))
 floats_and_type = tuples(floats(allow_nan=False), just(float))
@@ -26,35 +22,8 @@ bytes_and_type = tuples(binary(), just(bytes))
 primitives_and_type = one_of(ints_and_type, floats_and_type, strs_and_type,
                              bytes_and_type)
 
-list_types = sampled_from([List, Sequence, MutableSequence])
 mut_set_types = sampled_from([Set, MutableSet])
 set_types = one_of(mut_set_types, just(FrozenSet))
-dict_types = sampled_from([Dict, MutableMapping, Mapping])
-
-lists_of_primitives = primitive_strategies.flatmap(
-    lambda e: tuples(lists(e[0]),
-                     one_of(list_types.map(lambda t: t[e[1]]), list_types)))
-
-h_tuple_types = sampled_from([Tuple, Sequence])
-h_tuples_of_primitives = primitive_strategies.flatmap(
-    lambda e: tuples(lists(e[0]),
-                     one_of(sampled_from([Tuple[e[1], ...], Sequence[e[1]]]),
-                            h_tuple_types))).map(
-    lambda e: (tuple(e[0]), e[1]))
-
-seqs_of_primitives = one_of(lists_of_primitives, h_tuples_of_primitives)
-
-
-@composite
-def enums_of_primitives(draw):
-    names = draw(sets(text(min_size=1), min_size=1))
-    n = len(names)
-    vals = draw(one_of(sets(one_of(
-            integers(),
-            floats(allow_nan=False),
-            text(min_size=1)),
-        min_size=n, max_size=n)))
-    return Enum('HypEnum', list(zip(names, vals)))
 
 
 def create_generic_type(generic_types, param_type):
@@ -62,6 +31,7 @@ def create_generic_type(generic_types, param_type):
     return one_of(generic_types,
                   generic_types.map(lambda t: t[Any]),
                   generic_types.map(lambda t: t[param_type]))
+
 
 mut_sets_of_primitives = primitive_strategies.flatmap(
     lambda e: tuples(sets(e[0]), create_generic_type(mut_set_types, e[1]))
@@ -73,26 +43,6 @@ frozen_sets_of_primitives = primitive_strategies.flatmap(
 )
 
 sets_of_primitives = one_of(mut_sets_of_primitives, frozen_sets_of_primitives)
-
-
-def create_generic_dict_type(type1, type2):
-    """Create a strategy for generating parameterized dict types."""
-    return one_of(dict_types,
-                  dict_types.map(lambda t: t[type1, type2]),
-                  dict_types.map(lambda t: t[Any, type2]),
-                  dict_types.map(lambda t: t[type1, Any]))
-
-
-def create_dict_and_type(tuple_of_strats):
-    """Map two primitive strategies into a strategy for dict and type."""
-    (prim_strat_1, type_1), (prim_strat_2, type_2) = tuple_of_strats
-
-    return tuples(dictionaries(prim_strat_1, prim_strat_2),
-                  create_generic_dict_type(type_1, type_2))
-
-
-dicts_of_primitives = (tuples(primitive_strategies, primitive_strategies)
-                       .flatmap(create_dict_and_type))
 
 
 @given(primitives_and_type)
@@ -122,7 +72,11 @@ def test_loading_sets(converter: Converter, set_and_type, set_type):
 
     converted = converter.loads(set_, set_type)
     assert converted == set_
-    assert isinstance(converted, set_type)
+
+    # Set[int] can't be used with isinstance any more.
+    non_generic = (set_type.__origin__ if set_type.__origin__ is not None
+                   else set_type)
+    assert isinstance(converted, non_generic)
 
     converted = converter.loads(set_, Any)
     assert converted == set_
@@ -141,7 +95,7 @@ def test_stringifying_sets(converter: Converter, set_and_type):
         assert str(e) in converted
 
 
-@given(lists(primitives_and_type))
+@given(lists(primitives_and_type, min_size=1))
 def test_loading_hetero_tuples(converter: Converter, list_of_vals_and_types):
     """Test loading heterogenous tuples."""
     types = tuple(e[1] for e in list_of_vals_and_types)
@@ -205,9 +159,9 @@ def test_loading_optional_primitives(converter: Converter, primitive_and_type):
     assert converter.loads(None, Optional[type]) is None
 
 
-@given(lists_of_primitives)
+@given(lists_of_primitives().filter(lambda lp: lp[1].__args__))
 def test_loading_lists_of_opt(converter: Converter, list_and_type):
-    """Test loading Optional primitive types."""
+    """Test loading lists of Optional primitive types."""
     l, t = list_and_type
 
     l.append(None)
@@ -216,10 +170,8 @@ def test_loading_lists_of_opt(converter: Converter, list_and_type):
     if args and args[0] not in (Any, str, Optional):
         with raises(TypeError):
             converter.loads(l, t)
-    if args:
-        optional_t = Optional[args[0]]
-    else:
-        optional_t = Optional
+
+    optional_t = Optional[args[0]]
     t.__args__ = (optional_t, )
 
     converted = converter.loads(l, t)
@@ -230,7 +182,7 @@ def test_loading_lists_of_opt(converter: Converter, list_and_type):
     t.__args__ = args
 
 
-@given(lists_of_primitives)
+@given(lists_of_primitives())
 def test_stringifying_lists_of_opt(converter: Converter, list_and_type):
     """Test loading Optional primitive types into strings."""
     l, t = list_and_type
