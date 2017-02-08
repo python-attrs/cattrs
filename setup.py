@@ -10,13 +10,8 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    "attrs >= 16.0",
+    "attrs >= 16.2",
     "typing >= 3.5.2; python_version<'3.5'",
-    "singledispatch >= 3.4.0.3; python_version<'3.4'",
-]
-
-test_requirements = [
-    # TODO: put package test requirements here
 ]
 
 setup(
@@ -43,10 +38,8 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
     test_suite='tests',
-    tests_require=test_requirements
 )
