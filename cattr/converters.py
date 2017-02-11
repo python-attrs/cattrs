@@ -1,5 +1,5 @@
 from enum import unique, Enum
-from functools import lru_cache, singledispatch
+from functools import singledispatch
 from ._compat import (Callable, List, Mapping, Sequence, Type, Union, Optional,
                       GenericMeta, MutableSequence, TypeVar, Any, FrozenSet,
                       MutableSet, Set, MutableMapping, Dict, Tuple, Iterable,
