@@ -223,3 +223,11 @@ def test_loading_enums(converter: Converter, choice, enum):
     val = choice(list(enum))
 
     assert converter.loads(val.value, enum) == val
+
+
+def test_loading_unsupported(converter: Converter):
+    """Loading unsupported classes should throw."""
+    with raises(ValueError):
+        converter.loads(1, Converter)
+    with raises(ValueError):
+        converter.loads(1, Union[int, str])

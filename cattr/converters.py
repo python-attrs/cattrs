@@ -173,7 +173,7 @@ class Converter:
             return self.loads_attrs(obj, cl)
         # We don't know what this is, so we complain loudly.
         msg = "Unsupported type: {0}. Register a loads hook for it.".format(cl)
-        return ValueError(msg)
+        raise ValueError(msg)
 
     def _loads_call(self, cl, obj):
         """Just call ``cl`` with the given ``obj``.
@@ -193,8 +193,6 @@ class Converter:
             # We detect the type by the validator.
             validator = a.validator
             converted = self._handle_attr_attribute(a.name, validator, value)
-            if converted is NOTHING:
-                converted = None
             conv_obj.append(converted)
 
         return cl(*conv_obj)
@@ -341,7 +339,7 @@ class Converter:
         # This is unsupported as of now.
         msg = "Unsupported type: {0}. Register a loads hook for it.".format(
             union)
-        return ValueError(msg)
+        raise ValueError(msg)
 
     def _loads_tuple(self, tup: Type[Tuple], obj: Iterable):
         """Deal with converting to a tuple."""
