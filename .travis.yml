@@ -1,18 +1,27 @@
 # Config file for automatic testing at travis-ci.org
 # This file will be regenerated if you run travis_pypi_setup.py
+sudo: false
+cache:
+  directories:
+    - $HOME/.cache/pip
 
 language: python
-python: 3.6
 
-env:
-  - TOXENV=py35
-  - TOXENV=py36
-  - TOXENV=flake8
+matrix:
+  include:
+    - python: "3.5"
+      env: TOXENV=py35
+    - python: "3.6"
+      env: TOXENV=py36
+
+    # Meta
+    - python: "3.6"
+      env: TOXENV=flake8
+    - python: "3.6"
+      env: TOXENV=docs
 
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install: pip install -U tox setuptools
 
 # command to run tests, e.g. python setup.py test
-script: tox -e ${TOXENV}
-
-
+script: tox
