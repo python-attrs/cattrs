@@ -8,8 +8,6 @@ from ._compat import (Callable, List, Mapping, Sequence, Type, Union, Optional,
 from attr import NOTHING
 from attr.validators import _InstanceOfValidator, _OptionalValidator
 
-from .disambiguators import create_uniq_field_dis_func
-
 NoneType = type(None)
 T = TypeVar('T')
 V = TypeVar('V')
@@ -31,7 +29,6 @@ class Converter:
                  dumping_strat: DumpStratType=AttrsDumpingStrategy.AS_DICT):
         # Create a per-instance cache.
         self.dumping_strat = AttrsDumpingStrategy(dumping_strat)
-        self._get_dis_func = lru_cache()(self._get_dis_func)
 
         # Per-instance register of to-Python converters.
         dumps = singledispatch(self._dumps)
@@ -341,9 +338,10 @@ class Converter:
 
         # Getting here means either this is not an optional, or it's an
         # optional with more than one parameter.
-        # Let's support only unions of attr classes for now.
-        cl = self._get_dis_func(union)(obj)
-        return self._loads.dispatch(cl)(cl, obj)
+        # This is unsupported as of now.
+        msg = "Unsupported type: {0}. Register a loads hook for it.".format(
+            union)
+        return ValueError(msg)
 
     def _loads_tuple(self, tup: Type[Tuple], obj: Iterable):
         """Deal with converting to a tuple."""
@@ -365,11 +363,3 @@ class Converter:
                          if not isinstance(t, _Union)
                          else self._loads_union(t, e)
                          for t, e in zip(tup_params, obj))
-
-    def _get_dis_func(self, union: Type) -> Callable[..., Type]:
-        """Fetch or try creating a disambiguation function for a union."""
-        if not all(hasattr(e, '__attrs_attrs__')
-                   for e in union.__union_params__):
-            raise ValueError('Only unions of attr classes supported '
-                             'currently.')
-        return create_uniq_field_dis_func(*union.__union_params__)
