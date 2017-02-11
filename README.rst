@@ -18,8 +18,7 @@ cattrs
         :alt: Updates
 
 .. image:: https://codecov.io/gh/Tinche/cattrs/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/Tinche/cattrs
-   :alt: Codecov
+        :target: https://codecov.io/gh/Tinche/cattrs
 
 ----
 
