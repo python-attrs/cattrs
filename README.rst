@@ -14,14 +14,14 @@ cattrs
         :alt: Documentation Status
 
 .. image:: https://pyup.io/repos/github/Tinche/cattrs/shield.svg
-     :target: https://pyup.io/repos/github/Tinche/cattrs/
-     :alt: Updates
+        :target: https://pyup.io/repos/github/Tinche/cattrs/
+        :alt: Updates
 
 .. image:: https://codecov.io/gh/Tinche/cattrs/branch/master/graph/badge.svg
-     :target: https://codecov.io/gh/Tinche/cattrs
+        :target: https://codecov.io/gh/Tinche/cattrs
+        :alt: Codecov
 
-
-
+----
 
 ``cattrs`` is an experimental open source Python 3 library providing composable
 complex class conversion support for ``attrs`` classes. Other kinds of classes
