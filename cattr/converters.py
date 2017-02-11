@@ -1,10 +1,9 @@
-from collections import OrderedDict
 from enum import unique, Enum
 from functools import lru_cache, singledispatch
 from typing import (Callable, List, Mapping, Sequence, Type, Union, Optional,
                     GenericMeta, MutableSequence, TypeVar, Any, FrozenSet,
                     MutableSet, Set, MutableMapping, Dict, Tuple, Iterable,
-                    _Union, TupleMeta)
+                    _Union)
 
 from attr import NOTHING
 from attr.validators import _InstanceOfValidator, _OptionalValidator
@@ -67,6 +66,7 @@ class Converter:
         loads.register(float, self._loads_call)
         loads.register(Enum, self._loads_call)
 
+        self.loads_attrs = self.loads_attrs_fromdict
         self._loads = loads
         self._dict_factory = dict_factory
         # Unions are instances now, not classes. We use different registry.
@@ -95,16 +95,20 @@ class Converter:
         self.dumps.register(cls, func)
 
     def register_loads_hook(self, cl: Type[T],
-                            func: Callable[[Type, Any], T]) -> None:
+                            func: Callable[[Any, Type], T]) -> None:
         """Register a primitive-to-class converter function for a type.
 
-        The converter function should take an instance of a Python primitive
-        and return the instance of the class.
+        The converter function should take two arguments:
+          * a Python object to be converted,
+          * the type to convert to
+
+        and return the instance of the class. The type may seem redundant, but
+        is sometimes needed (for example, when dealing with generic classes).
         """
         if isinstance(cl, _Union):
             self._union_registry[cl] = func
         else:
-            self._loads.register(cl, func)
+            self._loads.register(cl, lambda t, o: func(o, t))
 
     def loads(self, obj: Any, cl: Type):
         """Convert unstructured Python data structures to structured data."""
@@ -169,10 +173,10 @@ class Converter:
             return obj
         if hasattr(cl, '__attrs_attrs__'):
             # This is an attrs class
-            return self._loads_attrs(cl, obj)
-        # We don't know what this is. Just try instantiating it.
-        # This covers the basics: bools, ints, floats, strings, bytes, enums.
-        return cl(obj)
+            return self.loads_attrs(obj, cl)
+        # We don't know what this is, so we complain loudly.
+        msg = "Unsupported type: {0}. Register a loads hook for it.".format(cl)
+        return ValueError(msg)
 
     def _loads_call(self, cl, obj):
         """Just call ``cl`` with the given ``obj``.
@@ -183,22 +187,57 @@ class Converter:
         """
         return cl(obj)
 
-    def _loads_attrs(self, cl, obj):
-        """Handle actual attrs classes."""
+    # Attrs classes.
+
+    def loads_attrs_fromtuple(self, obj: Sequence[Any], cl):
+        """Load an attrs class from a sequence (tuple)."""
+        conv_obj = []  # A list of converter parameters.
+        for a, value in zip(cl.__attrs_attrs__, obj):
+            # We detect the type by the validator.
+            validator = a.validator
+            converted = self._handle_attr_attribute(a.name, validator, value)
+            if converted is NOTHING:
+                converted = None
+            conv_obj.append(converted)
+
+        return cl(*conv_obj)
+
+    def _handle_attr_attribute(self, name, validator, value):
+        """Handle an individual attrs validator."""
+        if validator is None:
+            # No validator.
+            return value
+        elif isinstance(validator, _OptionalValidator):
+            # This is an Optional[something]
+            if value is None:
+                return None
+            return self._handle_attr_attribute(name, validator.validator,
+                                               value)
+        elif isinstance(validator, _InstanceOfValidator):
+            type_ = validator.type
+            return self._loads.dispatch(type_)(type_, value)
+        else:
+            # An unknown validator.
+            return value
+
+    def loads_attrs_fromdict(self, obj: Mapping, cl):
+        """Load an attrs class from a mapping (dict)."""
+        # For public use.
         conv_obj = obj.copy()  # Dict of converted parameters.
         for a in cl.__attrs_attrs__:
             name = a.name
             # We detect the type by the validator.
             validator = a.validator
-            converted = self._handle_attr_attribute(name, validator, obj)
+            converted = self._handle_attr_mapping_attribute(name, validator,
+                                                            obj)
             if converted is NOTHING:
                 continue
             conv_obj[name] = converted
 
         return cl(**conv_obj)
 
-    def _handle_attr_attribute(self, name, val, mapping):
-        """Handle an individual validator attrs validator."""
+    def _handle_attr_mapping_attribute(self, name, val, mapping):
+        """Handle an individual attrs validator."""
         if val is None:
             # No validator.
             return mapping[name]
@@ -206,7 +245,8 @@ class Converter:
             # This is an Optional[something]
             if name not in mapping or mapping[name] is None:
                 return NOTHING
-            return self._handle_attr_attribute(name, val.validator, mapping)
+            return self._handle_attr_mapping_attribute(name, val.validator,
+                                                       mapping)
         elif isinstance(val, _InstanceOfValidator):
             type_ = val.type
             return self._loads.dispatch(type_)(type_, mapping.get(name))

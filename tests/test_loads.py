@@ -1,4 +1,4 @@
-"""Test loading functionality."""
+"""Test loading of collections and primitives."""
 from typing import (List, Tuple, Any, Set, MutableSet, FrozenSet,
                     Dict, Optional, Union)
 

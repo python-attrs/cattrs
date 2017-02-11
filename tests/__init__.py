@@ -43,11 +43,6 @@ def lists_of_primitives(draw):
     return draw(st.lists(prim_strat)), list_t
 
 
-#lists_of_primitives = primitive_strategies.flatmap(
-#    lambda e: st.tuples(st.lists(e[0]),
-#                        st.one_of(
-#                            list_types.map(lambda t: t[e[1]]), list_types)))
-
 h_tuple_types = st.sampled_from([Tuple, Sequence])
 h_tuples_of_primitives = primitive_strategies.flatmap(
     lambda e: st.tuples(st.lists(e[0]),

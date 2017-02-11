@@ -2,6 +2,26 @@
 History
 =======
 
+0.3.0 (UNRELEASED)
+------------------
+
+* Introduced ``cattr.typing`` for use with Python versions 3.5.2 and 3.6.0.
+* Minor changes to work with newer versions of ``typing``.
+
+  * Bare Optionals are not supported any more (use ``Optional[Any]``).
+
+* Attempting to load unrecognized classes will result in a ValueError, and a helpful message to register a loads hook.
+* Loading ``attrs`` classes is now documented.
+* Undocumented support for unions of ``attrs`` classes and the disambiguation function generator removed for now.
+* The global converter is now documented.
+* ``cattr.loads_attrs_fromtuple`` and ``cattr.loads_attrs_fromdict`` are now exposed.
+
+
+0.2.0 (2016-10-02)
+------------------
+
+* Tests and documentation.
+
 0.1.0 (2016-08-13)
 ------------------
 

@@ -5,7 +5,9 @@ __email__ = 'tinchester@gmail.com'
 __version__ = '0.2.0'
 
 
-_global_converter = Converter()
+global_converter = Converter()
 
-dumps = _global_converter.dumps
-loads = _global_converter.loads
+dumps = global_converter.dumps
+loads = global_converter.loads
+loads_attrs_fromtuple = global_converter.loads_attrs_fromtuple
+loads_attrs_fromdict = global_converter.loads_attrs_fromdict

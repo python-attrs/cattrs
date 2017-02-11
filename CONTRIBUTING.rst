@@ -110,5 +110,5 @@ Tips
 
 To run a subset of tests::
 
-$ py.test tests.test_cattrs
+$ pytest tests.test_dumps
 

@@ -40,7 +40,8 @@ sys.path.insert(0, project_root)
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode',
+              'sphinx.ext.doctest']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -258,7 +259,7 @@ texinfo_documents = [
      u'cattrs Documentation',
      u'Tin Tvrtković',
      'cattrs',
-     'One line description of project.',
+     'Composable complex class support for attrs.',
      'Miscellaneous'),
 ]
 
@@ -273,3 +274,5 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
+
+doctest_global_setup = "import attr, cattr"

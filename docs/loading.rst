@@ -93,8 +93,8 @@ Optionals
     >>> cattr.loads(None, Optional[int])
     >>> # None was returned.
 
-A bare ``Optional`` (non-parameterized, just ``Optional``, as opposed to
-``Optional[str]``) is equivalent to ``Any``.
+Bare ``Optional``s (non-parameterized, just ``Optional``, as opposed to
+``Optional[str]``) aren't supported, use ``Optional[Any]`` instead.
 
 This generic type is composable with all other converters.
 
@@ -188,20 +188,20 @@ and values can be converted.
     >>> cattr.loads({1: None, 2: 2.0}, Dict[str, Optional[int]])
     {'1': None, '2': 2}
 
-Homogenous and heterogenous tuples
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Homogeneous and heterogeneous tuples
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Homogenous and heterogenous tuples can be produced from iterable objects.
-Heterogenous tuples require an iterable with the number of elements matching
+Homogeneous and heterogeneous tuples can be produced from iterable objects.
+Heterogeneous tuples require an iterable with the number of elements matching
 the number of type parameters exactly. Use:
 
 * ``Tuple[A, B, C, D]``
 
-Homogenous tuples use:
+Homogeneous tuples use:
 
 * ``Tuple[T, ...]``
 
-In all cases a few tuple will be returned. Any type parameters set to
+In all cases a tuple will be returned. Any type parameters set to
 ``typing.Any`` will be passed through unconverted.
 
 .. code-block: python
@@ -220,7 +220,7 @@ Unions
 ~~~~~~
 
 Unions of ``NoneType`` and a single other type are supported (also known as
-``Optional``s). All other unions a require a disambiguation function.
+``Optional`` s). All other unions a require a disambiguation function.
 
 In the case of a union consisting exclusively of ``attrs`` classes, ``cattrs``
 will attempt to generate a disambiguation function automatically; this will
@@ -229,17 +229,17 @@ classes:
 
 .. code-block:: python
 
-    >>> attr.s
+    >>> @attr.s
     ... class A:
     ...     a = attr.ib()
     ...     x = attr.ib()
     ...
-    >>> attr.s
+    >>> @attr.s
     ... class B:
     ...     a = attr.ib()
     ...     y = attr.ib()
     ...
-    >>> attr.s
+    >>> @attr.s
     ... class C:
     ...     a = attr.ib()
     ...     z = attr.ib()
@@ -251,8 +251,63 @@ information will then be generated and cached. This will happen automatically,
 the first time an appropriate union is loaded.
 
 
-Loading ``attrs`` classes
+``attrs`` classes
 -------------------------
+
+Simple ``attrs`` classes
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+``attrs`` classes using primitives, collections of primitives and their own
+converters would out of the box. Given a mapping ``d`` and class ``A``,
+``cattrs`` will simply instantiate ``A`` with ``d`` unpacked.
+
+.. doctest::
+
+    >>> @attr.s
+    ... class A:
+    ...     a = attr.ib()
+    ...     b = attr.ib(convert=int)
+    ...
+    >>> cattr.loads({'a': 1, 'b': '2'}, A)
+    A(a=1, b=2)
+
+``attrs`` classes deconstructed into tuples can be loaded using
+``cattr.loads_attrs_fromtuple`` (``fromtuple`` as in the opposite of
+``attr.astuple`` and ``cattr.astuple``).
+
+.. doctest::
+
+    >>> @attr.s
+    ... class A:
+    ...     a = attr.ib()
+    ...     b = attr.ib(convert=int)
+    ...
+    >>> cattr.loads_attrs_fromtuple(['string', '2'], A)
+    A(a='string', b=2)
+
+Loading from tuples can be made the default by assigning to the ``loads_attr``
+property of ``Converter`` objects.
+
+.. doctest::
+
+    >>> converter = cattr.Converter()
+    >>> converter.loads_attrs = converter.loads_attrs_fromtuple
+    >>> @attr.s
+    ... class A:
+    ...     a = attr.ib()
+    ...     b = attr.ib(convert=int)
+    ...
+    >>> converter.loads(['string', '2'], A)
+    A(a='string', b=2)
+
+Loading from tuples can also be made the default for specific classes only;
+see registering custom loading hooks below.
+
+Complex ``attrs`` classes
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Complex ``attrs`` classes are classes with type information available for some
+or all attributes. These classes support almost arbitrary nesting.
 
 Registering custom loading hooks
 --------------------------------
