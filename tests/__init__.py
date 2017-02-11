@@ -2,8 +2,8 @@ import string
 import keyword
 
 from enum import Enum
-from typing import (Tuple, Sequence, MutableSequence, List, Dict,
-                    MutableMapping, Mapping, Any)
+from cattr.typing import (Tuple, Sequence, MutableSequence, List, Dict,
+                          MutableMapping, Mapping, Any)
 
 import attr
 

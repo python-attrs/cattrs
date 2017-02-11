@@ -1,9 +1,9 @@
 from enum import unique, Enum
 from functools import lru_cache, singledispatch
-from typing import (Callable, List, Mapping, Sequence, Type, Union, Optional,
-                    GenericMeta, MutableSequence, TypeVar, Any, FrozenSet,
-                    MutableSet, Set, MutableMapping, Dict, Tuple, Iterable,
-                    _Union)
+from ._compat import (Callable, List, Mapping, Sequence, Type, Union, Optional,
+                      GenericMeta, MutableSequence, TypeVar, Any, FrozenSet,
+                      MutableSet, Set, MutableMapping, Dict, Tuple, Iterable,
+                      _Union)
 
 from attr import NOTHING
 from attr.validators import _InstanceOfValidator, _OptionalValidator

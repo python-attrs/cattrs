@@ -1,6 +1,6 @@
 """Test loading of collections and primitives."""
-from typing import (List, Tuple, Any, Set, MutableSet, FrozenSet,
-                    Dict, Optional, Union)
+from cattr.typing import (List, Tuple, Any, Set, MutableSet, FrozenSet,
+                          Dict, Optional, Union)
 
 from pytest import raises
 
