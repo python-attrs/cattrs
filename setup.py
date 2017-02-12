@@ -11,7 +11,6 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     "attrs >= 16.2",
-    "typing >= 3.5.2; python_version<'3.5'",
 ]
 
 setup(
@@ -38,8 +37,8 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
     test_suite='tests',
 )
