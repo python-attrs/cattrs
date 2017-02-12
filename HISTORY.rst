@@ -5,6 +5,7 @@ History
 0.3.0 (UNRELEASED)
 ------------------
 
+* Python 3.4 is no longer supported.
 * Introduced ``cattr.typing`` for use with Python versions 3.5.2 and 3.6.0.
 * Minor changes to work with newer versions of ``typing``.
 
