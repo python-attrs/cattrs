@@ -26,7 +26,7 @@ Primitive values
 Use ``typing.Any`` to avoid applying any conversions to the object you're
 loading; it will simply be passed through.
 
-.. code-block:: python
+.. doctest::
 
     >>> cattr.loads(1, Any)
     1
@@ -39,7 +39,7 @@ loading; it will simply be passed through.
 
 Use any of these primitive types to convert the object to the type.
 
-.. code-block:: python
+.. doctest::
 
     >>> cattr.loads(1, str)
     '1'
@@ -63,7 +63,7 @@ Enums
 Enums will be loaded by their values. This works even for complex values, like
 tuples.
 
-.. code-block:: python
+.. doctest::
 
     >>> @unique
     ... class CatBreed(Enum):
@@ -91,7 +91,7 @@ Optionals
 
 ``Optional`` primitives and collections are supported out of the box.
 
-.. code-block:: python
+.. doctest::
 
     >>> cattr.loads(None, int)
     Traceback (most recent call last):
@@ -100,12 +100,12 @@ Optionals
     >>> cattr.loads(None, Optional[int])
     >>> # None was returned.
 
-Bare ``Optional``s (non-parameterized, just ``Optional``, as opposed to
+Bare ``Optional`` s (non-parameterized, just ``Optional``, as opposed to
 ``Optional[str]``) aren't supported, use ``Optional[Any]`` instead.
 
 This generic type is composable with all other converters.
 
-.. code-block:: python
+.. doctest::
 
     >>> cattr.loads(1, Optional[float])
     1.0
@@ -123,14 +123,14 @@ In all cases, a new list will be returned, so this operation can be used to
 copy an iterable into a list. A bare type, for example ``Sequence`` instead of
 ``Sequence[int]``, is equivalent to ``Sequence[Any]``.
 
-.. code-block:: python
+.. doctest::
 
     >>> cattr.loads((1, 2, 3), MutableSequence[int])
     [1, 2, 3]
 
 These generic types are composable with all other converters.
 
-.. code-block:: python
+.. doctest::
 
     >>> cattr.loads((1, None, 3), List[Optional[str]])
     ['1', None, '3']
@@ -152,17 +152,17 @@ In all cases, a new set or frozenset will be returned, so this operation can be
 used to copy an iterable into a set. A bare type, for example ``MutableSet``
 instead of ``MutableSet[int]``, is equivalent to ``MutableSet[Any]``.
 
-.. code-block: python
+.. doctest::
 
     >>> cattr.loads([1, 2, 3, 4], Set)
     {1, 2, 3, 4}
 
 These generic types are composable with all other converters.
 
-.. code-block:: python
+.. doctest::
 
     >>> cattr.loads([[1, 2], [3, 4]], Set[FrozenSet[str]])
-    {frozenset({'1', '2'}), frozenset({'3', '4'})}
+    {frozenset({'4', '3'}), frozenset({'1', '2'})}
 
 Dictionaries
 ~~~~~~~~~~~~
@@ -181,7 +181,7 @@ used to copy a mapping into a dict. Any type parameters set to ``typing.Any``
 will be passed through unconverted. If both type parameters are absent,
 they will be treated as ``Any`` too.
 
-.. code-block: python
+.. doctest::
 
     >>> from collections import OrderedDict
     >>> cattr.loads(OrderedDict([(1, 2), (3, 4)]), Dict)
@@ -190,7 +190,7 @@ they will be treated as ``Any`` too.
 These generic types are composable with all other converters. Note both keys
 and values can be converted.
 
-.. code-block:: python
+.. doctest::
 
     >>> cattr.loads({1: None, 2: 2.0}, Dict[str, Optional[int]])
     {'1': None, '2': 2}
@@ -211,14 +211,14 @@ Homogeneous tuples use:
 In all cases a tuple will be returned. Any type parameters set to
 ``typing.Any`` will be passed through unconverted.
 
-.. code-block: python
+.. doctest::
 
     >>> cattr.loads([1, 2, 3], Tuple[int, str, float])
     (1, '2', 3.0)
 
 The tuple conversion is composable with all other converters.
 
-.. code-block: python
+.. doctest::
 
     >>> cattr.loads([{1: 1}, {2: 2}], Tuple[Dict[str, float], ...])
     ({'1': 1.0}, {'2': 2.0})
@@ -227,35 +227,7 @@ Unions
 ~~~~~~
 
 Unions of ``NoneType`` and a single other type are supported (also known as
-``Optional`` s). All other unions a require a disambiguation function.
-
-In the case of a union consisting exclusively of ``attrs`` classes, ``cattrs``
-will attempt to generate a disambiguation function automatically; this will
-succeed only if each class has a unique, required field. Given the following
-classes:
-
-.. code-block:: python
-
-    >>> @attr.s
-    ... class A:
-    ...     a = attr.ib()
-    ...     x = attr.ib()
-    ...
-    >>> @attr.s
-    ... class B:
-    ...     a = attr.ib()
-    ...     y = attr.ib()
-    ...
-    >>> @attr.s
-    ... class C:
-    ...     a = attr.ib()
-    ...     z = attr.ib()
-    ...
-
-``cattrs`` can deduce only instances of ``A`` will contain `x`, only instances
-of ``B`` will contain ``y``, etc. A disambiguation function using this
-information will then be generated and cached. This will happen automatically,
-the first time an appropriate union is loaded.
+``Optional`` s). All other unions a require a manually registered hook.
 
 
 ``attrs`` classes

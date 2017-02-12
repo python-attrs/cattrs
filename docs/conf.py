@@ -275,4 +275,6 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
 
-doctest_global_setup = "import attr, cattr"
+doctest_global_setup = "import attr, cattr;" \
+                       "from cattr.typing import *;" \
+                       "from enum import Enum, unique"
