@@ -127,7 +127,11 @@ Features
 
   * All `attrs` classes with the usual ``__init__``, if their complex attributes
     have type metadata.
-  * Custom converters for any type (including unions) can be registered using ``register_loads_hook``.
+  * ``typing.Union`` s of supported ``attrs`` classes, given that all of the classes
+    have a unique required field.
+  * ``typing.Union`` s of anything, given that you provide a disambiguation
+    function for it.
+  * Custom converters for any type can be registered using ``register_loads_hook``.
 
 Credits
 ---------

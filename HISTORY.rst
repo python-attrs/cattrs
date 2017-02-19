@@ -13,7 +13,6 @@ History
 
 * Attempting to load unrecognized classes will result in a ValueError, and a helpful message to register a loads hook.
 * Loading ``attrs`` classes is now documented.
-* Undocumented support for unions of ``attrs`` classes and the disambiguation function generator removed for now.
 * The global converter is now documented.
 * ``cattr.loads_attrs_fromtuple`` and ``cattr.loads_attrs_fromdict`` are now exposed.
 

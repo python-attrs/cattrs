@@ -32,5 +32,6 @@ Currently, a converter contains the following state:
 
 * a registry of dumps hooks, backed by a ``singledispatch``.
 * a registry of loads hooks, backed by a different ``singledispatch``.
+* a LRU cache of union disambiguation functions.
 * a ``dict_factory`` callable, used for creating ``dicts`` when dumping
   ``attrs`` classes.

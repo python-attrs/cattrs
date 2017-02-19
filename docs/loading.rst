@@ -227,7 +227,35 @@ Unions
 ~~~~~~
 
 Unions of ``NoneType`` and a single other type are supported (also known as
-``Optional`` s). All other unions a require a manually registered hook.
+``Optional`` s). All other unions a require a disambiguation function.
+
+In the case of a union consisting exclusively of ``attrs`` classes, ``cattrs``
+will attempt to generate a disambiguation function automatically; this will
+succeed only if each class has a unique, required field. Given the following
+classes:
+
+.. code-block:: python
+
+    >>> @attr.s
+    ... class A:
+    ...     a = attr.ib()
+    ...     x = attr.ib()
+    ...
+    >>> @attr.s
+    ... class B:
+    ...     a = attr.ib()
+    ...     y = attr.ib()
+    ...
+    >>> @attr.s
+    ... class C:
+    ...     a = attr.ib()
+    ...     z = attr.ib()
+    ...
+
+``cattrs`` can deduce only instances of ``A`` will contain `x`, only instances
+of ``B`` will contain ``y``, etc. A disambiguation function using this
+information will then be generated and cached. This will happen automatically,
+the first time an appropriate union is loaded.
 
 
 ``attrs`` classes
