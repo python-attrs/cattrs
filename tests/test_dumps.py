@@ -51,7 +51,7 @@ def test_enum_dumping(converter: Converter, enum: EnumMeta, dump_strat,
 @given(nested_classes)
 def test_attrs_asdict_dumping(converter: Converter, nested_class):
     """Our dumping should be identical to `attrs`."""
-    instance = nested_class()
+    instance = nested_class[0]()
     assert converter.dumps(instance) == asdict(instance)
 
 
@@ -60,5 +60,5 @@ def test_attrs_astuple_dumping(converter: Converter, nested_class):
     """Our dumping should be identical to `attrs`."""
     converter.dumping_strat = "astuple"
     assert converter.dumping_strat is AttrsDumpingStrategy.AS_TUPLE
-    instance = nested_class()
+    instance = nested_class[0]()
     assert converter.dumps(instance) == astuple(instance)

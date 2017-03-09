@@ -1,6 +1,7 @@
 import string
 import keyword
 
+from collections import OrderedDict
 from enum import Enum
 from cattr.typing import (Tuple, Sequence, MutableSequence, List, Dict,
                           MutableMapping, Mapping, Any)
@@ -92,63 +93,152 @@ def _gen_attr_names():
             yield outer + inner
 
 
-def _create_hyp_class(attrs):
+def _create_hyp_class(attrs_and_strategy):
     """
     A helper function for Hypothesis to generate attrs classes.
+
+    The result is a tuple: an attrs class, and a tuple of values to
+    instantiate it.
     """
-    return make_class('HypClass', dict(zip(_gen_attr_names(), attrs)))
+    def key(t):
+        return t[0].default is not attr.NOTHING
+    attrs_and_strat = sorted(attrs_and_strategy, key=key)
+    attrs = [a[0] for a in attrs_and_strat]
+    for i, a in enumerate(attrs):
+        a.counter = i
+    vals = tuple((a[1]) for a in attrs_and_strat)
+    return st.tuples(
+        st.just(make_class('HypClass',
+                           OrderedDict(zip(_gen_attr_names(), attrs)))),
+        st.tuples(*vals))
+
+
+def just_class(tup):
+    nested_cl = tup[1][0]
+    default = attr.Factory(nested_cl)
+    combined_attrs = list(tup[0])
+    combined_attrs.append((attr.ib(default=default), st.just(nested_cl())))
+    return _create_hyp_class(combined_attrs)
+
+
+def list_of_class(tup):
+    nested_cl = tup[1][0]
+    default = attr.Factory(lambda: [nested_cl()])
+    combined_attrs = list(tup[0])
+    combined_attrs.append((attr.ib(default=default),
+                           st.just([nested_cl()])))
+    return _create_hyp_class(combined_attrs)
+
+
+def dict_of_class(tup):
+    nested_cl = tup[1][0]
+    default = attr.Factory(lambda: {"cls": nested_cl()})
+    combined_attrs = list(tup[0])
+    combined_attrs.append((attr.ib(default=default),
+                          st.just({'cls': nested_cl()})))
+    return _create_hyp_class(combined_attrs)
 
 
 def _create_hyp_nested_strategy(simple_class_strategy):
     """
     Create a recursive attrs class.
     Given a strategy for building (simpler) classes, create and return
-    a strategy for building classes that have as an attribute: either just
-    the simpler class, a list of simpler classes, or a dict mapping the string
-    "cls" to a simpler class.
+    a strategy for building classes that have as an attribute:
+        * just the simpler class
+        * a list of simpler classes
+        * a dict mapping the string "cls" to a simpler class.
     """
-    # Use a tuple strategy to combine simple attributes and an attr class.
-    def just_class(tup):
-        combined_attrs = list(tup[0])
-        combined_attrs.append(attr.ib(default=attr.Factory(tup[1])))
-        return _create_hyp_class(combined_attrs)
-
-    def list_of_class(tup):
-        default = attr.Factory(lambda: [tup[1]()])
-        combined_attrs = list(tup[0])
-        combined_attrs.append(attr.ib(default=default))
-        return _create_hyp_class(combined_attrs)
-
-    def dict_of_class(tup):
-        default = attr.Factory(lambda: {"cls": tup[1]()})
-        combined_attrs = list(tup[0])
-        combined_attrs.append(attr.ib(default=default))
-        return _create_hyp_class(combined_attrs)
-
     # A strategy producing tuples of the form ([list of attributes], <given
     # class strategy>).
-    attrs_and_classes = st.tuples(list_of_attrs, simple_class_strategy)
+    attrs_and_classes = st.tuples(lists_of_attrs(defaults=True),
+                                  simple_class_strategy)
 
-    return st.one_of(attrs_and_classes.map(just_class),
-                     attrs_and_classes.map(list_of_class),
-                     attrs_and_classes.map(dict_of_class))
+    return (attrs_and_classes.flatmap(just_class) |
+            attrs_and_classes.flatmap(list_of_class) |
+            attrs_and_classes.flatmap(dict_of_class))
 
 
-bare_attrs = st.just(attr.ib(default=None))
-int_attrs = st.integers().map(lambda i: attr.ib(default=i))
-str_attrs = st.text().map(lambda s: attr.ib(default=s))
-float_attrs = st.floats().map(lambda f: attr.ib(default=f))
-dict_attrs = (st.dictionaries(keys=st.text(), values=st.integers())
-              .map(lambda d: attr.ib(default=d)))
+@st.composite
+def bare_attrs(draw, defaults=None):
+    """
+    Generate a tuple of an attribute and a strategy that yields values
+    appropriate for that attribute.
+    """
+    default = attr.NOTHING
+    if defaults is True or (defaults is None and draw(st.booleans())):
+        default = None
+    return ((attr.ib(default=default), st.just(None)))
 
-simple_attrs = st.one_of(bare_attrs, int_attrs, str_attrs, float_attrs,
-                         dict_attrs)
 
-# Python functions support up to 255 arguments.
-list_of_attrs = st.lists(simple_attrs, average_size=9, max_size=50)
-simple_classes = list_of_attrs.map(_create_hyp_class)
+@st.composite
+def int_attrs(draw, defaults=None):
+    """
+    Generate a tuple of an attribute and a strategy that yields ints for that
+    attribute.
+    """
+    default = attr.NOTHING
+    if defaults is True or (defaults is None and draw(st.booleans())):
+        default = draw(st.integers())
+    return ((attr.ib(default=default), st.integers()))
+
+
+@st.composite
+def str_attrs(draw, defaults=None):
+    """
+    Generate a tuple of an attribute and a strategy that yields ints for that
+    attribute.
+    """
+    default = attr.NOTHING
+    if defaults is True or (defaults is None and draw(st.booleans())):
+        default = draw(st.text())
+    return ((attr.ib(default=default), st.text()))
+
+
+@st.composite
+def float_attrs(draw, defaults=None):
+    """
+    Generate a tuple of an attribute and a strategy that yields floats for that
+    attribute.
+    """
+    default = attr.NOTHING
+    if defaults is True or (defaults is None and draw(st.booleans())):
+        default = draw(st.floats())
+    return ((attr.ib(default=default), st.floats()))
+
+
+@st.composite
+def dict_attrs(draw, defaults=None):
+    """
+    Generate a tuple of an attribute and a strategy that yields dictionaries
+    for that attribute. The dictionaries map strings to integers.
+    """
+    default = attr.NOTHING
+    val_strat = st.dictionaries(keys=st.text(), values=st.integers())
+    if defaults is True or (defaults is None and draw(st.booleans())):
+        default = draw(val_strat)
+    return ((attr.ib(default=default), val_strat))
+
+
+def simple_attrs(defaults=None):
+    return (bare_attrs(defaults) | int_attrs(defaults) | str_attrs(defaults) |
+            float_attrs(defaults) | dict_attrs(defaults))
+
+
+def lists_of_attrs(defaults=None):
+    # Python functions support up to 255 arguments.
+    return st.lists(simple_attrs(defaults), average_size=9, max_size=50)
+
+
+def simple_classes(defaults=None):
+    """
+    Return a strategy that yields tuples of simple classes and values to
+    instantiate them.
+    """
+    return lists_of_attrs(defaults).flatmap(_create_hyp_class)
+
 
 # Ok, so st.recursive works by taking a base strategy (in this case,
 # simple_classes) and a special function. This function receives a strategy,
 # and returns another strategy (building on top of the base strategy).
-nested_classes = st.recursive(simple_classes, _create_hyp_nested_strategy)
+nested_classes = st.recursive(simple_classes(defaults=True),
+                              _create_hyp_nested_strategy)
