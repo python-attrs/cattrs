@@ -15,7 +15,7 @@ requirements = [
 
 setup(
     name='cattrs',
-    version='0.3.0',
+    version='0.4.0dev0',
     description="Composable complex class support for attrs.",
     long_description=readme + '\n\n' + history,
     author="Tin Tvrtković",
