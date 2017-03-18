@@ -303,12 +303,12 @@ class Converter:
             if key_type is Any:
                 val_conv = (self._structure.dispatch(val_type)
                             if not isinstance(val_type, _Union)
-                            else self._loads_union)
+                            else self._structure_union)
                 return {k: val_conv(val_type, v) for k, v in obj.items()}
             elif val_type is Any:
                 key_conv = (self._structure.dispatch(key_type)
                             if not isinstance(key_type, _Union)
-                            else self._loads_union)
+                            else self._structure_union)
                 return {key_conv(key_type, k): v for k, v in obj.items()}
             else:
                 key_conv = (self._structure.dispatch(key_type)
@@ -316,7 +316,7 @@ class Converter:
                             else self._structure_union)
                 val_conv = (self._structure.dispatch(val_type)
                             if not isinstance(val_type, _Union)
-                            else self._loads_union)
+                            else self._structure_union)
                 return {key_conv(key_type, k): val_conv(val_type, v)
                         for k, v in obj.items()}
 

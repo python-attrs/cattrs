@@ -4,10 +4,10 @@ from cattr.typing import (List, Tuple, Any, Set, MutableSet, FrozenSet,
 
 from pytest import raises
 
-from hypothesis import given
-from hypothesis.strategies import (integers, floats, text, one_of,
+from hypothesis import assume, given
+from hypothesis.strategies import (booleans, integers, floats, text, one_of,
                                    sampled_from, lists, tuples, sets,
-                                   frozensets, just, binary, choices)
+                                   frozensets, just, binary, choices, data)
 
 from cattr import Converter
 
@@ -134,6 +134,20 @@ def test_stringifying_tuples(converter: Converter, list_of_vals_and_types):
 @given(dicts_of_primitives)
 def test_structuring_dicts(converter: Converter, dict_and_type):
     d, t = dict_and_type
+
+    converted = converter.structure(d, t)
+
+    assert converted == d
+    assert converted is not d
+
+
+@given(dicts_of_primitives, data())
+def test_structuring_dicts_opts(converter: Converter, dict_and_type, data):
+    """Structure dicts, but with optional primitives."""
+    d, t = dict_and_type
+    assume(t.__args__)
+    t.__args__ = (t.__args__[0], Optional[t.__args__[1]])
+    d = {k: v if data.draw(booleans()) else None for k, v in d.items()}
 
     converted = converter.structure(d, t)
 

@@ -15,8 +15,8 @@ Contents:
    installation
    usage
    converters
-   loading
-   dumping
+   structuring
+   unstructuring
    contributing
    history
 

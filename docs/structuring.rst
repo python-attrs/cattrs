@@ -1,8 +1,8 @@
-=========================
-What you can load and how
-=========================
+==============================
+What you can structure and how
+==============================
 
-The philosophy of ``cattrs`` loading is simple: give it an object of Python
+The philosophy of ``cattrs`` structuring is simple: give it an instance of Python
 built-in types and collections, and a type describing the data you want out.
 ``cattrs`` will convert the input data into the type you want, or throw an
 exception.
@@ -28,10 +28,10 @@ loading; it will simply be passed through.
 
 .. doctest::
 
-    >>> cattr.loads(1, Any)
+    >>> cattr.structure(1, Any)
     1
     >>> d = {1: 1}
-    >>> cattr.loads(d, Any) is d
+    >>> cattr.structure(d, Any) is d
     True
 
 ``int``, ``float``, ``str``, ``bytes``
@@ -41,9 +41,9 @@ Use any of these primitive types to convert the object to the type.
 
 .. doctest::
 
-    >>> cattr.loads(1, str)
+    >>> cattr.structure(1, str)
     '1'
-    >>> cattr.loads("1", float)
+    >>> cattr.structure("1", float)
     1.0
 
 In case the conversion isn't possible, the expected exceptions will be
@@ -52,7 +52,7 @@ do the conversion yourself, directly.
 
 .. code-block:: python
 
-    >>> cattr.loads("not-an-int", int)
+    >>> cattr.structure("not-an-int", int)
     Traceback (most recent call last):
     ...
     ValueError: invalid literal for int() with base 10: 'not-an-int'
@@ -60,8 +60,8 @@ do the conversion yourself, directly.
 Enums
 ~~~~~
 
-Enums will be loaded by their values. This works even for complex values, like
-tuples.
+Enums will be structured by their values. This works even for complex values,
+like tuples.
 
 .. doctest::
 
@@ -71,14 +71,14 @@ tuples.
     ...    MAINE_COON = "maine_coon"
     ...    SACRED_BIRMAN = "birman"
     ...
-    >>> cattr.loads("siamese", CatBreed)
+    >>> cattr.structure("siamese", CatBreed)
     <CatBreed.SIAMESE: 'siamese'>
 
 Again, in case of errors, the expected exceptions will fly out.
 
 .. code-block:: python
 
-    >>> cattr.loads("alsatian", CatBreed)
+    >>> cattr.structure("alsatian", CatBreed)
     Traceback (most recent call last):
     ...
     ValueError: 'alsatian' is not a valid CatBreed
@@ -93,11 +93,11 @@ Optionals
 
 .. doctest::
 
-    >>> cattr.loads(None, int)
+    >>> cattr.structure(None, int)
     Traceback (most recent call last):
     ...
     TypeError: int() argument must be a string, a bytes-like object or a number, not 'NoneType'
-    >>> cattr.loads(None, Optional[int])
+    >>> cattr.structure(None, Optional[int])
     >>> # None was returned.
 
 Bare ``Optional`` s (non-parameterized, just ``Optional``, as opposed to
@@ -107,7 +107,7 @@ This generic type is composable with all other converters.
 
 .. doctest::
 
-    >>> cattr.loads(1, Optional[float])
+    >>> cattr.structure(1, Optional[float])
     1.0
 
 Lists
@@ -125,14 +125,14 @@ copy an iterable into a list. A bare type, for example ``Sequence`` instead of
 
 .. doctest::
 
-    >>> cattr.loads((1, 2, 3), MutableSequence[int])
+    >>> cattr.structure((1, 2, 3), MutableSequence[int])
     [1, 2, 3]
 
 These generic types are composable with all other converters.
 
 .. doctest::
 
-    >>> cattr.loads((1, None, 3), List[Optional[str]])
+    >>> cattr.structure((1, None, 3), List[Optional[str]])
     ['1', None, '3']
 
 Sets and frozensets
@@ -154,14 +154,14 @@ instead of ``MutableSet[int]``, is equivalent to ``MutableSet[Any]``.
 
 .. doctest::
 
-    >>> cattr.loads([1, 2, 3, 4], Set)
+    >>> cattr.structure([1, 2, 3, 4], Set)
     {1, 2, 3, 4}
 
 These generic types are composable with all other converters.
 
 .. doctest::
 
-    >>> cattr.loads([[1, 2], [3, 4]], Set[FrozenSet[str]])
+    >>> cattr.structure([[1, 2], [3, 4]], Set[FrozenSet[str]])
     {frozenset({'4', '3'}), frozenset({'1', '2'})}
 
 Dictionaries
@@ -184,7 +184,7 @@ they will be treated as ``Any`` too.
 .. doctest::
 
     >>> from collections import OrderedDict
-    >>> cattr.loads(OrderedDict([(1, 2), (3, 4)]), Dict)
+    >>> cattr.structure(OrderedDict([(1, 2), (3, 4)]), Dict)
     {1: 2, 3: 4}
 
 These generic types are composable with all other converters. Note both keys
@@ -192,7 +192,7 @@ and values can be converted.
 
 .. doctest::
 
-    >>> cattr.loads({1: None, 2: 2.0}, Dict[str, Optional[int]])
+    >>> cattr.structure({1: None, 2: 2.0}, Dict[str, Optional[int]])
     {'1': None, '2': 2}
 
 Homogeneous and heterogeneous tuples
@@ -213,14 +213,14 @@ In all cases a tuple will be returned. Any type parameters set to
 
 .. doctest::
 
-    >>> cattr.loads([1, 2, 3], Tuple[int, str, float])
+    >>> cattr.structure([1, 2, 3], Tuple[int, str, float])
     (1, '2', 3.0)
 
 The tuple conversion is composable with all other converters.
 
 .. doctest::
 
-    >>> cattr.loads([{1: 1}, {2: 2}], Tuple[Dict[str, float], ...])
+    >>> cattr.structure([{1: 1}, {2: 2}], Tuple[Dict[str, float], ...])
     ({'1': 1.0}, {'2': 2.0})
 
 Unions
@@ -255,7 +255,7 @@ classes:
 ``cattrs`` can deduce only instances of ``A`` will contain `x`, only instances
 of ``B`` will contain ``y``, etc. A disambiguation function using this
 information will then be generated and cached. This will happen automatically,
-the first time an appropriate union is loaded.
+the first time an appropriate union is structured.
 
 
 ``attrs`` classes
@@ -265,7 +265,7 @@ Simple ``attrs`` classes
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``attrs`` classes using primitives, collections of primitives and their own
-converters would out of the box. Given a mapping ``d`` and class ``A``,
+converters work out of the box. Given a mapping ``d`` and class ``A``,
 ``cattrs`` will simply instantiate ``A`` with ``d`` unpacked.
 
 .. doctest::
@@ -275,12 +275,12 @@ converters would out of the box. Given a mapping ``d`` and class ``A``,
     ...     a = attr.ib()
     ...     b = attr.ib(convert=int)
     ...
-    >>> cattr.loads({'a': 1, 'b': '2'}, A)
+    >>> cattr.structure({'a': 1, 'b': '2'}, A)
     A(a=1, b=2)
 
-``attrs`` classes deconstructed into tuples can be loaded using
-``cattr.loads_attrs_fromtuple`` (``fromtuple`` as in the opposite of
-``attr.astuple`` and ``cattr.astuple``).
+``attrs`` classes deconstructed into tuples can be structured using
+``cattr.structure_attrs_fromtuple`` (``fromtuple`` as in the opposite of
+``attr.astuple`` and ``converter.unstructure_attrs_astuple``).
 
 .. doctest::
 
@@ -289,26 +289,26 @@ converters would out of the box. Given a mapping ``d`` and class ``A``,
     ...     a = attr.ib()
     ...     b = attr.ib(convert=int)
     ...
-    >>> cattr.loads_attrs_fromtuple(['string', '2'], A)
+    >>> cattr.structure_attrs_fromtuple(['string', '2'], A)
     A(a='string', b=2)
 
-Loading from tuples can be made the default by assigning to the ``loads_attr``
+Loading from tuples can be made the default by assigning to the ``structure_attr``
 property of ``Converter`` objects.
 
 .. doctest::
 
     >>> converter = cattr.Converter()
-    >>> converter.loads_attrs = converter.loads_attrs_fromtuple
+    >>> converter.structure_attrs = converter.structure_attrs_fromtuple
     >>> @attr.s
     ... class A:
     ...     a = attr.ib()
     ...     b = attr.ib(convert=int)
     ...
-    >>> converter.loads(['string', '2'], A)
+    >>> converter.structure(['string', '2'], A)
     A(a='string', b=2)
 
-Loading from tuples can also be made the default for specific classes only;
-see registering custom loading hooks below.
+Structuring from tuples can also be made the default for specific classes only;
+see registering custom structure hooks below.
 
 Complex ``attrs`` classes
 ~~~~~~~~~~~~~~~~~~~~~~~~~

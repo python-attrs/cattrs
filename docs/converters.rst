@@ -3,9 +3,10 @@ Converters
 ==========
 
 All ``cattrs`` functionality is exposed through a ``cattr.Converter`` object.
-Global ``cattrs`` functions, such as ``cattr.loads()``, use a single global
-converter. Changes done to this global converter, such as registering new
-``loads`` and ``dumps`` hooks, affect all code using the global functions.
+Global ``cattrs`` functions, such as ``cattr.unstructure()``, use a single
+global converter. Changes done to this global converter, such as registering new
+``structure`` and ``unstructure`` hooks, affect all code using the global
+functions.
 
 Global converter
 ----------------
@@ -13,10 +14,10 @@ Global converter
 A global converter is provided for convenience as ``cattr.global_converter``.
 The following functions implicitly use this global converter:
 
-* ``cattr.loads``
-* ``cattr.dumps``
-* ``cattr.loads_attr_fromtuple``
-* ``cattr.loads_attr_fromdict``
+* ``cattr.structure``
+* ``cattr.unstructure``
+* ``cattr.structure_attr_fromtuple``
+* ``cattr.structure_attr_fromdict``
 
 Changes made to the global converter will affect the behavior of these
 functions.
@@ -30,8 +31,8 @@ Converter objects
 To create a private converter, simply instantiate a ``cattr.Converter``.
 Currently, a converter contains the following state:
 
-* a registry of dumps hooks, backed by a ``singledispatch``.
-* a registry of loads hooks, backed by a different ``singledispatch``.
+* a registry of unstructure hooks, backed by a ``singledispatch``.
+* a registry of structure hooks, backed by a different ``singledispatch``.
 * a LRU cache of union disambiguation functions.
 * a ``dict_factory`` callable, used for creating ``dicts`` when dumping
   ``attrs`` classes.

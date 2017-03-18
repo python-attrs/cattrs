@@ -49,7 +49,7 @@ A taste:
 
     >>> from enum import unique, Enum
     >>> from typing import List, Sequence, Union
-    >>> from cattr import loads, dumps
+    >>> from cattr import structure, unstructure
     >>> import attr
     >>> from attr.validators import instance_of, optional
     >>>
@@ -74,19 +74,18 @@ A taste:
     ...     cuteness = attr.ib(validator=instance_of(int))
     ...     chip = attr.ib(validator=optional(instance_of(DogMicrochip)))
     ...
-    >>> p = dumps([Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)),
-    ...            Cat(breed=CatBreed.MAINE_COON, names=('Fluffly', 'Fluffer'))])
+    >>> p = unstructure([Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)),
+    ...                  Cat(breed=CatBreed.MAINE_COON, names=('Fluffly', 'Fluffer'))])
     ...
     >>> print(p)
     [{'chip': {'chip_id': 1, 'time_chipped': 10.0}, 'cuteness': 1}, {'names': ('Fluffly', 'Fluffer'), 'breed': 'maine_coon'}]
-    >>> print(loads(p, List[Union[Dog, Cat]]))
+    >>> print(structure(p, List[Union[Dog, Cat]]))
     [Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)), Cat(breed=<CatBreed.MAINE_COON: 'maine_coon'>, names=['Fluffly', 'Fluffer'])]
 
-``dumps`` and ``loads`` were chosen for their similarity to the functionality of
-modules like ``marshal``, ``pickle`` and ``json``. Consider unstructured data a
-low-level representation that needs to be converted to structured data to be
-handled, and use ``loads``. When you're done, ``dumps`` the data to its
-unstructured form and pass it along to another library or module.
+Consider unstructured data a low-level representation that needs to be converted
+to structured data to be handled, and use ``structure``. When you're done,
+``unstructure`` the data to its unstructured form and pass it along to another
+library or module.
 
 * Free software: MIT license
 * Documentation: https://cattrs.readthedocs.io.
@@ -109,7 +108,7 @@ Features
   * Enumeration instances are converted to their values.
   * Other types are let through without conversion. This includes types such as
     integers, dictionaries, lists and instances of non-``attrs`` classes.
-  * Custom converters for any type can be registered using ``register_dumps_hook``.
+  * Custom converters for any type can be registered using ``register_unstructure_hook``.
 
 * Converts unstructured data into structured data, recursively, according to
   your specification given as a type. The following types are supported:
@@ -131,7 +130,7 @@ Features
     have a unique required field.
   * ``typing.Union`` s of anything, given that you provide a disambiguation
     function for it.
-  * Custom converters for any type can be registered using ``register_loads_hook``.
+  * Custom converters for any type can be registered using ``register_structure_hook``.
 
 Credits
 ---------
