@@ -2,7 +2,10 @@
 History
 =======
 
-0.3.0 (UNRELEASED)
+0.4.0 (UNRELEASED)
+------------------
+
+0.3.0 (2017-03-18)
 ------------------
 
 * Python 3.4 is no longer supported.
