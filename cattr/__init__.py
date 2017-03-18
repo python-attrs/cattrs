@@ -2,7 +2,6 @@ from .converters import Converter
 
 __author__ = 'Tin Tvrtković'
 __email__ = 'tinchester@gmail.com'
-__version__ = '0.2.0'
 
 
 global_converter = Converter()
