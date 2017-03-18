@@ -6,7 +6,7 @@ __email__ = 'tinchester@gmail.com'
 
 global_converter = Converter()
 
-dumps = global_converter.dumps
-loads = global_converter.loads
-loads_attrs_fromtuple = global_converter.loads_attrs_fromtuple
-loads_attrs_fromdict = global_converter.loads_attrs_fromdict
+unstructure = global_converter.unstructure
+structure = global_converter.structure
+structure_attrs_fromtuple = global_converter.structure_attrs_fromtuple
+structure_attrs_fromdict = global_converter.structure_attrs_fromdict

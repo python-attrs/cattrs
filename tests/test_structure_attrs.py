@@ -9,13 +9,13 @@ from . import simple_classes
 
 
 @given(simple_classes())
-def test_load_simple_from_dict(converter: Converter, cl_and_vals):
-    """Test loading non-nested attrs classes dumped with asdict."""
+def test_structure_simple_from_dict(converter: Converter, cl_and_vals):
+    """Test structuring non-nested attrs classes dumped with asdict."""
     cl, vals = cl_and_vals
     obj = cl(*vals)
 
     dumped = asdict(obj)
-    loaded = converter.loads(dumped, cl)
+    loaded = converter.structure(dumped, cl)
 
     assert obj == loaded
 
@@ -26,27 +26,27 @@ def test_roundtrip(converter: Converter, cl_and_vals):
     cl, vals = cl_and_vals
     obj = cl(*vals)
 
-    dumped = converter.dumps(obj)
-    loaded = converter.loads(dumped, cl)
+    dumped = converter.unstructure(obj)
+    loaded = converter.structure(dumped, cl)
 
     assert obj == loaded
 
 
 @given(simple_classes())
-def test_load_tuple(converter: Converter, cl_and_vals):
+def test_structure_tuple(converter: Converter, cl_and_vals):
     """Test loading from a tuple, by registering the loader."""
     cl, vals = cl_and_vals
-    converter.register_loads_hook(cl, converter.loads_attrs_fromtuple)
+    converter.register_structure_hook(cl, converter.structure_attrs_fromtuple)
     obj = cl(*vals)
 
     dumped = astuple(obj)
-    loaded = converter.loads(dumped, cl)
+    loaded = converter.structure(dumped, cl)
 
     assert obj == loaded
 
 
 @given(simple_classes(defaults=False), simple_classes(defaults=False))
-def test_loads_union(converter: Converter, cl_and_vals_a, cl_and_vals_b):
+def test_structure_union(converter: Converter, cl_and_vals_a, cl_and_vals_b):
     cl_a, vals_a = cl_and_vals_a
     cl_b, vals_b = cl_and_vals_b
     a_field_names = {a.name for a in fields(cl_a)}
@@ -58,6 +58,6 @@ def test_loads_union(converter: Converter, cl_and_vals_a, cl_and_vals_b):
     if len(a_field_names) > len(common_names):
         obj = cl_a(*vals_a)
         dumped = asdict(obj)
-        res = converter.loads(dumped, Union[cl_a, cl_b])
+        res = converter.structure(dumped, Union[cl_a, cl_b])
         assert isinstance(res, cl_a)
         assert obj == res
