@@ -7,10 +7,11 @@ from ._compat import Callable, Mapping, Sequence, Type, Union
 from attr import fields, NOTHING
 
 
-def create_uniq_field_dis_func(*cls: Sequence[Type]) -> Callable:
+def create_uniq_field_dis_func(*cls):
     """Given attr classes, generate a disambiguation function.
 
     The function is based on unique required fields."""
+    # type: (*Sequence[Type]) -> Callable
     if len(cls) < 2:
         raise ValueError('At least two classes required.')
     cls_and_req_attrs = [(cl, set(at.name for at in fields(cl)
@@ -38,7 +39,8 @@ def create_uniq_field_dis_func(*cls: Sequence[Type]) -> Callable:
                                  "{} and {}.".format(fallback, cl))
             fallback = cl
 
-    def dis_func(data: Mapping) -> Union:
+    def dis_func(data):
+        # type: (Mapping) -> Union
         for k, v in uniq_attrs_dict.items():
             if k in data:
                 return v
