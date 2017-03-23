@@ -3,7 +3,7 @@ from functools import lru_cache, singledispatch
 from ._compat import (Callable, List, Mapping, Sequence, Type, Union, Optional,
                       GenericMeta, MutableSequence, TypeVar, Any, FrozenSet,
                       MutableSet, Set, MutableMapping, Dict, Tuple, Iterable,
-                      _Union)
+                      _Union, unicode, bytes)
 
 from attr import NOTHING
 from attr.validators import _InstanceOfValidator, _OptionalValidator
@@ -16,13 +16,13 @@ V = TypeVar('V')
 
 
 @unique
-class UnstructureStrategy(str, Enum):
+class UnstructureStrategy(unicode, Enum):
     """`attrs` classes unstructuring strategies."""
     AS_DICT = "asdict"
     AS_TUPLE = "astuple"
 
 
-UnstructStratType = Union[str, UnstructureStrategy]
+UnstructStratType = Union[unicode, UnstructureStrategy]
 
 
 class Converter:
@@ -39,7 +39,7 @@ class Converter:
         # Per-instance register of to-Python converters.
         unstructure = singledispatch(self._unstructure)
         unstructure.register(Enum, self._unstructure_enum)
-        unstructure.register(str, self._unstructure_identity)
+        unstructure.register(unicode, self._unstructure_identity)
         unstructure.register(bytes, self._unstructure_identity)
         unstructure.register(Sequence, self._unstructure_seq)
         unstructure.register(Mapping, self._unstructure_mapping)
@@ -62,7 +62,7 @@ class Converter:
         structure.register(MutableMapping, self._structure_dict)
         structure.register(Tuple, self._structure_tuple)
         structure.register(_Union, self._structure_union)
-        structure.register(str, self._structure_call)  # Strings are sequences.
+        structure.register(unicode, self._structure_call)  # Strings are sequences.
         structure.register(bytes, self._structure_call)  # Bytes are sequences.
         structure.register(int, self._structure_call)
         structure.register(float, self._structure_call)

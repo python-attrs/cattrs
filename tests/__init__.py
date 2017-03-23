@@ -10,10 +10,11 @@ import attr
 
 from attr import make_class
 from hypothesis import strategies as st
+from cattr._compat import bytes, unicode
 
 primitive_strategies = st.sampled_from([(st.integers(), int),
                                         (st.floats(allow_nan=False), float),
-                                        (st.text(), str),
+                                        (st.text(), unicode),
                                         (st.binary(), bytes)])
 
 

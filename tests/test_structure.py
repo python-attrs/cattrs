@@ -10,13 +10,14 @@ from hypothesis.strategies import (booleans, integers, floats, text, one_of,
                                    frozensets, just, binary, choices, data)
 
 from cattr import Converter
+from cattr._compat import bytes, unicode
 
 from . import (primitive_strategies, seqs_of_primitives, lists_of_primitives,
                dicts_of_primitives, enums_of_primitives)
 
 ints_and_type = tuples(integers(), just(int))
 floats_and_type = tuples(floats(allow_nan=False), just(float))
-strs_and_type = tuples(text(), just(str))
+strs_and_type = tuples(text(), just(unicode))
 bytes_and_type = tuples(binary(), just(bytes))
 
 primitives_and_type = one_of(ints_and_type, floats_and_type, strs_and_type,
@@ -92,11 +93,11 @@ def test_stringifying_sets(converter, set_and_type):
     # type: (Converter, Any) -> None
     set_, input_set_type = set_and_type
 
-    input_set_type.__args__ = (str,)
+    input_set_type.__args__ = (unicode,)
     converted = converter.structure(set_, input_set_type)
     assert len(converted) == len(set_)
     for e in set_:
-        assert str(e) in converted
+        assert unicode(e) in converted
 
 
 @given(lists(primitives_and_type, min_size=1))
@@ -123,17 +124,17 @@ def test_stringifying_tuples(converter, list_of_vals_and_types):
     """Stringify all elements of a heterogeneous tuple."""
     # type: (Converter, List[Any]) -> None
     vals = [e[0] for e in list_of_vals_and_types]
-    t = Tuple[(str,) * len(list_of_vals_and_types)]
+    t = Tuple[(unicode,) * len(list_of_vals_and_types)]
 
     converted = converter.structure(vals, t)
 
     assert isinstance(converted, tuple)
 
     for x, y in zip(vals, converted):
-        assert str(x) == y
+        assert unicode(x) == y
 
     for x in converted:
-        assert isinstance(x, str)
+        assert isinstance(x, unicode)
 
 
 @given(dicts_of_primitives)
@@ -167,10 +168,10 @@ def test_stringifying_dicts(converter, dict_and_type):
     # type: (Converter, Any) -> None
     d, t = dict_and_type
 
-    converted = converter.structure(d, Dict[str, str])
+    converted = converter.structure(d, Dict[unicode, unicode])
 
     for k, v in d.items():
-        assert converted[str(k)] == str(v)
+        assert converted[unicode(k)] == unicode(v)
 
 
 @given(primitives_and_type)
@@ -192,7 +193,7 @@ def test_structuring_lists_of_opt(converter, list_and_type):
     l.append(None)
     args = t.__args__
 
-    if args and args[0] not in (Any, str, Optional):
+    if args and args[0] not in (Any, unicode, Optional):
         with raises(TypeError):
             converter.structure(l, t)
 
@@ -215,13 +216,13 @@ def test_stringifying_lists_of_opt(converter, list_and_type):
 
     l.append(None)
 
-    converted = converter.structure(l, List[Optional[str]])
+    converted = converter.structure(l, List[Optional[unicode]])
 
     for x, y in zip(l, converted):
         if x is None:
             assert x is y
         else:
-            assert str(x) == y
+            assert unicode(x) == y
 
 
 @given(lists(integers()))
@@ -231,17 +232,17 @@ def test_structuring_primitive_union_hook(converter, ints):
 
     def structure_hook(cl, val):
         """Even ints are passed through, odd are stringified."""
-        return val if val % 2 == 0 else str(val)
+        return val if val % 2 == 0 else unicode(val)
 
-    converter.register_structure_hook(Union[str, int], structure_hook)
+    converter.register_structure_hook(Union[unicode, int], structure_hook)
 
-    converted = converter.structure(ints, List[Union[str, int]])
+    converted = converter.structure(ints, List[Union[unicode, int]])
 
     for x, y in zip(ints, converted):
         if x % 2 == 0:
             assert x == y
         else:
-            assert str(x) == y
+            assert unicode(x) == y
 
 
 @given(choices(), enums_of_primitives())
@@ -259,4 +260,4 @@ def test_structuring_unsupported(converter):
     with raises(ValueError):
         converter.structure(1, Converter)
     with raises(ValueError):
-        converter.structure(1, Union[int, str])
+        converter.structure(1, Union[int, unicode])
