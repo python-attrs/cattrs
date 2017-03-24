@@ -3,8 +3,8 @@ import keyword
 
 from collections import OrderedDict
 from enum import Enum
-from cattr.typing import (Tuple, Sequence, MutableSequence, List, Dict,
-                          MutableMapping, Mapping, Any)
+from cattr._compat import (Tuple, Sequence, MutableSequence, List, Dict,
+                           MutableMapping, Mapping, Any)
 
 import attr
 

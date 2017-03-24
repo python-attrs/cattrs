@@ -1,6 +1,6 @@
 """Test structuring of collections and primitives."""
-from cattr.typing import (List, Tuple, Any, Set, MutableSet, FrozenSet,
-                          Dict, Optional, Union)
+from cattr._compat import (List, Tuple, Any, Set, MutableSet, FrozenSet,
+                           Dict, Optional, Union)
 
 from pytest import raises
 

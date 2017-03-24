@@ -1,10 +1,13 @@
 import sys
 
 version_info = sys.version_info[0:3]
+use_vendored_typing = (
+    (3, 0, 0) <= version_info < (3, 5, 4) or
+    (3, 6, 0) <= version_info < (3, 6, 1))
 
-if version_info < (3, 5, 4) or (3, 6, 0) <= version_info < (3, 6, 1):
-    from .typing import *  # noqa
-    from .typing import _Union  # noqa
+if use_vendored_typing:
+    from .vendor.python3.typing import *  # noqa
+    from .vendor.python3.typing import _Union  # noqa
 else:
     from typing import *  # noqa
     from typing import _Union  # noqa
