@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import sys
 
 from setuptools import setup
 
@@ -12,6 +13,14 @@ with open('HISTORY.rst') as history_file:
 requirements = [
     "attrs >= 16.2",
 ]
+
+if sys.version_info < (3, 0):
+    requirements.extend([
+        "functools32 >= 3.2.3; python_version<'3.0'",
+        "singledispatch >= 3.4.0.3; python_version<'3.0'",
+        "typing  >= 3.5.3; python_version<'3.0'",
+    ])
+
 
 setup(
     name='cattrs',
@@ -36,6 +45,7 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
+        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',

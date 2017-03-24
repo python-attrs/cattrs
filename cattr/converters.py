@@ -1,9 +1,10 @@
 from enum import unique, Enum
-from functools import lru_cache, singledispatch
+from ._compat import lru_cache, singledispatch
 from ._compat import (Callable, List, Mapping, Sequence, Type, Union, Optional,
                       GenericMeta, MutableSequence, TypeVar, Any, FrozenSet,
                       MutableSet, Set, MutableMapping, Dict, Tuple, Iterable,
-                      _Union, unicode, bytes)
+                      _Union)
+from ._compat import unicode, bytes
 
 from attr import NOTHING
 from attr.validators import _InstanceOfValidator, _OptionalValidator
@@ -27,8 +28,7 @@ UnstructStratType = Union[unicode, UnstructureStrategy]
 
 class Converter:
     """Converts between structured and unstructured data."""
-    def __init__(self, *,
-                 dict_factory=dict,
+    def __init__(self, dict_factory=dict,
                  unstruct_strat=UnstructureStrategy.AS_DICT  # type: UnstructStratType
                  ):
 
