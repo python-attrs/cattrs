@@ -48,10 +48,9 @@ A taste:
 .. code-block:: python
 
     >>> from enum import unique, Enum
-    >>> from typing import List, Sequence, Union
-    >>> from cattr import structure, unstructure
+    >>> from typing import List, Optional, Sequence, Union
+    >>> from cattr import structure, unstructure, typed
     >>> import attr
-    >>> from attr.validators import instance_of, optional
     >>>
     >>> @unique
     ... class CatBreed(Enum):
@@ -61,18 +60,18 @@ A taste:
     ...
     >>> @attr.s
     ... class Cat:
-    ...     breed = attr.ib(validator=instance_of(CatBreed))
-    ...     names = attr.ib(validator=instance_of(Sequence[str]))
+    ...     breed = typed(CatBreed)
+    ...     names = typed(Sequence[str])
     ...
     >>> @attr.s
     ... class DogMicrochip:
     ...     chip_id = attr.ib()
-    ...     time_chipped = attr.ib(validator=instance_of(float))
+    ...     time_chipped = typed(float)
     ...
     >>> @attr.s
     ... class Dog:
-    ...     cuteness = attr.ib(validator=instance_of(int))
-    ...     chip = attr.ib(validator=optional(instance_of(DogMicrochip)))
+    ...     cuteness = typed(int)
+    ...     chip = typed(Optional[DogMicrochip])
     ...
     >>> p = unstructure([Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)),
     ...                  Cat(breed=CatBreed.MAINE_COON, names=('Fluffly', 'Fluffer'))])
@@ -85,7 +84,8 @@ A taste:
 Consider unstructured data a low-level representation that needs to be converted
 to structured data to be handled, and use ``structure``. When you're done,
 ``unstructure`` the data to its unstructured form and pass it along to another
-library or module.
+library or module. Use ``cattr.typed`` to add type metadata to attributes, so
+``cattrs`` will know how to structure and destructure them.
 
 * Free software: MIT license
 * Documentation: https://cattrs.readthedocs.io.
@@ -104,7 +104,7 @@ Features
 
 * Converts structured data into unstructured data, recursively:
 
-  * ``attrs`` classes are converted into dictionaries, in a way similar to ``attrs.asdict``.
+  * ``attrs`` classes are converted into dictionaries, in a way similar to ``attr.asdict``.
   * Enumeration instances are converted to their values.
   * Other types are let through without conversion. This includes types such as
     integers, dictionaries, lists and instances of non-``attrs`` classes.

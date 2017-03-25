@@ -5,6 +5,7 @@ from ._compat import (Callable, List, Mapping, Sequence, Type, Union, Optional,
                       MutableSet, Set, MutableMapping, Dict, Tuple, Iterable,
                       _Union)
 from ._compat import unicode, bytes, is_py2
+from .metadata import TYPE_METADATA_KEY
 
 from attr import NOTHING
 from attr.validators import _InstanceOfValidator, _OptionalValidator
@@ -223,30 +224,22 @@ class Converter(object):
         """Load an attrs class from a sequence (tuple)."""
         conv_obj = []  # A list of converter parameters.
         for a, value in zip(cl.__attrs_attrs__, obj):
-            # We detect the type by the validator.
-            validator = a.validator
-            converted = self._handle_attr_attribute(a.name, validator, value)
+            # We detect the type by the metadata.
+            converted = self._handle_attr_attribute(a, a.name, value)
             conv_obj.append(converted)
 
         return cl(*conv_obj)
 
-    def _handle_attr_attribute(self, name, validator, value):
-        """Handle an individual attrs validator."""
-        if validator is None:
-            # No validator.
+    def _handle_attr_attribute(self, a, name, value):
+        """Handle an individual attrs attribute."""
+        type_ = a.metadata.get(TYPE_METADATA_KEY)
+        if type_ is None:
+            # No type metadata.
             return value
-        elif isinstance(validator, _OptionalValidator):
-            # This is an Optional[something]
-            if value is None:
-                return None
-            return self._handle_attr_attribute(name, validator.validator,
-                                               value)
-        elif isinstance(validator, _InstanceOfValidator):
-            type_ = validator.type
-            return self._structure.dispatch(type_)(type_, value)
-        else:
-            # An unknown validator.
-            return value
+        if isinstance(type_, _Union):
+            # This is a union.
+            return self._structure_union(type_, value)
+        return self._structure.dispatch(type_)(type_, value)
 
     def structure_attrs_fromdict(self, obj, cl):
         # type: (Mapping, Type) -> Any
@@ -255,32 +248,27 @@ class Converter(object):
         conv_obj = obj.copy()  # Dict of converted parameters.
         for a in cl.__attrs_attrs__:
             name = a.name
-            # We detect the type by the validator.
-            validator = a.validator
-            converted = self._handle_attr_mapping_attribute(name, validator,
-                                                            obj)
+            # We detect the type by metadata.
+            converted = self._handle_attr_mapping_attribute(a, name, obj)
             if converted is NOTHING:
                 continue
             conv_obj[name] = converted
 
         return cl(**conv_obj)
 
-    def _handle_attr_mapping_attribute(self, name, val, mapping):
-        """Handle an individual attrs validator."""
-        if val is None:
-            # No validator.
+    def _handle_attr_mapping_attribute(self, a, name, mapping):
+        """Handle an individual attrs attribute structuring."""
+        type_ = a.metadata.get(TYPE_METADATA_KEY)
+        if type_ is None:
+            # No type.
             return mapping[name]
-        elif isinstance(val, _OptionalValidator):
-            # This is an Optional[something]
-            if name not in mapping or mapping[name] is None:
+        if isinstance(type_, _Union):
+            # This is a union.
+            val = mapping.get(name, NOTHING)
+            if NoneType in type_.__args__ and val is NOTHING:
                 return NOTHING
-            return self._handle_attr_mapping_attribute(name, val.validator,
-                                                       mapping)
-        elif isinstance(val, _InstanceOfValidator):
-            type_ = val.type
-            return self._structure.dispatch(type_)(type_, mapping.get(name))
-        else:
-            return mapping[name]
+            return self._structure_union(type_, val)
+        return self._structure.dispatch(type_)(type_, mapping.get(a.name))
 
     def _structure_list(self, cl, obj):
         # type: (Type[GenericMeta], Iterable[T]) -> List[T]
