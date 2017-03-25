@@ -18,7 +18,11 @@ if sys.version_info < (3, 0):
     requirements.extend([
         "functools32 >= 3.2.3; python_version<'3.0'",
         "singledispatch >= 3.4.0.3; python_version<'3.0'",
-        "typing  >= 3.5.3; python_version<'3.0'",
+        # TODO: uncomment this typing >= 3.6.1 is released with the fix that
+        # allows singledispatch to in check for type declarations for
+        # subclasses
+        #
+        # "typing >= 3.5.3; python_version<'3.0'",
     ])
 
 
