@@ -6,6 +6,9 @@ History
 ------------------
 
 * `Converter.loads` is now `Converter.structure`, and `Converter.dumps` is now `Converter.unstructure`.
+* Support for Python 2.7 added
+* Moved ``cattr.typing`` to ``cattr.vendor.typing`` to support different vendored versions of typing.py for python2 and python3
+
 
 0.3.0 (2017-03-18)
 ------------------

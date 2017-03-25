@@ -94,7 +94,7 @@ library or module.
 .. warning::
 
     When using Python 2.7 or 3.5 earlier or equal to 3.5.3 or Python 3.6.0, please use
-    the bundled ``cattr.vendor.pythonX.typing`` module instead of Python's standard ``typing``
+    the bundled ``cattr.vendor.typing`` module instead of Python's standard ``typing``
     module. These versions of ``typing`` are incompatible with ``cattrs``. If
     your Python version is a later one, please use Python's ``typing`` instead.
 

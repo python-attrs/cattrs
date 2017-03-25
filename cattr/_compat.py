@@ -7,12 +7,9 @@ use_vendored_typing = (
 is_py2 = version_info[0] == 2
 is_py3 = version_info[0] == 3
 
-if is_py2:
-    from .vendor.python2.typing import *  # noqa
-    from .vendor.python2.typing import _Union  # noqa
-elif use_vendored_typing:
-    from .vendor.python3.typing import *  # noqa
-    from .vendor.python3.typing import _Union  # noqa
+if is_py2 or use_vendored_typing:
+    from .vendor.typing import *  # noqa
+    from .vendor.typing import _Union  # noqa
 else:
     from typing import *  # noqa
     from typing import _Union  # noqa

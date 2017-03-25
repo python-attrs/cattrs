@@ -277,5 +277,5 @@ texinfo_documents = [
 # texinfo_no_detailmenu = False
 
 doctest_global_setup = "import attr, cattr;" \
-                       "from cattr.typing import *;" \
+                       "from cattr.vendor.typing import *;" \
                        "from enum import Enum, unique"
