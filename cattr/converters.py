@@ -4,7 +4,7 @@ from ._compat import (Callable, List, Mapping, Sequence, Type, Union, Optional,
                       GenericMeta, MutableSequence, TypeVar, Any, FrozenSet,
                       MutableSet, Set, MutableMapping, Dict, Tuple, Iterable,
                       _Union)
-from ._compat import unicode, bytes
+from ._compat import unicode, bytes, is_py2
 
 from attr import NOTHING
 from attr.validators import _InstanceOfValidator, _OptionalValidator
@@ -17,19 +17,16 @@ V = TypeVar('V')
 
 
 @unique
-class UnstructureStrategy(unicode, Enum):
+class UnstructureStrategy(Enum):
     """`attrs` classes unstructuring strategies."""
     AS_DICT = "asdict"
     AS_TUPLE = "astuple"
 
 
-UnstructStratType = Union[unicode, UnstructureStrategy]
-
-
-class Converter:
+class Converter(object):
     """Converts between structured and unstructured data."""
     def __init__(self, dict_factory=dict,
-                 unstruct_strat=UnstructureStrategy.AS_DICT  # type: UnstructStratType
+                 unstruct_strat=UnstructureStrategy.AS_DICT  # type: UnstructureStrategy
                  ):
 
         # Create a per-instance cache.
@@ -62,7 +59,11 @@ class Converter:
         structure.register(MutableMapping, self._structure_dict)
         structure.register(Tuple, self._structure_tuple)
         structure.register(_Union, self._structure_union)
-        structure.register(unicode, self._structure_call)  # Strings are sequences.
+        if is_py2:
+            # handle unicode with care in python2
+            structure.register(unicode, self._structure_unicode)
+        else:
+            structure.register(unicode, self._structure_call)  # Strings are sequences.
         structure.register(bytes, self._structure_call)  # Bytes are sequences.
         structure.register(int, self._structure_call)
         structure.register(float, self._structure_call)
@@ -73,22 +74,6 @@ class Converter:
         self._dict_factory = dict_factory
         # Unions are instances now, not classes. We use different registry.
         self._union_registry = {}
-
-    @property
-    def unstruct_strat(self):
-        """The default way of unstructuring ``attrs`` classes."""
-        # type: () -> UnstructureStrategy
-        return (UnstructureStrategy.AS_DICT
-                if self.unstructure_attrs is self.unstructure_attrs_asdict
-                else UnstructureStrategy.AS_TUPLE)
-
-    @unstruct_strat.setter
-    def unstruct_strat(self, val):
-        # type: (UnstructureStrategy) -> None
-        if val is UnstructureStrategy.AS_DICT:
-            self.unstructure_attrs = self.unstructure_attrs_asdict
-        else:
-            self.unstructure_attrs = self.unstructure_attrs_astuple
 
     def register_unstructure_hook(self, cls, func):
         """Register a class-to-primitive converter function for a class.
@@ -134,6 +119,12 @@ class Converter:
         return (self.unstructure_attrs(obj)
                 if getattr(obj.__class__, "__attrs_attrs__", None) is not None
                 else obj)
+
+    def unstructure_attrs(self, obj):
+        if self.unstruct_strat is UnstructureStrategy.AS_DICT:
+            return self.unstructure_attrs_asdict(obj)
+        else:
+            return self.unstructure_attrs_astuple(obj)
 
     def unstructure_attrs_asdict(self, obj):
         """Our version of `attrs.asdict`, so we can call back to us."""
@@ -200,6 +191,13 @@ class Converter:
         etc.
         """
         return cl(obj)
+
+    def _structure_unicode(self, cl, obj):
+        """Just call ``cl`` with the given ``obj``"""
+        if not isinstance(obj, (bytes, unicode)):
+            return cl(str(obj))
+        else:
+            return obj
 
     # Attrs classes.
 
