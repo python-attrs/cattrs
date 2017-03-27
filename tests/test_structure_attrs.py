@@ -10,8 +10,8 @@ from . import simple_classes
 
 @given(simple_classes())
 def test_structure_simple_from_dict(converter, cl_and_vals):
-    """Test structuring non-nested attrs classes dumped with asdict."""
     # type: (Converter, Any) -> None
+    """Test structuring non-nested attrs classes dumped with asdict."""
     cl, vals = cl_and_vals
     obj = cl(*vals)
 
@@ -23,8 +23,8 @@ def test_structure_simple_from_dict(converter, cl_and_vals):
 
 @given(simple_classes())
 def test_roundtrip(converter, cl_and_vals):
-    """We dump the class, then we load it."""
     # type: (Converter, Any) -> None
+    """We dump the class, then we load it."""
     cl, vals = cl_and_vals
     obj = cl(*vals)
 
@@ -36,8 +36,8 @@ def test_roundtrip(converter, cl_and_vals):
 
 @given(simple_classes())
 def test_structure_tuple(converter, cl_and_vals):
-    """Test loading from a tuple, by registering the loader."""
     # type: (Converter, Any) -> None
+    """Test loading from a tuple, by registering the loader."""
     cl, vals = cl_and_vals
     converter.register_structure_hook(cl, converter.structure_attrs_fromtuple)
     obj = cl(*vals)

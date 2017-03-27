@@ -8,10 +8,10 @@ from attr import fields, NOTHING
 
 
 def create_uniq_field_dis_func(*cls):
+    # type: (*Sequence[Type]) -> Callable
     """Given attr classes, generate a disambiguation function.
 
     The function is based on unique required fields."""
-    # type: (*Sequence[Type]) -> Callable
     if len(cls) < 2:
         raise ValueError('At least two classes required.')
     cls_and_req_attrs = [(cl, set(at.name for at in fields(cl)
