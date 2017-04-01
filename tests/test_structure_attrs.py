@@ -9,7 +9,8 @@ from . import simple_classes
 
 
 @given(simple_classes())
-def test_structure_simple_from_dict(converter: Converter, cl_and_vals):
+def test_structure_simple_from_dict(converter, cl_and_vals):
+    # type: (Converter, Any) -> None
     """Test structuring non-nested attrs classes dumped with asdict."""
     cl, vals = cl_and_vals
     obj = cl(*vals)
@@ -21,7 +22,8 @@ def test_structure_simple_from_dict(converter: Converter, cl_and_vals):
 
 
 @given(simple_classes())
-def test_roundtrip(converter: Converter, cl_and_vals):
+def test_roundtrip(converter, cl_and_vals):
+    # type: (Converter, Any) -> None
     """We dump the class, then we load it."""
     cl, vals = cl_and_vals
     obj = cl(*vals)
@@ -33,7 +35,8 @@ def test_roundtrip(converter: Converter, cl_and_vals):
 
 
 @given(simple_classes())
-def test_structure_tuple(converter: Converter, cl_and_vals):
+def test_structure_tuple(converter, cl_and_vals):
+    # type: (Converter, Any) -> None
     """Test loading from a tuple, by registering the loader."""
     cl, vals = cl_and_vals
     converter.register_structure_hook(cl, converter.structure_attrs_fromtuple)
@@ -46,7 +49,8 @@ def test_structure_tuple(converter: Converter, cl_and_vals):
 
 
 @given(simple_classes(defaults=False), simple_classes(defaults=False))
-def test_structure_union(converter: Converter, cl_and_vals_a, cl_and_vals_b):
+def test_structure_union(converter, cl_and_vals_a, cl_and_vals_b):
+    # type: (Converter, Any, Any) -> None
     cl_a, vals_a = cl_and_vals_a
     cl_b, vals_b = cl_and_vals_b
     a_field_names = {a.name for a in fields(cl_a)}

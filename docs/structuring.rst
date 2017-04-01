@@ -13,7 +13,7 @@ demonstrated further in the examples.
 .. warning::
 
     When using Python 3.5 earlier or equal to 3.5.3 or Python 3.6.0, please use
-    the bundled ``cattr.typing`` module instead of Python's standard ``typing``
+    the bundled ``cattr.vendor.typing`` module instead of Python's standard ``typing``
     module. These versions of ``typing`` are incompatible with ``cattrs``. If
     your Python version is a later one, please use Python's ``typing`` instead.
 

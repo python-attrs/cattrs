@@ -7,7 +7,8 @@ from ._compat import Callable, Mapping, Sequence, Type, Union
 from attr import fields, NOTHING
 
 
-def create_uniq_field_dis_func(*cls: Sequence[Type]) -> Callable:
+def create_uniq_field_dis_func(*cls):
+    # type: (*Sequence[Type]) -> Callable
     """Given attr classes, generate a disambiguation function.
 
     The function is based on unique required fields."""
@@ -38,7 +39,8 @@ def create_uniq_field_dis_func(*cls: Sequence[Type]) -> Callable:
                                  "{} and {}.".format(fallback, cl))
             fallback = cl
 
-    def dis_func(data: Mapping) -> Union:
+    def dis_func(data):
+        # type: (Mapping) -> Union
         for k, v in uniq_attrs_dict.items():
             if k in data:
                 return v

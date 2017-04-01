@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from .converters import Converter
 
 __author__ = 'Tin Tvrtković'

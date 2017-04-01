@@ -3,24 +3,34 @@ import keyword
 
 from collections import OrderedDict
 from enum import Enum
-from cattr.typing import (Tuple, Sequence, MutableSequence, List, Dict,
-                          MutableMapping, Mapping, Any)
+from cattr._compat import (Tuple, Sequence, MutableSequence, List, Dict,
+                           MutableMapping, Mapping, Any, is_py2, bytes, unicode)
 
 import attr
 
 from attr import make_class
 from hypothesis import strategies as st
 
-primitive_strategies = st.sampled_from([(st.integers(), int),
-                                        (st.floats(allow_nan=False), float),
-                                        (st.text(), str),
-                                        (st.binary(), bytes)])
+if is_py2:
+    # we exclude float checks from py2, because their stringification is not
+    # consistent
+    primitive_strategies = st.sampled_from([(st.integers(), int),
+                                            (st.text(), unicode),
+                                            (st.binary(), bytes)])
+else:
+    primitive_strategies = st.sampled_from([(st.integers(), int),
+                                            (st.floats(allow_nan=False), float),
+                                            (st.text(), unicode),
+                                            (st.binary(), bytes)])
 
 
 @st.composite
 def enums_of_primitives(draw):
     """Generate enum classes with primitive values."""
-    names = draw(st.sets(st.text(min_size=1), min_size=1))
+    if is_py2:
+        names = draw(st.sets(st.text(alphabet=string.ascii_letters, min_size=1), min_size=1))
+    else:
+        names = draw(st.sets(st.text(min_size=1), min_size=1))
     n = len(names)
     vals = draw(st.one_of(st.sets(st.one_of(
             st.integers(),
