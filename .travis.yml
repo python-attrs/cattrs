@@ -19,7 +19,7 @@ matrix:
     # Meta
     - python: "3.6"
       env: TOXENV=flake8
-    - python: "3.5"
+    - python: "3.6"
       env: TOXENV=docs
 
 before_install:
