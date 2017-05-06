@@ -18,6 +18,8 @@ import os
 
 import pkg_resources  # part of setuptools
 
+from unittest.mock import Mock
+
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory is
 # relative to the documentation root, use os.path.abspath to make it
@@ -277,5 +279,11 @@ texinfo_documents = [
 # texinfo_no_detailmenu = False
 
 doctest_global_setup = "import attr, cattr;" \
-                       "from cattr.vendor.typing import *;" \
+                       "from typing import *;" \
                        "from enum import Enum, unique"
+
+# Sphinx will want to import all referenced modules. Some of these modules
+# aren't needed and will, in fact, change process-wide state.
+# This will make the doctests fail.
+sys.modules['cattr.vendor.python2.typing'] = Mock()
+sys.modules['cattr.vendor.python3.typing'] = Mock()
