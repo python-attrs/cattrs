@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -29,17 +29,13 @@ if sys.version_info < (3, 0):
 
 setup(
     name='cattrs',
-    version='0.4.0dev0',
+    version='0.4.0.dev0',
     description="Composable complex class support for attrs.",
     long_description=readme + '\n\n' + history,
     author="Tin Tvrtković",
     author_email='tinchester@gmail.com',
     url='https://github.com/Tinche/cattrs',
-    packages=[
-        'cattr',
-    ],
-    package_dir={'cattr':
-                 'cattr'},
+    packages=find_packages(exclude=['tests']),
     include_package_data=True,
     install_requires=requirements,
     license="MIT license",
@@ -55,5 +51,4 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
-    test_suite='tests',
 )
