@@ -4,7 +4,8 @@ import keyword
 from collections import OrderedDict
 from enum import Enum
 from cattr._compat import (Tuple, Sequence, MutableSequence, List, Dict,
-                           MutableMapping, Mapping, Any, is_py2, bytes, unicode)
+                           MutableMapping, Mapping, Any, is_py2, bytes,
+                           unicode)
 
 import attr
 
@@ -19,7 +20,8 @@ if is_py2:
                                             (st.binary(), bytes)])
 else:
     primitive_strategies = st.sampled_from([(st.integers(), int),
-                                            (st.floats(allow_nan=False), float),
+                                            (st.floats(allow_nan=False),
+                                             float),
                                             (st.text(), unicode),
                                             (st.binary(), bytes)])
 
@@ -28,7 +30,9 @@ else:
 def enums_of_primitives(draw):
     """Generate enum classes with primitive values."""
     if is_py2:
-        names = draw(st.sets(st.text(alphabet=string.ascii_letters, min_size=1), min_size=1))
+        names = draw(st.sets(st.text(alphabet=string.ascii_letters,
+                                     min_size=1),
+                             min_size=1))
     else:
         names = draw(st.sets(st.text(min_size=1), min_size=1))
     n = len(names)

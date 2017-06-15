@@ -1,11 +1,8 @@
 """Tests for dumping."""
-from enum import EnumMeta
-
 from . import (seqs_of_primitives, dicts_of_primitives, enums_of_primitives,
                nested_classes)
 
-from cattr._compat import Any, Type
-from cattr.converters import Converter, UnstructureStrategy
+from cattr.converters import UnstructureStrategy
 
 from attr import asdict, astuple
 from hypothesis import given

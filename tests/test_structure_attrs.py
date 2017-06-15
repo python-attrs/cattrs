@@ -2,7 +2,6 @@
 from attr import asdict, astuple, fields
 from hypothesis import assume, given
 
-from cattr import Converter
 from cattr._compat import Union
 
 from . import simple_classes

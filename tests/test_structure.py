@@ -103,6 +103,7 @@ def _as_str(x):
     else:
         return str(x)
 
+
 @given(sets_of_primitives)
 def test_stringifying_sets(converter, set_and_type):
     # type: (Converter, Any) -> None
@@ -114,6 +115,7 @@ def test_stringifying_sets(converter, set_and_type):
     assert len(converted) == len(set_)
     for e in set_:
         assert _as_str(e) in converted
+
 
 @given(lists(primitives_and_type, min_size=1))
 def test_structuring_hetero_tuples(converter, list_of_vals_and_types):
