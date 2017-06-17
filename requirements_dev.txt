@@ -8,5 +8,5 @@ coverage==4.2
 Sphinx==1.5.2
 
 pytest==3.0.4
-hypothesis==3.8.2
+hypothesis==3.11.4
 setuptools==28.8.0

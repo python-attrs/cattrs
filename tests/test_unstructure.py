@@ -1,6 +1,6 @@
 """Tests for dumping."""
 from . import (seqs_of_primitives, dicts_of_primitives, enums_of_primitives,
-               nested_classes)
+               simple_classes, nested_classes)
 
 from cattr.converters import UnstructureStrategy
 
@@ -19,6 +19,7 @@ def test_seq_unstructure(converter, seq_and_type, dump_strat):
     # type: (Converter, Any, UnstructureStrategy) -> None
     """Dumping a sequence of primitives is a simple copy operation."""
     converter.unstruct_strat = dump_strat
+    assert converter.unstruct_strat is dump_strat
     seq = seq_and_type[0]
     dumped = converter.unstructure(seq)
     assert dumped == seq
@@ -65,3 +66,16 @@ def test_attrs_astuple_unstructure(converter, nested_class):
     converter.unstruct_strat = UnstructureStrategy.AS_TUPLE
     instance = nested_class[0]()
     assert converter.unstructure(instance) == astuple(instance)
+
+
+@given(simple_classes())
+def test_unstructure_hooks(converter, cl_and_vals):
+    """
+    Unstructure hooks work.
+    """
+    cl, vals = cl_and_vals
+    inst = cl(*vals)
+
+    converter.register_unstructure_hook(cl, lambda val: 'test')
+
+    assert converter.unstructure(inst) == 'test'

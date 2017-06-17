@@ -90,7 +90,7 @@ dicts_of_primitives = (st.tuples(primitive_strategies, primitive_strategies)
                        .flatmap(create_dict_and_type))
 
 
-def _gen_attr_names():
+def gen_attr_names():
     """
     Generate names for attributes, 'a'...'z', then 'aa'...'zz'.
     ~702 different attribute names should be enough in practice.
@@ -123,7 +123,7 @@ def _create_hyp_class(attrs_and_strategy):
     vals = tuple((a[1]) for a in attrs_and_strat)
     return st.tuples(
         st.just(make_class('HypClass',
-                           OrderedDict(zip(_gen_attr_names(), attrs)))),
+                           OrderedDict(zip(gen_attr_names(), attrs)))),
         st.tuples(*vals))
 
 
@@ -199,7 +199,7 @@ def int_attrs(draw, defaults=None):
 @st.composite
 def str_attrs(draw, defaults=None):
     """
-    Generate a tuple of an attribute and a strategy that yields ints for that
+    Generate a tuple of an attribute and a strategy that yields strs for that
     attribute.
     """
     default = attr.NOTHING

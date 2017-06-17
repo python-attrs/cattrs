@@ -84,7 +84,7 @@ class Converter(object):
         # type: () -> UnstructureStrategy
         """The default way of unstructuring ``attrs`` classes."""
         return (UnstructureStrategy.AS_DICT
-                if self.unstructure_attrs is self.unstructure_attrs_asdict
+                if self.unstructure_attrs == self.unstructure_attrs_asdict
                 else UnstructureStrategy.AS_TUPLE)
 
     @unstruct_strat.setter
