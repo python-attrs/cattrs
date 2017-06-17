@@ -279,8 +279,8 @@ texinfo_documents = [
 # texinfo_no_detailmenu = False
 
 doctest_global_setup = "import attr, cattr;" \
-                       "from cattr.typing import *;" \
                        "from cattr import typed;" \
+                       "from cattr._compat import *;" \
                        "from enum import Enum, unique"
 
 # Sphinx will want to import all referenced modules. Some of these modules
