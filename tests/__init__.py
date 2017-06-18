@@ -9,7 +9,7 @@ from cattr._compat import (Tuple, Sequence, MutableSequence, List, Dict,
 
 import attr
 
-from attr import make_class
+from attr import make_class, NOTHING
 from hypothesis import strategies as st
 
 if is_py2:
@@ -115,7 +115,7 @@ def _create_hyp_class(attrs_and_strategy):
     instantiate it.
     """
     def key(t):
-        return t[0].default is not attr.NOTHING
+        return t[0].default is not NOTHING
     attrs_and_strat = sorted(attrs_and_strategy, key=key)
     attrs = [a[0] for a in attrs_and_strat]
     for i, a in enumerate(attrs):
@@ -178,7 +178,7 @@ def bare_attrs(draw, defaults=None):
     Generate a tuple of an attribute and a strategy that yields values
     appropriate for that attribute.
     """
-    default = attr.NOTHING
+    default = NOTHING
     if defaults is True or (defaults is None and draw(st.booleans())):
         default = None
     return ((attr.ib(default=default), st.just(None)))
@@ -190,7 +190,7 @@ def int_attrs(draw, defaults=None):
     Generate a tuple of an attribute and a strategy that yields ints for that
     attribute.
     """
-    default = attr.NOTHING
+    default = NOTHING
     if defaults is True or (defaults is None and draw(st.booleans())):
         default = draw(st.integers())
     return ((attr.ib(default=default), st.integers()))
@@ -202,7 +202,7 @@ def str_attrs(draw, defaults=None):
     Generate a tuple of an attribute and a strategy that yields strs for that
     attribute.
     """
-    default = attr.NOTHING
+    default = NOTHING
     if defaults is True or (defaults is None and draw(st.booleans())):
         default = draw(st.text())
     return ((attr.ib(default=default), st.text()))
@@ -214,7 +214,7 @@ def float_attrs(draw, defaults=None):
     Generate a tuple of an attribute and a strategy that yields floats for that
     attribute.
     """
-    default = attr.NOTHING
+    default = NOTHING
     if defaults is True or (defaults is None and draw(st.booleans())):
         default = draw(st.floats())
     return ((attr.ib(default=default), st.floats()))
@@ -226,7 +226,7 @@ def dict_attrs(draw, defaults=None):
     Generate a tuple of an attribute and a strategy that yields dictionaries
     for that attribute. The dictionaries map strings to integers.
     """
-    default = attr.NOTHING
+    default = NOTHING
     val_strat = st.dictionaries(keys=st.text(), values=st.integers())
     if defaults is True or (defaults is None and draw(st.booleans())):
         default = draw(val_strat)
@@ -240,7 +240,9 @@ def simple_attrs(defaults=None):
 
 def lists_of_attrs(defaults=None):
     # Python functions support up to 255 arguments.
-    return st.lists(simple_attrs(defaults), average_size=9, max_size=50)
+    return (st.lists(simple_attrs(defaults), average_size=9, max_size=50)
+            .map(lambda l: sorted(l,
+                                  key=lambda t: t[0]._default is not NOTHING)))
 
 
 def simple_classes(defaults=None):

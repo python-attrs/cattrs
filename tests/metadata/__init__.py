@@ -2,6 +2,7 @@
 from collections import OrderedDict
 
 import attr
+from attr import NOTHING
 from hypothesis.strategies import (booleans, composite, dictionaries,
                                    floats, integers, just, lists, recursive,
                                    text, tuples)
@@ -19,7 +20,9 @@ def simple_typed_classes(defaults=None):
 
 def lists_of_typed_attrs(defaults=None):
     # Python functions support up to 255 arguments.
-    return lists(simple_typed_attrs(defaults), average_size=9, max_size=50)
+    return (lists(simple_typed_attrs(defaults), average_size=9, max_size=50)
+            .map(lambda l: sorted(l,
+                                  key=lambda t: t[0]._default is not NOTHING)))
 
 
 def simple_typed_attrs(defaults=None):
