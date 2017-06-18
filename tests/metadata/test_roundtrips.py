@@ -1,8 +1,6 @@
 """Test both structuring and unstructuring."""
 from hypothesis import given
 
-from attr import fields
-
 from . import simple_typed_classes, nested_typed_classes
 
 
@@ -23,6 +21,5 @@ def test_nested_roundtrip(converter, cls_and_vals):
     """
     cl, vals = cls_and_vals
     # Vals are a tuple, convert into a dictionary.
-    attr_names = [a.name for a in fields(cl)]
     inst = cl(*vals)
     assert inst == converter.structure(converter.unstructure(inst), cl)

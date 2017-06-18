@@ -110,7 +110,8 @@ def dict_typed_attrs(draw, defaults=None):
 
 
 def just_class(tup):
-    # tup: Tuple[List[Tuple[_CountingAttr, Strategy]], Tuple[Type, Sequence[Any]]]
+    # tup: Tuple[List[Tuple[_CountingAttr, Strategy]],
+    #            Tuple[Type, Sequence[Any]]]
     nested_cl = tup[1][0]
     nested_cl_args = tup[1][1]
     default = attr.Factory(lambda: nested_cl(*nested_cl_args))
