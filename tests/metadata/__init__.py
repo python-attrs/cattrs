@@ -8,7 +8,7 @@ from hypothesis.strategies import (booleans, composite, dictionaries,
                                    text, tuples)
 
 from cattr import typed
-from cattr._compat import Any, Dict, List
+from cattr._compat import Any, Dict, List, unicode
 
 from .. import gen_attr_names, make_class
 
@@ -81,10 +81,10 @@ def str_typed_attrs(draw, defaults=None):
     Generate a tuple of an attribute and a strategy that yields strs for that
     attribute.
     """
-    default = attr.NOTHING
+    default = NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(text())
-    return ((typed(str, default=default), text()))
+    return ((typed(unicode, default=default), text()))
 
 
 @composite
@@ -109,7 +109,7 @@ def dict_typed_attrs(draw, defaults=None):
     val_strat = dictionaries(keys=text(), values=integers())
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(val_strat)
-    return ((typed(Dict[str, int], default=default), val_strat))
+    return ((typed(Dict[unicode, int], default=default), val_strat))
 
 
 def just_class(tup):
