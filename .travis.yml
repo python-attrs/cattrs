@@ -11,8 +11,12 @@ matrix:
   include:
     - python: "2.7"
       env: TOXENV=py27
+    - python: "pypy"
+      env: TOXENV=pypy
     - python: "3.5"
       env: TOXENV=py35
+    - python: "pypy3"
+      env: TOXENV=pypy3
     - python: "3.6"
       env: TOXENV=py36
 
