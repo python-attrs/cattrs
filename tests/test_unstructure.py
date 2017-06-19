@@ -31,7 +31,7 @@ def test_seq_unstructure(converter, seq_and_type, dump_strat):
 def test_mapping_unstructure(converter, map_and_type, dump_strat):
     # type: (Converter, Any, UnstructureStrategy) -> None
     """Dumping a mapping of primitives is a simple copy operation."""
-    converter.dumping_strat = dump_strat
+    converter.unstruct_strat = dump_strat
     mapping = map_and_type[0]
     dumped = converter.unstructure(mapping)
     assert dumped == mapping
@@ -44,7 +44,7 @@ def test_enum_unstructure(converter, enum, dump_strat,
                           choice):
     # type: (Converter, EnumMeta, UnstructureStrategy) -> None
     """Dumping enums of primitives converts them to their primitives."""
-    converter.dumping_strat = dump_strat
+    converter.unstruct_strat = dump_strat
 
     member = choice(list(enum.__members__.values()))
 

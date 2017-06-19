@@ -1,16 +1,14 @@
 from enum import unique, Enum
 from ._compat import lru_cache, singledispatch
-from ._compat import (Callable, List, Mapping, Sequence, Type, Union, Optional,
-                      GenericMeta, MutableSequence, TypeVar, Any, FrozenSet,
-                      MutableSet, Set, MutableMapping, Dict, Tuple, Iterable,
-                      _Union)
+from ._compat import (List, Mapping, Sequence, Optional, MutableSequence,
+                      TypeVar, Any, FrozenSet, MutableSet, Set, MutableMapping,
+                      Dict, Tuple, _Union)
 from ._compat import unicode, bytes, is_py2
+from .disambiguators import create_uniq_field_dis_func
 from .metadata import TYPE_METADATA_KEY
 
 from attr import NOTHING
-from attr.validators import _InstanceOfValidator, _OptionalValidator
 
-from .disambiguators import create_uniq_field_dis_func
 
 NoneType = type(None)
 T = TypeVar('T')
@@ -26,6 +24,10 @@ class UnstructureStrategy(Enum):
 
 class Converter(object):
     """Converts between structured and unstructured data."""
+    __slots__ = ('_dis_func_cache', 'unstructure', 'unstructure_attrs',
+                 'structure_attrs', '_structure', '_dict_factory',
+                 '_union_registry')
+
     def __init__(self, dict_factory=dict,
                  unstruct_strat=UnstructureStrategy.AS_DICT  # type: UnstructureStrategy
                  ):
@@ -35,7 +37,7 @@ class Converter(object):
         if is_py2:  # in py2, the unstruct_strat property setter is not invoked here
             self._unstruct_strat(unstruct_strat)
 
-        self._get_dis_func = lru_cache()(self._get_dis_func)
+        self._dis_func_cache = lru_cache()(self._get_dis_func)
 
         # Per-instance register of to-Python converters.
         unstructure = singledispatch(self._unstructure)
@@ -73,7 +75,6 @@ class Converter(object):
         structure.register(float, self._structure_call)
         structure.register(Enum, self._structure_call)
 
-        self.structure_attrs = self.structure_attrs_fromdict
         self._structure = structure
         self._dict_factory = dict_factory
         # Unions are instances now, not classes. We use different registry.
@@ -96,8 +97,10 @@ class Converter(object):
         # type: (UnstructureStrategy) -> None
         if val is UnstructureStrategy.AS_DICT:
             self.unstructure_attrs = self.unstructure_attrs_asdict
+            self.structure_attrs = self.structure_attrs_fromdict
         else:
             self.unstructure_attrs = self.unstructure_attrs_astuple
+            self.structure_attrs = self.structure_attrs_fromtuple
 
     def register_unstructure_hook(self, cls, func):
         # type: (Type[T], Callable[[T], Any]) -> None
@@ -193,7 +196,7 @@ class Converter(object):
         """
         if cl is Any or cl is Optional:
             return obj
-        if hasattr(cl, '__attrs_attrs__'):
+        if getattr(cl, '__attrs_attrs__', None) is not None:
             # This is an attrs class
             return self.structure_attrs(obj, cl)
         # We don't know what this is, so we complain loudly.
@@ -225,12 +228,12 @@ class Converter(object):
         conv_obj = []  # A list of converter parameters.
         for a, value in zip(cl.__attrs_attrs__, obj):
             # We detect the type by the metadata.
-            converted = self._handle_attr_attribute(a, a.name, value)
+            converted = self._structure_attr_from_tuple(a, a.name, value)
             conv_obj.append(converted)
 
         return cl(*conv_obj)
 
-    def _handle_attr_attribute(self, a, name, value):
+    def _structure_attr_from_tuple(self, a, name, value):
         """Handle an individual attrs attribute."""
         type_ = a.metadata.get(TYPE_METADATA_KEY)
         if type_ is None:
@@ -249,14 +252,14 @@ class Converter(object):
         for a in cl.__attrs_attrs__:
             name = a.name
             # We detect the type by metadata.
-            converted = self._handle_attr_mapping_attribute(a, name, obj)
+            converted = self._structure_attr_from_dict(a, name, obj)
             if converted is NOTHING:
                 continue
             conv_obj[name] = converted
 
         return cl(**conv_obj)
 
-    def _handle_attr_mapping_attribute(self, a, name, mapping):
+    def _structure_attr_from_dict(self, a, name, mapping):
         """Handle an individual attrs attribute structuring."""
         type_ = a.metadata.get(TYPE_METADATA_KEY)
         if type_ is None:
@@ -361,7 +364,7 @@ class Converter(object):
         # Getting here means either this is not an optional, or it's an
         # optional with more than one parameter.
         # Let's support only unions of attr classes for now.
-        cl = self._get_dis_func(union)(obj)
+        cl = self._dis_func_cache(union)(obj)
         return self._structure.dispatch(cl)(cl, obj)
 
     def _structure_tuple(self, tup, obj):
