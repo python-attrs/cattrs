@@ -348,5 +348,34 @@ attributes holding ``attrs`` classes.
     >>> cattr.structure({'b': {'a': '1'}}, B)
     B(b=A(a=1))
 
-Registering custom loading hooks
---------------------------------
+Registering custom structuring hooks
+------------------------------------
+
+``cattrs`` doesn't know how to structure non-``attrs`` classes by default,
+so it has to be taught. This can be done by registering structuring hooks on
+a converter instance (including the global converter).
+
+Here's an example involving a simple, classic (i.e. non-``attrs``) Python class.
+
+.. doctest::
+
+    >>> class C(object):
+    ...     def __init__(self, a):
+    ...         self.a = a
+    ...     def __repr__(self):
+    ...         return f'C(a={self.a})'
+    >>> cattr.structure({'a': 1}, C)
+    Traceback (most recent call last):
+    ...
+    ValueError: Unsupported type: <class '__main__.C'>. Register a structure hook for it.
+    >>>
+    >>> cattr.register_structure_hook(C, lambda d, t: C(**d))
+    >>> cattr.structure({'a': 1}, C)
+    C(a=1)
+
+The structuring hooks are callables that take two arguments: the object to
+convert to the desired class and the type to convert to.
+The type may seem redundant, but it is useful when dealing with generic types.
+
+When using ``cattr.register_structure_hook``, the hook will be registered on the global converter.
+If you want to avoid changing the global converter, create an instance of ``cattr.Converter`` and register the hook on that.

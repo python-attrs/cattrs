@@ -22,9 +22,10 @@ cattrs
 
 ----
 
-``cattrs`` is an experimental open source Python library providing composable
-complex class conversion support for ``attrs`` classes. Other kinds of classes
-are supported by manually registering converters.
+``cattrs`` is an open source Python library for structuring and unstructuring
+data. ``cattrs`` works best with ``attrs`` classes and the usual Python
+collections, but other kinds of classes are supported by manually registering
+converters.
 
 Python has a rich set of powerful, easy to use, built-in data types like
 dictionaries, lists and tuples. These data types are also the lingua franca
@@ -43,7 +44,19 @@ structured data. When you have to convert your structured data into data types
 other libraries can handle, ``cattrs`` turns your classes and enumerations into
 dictionaries, integers and strings.
 
-A taste:
+Here's a simple taste. The list containing a float, an int and a string
+gets converted into a tuple of three ints.
+
+.. doctest::
+
+    >>> import cattr
+    >>> from typing import Tuple
+    >>>
+    >>> cattr.structure([1.0, 2, "3"], Tuple[int, int, int])
+    (1, 2, 3)
+
+Here's a much more complex example, involving ``attrs`` classes with type
+metadata.
 
 .. code-block:: python
 
