@@ -67,7 +67,10 @@ def test_union_field_roundtrip(converter, cl_and_vals_a, cl_and_vals_b, strat):
         # Our disambiguation functions only support dictionaries for now.
         with pytest.raises(ValueError):
             converter.structure(converter.unstructure(inst), C)
-        converter._union_registry[Union[cl_a, cl_b]] = lambda _, obj: converter.structure(obj, cl_a)
+
+        def handler(_, obj):
+            return converter.structure(obj, cl_a)
+        converter._union_registry[Union[cl_a, cl_b]] = handler
         assert inst == converter.structure(converter.unstructure(inst), C)
         del converter._union_registry[Union[cl_a, cl_b]]
 
