@@ -29,12 +29,11 @@ class Converter(object):
                  '_union_registry')
 
     def __init__(self, dict_factory=dict,
-                 unstruct_strat=UnstructureStrategy.AS_DICT  # type: UnstructureStrategy
-                 ):
+                 unstruct_strat=UnstructureStrategy.AS_DICT):
 
         # Create a per-instance cache.
         self.unstruct_strat = UnstructureStrategy(unstruct_strat)
-        if is_py2:  # in py2, the unstruct_strat property setter is not invoked here
+        if is_py2:  # in py2, the unstruct_strat property setter is not invoked
             self._unstruct_strat(unstruct_strat)
 
         self._dis_func_cache = lru_cache()(self._get_dis_func)
@@ -65,11 +64,13 @@ class Converter(object):
         structure.register(MutableMapping, self._structure_dict)
         structure.register(Tuple, self._structure_tuple)
         structure.register(_Union, self._structure_union)
+
+        # Strings are sequences.
         if is_py2:
             # handle unicode with care in python2
             structure.register(unicode, self._structure_unicode)
         else:
-            structure.register(unicode, self._structure_call)  # Strings are sequences.
+            structure.register(unicode, self._structure_call)
         structure.register(bytes, self._structure_call)  # Bytes are sequences.
         structure.register(int, self._structure_call)
         structure.register(float, self._structure_call)

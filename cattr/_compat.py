@@ -17,10 +17,9 @@ else:
 if is_py2:
     from functools32 import lru_cache
     from singledispatch import singledispatch
-    unicode = unicode
+    unicode = __builtins__.unicode
     bytes = str
-elif is_py3:
-    from functools import lru_cache, singledispatch
+else:
+    from functools import lru_cache, singledispatch  # noqa
     unicode = str
     bytes = bytes
-

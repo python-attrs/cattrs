@@ -2,7 +2,8 @@
 from collections import OrderedDict
 from functools import reduce
 from operator import or_
-from ._compat import Callable, Mapping, Sequence, Type, Union
+
+from ._compat import Mapping
 
 from attr import fields, NOTHING
 
@@ -31,7 +32,8 @@ def create_uniq_field_dis_func(*cls):
             other_reqs = reduce(or_, (c_a[1] for c_a in other_classes))
             uniq = cl_reqs - other_reqs
             if not uniq:
-                raise ValueError('{} has no usable unique attributes.'.format(cl))
+                m = '{} has no usable unique attributes.'.format(cl)
+                raise ValueError(m)
             uniq_attrs_dict[next(iter(uniq))] = cl
         else:
             if fallback is not None:
