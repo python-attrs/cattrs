@@ -41,6 +41,8 @@ def create_uniq_field_dis_func(*cls):
 
     def dis_func(data):
         # type: (Mapping) -> Union
+        if not isinstance(data, Mapping):
+            raise ValueError('Only input mappings are supported.')
         for k, v in uniq_attrs_dict.items():
             if k in data:
                 return v

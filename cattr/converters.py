@@ -77,6 +77,7 @@ class Converter(object):
 
         self._structure = structure
         self._dict_factory = dict_factory
+
         # Unions are instances now, not classes. We use different registry.
         self._union_registry = {}
 
@@ -253,8 +254,6 @@ class Converter(object):
             name = a.name
             # We detect the type by metadata.
             converted = self._structure_attr_from_dict(a, name, obj)
-            if converted is NOTHING:
-                continue
             conv_obj[name] = converted
 
         return cl(**conv_obj)
@@ -269,7 +268,7 @@ class Converter(object):
             # This is a union.
             val = mapping.get(name, NOTHING)
             if NoneType in type_.__args__ and val is NOTHING:
-                return NOTHING
+                return None
             return self._structure_union(type_, val)
         return self._structure.dispatch(type_)(type_, mapping.get(a.name))
 
