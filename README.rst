@@ -39,10 +39,11 @@ Python, structured data is better represented with classes and enumerations.
 ``attrs`` is an excellent library for declaratively describing the structure of
 your data, and validating it.
 
-When you're handed unstructured data, ``cattrs`` helps to convert this data into
-structured data. When you have to convert your structured data into data types
-other libraries can handle, ``cattrs`` turns your classes and enumerations into
-dictionaries, integers and strings.
+When you're handed unstructured data (by your network, file system, database...),
+``cattrs`` helps to convert this data into structured data. When you have to
+convert your structured data into data types other libraries can handle,
+``cattrs`` turns your classes and enumerations into dictionaries, integers and
+strings.
 
 Here's a simple taste. The list containing a float, an int and a string
 gets converted into a tuple of three ints.
@@ -54,6 +55,23 @@ gets converted into a tuple of three ints.
     >>>
     >>> cattr.structure([1.0, 2, "3"], Tuple[int, int, int])
     (1, 2, 3)
+
+``cattrs`` works well with ``attrs`` classes out of the box.
+
+.. doctest::
+
+    >>> import attr, cattr
+    >>>
+    >>> @attr.s(slots=True, frozen=True)  # It works with normal classes too.
+    ... class C:
+    ...     a = attr.ib()
+    ...     b = attr.ib()
+    ...
+    >>> instance = C(1, 'a')
+    >>> cattr.unstructure(instance)
+    {'a': 1, 'b': 'a'}
+    >>> cattr.structure({'a': 1, 'b': 'a'}, C)
+    C(a=1, b='a')
 
 Here's a much more complex example, involving ``attrs`` classes with type
 metadata.
