@@ -34,5 +34,6 @@ Currently, a converter contains the following state:
 * a registry of unstructure hooks, backed by a ``singledispatch``.
 * a registry of structure hooks, backed by a different ``singledispatch``.
 * a LRU cache of union disambiguation functions.
+* a reference to an unstructuring strategy (either AS_DICT or AS_TUPLE).
 * a ``dict_factory`` callable, used for creating ``dicts`` when dumping
-  ``attrs`` classes.
+  ``attrs`` classes using AS_DICT.
