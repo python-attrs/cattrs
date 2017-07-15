@@ -76,7 +76,7 @@ gets converted into a tuple of three ints.
 Here's a much more complex example, involving ``attrs`` classes with type
 metadata.
 
-.. code-block:: python
+.. doctest::
 
     >>> from enum import unique, Enum
     >>> from typing import List, Optional, Sequence, Union
@@ -108,7 +108,7 @@ metadata.
     ...                  Cat(breed=CatBreed.MAINE_COON, names=('Fluffly', 'Fluffer'))])
     ...
     >>> print(p)
-    [{'chip': {'chip_id': 1, 'time_chipped': 10.0}, 'cuteness': 1}, {'names': ('Fluffly', 'Fluffer'), 'breed': 'maine_coon'}]
+    [{'cuteness': 1, 'chip': {'chip_id': 1, 'time_chipped': 10.0}}, {'breed': 'maine_coon', 'names': ('Fluffly', 'Fluffer')}]
     >>> print(structure(p, List[Union[Dog, Cat]]))
     [Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)), Cat(breed=<CatBreed.MAINE_COON: 'maine_coon'>, names=['Fluffly', 'Fluffer'])]
 
@@ -135,7 +135,7 @@ Features
 
 * Converts structured data into unstructured data, recursively:
 
-  * ``attrs`` classes are converted into dictionaries, in a way similar to ``attr.asdict``.
+  * ``attrs`` classes are converted into dictionaries in a way similar to ``attr.asdict``, or into tuples in a way similar to ``attr.astuple``.
   * Enumeration instances are converted to their values.
   * Other types are let through without conversion. This includes types such as
     integers, dictionaries, lists and instances of non-``attrs`` classes.
@@ -164,7 +164,7 @@ Features
   * Custom converters for any type can be registered using ``register_structure_hook``.
 
 Credits
----------
+-------
 
 Major credits to Hynek Schlawack for creating attrs_ and its predecessor,
 characteristic_.
