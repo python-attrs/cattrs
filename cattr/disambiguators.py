@@ -43,7 +43,6 @@ def create_uniq_field_dis_func(*cls):
             raise ValueError('Only input mappings are supported.')
         for k, v in uniq_attrs_dict.items():
             if k in data:
-                print(f'Found {k}, returning {v}.')
                 return v
         return fallback
 
