@@ -27,6 +27,18 @@ def test_edge_errors():
         # No fields on either class.
         create_uniq_field_dis_func(A, B)
 
+    @attr.s
+    class C(object):
+        a = attr.ib()
+
+    @attr.s
+    class D(object):
+        a = attr.ib()
+
+    with pytest.raises(ValueError):
+        # No unique fields on either class.
+        create_uniq_field_dis_func(C, D)
+
 
 @given(simple_classes(defaults=False))
 def test_fallback(cl_and_vals):
