@@ -382,7 +382,7 @@ Here's an example involving a simple, classic (i.e. non-``attrs``) Python class.
 
 The structuring hooks are callables that take two arguments: the object to
 convert to the desired class and the type to convert to.
-The type may seem redundant, but it is useful when dealing with generic types.
+The type may seem redundant but is useful when dealing with generic types.
 
 When using ``cattr.register_structure_hook``, the hook will be registered on the global converter.
 If you want to avoid changing the global converter, create an instance of ``cattr.Converter`` and register the hook on that.
