@@ -246,9 +246,9 @@ def test_stringifying_lists_of_opt(converter, list_and_type):
 @given(lists(integers()))
 def test_structuring_primitive_union_hook(converter, ints):
     # type: (Converter, List[int]) -> None
-    """Test registering a union loading hook."""
+    """Registering a union loading hook works."""
 
-    def structure_hook(cl, val):
+    def structure_hook(val, cl):
         """Even ints are passed through, odd are stringified."""
         return val if val % 2 == 0 else unicode(val)
 
