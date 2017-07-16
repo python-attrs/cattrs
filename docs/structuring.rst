@@ -229,6 +229,9 @@ Unions
 Unions of ``NoneType`` and a single other type are supported (also known as
 ``Optional`` s). All other unions a require a disambiguation function.
 
+Automatic Disambiguation
+""""""""""""""""""""""""
+
 In the case of a union consisting exclusively of ``attrs`` classes, ``cattrs``
 will attempt to generate a disambiguation function automatically; this will
 succeed only if each class has a unique field. Given the following classes:
@@ -256,9 +259,14 @@ of ``B`` will contain ``y``, etc. A disambiguation function using this
 information will then be generated and cached. This will happen automatically,
 the first time an appropriate union is structured.
 
+Manual Disambiguation
+"""""""""""""""""""""
+
+To support arbitrary unions, register a custom structuring hook for the union
+(see `Registering custom structuring hooks`_).
 
 ``attrs`` classes
--------------------------
+-----------------
 
 Simple ``attrs`` classes
 ~~~~~~~~~~~~~~~~~~~~~~~~
