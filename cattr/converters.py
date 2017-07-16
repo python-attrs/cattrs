@@ -347,7 +347,7 @@ class Converter(object):
         # Check the union registry first.
         handler = self._union_registry.get(union)
         if handler is not None:
-            return handler(union, obj)
+            return handler(obj, union)
 
         # Unions with NoneType in them are basically optionals.
         union_params = union.__args__

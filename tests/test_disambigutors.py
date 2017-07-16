@@ -46,9 +46,9 @@ def test_fallback(cl_and_vals):
 
     attr_names = {a.name for a in attr.fields(cl)}
 
-    if 'a' not in attr_names:
+    if 'xyz' not in attr_names:
         with pytest.raises(ValueError):
-            fn({'a': 1}) is A  # Uses the fallback.
+            fn({'xyz': 1}) is A  # Uses the fallback.
 
 
 @given(simple_classes(), simple_classes())

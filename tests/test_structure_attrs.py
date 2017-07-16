@@ -49,6 +49,7 @@ def test_structure_tuple(converter, cl_and_vals):
 
 @given(simple_classes(defaults=False), simple_classes(defaults=False))
 def test_structure_union(converter, cl_and_vals_a, cl_and_vals_b):
+    """Structuring of automatically-disambiguable unions works."""
     # type: (Converter, Any, Any) -> None
     cl_a, vals_a = cl_and_vals_a
     cl_b, vals_b = cl_and_vals_b
@@ -64,3 +65,21 @@ def test_structure_union(converter, cl_and_vals_a, cl_and_vals_b):
         res = converter.structure(dumped, Union[cl_a, cl_b])
         assert isinstance(res, cl_a)
         assert obj == res
+
+
+@given(simple_classes(), simple_classes())
+def test_structure_union_explicit(converter, cl_and_vals_a, cl_and_vals_b):
+    """Structuring of manually-disambiguable unions works."""
+    # type: (Converter, Any, Any) -> None
+    cl_a, vals_a = cl_and_vals_a
+    cl_b, vals_b = cl_and_vals_b
+
+    def dis(obj, _):
+        return converter.structure(obj, cl_a)
+
+    converter.register_structure_hook(Union[cl_a, cl_b], dis)
+
+    inst = cl_a(*vals_a)
+
+    assert inst == converter.structure(converter.unstructure(inst),
+                                       Union[cl_a, cl_b])
