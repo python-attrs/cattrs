@@ -13,7 +13,7 @@ def test_edge_errors():
     """Edge input cases cause errors."""
     @attr.s
     class A(object):
-        a = attr.ib(default=0)
+        pass
 
     with pytest.raises(ValueError):
         # Can't generate for only one class.
@@ -21,10 +21,10 @@ def test_edge_errors():
 
     @attr.s
     class B(object):
-        b = attr.ib(default=0)
+        pass
 
     with pytest.raises(ValueError):
-        # No required fields on either class.
+        # No fields on either class.
         create_uniq_field_dis_func(A, B)
 
 
@@ -37,9 +37,34 @@ def test_fallback(cl_and_vals):
 
     @attr.s
     class A(object):
-        a = attr.ib(default=0)
+        pass
 
     fn = create_uniq_field_dis_func(A, cl)
 
     assert fn({}) is A
     assert fn(attr.asdict(cl(*vals))) is cl
+
+    attr_names = {a.name for a in attr.fields(cl)}
+
+    if 'a' not in attr_names:
+        with pytest.raises(ValueError):
+            fn({'a': 1}) is A  # Uses the fallback.
+
+
+@given(simple_classes(), simple_classes())
+def test_disambiguation(cl_and_vals_a, cl_and_vals_b):
+    """Disambiguation should work when there are unique fields."""
+    cl_a, vals_a = cl_and_vals_a
+    cl_b, vals_b = cl_and_vals_b
+
+    req_a = {a.name for a in attr.fields(cl_a)}
+    req_b = {a.name for a in attr.fields(cl_b)}
+
+    assume(len(req_a))
+    assume(len(req_b))
+
+    assume((req_a - req_b) or (req_b - req_a))
+
+    fn = create_uniq_field_dis_func(cl_a, cl_b)
+
+    assert fn(attr.asdict(cl_a(*vals_a))) is cl_a

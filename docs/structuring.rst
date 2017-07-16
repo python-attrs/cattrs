@@ -231,8 +231,7 @@ Unions of ``NoneType`` and a single other type are supported (also known as
 
 In the case of a union consisting exclusively of ``attrs`` classes, ``cattrs``
 will attempt to generate a disambiguation function automatically; this will
-succeed only if each class has a unique, required field. Given the following
-classes:
+succeed only if each class has a unique field. Given the following classes:
 
 .. code-block:: python
 
