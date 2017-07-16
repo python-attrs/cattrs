@@ -68,8 +68,9 @@ def test_union_field_roundtrip(converter, cl_and_vals_a, cl_and_vals_b, strat):
         with pytest.raises(ValueError):
             converter.structure(converter.unstructure(inst), C)
 
-        def handler(_, obj):
+        def handler(obj, _):
             return converter.structure(obj, cl_a)
+
         converter._union_registry[Union[cl_a, cl_b]] = handler
         assert inst == converter.structure(converter.unstructure(inst), C)
         del converter._union_registry[Union[cl_a, cl_b]]
