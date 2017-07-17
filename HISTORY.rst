@@ -2,7 +2,7 @@
 History
 =======
 
-0.4.0 (UNRELEASED)
+0.4.0 (2017-07-17)
 ------------------
 
 * `Converter.loads` is now `Converter.structure`, and `Converter.dumps` is now `Converter.unstructure`.
