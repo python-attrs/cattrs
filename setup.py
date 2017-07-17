@@ -30,7 +30,7 @@ if sys.version_info < (3, 0):
 
 setup(
     name='cattrs',
-    version='0.4.0.dev0',
+    version='0.4.0',
     description="Composable complex class support for attrs.",
     long_description=readme + '\n\n' + history,
     author="Tin Tvrtković",
@@ -43,7 +43,7 @@ setup(
     zip_safe=False,
     keywords='cattrs',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
