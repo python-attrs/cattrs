@@ -6,6 +6,7 @@ from ._compat import (List, Mapping, Sequence, Optional, MutableSequence,
 from ._compat import unicode, bytes, is_py2
 from .disambiguators import create_uniq_field_dis_func
 from .metadata import TYPE_METADATA_KEY
+from .function_dispatch import FunctionDispatch
 
 from attr import NOTHING
 
@@ -24,9 +25,9 @@ class UnstructureStrategy(Enum):
 
 class Converter(object):
     """Converts between structured and unstructured data."""
-    __slots__ = ('_dis_func_cache', 'unstructure', 'unstructure_attrs',
+    __slots__ = ('_dis_func_cache', 'unstructure_func', 'unstructure_attrs',
                  'structure_attrs', '_structure', '_dict_factory',
-                 '_union_registry')
+                 '_union_registry', 'structure_func')
 
     def __init__(self, dict_factory=dict,
                  unstruct_strat=UnstructureStrategy.AS_DICT):
@@ -39,48 +40,51 @@ class Converter(object):
         self._dis_func_cache = lru_cache()(self._get_dis_func)
 
         # Per-instance register of to-Python converters.
-        unstructure = singledispatch(self._unstructure)
-        unstructure.register(Enum, self._unstructure_enum)
-        unstructure.register(unicode, self._unstructure_identity)
-        unstructure.register(bytes, self._unstructure_identity)
-        unstructure.register(Sequence, self._unstructure_seq)
-        unstructure.register(Mapping, self._unstructure_mapping)
-
-        self.unstructure = unstructure
+        self.unstructure_func = FunctionDispatch()
+        self.unstructure_func.register(lambda typ: True, self._unstructure)
+        self.unstructure_func.register(lambda typ: issubclass(typ, Mapping), self._unstructure_mapping)
+        self.unstructure_func.register(lambda typ: issubclass(typ, Sequence), self._unstructure_seq)
+        self.unstructure_func.register(lambda typ: issubclass(typ, bytes), self._unstructure_identity)
+        self.unstructure_func.register(lambda typ: issubclass(typ, unicode), self._unstructure_identity)
+        self.unstructure_func.register(lambda typ: issubclass(typ, Enum), self._unstructure_enum)
 
         # Per-instance register of to-attrs converters.
         # Singledispatch dispatches based on the first argument, so we
         # store the function and switch the arguments in self.loads.
-        structure = singledispatch(self._structure_default)
-        structure.register(Any, self._structure_default)  # Bare opts here too.
-        structure.register(List, self._structure_list)
-        structure.register(Sequence, self._structure_list)
-        structure.register(MutableSequence, self._structure_list)
-        structure.register(MutableSet, self._structure_set)
-        structure.register(Set, self._structure_set)
-        structure.register(FrozenSet, self._structure_frozenset)
-        structure.register(Dict, self._structure_dict)
-        structure.register(Mapping, self._structure_dict)
-        structure.register(MutableMapping, self._structure_dict)
-        structure.register(Tuple, self._structure_tuple)
-        structure.register(_Union, self._structure_union)
+        self.structure_func = FunctionDispatch()
+        self.structure_func.register(lambda typ: True, self._structure_default)  # Bare opts here too.
+        self.structure_func.register(lambda typ: issubclass(typ, Any), self._structure_default)  # Bare opts here too.
+        self.structure_func.register(lambda typ: issubclass(typ, List), self._structure_list)
+        self.structure_func.register(lambda typ: issubclass(typ, Sequence), self._structure_list)
+        self.structure_func.register(lambda typ: issubclass(typ, MutableSequence), self._structure_list)
+        self.structure_func.register(lambda typ: issubclass(typ, MutableSet), self._structure_set)
+        self.structure_func.register(lambda typ: issubclass(typ, Set), self._structure_set)
+        self.structure_func.register(lambda typ: issubclass(typ, FrozenSet), self._structure_frozenset)
+        self.structure_func.register(lambda typ: issubclass(typ, Dict), self._structure_dict)
+        self.structure_func.register(lambda typ: issubclass(typ, Mapping), self._structure_dict)
+        self.structure_func.register(lambda typ: issubclass(typ, MutableMapping), self._structure_dict)
+        self.structure_func.register(lambda typ: issubclass(typ, Tuple), self._structure_tuple)
+        self.structure_func.register(lambda typ: issubclass(typ, _Union), self._structure_union)
 
         # Strings are sequences.
         if is_py2:
             # handle unicode with care in python2
-            structure.register(unicode, self._structure_unicode)
+            self.structure_func.register(lambda typ: issubclass(typ, unicode), self._structure_unicode)
         else:
-            structure.register(unicode, self._structure_call)
-        structure.register(bytes, self._structure_call)  # Bytes are sequences.
-        structure.register(int, self._structure_call)
-        structure.register(float, self._structure_call)
-        structure.register(Enum, self._structure_call)
+            self.structure_func.register(lambda typ: issubclass(typ, unicode), self._structure_call)
+        self.structure_func.register(lambda typ: issubclass(typ, bytes), self._structure_call)  # Bytes are sequences.
+        self.structure_func.register(lambda typ: issubclass(typ, int), self._structure_call)
+        self.structure_func.register(lambda typ: issubclass(typ, float), self._structure_call)
+        self.structure_func.register(lambda typ: issubclass(typ, Enum), self._structure_call)
 
-        self._structure = structure
+        self._structure = self.structure_func
         self._dict_factory = dict_factory
 
         # Unions are instances now, not classes. We use different registry.
         self._union_registry = {}
+
+    def unstructure(self, obj):
+        return self.unstructure_func.dispatch(type(obj))(obj)
 
     @property
     def unstruct_strat(self):
@@ -111,7 +115,7 @@ class Converter(object):
         The converter function should take an instance of the class and return
         its Python equivalent.
         """
-        self.unstructure.register(cls, func)
+        self.unstructure_func.register(lambda t: issubclass(t, cls), func)
 
     def register_structure_hook(self, cl, func):
         """Register a primitive-to-class converter function for a type.
@@ -127,14 +131,14 @@ class Converter(object):
         if isinstance(cl, _Union):
             self._union_registry[cl] = func
         else:
-            self._structure.register(cl, lambda t, o: func(o, t))
+            self._structure.register(lambda typ: issubclass(typ, cl), lambda t, o: func(o, t))
 
     def structure(self, obj, cl):
         """Convert unstructured Python data structures to structured data."""
         # type: (Any, Type) -> Any
 
         # Unions aren't classes, but rather instances of typing._Union now.
-        return (self._structure.dispatch(cl)(cl, obj)
+        return (self.structure_func.dispatch(cl)(cl, obj)
                 if not isinstance(cl, _Union)
                 else self._structure_union(cl, obj))  # For Unions.
 
