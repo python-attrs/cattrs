@@ -33,6 +33,6 @@ class FunctionDispatch(object):
             try:
                 if can_handle(typ):
                     return handler
-            except:
+            except Exception:
                 pass
-        raise KeyError("unable to find handler for {0}".format(obj))
+        raise KeyError("unable to find handler for {0}".format(typ))

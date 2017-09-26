@@ -3,10 +3,11 @@ from ._compat import lru_cache, singledispatch
 from ._compat import (List, Mapping, Sequence, Optional, MutableSequence,
                       TypeVar, Any, FrozenSet, MutableSet, Set, MutableMapping,
                       Dict, Tuple, _Union)
-from ._compat import unicode, bytes, is_py2
+from ._compat import unicode, bytes, is_py2, singledispatch
 from .disambiguators import create_uniq_field_dis_func
 from .metadata import TYPE_METADATA_KEY
 from .function_dispatch import FunctionDispatch
+from .multistrategy_dispatch import MultiStrategyDispatch
 
 from attr import NOTHING
 
@@ -16,11 +17,14 @@ T = TypeVar('T')
 V = TypeVar('V')
 
 
-@unique
 class UnstructureStrategy(Enum):
     """`attrs` classes unstructuring strategies."""
     AS_DICT = "asdict"
     AS_TUPLE = "astuple"
+
+
+def _is_attrs_class(cls):
+    return getattr(cls, "__attrs_attrs__", None) is not None
 
 
 class Converter(object):
@@ -39,43 +43,42 @@ class Converter(object):
 
         self._dis_func_cache = lru_cache()(self._get_dis_func)
 
-        # Per-instance register of to-Python converters.
-        self.unstructure_func = FunctionDispatch()
-        self.unstructure_func.register(lambda typ: True, self._unstructure)
-        self.unstructure_func.register(lambda typ: issubclass(typ, Mapping), self._unstructure_mapping)
-        self.unstructure_func.register(lambda typ: issubclass(typ, Sequence), self._unstructure_seq)
-        self.unstructure_func.register(lambda typ: issubclass(typ, bytes), self._unstructure_identity)
-        self.unstructure_func.register(lambda typ: issubclass(typ, unicode), self._unstructure_identity)
-        self.unstructure_func.register(lambda typ: issubclass(typ, Enum), self._unstructure_enum)
+        self.unstructure_func = MultiStrategyDispatch(self._unstructure_default)
+        self.unstructure_func.register_cls(bytes, self._unstructure_identity)
+        self.unstructure_func.register_cls(unicode, self._unstructure_identity)
+        self.unstructure_func.register_func(lambda typ: issubclass(typ, Mapping), self._unstructure_mapping)
+        self.unstructure_func.register_func(lambda typ: issubclass(typ, Sequence), self._unstructure_seq)
+        self.unstructure_func.register_func(lambda typ: issubclass(typ, Enum), self._unstructure_enum)
+        self.unstructure_func.register_func(_is_attrs_class, lambda *args, **kwargs: self.unstructure_attrs(*args, **kwargs))
 
         # Per-instance register of to-attrs converters.
         # Singledispatch dispatches based on the first argument, so we
         # store the function and switch the arguments in self.loads.
-        self.structure_func = FunctionDispatch()
-        self.structure_func.register(lambda typ: True, self._structure_default)  # Bare opts here too.
-        self.structure_func.register(lambda typ: issubclass(typ, Any), self._structure_default)  # Bare opts here too.
-        self.structure_func.register(lambda typ: issubclass(typ, List), self._structure_list)
-        self.structure_func.register(lambda typ: issubclass(typ, Sequence), self._structure_list)
-        self.structure_func.register(lambda typ: issubclass(typ, MutableSequence), self._structure_list)
-        self.structure_func.register(lambda typ: issubclass(typ, MutableSet), self._structure_set)
-        self.structure_func.register(lambda typ: issubclass(typ, Set), self._structure_set)
-        self.structure_func.register(lambda typ: issubclass(typ, FrozenSet), self._structure_frozenset)
-        self.structure_func.register(lambda typ: issubclass(typ, Dict), self._structure_dict)
-        self.structure_func.register(lambda typ: issubclass(typ, Mapping), self._structure_dict)
-        self.structure_func.register(lambda typ: issubclass(typ, MutableMapping), self._structure_dict)
-        self.structure_func.register(lambda typ: issubclass(typ, Tuple), self._structure_tuple)
-        self.structure_func.register(lambda typ: issubclass(typ, _Union), self._structure_union)
+        self.structure_func = MultiStrategyDispatch(self._structure_default)
+        self.structure_func.register_func(lambda typ: typ is Any, self._structure_default)
+        self.structure_func.register_func(lambda typ: issubclass(typ, List), self._structure_list)
+        self.structure_func.register_func(lambda typ: issubclass(typ, Sequence), self._structure_list)
+        self.structure_func.register_func(lambda typ: issubclass(typ, MutableSequence), self._structure_list)
+        self.structure_func.register_func(lambda typ: issubclass(typ, MutableSet), self._structure_set)
+        self.structure_func.register_func(lambda typ: issubclass(typ, Set), self._structure_set)
+        self.structure_func.register_func(lambda typ: issubclass(typ, FrozenSet), self._structure_frozenset)
+        self.structure_func.register_func(lambda typ: issubclass(typ, Dict), self._structure_dict)
+        self.structure_func.register_func(lambda typ: issubclass(typ, Mapping), self._structure_dict)
+        self.structure_func.register_func(lambda typ: issubclass(typ, MutableMapping), self._structure_dict)
+        self.structure_func.register_func(lambda typ: issubclass(typ, Tuple), self._structure_tuple)
+        self.structure_func.register_func(lambda typ: isinstance(typ, _Union), self._structure_union)
 
         # Strings are sequences.
         if is_py2:
             # handle unicode with care in python2
-            self.structure_func.register(lambda typ: issubclass(typ, unicode), self._structure_unicode)
+            self.structure_func.register_cls(unicode, self._structure_unicode)
         else:
-            self.structure_func.register(lambda typ: issubclass(typ, unicode), self._structure_call)
-        self.structure_func.register(lambda typ: issubclass(typ, bytes), self._structure_call)  # Bytes are sequences.
-        self.structure_func.register(lambda typ: issubclass(typ, int), self._structure_call)
-        self.structure_func.register(lambda typ: issubclass(typ, float), self._structure_call)
-        self.structure_func.register(lambda typ: issubclass(typ, Enum), self._structure_call)
+            self.structure_func.register_cls(unicode, self._structure_call)
+        self.structure_func.register_cls(bytes, self._structure_call)  # Bytes are sequences.
+        self.structure_func.register_cls(int, self._structure_call)
+        self.structure_func.register_cls(float, self._structure_call)
+        self.structure_func.register_cls(Enum, self._structure_call)
+        self.structure_func.register_func(_is_attrs_class, lambda *args, **kwargs: self.structure_attrs(*args, **kwargs))
 
         self._structure = self.structure_func
         self._dict_factory = dict_factory
@@ -115,7 +118,14 @@ class Converter(object):
         The converter function should take an instance of the class and return
         its Python equivalent.
         """
-        self.unstructure_func.register(lambda t: issubclass(t, cls), func)
+        self.unstructure_func.register_cls(cls, func)
+
+    def register_unstructure_func_hook(self, check_func, func):
+        """Register a class-to-primitive converter function for a class, using
+        a function to check if it's a match.
+        """
+        # type: (Callable[Any], Callable[T], Any]) -> None
+        self.unstructure_func.register_func(check_func, func)
 
     def register_structure_hook(self, cl, func):
         """Register a primitive-to-class converter function for a type.
@@ -131,27 +141,23 @@ class Converter(object):
         if isinstance(cl, _Union):
             self._union_registry[cl] = func
         else:
-            self._structure.register(lambda typ: issubclass(typ, cl), lambda t, o: func(o, t))
+            self._structure.register_cls(cl, func)
+
+    def register_structure_func_hook(self, check_func, func):
+        # type: (Callable[Any], Callable[T], Any]) -> None
+        """Register a class-to-primitive converter function for a class, using
+        a function to check if it's a match.
+        """
+        self.structure_func.register_func(check_func, func)
 
     def structure(self, obj, cl):
         """Convert unstructured Python data structures to structured data."""
         # type: (Any, Type) -> Any
-
-        # Unions aren't classes, but rather instances of typing._Union now.
-        return (self.structure_func.dispatch(cl)(cl, obj)
-                if not isinstance(cl, _Union)
-                else self._structure_union(cl, obj))  # For Unions.
+        return self.structure_func.dispatch(cl)(obj, cl)
 
     # Classes to Python primitives.
-
-    def _unstructure(self, obj):
-        """Convert given attrs classes to their primitive equivalents.
-
-        Other classes are passed through unchanged.
-        """
-        return (self.unstructure_attrs(obj)
-                if getattr(obj.__class__, "__attrs_attrs__", None) is not None
-                else obj)
+    def _unstructure_default(self, obj):
+        return obj
 
     def unstructure_attrs_asdict(self, obj):
         """Our version of `attrs.asdict`, so we can call back to us."""
@@ -192,7 +198,7 @@ class Converter(object):
 
     # Python primitives to classes.
 
-    def _structure_default(self, cl, obj):
+    def _structure_default(self, obj, cl):
         """This is the fallthrough case. Everything is a subclass of `Any`.
 
         A special condition here handles ``attrs`` classes.
@@ -202,15 +208,12 @@ class Converter(object):
         """
         if cl is Any or cl is Optional:
             return obj
-        if getattr(cl, '__attrs_attrs__', None) is not None:
-            # This is an attrs class
-            return self.structure_attrs(obj, cl)
         # We don't know what this is, so we complain loudly.
         msg = "Unsupported type: {0}. Register a structure hook for " \
               "it.".format(cl)
         raise ValueError(msg)
 
-    def _structure_call(self, cl, obj):
+    def _structure_call(self, obj, cl):
         """Just call ``cl`` with the given ``obj``.
 
         This is just an optimization on the ``_structure_default`` case, when
@@ -219,7 +222,7 @@ class Converter(object):
         """
         return cl(obj)
 
-    def _structure_unicode(self, cl, obj):
+    def _structure_unicode(self, obj, cl):
         """Just call ``cl`` with the given ``obj``"""
         if not isinstance(obj, (bytes, unicode)):
             return cl(str(obj))
@@ -247,8 +250,8 @@ class Converter(object):
             return value
         if isinstance(type_, _Union):
             # This is a union.
-            return self._structure_union(type_, value)
-        return self._structure.dispatch(type_)(type_, value)
+            return self._structure_union(value, type_)
+        return self._structure.dispatch(type_)(value, type_)
 
     def structure_attrs_fromdict(self, obj, cl):
         # type: (Mapping, Type) -> Any
@@ -274,10 +277,10 @@ class Converter(object):
             val = mapping.get(name, NOTHING)
             if NoneType in type_.__args__ and val is NOTHING:
                 return None
-            return self._structure_union(type_, val)
-        return self._structure.dispatch(type_)(type_, mapping.get(a.name))
+            return self._structure_union(val, type_)
+        return self._structure.dispatch(type_)(mapping.get(a.name), type_)
 
-    def _structure_list(self, cl, obj):
+    def _structure_list(self, obj, cl):
         # type: (Type[GenericMeta], Iterable[T]) -> List[T]
         """Convert an iterable to a potentially generic list."""
         if not cl.__args__ or cl.__args__[0] is Any:
@@ -287,9 +290,9 @@ class Converter(object):
             conv = (self._structure.dispatch(elem_type)
                     if not isinstance(elem_type, _Union)
                     else self._structure_union)
-            return [conv(elem_type, e) for e in obj]
+            return [conv(e, elem_type) for e in obj]
 
-    def _structure_set(self, cl, obj):
+    def _structure_set(self, obj, cl):
         # type: (Type[GenericMeta], Iterable[T]) -> MutableSet[T]
         """Convert an iterable into a potentially generic set."""
         if not cl.__args__ or cl.__args__[0] is Any:
@@ -299,9 +302,9 @@ class Converter(object):
             conv = (self._structure.dispatch(elem_type)
                     if not isinstance(elem_type, _Union)
                     else self._structure_union)
-            return {conv(elem_type, e) for e in obj}
+            return {conv(e, elem_type) for e in obj}
 
-    def _structure_frozenset(self, cl, obj):
+    def _structure_frozenset(self, obj, cl):
         # type: (Type[GenericMeta], Iterable[T]) -> FrozenSet[T]
         """Convert an iterable into a potentially generic frozenset."""
         if not cl.__args__ or cl.__args__[0] is Any:
@@ -311,9 +314,9 @@ class Converter(object):
             conv = (self._structure.dispatch(elem_type)
                     if not isinstance(elem_type, _Union)
                     else self._structure_union)
-            return frozenset([conv(elem_type, e) for e in obj])
+            return frozenset([conv(e, elem_type) for e in obj])
 
-    def _structure_dict(self, cl, obj):
+    def _structure_dict(self, obj, cl):
         # type: (Type[GenericMeta], Mapping[T, V]) -> Dict[T, V]
         """Convert a mapping into a potentially generic dict."""
         if not cl.__args__ or cl.__args__ == (Any, Any):
@@ -324,12 +327,12 @@ class Converter(object):
                 val_conv = (self._structure.dispatch(val_type)
                             if not isinstance(val_type, _Union)
                             else self._structure_union)
-                return {k: val_conv(val_type, v) for k, v in obj.items()}
+                return {k: val_conv(v, val_type) for k, v in obj.items()}
             elif val_type is Any:
                 key_conv = (self._structure.dispatch(key_type)
                             if not isinstance(key_type, _Union)
                             else self._structure_union)
-                return {key_conv(key_type, k): v for k, v in obj.items()}
+                return {key_conv(k, key_type): v for k, v in obj.items()}
             else:
                 key_conv = (self._structure.dispatch(key_type)
                             if not isinstance(key_type, _Union)
@@ -337,10 +340,10 @@ class Converter(object):
                 val_conv = (self._structure.dispatch(val_type)
                             if not isinstance(val_type, _Union)
                             else self._structure_union)
-                return {key_conv(key_type, k): val_conv(val_type, v)
+                return {key_conv(k, key_type): val_conv(v, val_type)
                         for k, v in obj.items()}
 
-    def _structure_union(self, union, obj):
+    def _structure_union(self, obj, union):
         # type: (_Union, Any): -> Any
         """Deal with converting a union."""
 
@@ -363,15 +366,15 @@ class Converter(object):
                 other = (union_params[0] if union_params[1] is NoneType
                          else union_params[1])
                 # We can't actually have a Union of a Union, so this is safe.
-                return self._structure.dispatch(other)(other, obj)
+                return self._structure.dispatch(other)(obj, other)
 
         # Getting here means either this is not an optional, or it's an
         # optional with more than one parameter.
         # Let's support only unions of attr classes for now.
         cl = self._dis_func_cache(union)(obj)
-        return self._structure.dispatch(cl)(cl, obj)
+        return self._structure.dispatch(cl)(obj, cl)
 
-    def _structure_tuple(self, tup, obj):
+    def _structure_tuple(self, obj, tup):
         # type: (Type[Tuple], Iterable) -> Any
         """Deal with converting to a tuple."""
         tup_params = tup.__args__
@@ -385,12 +388,12 @@ class Converter(object):
             conv = (self._structure.dispatch(tup_type)
                     if not isinstance(tup_type, _Union)
                     else self._structure_union)
-            return tuple(conv(tup_type, e) for e in obj)
+            return tuple(conv(e, tup_type) for e in obj)
         else:
             # We're dealing with a heterogenous tuple.
-            return tuple(self._structure.dispatch(t)(t, e)
+            return tuple(self._structure.dispatch(t)(e, t)
                          if not isinstance(t, _Union)
-                         else self._structure_union(t, e)
+                         else self._structure_union(e, t)
                          for t, e in zip(tup_params, obj))
 
     def _get_dis_func(self, union):
