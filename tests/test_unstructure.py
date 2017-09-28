@@ -23,7 +23,8 @@ def test_seq_unstructure(converter, seq_and_type, dump_strat):
     seq = seq_and_type[0]
     dumped = converter.unstructure(seq)
     assert dumped == seq
-    assert dumped is not seq
+    if not isinstance(seq, tuple):
+        assert dumped is not seq
     assert type(dumped) is type(seq)
 
 
