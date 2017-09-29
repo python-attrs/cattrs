@@ -5,7 +5,6 @@ class FunctionDispatch(object):
     first argument in the method, and return True or False.
 
     objects that help determine dispatch should be instantiated objects.
-
     """
 
     def __init__(self):
@@ -14,6 +13,7 @@ class FunctionDispatch(object):
 
     def register(self, can_handle, func):
         self._handler_pairs.insert(0, (can_handle, func))
+        self._cache.clear()
 
     def dispatch(self, typ):
         """

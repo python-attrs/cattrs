@@ -279,3 +279,23 @@ def test_structuring_unsupported(converter):
         converter.structure(1, Converter)
     with raises(ValueError):
         converter.structure(1, Union[int, unicode])
+
+
+def test_subclass_registration_is_honored(converter):
+    """ If a subclass is registered after a superclass,
+    that subclass handler should be dispatched for
+    structure
+    """
+    class Foo(object):
+        def __init__(self, value):
+            self.value = value
+
+    class Bar(Foo):
+        pass
+
+    converter.register_structure_hook(Foo, lambda obj, cls: cls("foo"))
+    assert converter.structure(None, Foo).value == "foo"
+    assert converter.structure(None, Bar).value == "foo"
+    converter.register_structure_hook(Bar, lambda obj, cls: cls("bar"))
+    assert converter.structure(None, Foo).value == "foo"
+    assert converter.structure(None, Bar).value == "bar"

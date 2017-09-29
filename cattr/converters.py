@@ -25,9 +25,11 @@ class UnstructureStrategy(Enum):
 def _is_attrs_class(cls):
     return getattr(cls, "__attrs_attrs__", None) is not None
 
+
 def _is_union_type(obj):
     """ returns true if the object is an instance of union. """
     return isinstance(obj, _Union)
+
 
 def _subclass(typ):
     """ a shortcut """

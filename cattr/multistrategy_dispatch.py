@@ -2,41 +2,33 @@ from .function_dispatch import FunctionDispatch
 from ._compat import singledispatch
 
 
+class _DispatchNotFound(object):
+    """ a dummy object to help signify a dispatch not found """
+    pass
+
+
 class MultiStrategyDispatch(object):
     """
     MultiStrategyDispatch uses a
-    combination of function dispatch and singledispatch.
+    combination of FunctionDispatch and singledispatch.
 
-    FunctionDispatches are used first, then uses singledispatch otherwise.
+    singledispatch is attempted first. If nothing is
+    registered for singledispatch, or an exception occurs,
+    the FunctionDispatch instance is then used.
     """
 
     def __init__(self, fallback_func):
-        self._dispatch_not_found = object()
         self._function_dispatch = FunctionDispatch()
         self._function_dispatch.register(lambda cls: True, fallback_func)
-        self._single_dispatch = singledispatch(self._dispatch_not_found)
+        self._single_dispatch = singledispatch(_DispatchNotFound)
         self._cache = {}
-
-    @staticmethod
-    def _clear_registry(singledispatch_instance):
-        """
-        a hack to clear the singledispatch registry.
-
-        this ensures that singledispatch does not resolve for
-        types that are not explicitly registered to it.
-        """
-        register_closure = singledispatch_instance.register.__closure__
-        for cell in register_closure:
-            if isinstance(cell.cell_contents, dict):
-                if object in cell.cell_contents:
-                    del cell.cell_contents[object]
 
     def dispatch(self, cl):
         if cl not in self._cache:
             found = False
             try:
                 dispatch = self._single_dispatch.dispatch(cl)
-                if dispatch is not self._dispatch_not_found:
+                if dispatch is not _DispatchNotFound:
                     found = True
             except Exception as e:
                 pass
@@ -46,7 +38,7 @@ class MultiStrategyDispatch(object):
         return self._cache[cl]
 
     def register_cls(self, cls, handler):
-        """ register a class, which utilizes singledispatch """
+        """ register a class to singledispatch """
         self._single_dispatch.register(cls, handler)
         if cls in self._cache:
             del self._cache[cls]
