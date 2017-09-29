@@ -11,10 +11,10 @@ class MultiStrategyDispatch(object):
     """
 
     def __init__(self, fallback_func):
+        self._dispatch_not_found = object()
         self._function_dispatch = FunctionDispatch()
         self._function_dispatch.register(lambda cls: True, fallback_func)
-        self._single_dispatch = singledispatch(lambda: None)
-        self._clear_registry(self._single_dispatch)
+        self._single_dispatch = singledispatch(self._dispatch_not_found)
         self._cache = {}
 
     @staticmethod
@@ -36,9 +36,9 @@ class MultiStrategyDispatch(object):
             found = False
             try:
                 dispatch = self._single_dispatch.dispatch(cl)
-                if dispatch is not None:
+                if dispatch is not self._dispatch_not_found:
                     found = True
-            except Exception:
+            except Exception as e:
                 pass
             if not found:
                 dispatch = self._function_dispatch.dispatch(cl)
@@ -48,7 +48,13 @@ class MultiStrategyDispatch(object):
     def register_cls(self, cls, handler):
         """ register a class, which utilizes singledispatch """
         self._single_dispatch.register(cls, handler)
+        if cls in self._cache:
+            del self._cache[cls]
 
-    def register_func(self, func, handler):
-        """ register a function to determine if the handle should be used for the type """
-        self._function_dispatch.register(func, handler)
+    def register_func_list(self, func_and_handler):
+        """ register a function to determine if the handle
+            should be used for the type
+        """
+        for func, handler in func_and_handler:
+            self._function_dispatch.register(func, handler)
+        self._cache.clear()
