@@ -16,11 +16,13 @@ def _foo_func():
 def _foo_cls():
     pass
 
+
 def test_multistrategy_dispatch_register_cls():
     dispatch = MultiStrategyDispatch(_fallback)
     assert dispatch.dispatch(Foo) == _fallback
     dispatch.register_cls_list([(Foo, _foo_cls)])
     assert dispatch.dispatch(Foo) == _foo_cls
+
 
 def test_multistrategy_dispatch_register_func():
     dispatch = MultiStrategyDispatch(_fallback)
@@ -29,6 +31,7 @@ def test_multistrategy_dispatch_register_func():
         (lambda cls: issubclass(cls, Foo), _foo_func)
     ])
     assert dispatch.dispatch(Foo) == _foo_func
+
 
 def test_multistrategy_dispatch_conflict_class_wins():
     """

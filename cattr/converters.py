@@ -90,7 +90,7 @@ class Converter(object):
         # Strings are sequences.
         self.structure_func.register_cls_list([
             (unicode, self._structure_unicode if is_py2
-                      else self._structure_call),
+             else self._structure_call),
             (bytes, self._structure_call),
             (int, self._structure_call),
             (float, self._structure_call),

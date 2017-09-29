@@ -30,7 +30,7 @@ class MultiStrategyDispatch(object):
                 dispatch = self._single_dispatch.dispatch(cl)
                 if dispatch is not _DispatchNotFound:
                     found = True
-            except Exception as e:
+            except Exception:
                 pass
             if not found:
                 dispatch = self._function_dispatch.dispatch(cl)
