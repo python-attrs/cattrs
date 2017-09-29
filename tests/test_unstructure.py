@@ -82,7 +82,7 @@ def test_unstructure_hooks(converter, cl_and_vals):
     assert converter.unstructure(inst) == 'test'
 
 
-def test_unstructure_hook_func(converter, cl_and_vals):
+def test_unstructure_hook_func(converter):
     """
     Unstructure hooks work.
     """
