@@ -263,6 +263,28 @@ def test_structuring_primitive_union_hook(converter, ints):
             assert unicode(x) == y
 
 
+def test_structure_hook_func(converter):
+    """ testing the hook_func method """
+
+    def can_handle(cls):
+        return cls.__name__.startswith("F")
+
+    def handle(obj, cls):
+        return "hi"
+
+    class Foo(object):
+        pass
+
+    class Bar(object):
+        pass
+
+    converter.register_structure_hook_func(can_handle, handle)
+
+    assert converter.structure(10, Foo) == "hi"
+    with raises(ValueError):
+        converter.structure(10, Bar)
+
+
 @given(choices(), enums_of_primitives())
 def test_structuring_enums(converter, choice, enum):
     # type: (Converter, Any, Any) -> None

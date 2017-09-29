@@ -386,3 +386,23 @@ The type may seem redundant but is useful when dealing with generic types.
 
 When using ``cattr.register_structure_hook``, the hook will be registered on the global converter.
 If you want to avoid changing the global converter, create an instance of ``cattr.Converter`` and register the hook on that.
+
+In some situations, it is not possible to decide on the converter using typing mechanisms alone (such as with attrs classes). In these situations,
+cattrs provides a register_structure_func_hook instead, which accepts a function to determine whether that type can be handled instead.
+
+The function-based hooks are evaluated after the class-based hooks. In the case where both a class-based hook and a function-based hook are present, the class-based hook will be used.
+
+.. doctest::
+
+    >>> class D(object):
+    ...     custom = True
+    ...     def __init__(self, a):
+    ...         self.a = a
+    ...     def __repr__(self):
+    ...         return f'D(a={self.a})'
+    ...     @classmethod
+    ...     def deserialize(cls, data):
+    ...         return cls(data["a"])
+    >>> cattr.register_structure_hook_func(lambda cls: getattr(cls, "custom", False), lambda d, t: t.deserialize(d))
+    >>> cattr.structure({'a': 2}, D)
+    D(a=2)

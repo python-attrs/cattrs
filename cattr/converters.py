@@ -55,8 +55,10 @@ class Converter(object):
         self.unstructure_func = MultiStrategyDispatch(
             self._unstructure_default
         )
-        self.unstructure_func.register_cls(bytes, self._unstructure_identity)
-        self.unstructure_func.register_cls(unicode, self._unstructure_identity)
+        self.unstructure_func.register_cls_list([
+            (bytes, self._unstructure_identity),
+            (unicode, self._unstructure_identity),
+        ])
         self.unstructure_func.register_func_list([
             (_subclass(Mapping), self._unstructure_mapping),
             (_subclass(Sequence), self._unstructure_seq),
@@ -86,16 +88,14 @@ class Converter(object):
         ])
 
         # Strings are sequences.
-        if is_py2:
-            # handle unicode with care in python2
-            self.structure_func.register_cls(unicode, self._structure_unicode)
-        else:
-            self.structure_func.register_cls(unicode, self._structure_call)
-        # Bytes are sequences.
-        self.structure_func.register_cls(bytes, self._structure_call)
-        self.structure_func.register_cls(int, self._structure_call)
-        self.structure_func.register_cls(float, self._structure_call)
-        self.structure_func.register_cls(Enum, self._structure_call)
+        self.structure_func.register_cls_list([
+            (unicode, self._structure_unicode if is_py2
+                      else self._structure_call),
+            (bytes, self._structure_call),
+            (int, self._structure_call),
+            (float, self._structure_call),
+            (Enum, self._structure_call),
+        ])
         self._structure = self.structure_func
         self._dict_factory = dict_factory
 
@@ -134,14 +134,14 @@ class Converter(object):
         The converter function should take an instance of the class and return
         its Python equivalent.
         """
-        self.unstructure_func.register_cls(cls, func)
+        self.unstructure_func.register_cls_list([(cls, func)])
 
-    def register_unstructure_func_hook(self, check_func, func):
+    def register_unstructure_hook_func(self, check_func, func):
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
         """
         # type: (Callable[Any], Callable[T], Any]) -> None
-        self.unstructure_func.register_func(check_func, func)
+        self.unstructure_func.register_func_list([(check_func, func)])
 
     def register_structure_hook(self, cl, func):
         """Register a primitive-to-class converter function for a type.
@@ -157,14 +157,14 @@ class Converter(object):
         if _is_union_type(cl):
             self._union_registry[cl] = func
         else:
-            self._structure.register_cls(cl, func)
+            self._structure.register_cls_list([(cl, func)])
 
-    def register_structure_func_hook(self, check_func, func):
+    def register_structure_hook_func(self, check_func, func):
         # type: (Callable[Any], Callable[T], Any]) -> None
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
         """
-        self.structure_func.register_func(check_func, func)
+        self.structure_func.register_func_list([(check_func, func)])
 
     def structure(self, obj, cl):
         """Convert unstructured Python data structures to structured data."""

@@ -37,11 +37,12 @@ class MultiStrategyDispatch(object):
             self._cache[cl] = dispatch
         return self._cache[cl]
 
-    def register_cls(self, cls, handler):
+    def register_cls_list(self, cls_and_handler):
         """ register a class to singledispatch """
-        self._single_dispatch.register(cls, handler)
-        if cls in self._cache:
-            del self._cache[cls]
+        for cls, handler in cls_and_handler:
+            self._single_dispatch.register(cls, handler)
+            if cls in self._cache:
+                del self._cache[cls]
 
     def register_func_list(self, func_and_handler):
         """ register a function to determine if the handle

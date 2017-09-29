@@ -3,6 +3,7 @@ from . import (seqs_of_primitives, dicts_of_primitives, enums_of_primitives,
                simple_classes, nested_classes)
 
 from cattr.converters import UnstructureStrategy
+from pytest import raises
 
 from attr import asdict, astuple
 from hypothesis import given
@@ -80,3 +81,26 @@ def test_unstructure_hooks(converter, cl_and_vals):
     converter.register_unstructure_hook(cl, lambda val: 'test')
 
     assert converter.unstructure(inst) == 'test'
+
+@given(simple_classes())
+def test_unstructure_hooks(converter, cl_and_vals):
+    """
+    Unstructure hooks work.
+    """
+    def can_handle(cls):
+        return cls.__name__.startswith("F")
+
+    def handle(obj):
+        return "hi"
+
+    class Foo(object):
+        pass
+
+    class Bar(object):
+        pass
+
+    converter.register_unstructure_hook_func(can_handle, handle)
+
+    b = Bar()
+    assert converter.unstructure(Foo()) == "hi"
+    assert converter.unstructure(b) is b
