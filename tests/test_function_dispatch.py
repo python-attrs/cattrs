@@ -8,8 +8,7 @@ def test_function_dispatch():
     with pytest.raises(KeyError):
         dispatch.dispatch(float)
 
-    def test_func():
-        return "test"
+    test_func = object()
 
     dispatch.register(
         lambda cls: issubclass(cls, float),
@@ -24,9 +23,11 @@ def test_function_clears_cache_after_function_added():
 
     class Foo(object):
         pass
+    Foo()
 
     class Bar(Foo):
         pass
+    Bar()
 
     dispatch.register(
         lambda cls: issubclass(cls, Foo), "foo"

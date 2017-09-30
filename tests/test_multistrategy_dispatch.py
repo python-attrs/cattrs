@@ -18,6 +18,9 @@ def _foo_cls():
 
 
 def test_multistrategy_dispatch_register_cls():
+    _fallback()
+    _foo_func()
+    _foo_cls()
     dispatch = MultiStrategyDispatch(_fallback)
     assert dispatch.dispatch(Foo) == _fallback
     dispatch.register_cls_list([(Foo, _foo_cls)])
