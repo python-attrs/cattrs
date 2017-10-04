@@ -1,7 +1,9 @@
+import attr
 from .function_dispatch import FunctionDispatch
 from ._compat import singledispatch
 
 
+@attr.s
 class _DispatchNotFound(object):
     """ a dummy object to help signify a dispatch not found """
     pass

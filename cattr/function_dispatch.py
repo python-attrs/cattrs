@@ -1,3 +1,7 @@
+import attr
+
+
+@attr.s
 class FunctionDispatch(object):
     """
     FunctionDispatch is similar to functools.singledispatch, but
@@ -6,10 +10,8 @@ class FunctionDispatch(object):
 
     objects that help determine dispatch should be instantiated objects.
     """
-
-    def __init__(self):
-        self._handler_pairs = []
-        self._cache = {}
+    _handler_pairs = attr.ib(init=False, default=attr.Factory(list))
+    _cache = attr.ib(init=False, default=attr.Factory(dict))
 
     def register(self, can_handle, func):
         self._handler_pairs.insert(0, (can_handle, func))
