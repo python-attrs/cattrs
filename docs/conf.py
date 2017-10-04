@@ -280,11 +280,5 @@ texinfo_documents = [
 
 doctest_global_setup = "import attr, cattr;" \
                        "from cattr import typed;" \
-                       "from cattr._compat import *;" \
+                       "from typing import *;" \
                        "from enum import Enum, unique"
-
-# Sphinx will want to import all referenced modules. Some of these modules
-# aren't needed and will, in fact, change process-wide state.
-# This will make the doctests fail.
-sys.modules['cattr.vendor.python2.typing'] = Mock()
-sys.modules['cattr.vendor.python3.typing'] = Mock()
