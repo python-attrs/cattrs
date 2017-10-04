@@ -7,7 +7,7 @@ from hypothesis import assume, given
 from hypothesis.strategies import sampled_from
 
 from cattr import UnstructureStrategy, typed
-from cattr._compat import Union, Optional
+from typing import Union, Optional
 
 from . import simple_typed_classes, nested_typed_classes
 

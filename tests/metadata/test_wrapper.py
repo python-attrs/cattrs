@@ -1,7 +1,7 @@
 """Tests for the typed wrapper."""
 from cattr import typed
 from cattr.metadata import TYPE_METADATA_KEY
-from cattr._compat import Any
+from typing import Any
 
 
 def test_existing_metadata():

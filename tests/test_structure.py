@@ -1,8 +1,9 @@
 """Test structuring of collections and primitives."""
 import sys
 
-from cattr._compat import (List, Tuple, Any, Set, MutableSet, FrozenSet,
-                           Dict, Optional, Union, bytes, unicode, is_py2)
+from typing import (List, Tuple, Any, Set, MutableSet, FrozenSet,
+                    Dict, Optional, Union)
+from cattr._compat import bytes, unicode, is_py2
 
 from pytest import raises
 

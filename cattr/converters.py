@@ -1,9 +1,8 @@
 from enum import Enum
-from ._compat import lru_cache
-from ._compat import (List, Mapping, Sequence, Optional, MutableSequence,
-                      TypeVar, Any, FrozenSet, MutableSet, Set, MutableMapping,
-                      Dict, Tuple, _Union)
-from ._compat import unicode, bytes, is_py2
+from typing import (List, Mapping, Sequence, Optional, MutableSequence,
+                    TypeVar, Any, FrozenSet, MutableSet, Set, MutableMapping,
+                    Dict, Tuple, _Union)
+from ._compat import lru_cache, unicode, bytes, is_py2
 from .disambiguators import create_uniq_field_dis_func
 from .metadata import TYPE_METADATA_KEY
 from .multistrategy_dispatch import MultiStrategyDispatch

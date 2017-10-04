@@ -3,7 +3,7 @@ from collections import OrderedDict
 from functools import reduce
 from operator import or_
 
-from ._compat import Mapping
+from typing import Mapping
 
 from attr import fields
 
