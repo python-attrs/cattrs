@@ -23,7 +23,8 @@ def test_seq_unstructure(converter, seq_and_type, dump_strat):
     seq = seq_and_type[0]
     dumped = converter.unstructure(seq)
     assert dumped == seq
-    assert dumped is not seq
+    if not isinstance(seq, tuple):
+        assert dumped is not seq
     assert type(dumped) is type(seq)
 
 
@@ -79,3 +80,26 @@ def test_unstructure_hooks(converter, cl_and_vals):
     converter.register_unstructure_hook(cl, lambda val: 'test')
 
     assert converter.unstructure(inst) == 'test'
+
+
+def test_unstructure_hook_func(converter):
+    """
+    Unstructure hooks work.
+    """
+    def can_handle(cls):
+        return cls.__name__.startswith("F")
+
+    def handle(obj):
+        return "hi"
+
+    class Foo(object):
+        pass
+
+    class Bar(object):
+        pass
+
+    converter.register_unstructure_hook_func(can_handle, handle)
+
+    b = Bar()
+    assert converter.unstructure(Foo()) == "hi"
+    assert converter.unstructure(b) is b

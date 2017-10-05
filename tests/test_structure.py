@@ -263,6 +263,28 @@ def test_structuring_primitive_union_hook(converter, ints):
             assert unicode(x) == y
 
 
+def test_structure_hook_func(converter):
+    """ testing the hook_func method """
+
+    def can_handle(cls):
+        return cls.__name__.startswith("F")
+
+    def handle(obj, cls):
+        return "hi"
+
+    class Foo(object):
+        pass
+
+    class Bar(object):
+        pass
+
+    converter.register_structure_hook_func(can_handle, handle)
+
+    assert converter.structure(10, Foo) == "hi"
+    with raises(ValueError):
+        converter.structure(10, Bar)
+
+
 @given(choices(), enums_of_primitives())
 def test_structuring_enums(converter, choice, enum):
     # type: (Converter, Any, Any) -> None
@@ -279,3 +301,23 @@ def test_structuring_unsupported(converter):
         converter.structure(1, Converter)
     with raises(ValueError):
         converter.structure(1, Union[int, unicode])
+
+
+def test_subclass_registration_is_honored(converter):
+    """ If a subclass is registered after a superclass,
+    that subclass handler should be dispatched for
+    structure
+    """
+    class Foo(object):
+        def __init__(self, value):
+            self.value = value
+
+    class Bar(Foo):
+        pass
+
+    converter.register_structure_hook(Foo, lambda obj, cls: cls("foo"))
+    assert converter.structure(None, Foo).value == "foo"
+    assert converter.structure(None, Bar).value == "foo"
+    converter.register_structure_hook(Bar, lambda obj, cls: cls("bar"))
+    assert converter.structure(None, Foo).value == "foo"
+    assert converter.structure(None, Bar).value == "bar"

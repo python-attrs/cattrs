@@ -5,6 +5,10 @@ History
 0.5.0 (UNRELEASED)
 ------------------
 
+* structure/unstructure now supports using functions as well as classes for deciding the appropriate function.
+* added `Converter.register_structure_hook_func`, to register a function instead of a class for determining handler func
+* added `Converter.register_unstructure_hook_func`, to register a function instead of a class for determining handler func
+
 
 0.4.0 (2017-07-17)
 ------------------
