@@ -6,8 +6,9 @@ History
 ------------------
 
 * structure/unstructure now supports using functions as well as classes for deciding the appropriate function.
-* added `Converter.register_structure_hook_func`, to register a function instead of a class for determining handler func
-* added `Converter.register_unstructure_hook_func`, to register a function instead of a class for determining handler func
+* added `Converter.register_structure_hook_func`, to register a function instead of a class for determining handler func.
+* added `Converter.register_unstructure_hook_func`, to register a function instead of a class for determining handler func.
+* vendored typing is no longer needed, nor provided.
 
 
 0.4.0 (2017-07-17)
