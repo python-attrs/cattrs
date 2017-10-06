@@ -13,9 +13,8 @@ cattrs
         :target: https://cattrs.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-.. image:: https://pyup.io/repos/github/Tinche/cattrs/shield.svg
-        :target: https://pyup.io/repos/github/Tinche/cattrs/
-        :alt: Updates
+.. image:: https://img.shields.io/pypi/pyversions/cattrs.svg
+        :alt: Supported Python versions
 
 .. image:: https://codecov.io/gh/Tinche/cattrs/branch/master/graph/badge.svg
         :target: https://codecov.io/gh/Tinche/cattrs
