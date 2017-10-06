@@ -14,6 +14,7 @@ cattrs
         :alt: Documentation Status
 
 .. image:: https://img.shields.io/pypi/pyversions/cattrs.svg
+        :target: https://github.com/Tinche/cattrs
         :alt: Supported Python versions
 
 .. image:: https://codecov.io/gh/Tinche/cattrs/branch/master/graph/badge.svg
