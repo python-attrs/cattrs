@@ -6,9 +6,9 @@ from attr import NOTHING
 from hypothesis.strategies import (booleans, composite, dictionaries,
                                    floats, integers, just, lists, recursive,
                                    text, tuples)
-
 from cattr import typed
-from cattr._compat import Any, Dict, List, unicode
+from typing import Any, Dict, List
+from cattr._compat import unicode
 
 from .. import gen_attr_names, make_class
 

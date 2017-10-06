@@ -3,9 +3,9 @@ import keyword
 
 from collections import OrderedDict
 from enum import Enum
-from cattr._compat import (Tuple, Sequence, MutableSequence, List, Dict,
-                           MutableMapping, Mapping, Any, is_py2, bytes,
-                           unicode)
+from typing import (Tuple, Sequence, MutableSequence, List, Dict,
+                    MutableMapping, Mapping, Any)
+from cattr._compat import is_py2, bytes, unicode
 
 import attr
 
