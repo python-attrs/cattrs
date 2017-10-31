@@ -1,10 +1,10 @@
 """Loading of attrs classes."""
-from attr import asdict, astuple, fields
+from attr import asdict, astuple, fields, make_class
 from hypothesis import assume, given
 
 from typing import Union
 
-from . import simple_classes
+from . import simple_classes, simple_attrs
 
 
 @given(simple_classes())
@@ -17,6 +17,16 @@ def test_structure_simple_from_dict(converter, cl_and_vals):
     dumped = asdict(obj)
     loaded = converter.structure(dumped, cl)
 
+    assert obj == loaded
+
+
+@given(simple_attrs(defaults=True))
+def test_structure_simple_from_dict_default(converter, cl_and_vals):
+    """Test structuring non-nested attrs classes with default value."""
+    a, _ = cl_and_vals
+    cl = make_class("HypClass", {"a": a})
+    obj = cl()
+    loaded = converter.structure({}, cl)
     assert obj == loaded
 
 

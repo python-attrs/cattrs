@@ -286,9 +286,9 @@ class Converter(object):
             return mapping.get(name, a.default)
         if _is_union_type(type_):
             # This is a union.
-            val = mapping.get(name, NOTHING)
+            val = mapping.get(name, a.default)
             if NoneType in type_.__args__ and val is NOTHING:
-                return a.default
+                return None
             return self._structure_union(val, type_)
         return self._structure.dispatch(type_)(mapping.get(a.name), type_)
 
