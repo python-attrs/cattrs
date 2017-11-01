@@ -281,16 +281,16 @@ class Converter(object):
     def _structure_attr_from_dict(self, a, name, mapping):
         """Handle an individual attrs attribute structuring."""
         type_ = a.metadata.get(TYPE_METADATA_KEY)
+        val = mapping.get(name, a.default)
         if type_ is None:
             # No type.
-            return mapping.get(name, a.default)
+            return val
         if _is_union_type(type_):
-            # This is a union.
-            val = mapping.get(name, a.default)
+
             if NoneType in type_.__args__ and val is NOTHING:
                 return None
             return self._structure_union(val, type_)
-        return self._structure.dispatch(type_)(mapping.get(a.name), type_)
+        return self._structure.dispatch(type_)(val, type_)
 
     def _structure_list(self, obj, cl):
         # type: (Type[GenericMeta], Iterable[T]) -> List[T]
