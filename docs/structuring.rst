@@ -327,7 +327,7 @@ the first positional argument is the attribute type.
     ...     a = typed(int)
     ...
     >>> attr.fields(A).a
-    Attribute(name='a', default=NOTHING, validator=None, repr=True, cmp=True, hash=True, init=True, convert=None, metadata=mappingproxy({'cattr_type_metadata': <class 'int'>}))
+    Attribute(name='a', default=NOTHING, validator=None, repr=True, cmp=True, hash=True, init=True, convert=None, metadata=mappingproxy({'cattr_type_metadata': <class 'int'>}), type=None)
 
 The type information is stored in the attribute metadata, under the ``cattr.metadata.TYPE_METADATA_KEY`` key,
 and is used automatically by ``cattrs``.

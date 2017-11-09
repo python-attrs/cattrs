@@ -11,7 +11,7 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    "attrs >= 17.2",
+    "attrs >= 17.3",
 ]
 
 if sys.version_info < (3, 0):

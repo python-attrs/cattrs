@@ -229,7 +229,8 @@ def dict_attrs(draw, defaults=None):
     default = NOTHING
     val_strat = st.dictionaries(keys=st.text(), values=st.integers())
     if defaults is True or (defaults is None and draw(st.booleans())):
-        default = draw(val_strat)
+        default_val = draw(val_strat)
+        default = attr.Factory(lambda: default_val)
     return ((attr.ib(default=default), val_strat))
 
 

@@ -274,20 +274,23 @@ class Converter(object):
             name = a.name
             # We detect the type by metadata.
             converted = self._structure_attr_from_dict(a, name, obj)
-            conv_obj[name] = converted
+            if converted is not NOTHING:
+                conv_obj[name] = converted
 
         return cl(**conv_obj)
 
     def _structure_attr_from_dict(self, a, name, mapping):
         """Handle an individual attrs attribute structuring."""
+        val = mapping.get(name, NOTHING)
+        if val is NOTHING:
+            return NOTHING
+
         type_ = a.metadata.get(TYPE_METADATA_KEY)
-        val = mapping.get(name, a.default)
         if type_ is None:
             # No type.
             return val
         if _is_union_type(type_):
-
-            if NoneType in type_.__args__ and val is NOTHING:
+            if NoneType in type_.__args__ and val is None:
                 return None
             return self._structure_union(val, type_)
         return self._structure.dispatch(type_)(val, type_)

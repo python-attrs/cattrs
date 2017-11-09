@@ -1,10 +1,11 @@
 """Loading of attrs classes."""
-from attr import asdict, astuple, fields, make_class
+from attr import asdict, astuple, Factory, fields, NOTHING
 from hypothesis import assume, given
+from hypothesis.strategies import data, lists, sampled_from
 
 from typing import Union
 
-from . import simple_classes, simple_attrs
+from . import simple_classes
 
 
 @given(simple_classes())
@@ -20,14 +21,28 @@ def test_structure_simple_from_dict(converter, cl_and_vals):
     assert obj == loaded
 
 
-@given(simple_attrs(defaults=True))
-def test_structure_simple_from_dict_default(converter, cl_and_vals):
+@given(simple_classes(defaults=True), data())
+def test_structure_simple_from_dict_default(converter, cl_and_vals, data):
     """Test structuring non-nested attrs classes with default value."""
-    a, _ = cl_and_vals
-    cl = make_class("HypClass", {"a": a})
-    obj = cl()
-    loaded = converter.structure({}, cl)
-    assert obj == loaded
+    cl, vals = cl_and_vals
+    obj = cl(*vals)
+    attrs_with_defaults = [a for a in fields(cl)
+                           if a.default is not NOTHING]
+    to_remove = data.draw(lists(elements=sampled_from(attrs_with_defaults),
+                                unique=True))
+
+    for a in to_remove:
+        if isinstance(a.default, Factory):
+            setattr(obj, a.name, a.default.factory())
+        else:
+            setattr(obj, a.name, a.default)
+
+    dumped = asdict(obj)
+
+    for a in to_remove:
+        del dumped[a.name]
+
+    assert obj == converter.structure(dumped, cl)
 
 
 @given(simple_classes())
