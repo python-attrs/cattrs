@@ -6,17 +6,10 @@ Unstructuring is intended to convert high-level, structured Python data (like
 instances of complex classes) into simple, unstructured data (like
 dictionaries).
 
-Unstructuring is simpler than loading in that no target types are required.
+Unstructuring is simpler than structuring in that no target types are required.
 Simply provide an argument to ``unstructure`` and ``cattrs`` will produce a
 result based on the registered unstructuring hooks. A number of default
 unstructuring hooks are documented here.
-
-.. warning::
-
-    When using Python 3.5 earlier or equal to 3.5.3 or Python 3.6.0, please use
-    the bundled ``cattr.typing`` module instead of Python's standard ``typing``
-    module. These versions of ``typing`` are incompatible with ``cattrs``. If
-    your Python version is a later one, please use Python's ``typing`` instead.
 
 Unstructuring is primarily done using :py:attr:`.Converter.unstructure`.
 
@@ -74,27 +67,28 @@ and :meth:`.Converter.unstructure_attrs_astuple`. These methods can be used with
 custom unstructuring hooks to selectively apply one strategy to instances of
 particular classes.
 
-Assume two nested ``attrs`` classes, ``A`` and ``B``; instances of ``A``
-contain instances of ``B``. Instances of ``A`` should be unstructured as
-dictionaries, and instances of ``B`` as tuples. Here's how to do this.
+Assume two nested ``attrs`` classes, ``Inner`` and ``Outer``; instances of
+``Outer`` contain instances of ``Inner``. Instances of ``Outer`` should be
+unstructured as dictionaries, and instances of ``Inner`` as tuples. Here's how
+to do this.
 
 .. doctest::
 
     >>> @attr.s
-    ... class A:
-    ...     a = attr.ib()
+    ... class Inner:
+    ...     a: int = attr.ib()
     ...
     >>> @attr.s
-    ... class B:
-    ...     b = attr.ib()
+    ... class Outer:
+    ...     i: Inner = attr.ib()
     ...
-    >>> inst = A(a=B(b=1))
+    >>> inst = Outer(i=Inner(a=1))
     >>>
     >>> converter = cattr.Converter()
-    >>> converter.register_unstructure_hook(B, converter.unstructure_attrs_astuple)
+    >>> converter.register_unstructure_hook(Inner, converter.unstructure_attrs_astuple)
     >>>
     >>> converter.unstructure(inst)
-    {'a': (1,)}
+    {'i': (1,)}
 
 Of course, these methods can be used directly as well, without changing the converter strategy.
 
@@ -102,8 +96,8 @@ Of course, these methods can be used directly as well, without changing the conv
 
     >>> @attr.s
     ... class C:
-    ...     a = attr.ib()
-    ...     b = attr.ib()
+    ...     a: int = attr.ib()
+    ...     b: str = attr.ib()
     ...
     >>> inst = C(1, 'a')
     >>>

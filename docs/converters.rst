@@ -31,8 +31,8 @@ Converter objects
 To create a private converter, simply instantiate a ``cattr.Converter``.
 Currently, a converter contains the following state:
 
-* a registry of unstructure hooks, backed by a ``singledispatch``.
-* a registry of structure hooks, backed by a different ``singledispatch``.
+* a registry of unstructure hooks, backed by a ``singledispatch`` and a ``function_dispatch``.
+* a registry of structure hooks, backed by a different ``singledispatch`` and ``function_dispatch``.
 * a LRU cache of union disambiguation functions.
 * a reference to an unstructuring strategy (either AS_DICT or AS_TUPLE).
 * a ``dict_factory`` callable, used for creating ``dicts`` when dumping

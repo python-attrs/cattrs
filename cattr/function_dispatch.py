@@ -1,7 +1,7 @@
 import attr
 
 
-@attr.s
+@attr.s(slots=True)
 class FunctionDispatch(object):
     """
     FunctionDispatch is similar to functools.singledispatch, but
