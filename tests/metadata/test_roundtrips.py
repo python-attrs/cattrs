@@ -108,4 +108,3 @@ def test_optional_field_roundtrip(converter, cl_and_vals):
     unstructured = converter.unstructure(inst)
 
     assert inst == converter.structure(unstructured, C)
-
