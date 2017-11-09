@@ -316,21 +316,18 @@ Complex ``attrs`` classes
 Complex ``attrs`` classes are classes with type information available for some
 or all attributes. These classes support almost arbitrary nesting.
 
-Type information can be provided by using ``cattr.typed()`` instead of
-``attr.ib()``. ``cattr.typed()`` has the same arguments as ``attr.ib()`` except
-the first positional argument is the attribute type.
+Type information is supported by attrs directly, and can be set using type
+annotations when using Python 3.6+, or by passing the appropriate type to
+``attr.ib``.
 
 .. doctest::
 
     >>> @attr.s
     ... class A:
-    ...     a = typed(int)
+    ...     a: int = attr.ib()
     ...
     >>> attr.fields(A).a
-    Attribute(name='a', default=NOTHING, validator=None, repr=True, cmp=True, hash=True, init=True, convert=None, metadata=mappingproxy({'cattr_type_metadata': <class 'int'>}), type=None)
-
-The type information is stored in the attribute metadata, under the ``cattr.metadata.TYPE_METADATA_KEY`` key,
-and is used automatically by ``cattrs``.
+    Attribute(name='a', default=NOTHING, validator=None, repr=True, cmp=True, hash=None, init=True, convert=None, metadata=mappingproxy({}), type=<class 'int'>)
 
 Type information, when provided, can be used for all attribute types, not only
 attributes holding ``attrs`` classes.
@@ -339,11 +336,11 @@ attributes holding ``attrs`` classes.
 
     >>> @attr.s
     ... class A:
-    ...     a = typed(int, default=0)
+    ...     a: int = attr.ib(default=0)
     ...
     >>> @attr.s
     ... class B:
-    ...     b = typed(A)
+    ...     b = attr.ib(type=A)  # Legacy syntax.
     ...
     >>> cattr.structure({'b': {'a': '1'}}, B)
     B(b=A(a=1))
