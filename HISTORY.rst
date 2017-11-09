@@ -9,6 +9,8 @@ History
 * added `Converter.register_structure_hook_func`, to register a function instead of a class for determining handler func.
 * added `Converter.register_unstructure_hook_func`, to register a function instead of a class for determining handler func.
 * vendored typing is no longer needed, nor provided.
+* Attributes with default values can now be structured if they are missing in the input.
+  (`#15 https://github.com/Tinche/cattrs/pull/15`_)
 
 
 0.4.0 (2017-07-17)
