@@ -6,7 +6,6 @@ from attr import NOTHING
 from hypothesis.strategies import (booleans, composite, dictionaries,
                                    floats, integers, just, lists, recursive,
                                    text, tuples)
-from cattr import typed
 from typing import Any, Dict, List
 from cattr._compat import unicode
 
@@ -60,7 +59,7 @@ def bare_typed_attrs(draw, defaults=None):
     default = attr.NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = None
-    return ((typed(Any, default=default), just(None)))
+    return ((attr.ib(type=Any, default=default), just(None)))
 
 
 @composite
@@ -72,7 +71,7 @@ def int_typed_attrs(draw, defaults=None):
     default = attr.NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(integers())
-    return ((typed(int, default=default), integers()))
+    return ((attr.ib(type=int, default=default), integers()))
 
 
 @composite
@@ -84,7 +83,7 @@ def str_typed_attrs(draw, defaults=None):
     default = NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(text())
-    return ((typed(unicode, default=default), text()))
+    return ((attr.ib(type=unicode, default=default), text()))
 
 
 @composite
@@ -96,7 +95,7 @@ def float_typed_attrs(draw, defaults=None):
     default = attr.NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(floats())
-    return ((typed(float, default=default), floats()))
+    return ((attr.ib(type=float, default=default), floats()))
 
 
 @composite
@@ -109,7 +108,7 @@ def dict_typed_attrs(draw, defaults=None):
     val_strat = dictionaries(keys=text(), values=integers())
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(val_strat)
-    return ((typed(Dict[unicode, int], default=default), val_strat))
+    return ((attr.ib(type=Dict[unicode, int], default=default), val_strat))
 
 
 def just_class(tup):
@@ -119,7 +118,7 @@ def just_class(tup):
     nested_cl_args = tup[1][1]
     default = attr.Factory(lambda: nested_cl(*nested_cl_args))
     combined_attrs = list(tup[0])
-    combined_attrs.append((typed(nested_cl, default=default),
+    combined_attrs.append((attr.ib(type=nested_cl, default=default),
                            just(nested_cl(*nested_cl_args))))
     return _create_hyp_class(combined_attrs)
 
@@ -129,7 +128,7 @@ def list_of_class(tup):
     nested_cl_args = tup[1][1]
     default = attr.Factory(lambda: [nested_cl(*nested_cl_args)])
     combined_attrs = list(tup[0])
-    combined_attrs.append((typed(List[nested_cl], default=default),
+    combined_attrs.append((attr.ib(type=List[nested_cl], default=default),
                            just([nested_cl(*nested_cl_args)])))
     return _create_hyp_class(combined_attrs)
 
@@ -139,7 +138,7 @@ def dict_of_class(tup):
     nested_cl_args = tup[1][1]
     default = attr.Factory(lambda: {"cls": nested_cl(*nested_cl_args)})
     combined_attrs = list(tup[0])
-    combined_attrs.append((typed(Dict[str, nested_cl], default=default),
+    combined_attrs.append((attr.ib(type=Dict[str, nested_cl], default=default),
                            just({'cls': nested_cl(*nested_cl_args)})))
     return _create_hyp_class(combined_attrs)
 

@@ -6,7 +6,7 @@ from attr import fields, make_class
 from hypothesis import assume, given
 from hypothesis.strategies import sampled_from
 
-from cattr import UnstructureStrategy, typed
+from cattr import UnstructureStrategy
 from typing import Union, Optional
 
 from . import simple_typed_classes, nested_typed_classes, simple_typed_attrs
@@ -71,7 +71,7 @@ def test_union_field_roundtrip(converter, cl_and_vals_a, cl_and_vals_b, strat):
 
     @attr.s
     class C(object):
-        a = typed(Union[cl_a, cl_b])
+        a = attr.ib(type=Union[cl_a, cl_b])
 
     inst = C(a=cl_a(*vals_a))
 
@@ -99,7 +99,7 @@ def test_optional_field_roundtrip(converter, cl_and_vals):
 
     @attr.s
     class C(object):
-        a = typed(Optional[cl])
+        a = attr.ib(type=Optional[cl])
 
     inst = C(a=cl(*vals))
     assert inst == converter.structure(converter.unstructure(inst), C)
