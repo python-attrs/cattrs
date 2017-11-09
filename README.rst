@@ -80,7 +80,7 @@ metadata.
 
     >>> from enum import unique, Enum
     >>> from typing import List, Optional, Sequence, Union
-    >>> from cattr import structure, unstructure, typed
+    >>> from cattr import structure, unstructure
     >>> import attr
     >>>
     >>> @unique
@@ -91,18 +91,18 @@ metadata.
     ...
     >>> @attr.s
     ... class Cat:
-    ...     breed = typed(CatBreed)
-    ...     names = typed(Sequence[str])
+    ...     breed: CatBreed = attr.ib()
+    ...     names: Sequence[str] = attr.ib()
     ...
     >>> @attr.s
     ... class DogMicrochip:
     ...     chip_id = attr.ib()
-    ...     time_chipped = typed(float)
+    ...     time_chipped: float = attr.ib()
     ...
     >>> @attr.s
     ... class Dog:
-    ...     cuteness = typed(int)
-    ...     chip = typed(Optional[DogMicrochip])
+    ...     cuteness: int = attr.ib()
+    ...     chip: Optional[DogMicrochip] = attr.ib()
     ...
     >>> p = unstructure([Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)),
     ...                  Cat(breed=CatBreed.MAINE_COON, names=('Fluffly', 'Fluffer'))])
@@ -115,8 +115,9 @@ metadata.
 Consider unstructured data a low-level representation that needs to be converted
 to structured data to be handled, and use ``structure``. When you're done,
 ``unstructure`` the data to its unstructured form and pass it along to another
-library or module. Use ``cattr.typed`` to add type metadata to attributes, so
-``cattrs`` will know how to structure and destructure them.
+library or module. Use [attrs type metadata](http://attrs.readthedocs.io/en/stable/examples.html#types)
+to add type metadata to attributes, so ``cattrs`` will know how to structure and
+destructure them.
 
 * Free software: MIT license
 * Documentation: https://cattrs.readthedocs.io.

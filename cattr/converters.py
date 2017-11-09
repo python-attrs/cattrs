@@ -4,7 +4,6 @@ from typing import (List, Mapping, Sequence, Optional, MutableSequence,
                     Dict, Tuple, _Union)
 from ._compat import lru_cache, unicode, bytes, is_py2
 from .disambiguators import create_uniq_field_dis_func
-from .metadata import TYPE_METADATA_KEY
 from .multistrategy_dispatch import MultiStrategyDispatch
 
 from attr import NOTHING
@@ -259,7 +258,7 @@ class Converter(object):
 
     def _structure_attr_from_tuple(self, a, name, value):
         """Handle an individual attrs attribute."""
-        type_ = a.metadata.get(TYPE_METADATA_KEY)
+        type_ = a.type
         if type_ is None:
             # No type metadata.
             return value
@@ -285,7 +284,7 @@ class Converter(object):
         if val is NOTHING:
             return NOTHING
 
-        type_ = a.metadata.get(TYPE_METADATA_KEY)
+        type_ = a.type
         if type_ is None:
             # No type.
             return val
