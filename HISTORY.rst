@@ -11,6 +11,16 @@ History
 * vendored typing is no longer needed, nor provided.
 * Attributes with default values can now be structured if they are missing in the input.
   (`#15 https://github.com/Tinche/cattrs/pull/15`_)
+* `Optional` attributes can no longer be structured if they are missing in the input.
+In other words, this no longer works:
+
+.. code-block:: python
+
+    @attr.s
+    class A:
+        a: Optional[int] = attr.ib()
+
+    >>> cattr.structure({}, A)
 
 
 0.4.0 (2017-07-17)
