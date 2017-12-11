@@ -24,7 +24,7 @@ if sys.version_info < (3, 0):
 
 setup(
     name='cattrs',
-    version='0.5.0',
+    version='0.6.0.dev0',
     description="Composable complex class support for attrs.",
     long_description=readme + '\n\n' + history,
     author="Tin Tvrtković",
