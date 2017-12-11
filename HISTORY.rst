@@ -2,7 +2,7 @@
 History
 =======
 
-0.5.0 (UNRELEASED)
+0.5.0 (2017-12-11)
 ------------------
 
 * structure/unstructure now supports using functions as well as classes for deciding the appropriate function.
