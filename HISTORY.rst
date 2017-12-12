@@ -16,8 +16,6 @@ History
   (`#15 https://github.com/Tinche/cattrs/pull/15`_)
 * `Optional` attributes can no longer be structured if they are missing in the input.
 In other words, this no longer works:
-* `cattr.typed` removed since the functionality is now present in `attrs` itself.
-  Replace instances of `cattr.typed(type)` with `attr.ib(type=type)`.
 
 .. code-block:: python
 
@@ -27,6 +25,8 @@ In other words, this no longer works:
 
     >>> cattr.structure({}, A)
 
+* `cattr.typed` removed since the functionality is now present in `attrs` itself.
+  Replace instances of `cattr.typed(type)` with `attr.ib(type=type)`.
 
 0.4.0 (2017-07-17)
 ------------------
