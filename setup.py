@@ -12,15 +12,11 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     "attrs >= 17.3",
+    "functools32 >= 3.2.3; python_version<'3.0'",
+    "singledispatch >= 3.4.0.3; python_version<'3.0'",
+    "enum34 >= 1.1.6; python_version<'3.0'",
+    "typing >= 3.5.3; python_version<'3.0'",
 ]
-
-if sys.version_info < (3, 0):
-    requirements.extend([
-        "functools32 >= 3.2.3; python_version<'3.0'",
-        "singledispatch >= 3.4.0.3; python_version<'3.0'",
-        "enum34 >= 1.1.6; python_version<'3.0'",
-        "typing >= 3.5.3; python_version<'3.0'",
-    ])
 
 setup(
     name='cattrs',
@@ -30,7 +26,7 @@ setup(
     author="Tin Tvrtković",
     author_email='tinchester@gmail.com',
     url='https://github.com/Tinche/cattrs',
-    packages=find_packages(exclude=['tests']),
+    packages=find_packages(exclude=['tests*']),
     include_package_data=True,
     install_requires=requirements,
     license="MIT license",
