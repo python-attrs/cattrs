@@ -176,11 +176,12 @@ class Converter(object):
     def unstructure_attrs_asdict(self, obj):
         """Our version of `attrs.asdict`, so we can call back to us."""
         attrs = obj.__class__.__attrs_attrs__
+        dispatch = self.unstructure_func.dispatch
         rv = self._dict_factory()
         for a in attrs:
             name = a.name
             v = getattr(obj, name)
-            rv[name] = self.unstructure(v)
+            rv[name] = dispatch(type(v))(v)
         return rv
 
     def unstructure_attrs_astuple(self, obj):
@@ -199,7 +200,8 @@ class Converter(object):
     def _unstructure_seq(self, seq):
         """Convert a sequence to primitive equivalents."""
         # We can reuse the sequence class, so tuples stay tuples.
-        return seq.__class__(self.unstructure(e) for e in seq)
+        dispatch = self.unstructure_func.dispatch
+        return seq.__class__(dispatch(type(e))(e) for e in seq)
 
     def _unstructure_mapping(self, mapping):
         # type: (Mapping) -> Any
@@ -207,7 +209,8 @@ class Converter(object):
 
         # We can reuse the mapping class, so dicts stay dicts and OrderedDicts
         # stay OrderedDicts.
-        return mapping.__class__((self.unstructure(k), self.unstructure(v))
+        dispatch = self.unstructure_func.dispatch
+        return mapping.__class__((dispatch(type(k))(k), dispatch(type(v))(v))
                                  for k, v in mapping.items())
 
     # Python primitives to classes.
