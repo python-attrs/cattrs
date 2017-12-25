@@ -2,8 +2,10 @@
 History
 =======
 
-0.6.0 (UNRELEASED)
+0.6.0 (2017-12-25)
 ------------------
+* Packaging fixes.
+  (`#17 <https://github.com/Tinche/cattrs/pull/17>`_)
 
 0.5.0 (2017-12-11)
 ------------------
