@@ -6,8 +6,6 @@ from ._compat import lru_cache, unicode, bytes, is_py2
 from .disambiguators import create_uniq_field_dis_func
 from .multistrategy_dispatch import MultiStrategyDispatch
 
-from attr import NOTHING
-
 
 NoneType = type(None)
 T = TypeVar('T')
@@ -276,14 +274,16 @@ class Converter(object):
         for a in cl.__attrs_attrs__:
             name = a.name
             # We detect the type by metadata.
-            val = obj.get(name, NOTHING)
-            if val is not NOTHING:
-                type_ = a.type
-                if type_ is None:
-                    # No type.
-                    conv_obj[name] = val
-                else:
-                    conv_obj[name] = dispatch(type_)(val, type_)
+            try:
+                val = obj[name]
+            except KeyError:
+                continue
+            type_ = a.type
+            if type_ is None:
+                # No type.
+                conv_obj[name] = val
+            else:
+                conv_obj[name] = dispatch(type_)(val, type_)
 
         return cl(**conv_obj)
 
