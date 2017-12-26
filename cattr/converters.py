@@ -272,6 +272,7 @@ class Converter(object):
         """Instantiate an attrs class from a mapping (dict)."""
         # For public use.
         conv_obj = obj.copy()  # Dict of converted parameters.
+        dispatch = self._structure.dispatch
         for a in cl.__attrs_attrs__:
             name = a.name
             # We detect the type by metadata.
@@ -281,14 +282,8 @@ class Converter(object):
                 if type_ is None:
                     # No type.
                     conv_obj[name] = val
-                elif _is_union_type(type_):
-                    if NoneType in type_.__args__ and val is None:
-                        conv_obj[name] = None
-                    else:
-                        conv_obj[name] = self._structure_union(val, type_)
                 else:
-                    conv_obj[name] = \
-                        self._structure.dispatch(type_)(val, type_)
+                    conv_obj[name] = dispatch(type_)(val, type_)
 
         return cl(**conv_obj)
 
@@ -348,6 +343,9 @@ class Converter(object):
         # Note that optionals are unions that contain NoneType. We check for
         # NoneType early and handle the case of obj being None, so
         # disambiguation functions don't need to handle NoneType.
+
+        if NoneType in union.__args__ and obj is None:
+            return None
 
         # Check the union registry first.
         handler = self._union_registry.get(union)
