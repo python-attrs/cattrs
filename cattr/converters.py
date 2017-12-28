@@ -272,18 +272,17 @@ class Converter(object):
         conv_obj = obj.copy()  # Dict of converted parameters.
         dispatch = self._structure.dispatch
         for a in cl.__attrs_attrs__:
-            name = a.name
             # We detect the type by metadata.
+            type_ = a.type
+            if type_ is None:
+                # No type.
+                continue
+            name = a.name
             try:
                 val = obj[name]
             except KeyError:
                 continue
-            type_ = a.type
-            if type_ is None:
-                # No type.
-                conv_obj[name] = val
-            else:
-                conv_obj[name] = dispatch(type_)(val, type_)
+            conv_obj[name] = dispatch(type_)(val, type_)
 
         return cl(**conv_obj)
 
