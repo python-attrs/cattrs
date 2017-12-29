@@ -102,7 +102,7 @@ class Converter(object):
         self._union_registry = {}
 
     def unstructure(self, obj):
-        return self._unstructure_func.dispatch(type(obj))(obj)
+        return self._unstructure_func.dispatch(obj.__class__)(obj)
 
     @property
     def unstruct_strat(self):
@@ -165,7 +165,7 @@ class Converter(object):
         for a in attrs:
             name = a.name
             v = getattr(obj, name)
-            rv[name] = dispatch(type(v))(v)
+            rv[name] = dispatch(v.__class__)(v)
         return rv
 
     def unstructure_attrs_astuple(self, obj):
@@ -185,7 +185,7 @@ class Converter(object):
         """Convert a sequence to primitive equivalents."""
         # We can reuse the sequence class, so tuples stay tuples.
         dispatch = self._unstructure_func.dispatch
-        return seq.__class__(dispatch(type(e))(e) for e in seq)
+        return seq.__class__(dispatch(e.__class__)(e) for e in seq)
 
     def _unstructure_mapping(self, mapping):
         # type: (Mapping) -> Any
@@ -194,8 +194,10 @@ class Converter(object):
         # We can reuse the mapping class, so dicts stay dicts and OrderedDicts
         # stay OrderedDicts.
         dispatch = self._unstructure_func.dispatch
-        return mapping.__class__((dispatch(type(k))(k), dispatch(type(v))(v))
-                                 for k, v in mapping.items())
+        return mapping.__class__(
+            (dispatch(k.__class__)(k), dispatch(v.__class__)(v))
+            for k, v in mapping.items()
+        )
 
     # Python primitives to classes.
 
