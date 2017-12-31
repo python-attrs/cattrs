@@ -49,7 +49,7 @@ class Converter(object):
         self._dis_func_cache = lru_cache()(self._get_dis_func)
 
         self.unstructure_func = MultiStrategyDispatch(
-            self._unstructure_default
+            self._unstructure_identity
         )
         self.unstructure_func.register_cls_list([
             (bytes, self._unstructure_identity),
@@ -168,9 +168,6 @@ class Converter(object):
         return self.structure_func.dispatch(cl)(obj, cl)
 
     # Classes to Python primitives.
-    def _unstructure_default(self, obj):
-        return obj
-
     def unstructure_attrs_asdict(self, obj):
         """Our version of `attrs.asdict`, so we can call back to us."""
         attrs = obj.__class__.__attrs_attrs__
