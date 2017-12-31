@@ -1,7 +1,6 @@
-import attr
+from ._compat import lru_cache
 
 
-@attr.s(slots=True)
 class FunctionDispatch(object):
     """
     FunctionDispatch is similar to functools.singledispatch, but
@@ -10,24 +9,20 @@ class FunctionDispatch(object):
 
     objects that help determine dispatch should be instantiated objects.
     """
-    _handler_pairs = attr.ib(init=False, default=attr.Factory(list))
-    _cache = attr.ib(init=False, default=attr.Factory(dict))
+    __slots__ = ('_handler_pairs', 'dispatch')
+
+    def __init__(self):
+        self._handler_pairs = []
+        self.dispatch = lru_cache(64)(self._dispatch)
 
     def register(self, can_handle, func):
         self._handler_pairs.insert(0, (can_handle, func))
-        self._cache.clear()
+        self.dispatch.cache_clear()
 
-    def dispatch(self, typ):
+    def _dispatch(self, typ):
         """
         returns the appropriate handler, for the object passed.
         """
-        try:
-            return self._cache[typ]
-        except KeyError:
-            self._cache[typ] = self._dispatch(typ)
-            return self._cache[typ]
-
-    def _dispatch(self, typ):
         for can_handle, handler in self._handler_pairs:
             # can handle could raise an exception here
             # such as issubclass being called on an instance.

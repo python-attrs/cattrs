@@ -6,8 +6,6 @@ from ._compat import lru_cache, unicode, bytes, is_py2
 from .disambiguators import create_uniq_field_dis_func
 from .multistrategy_dispatch import MultiStrategyDispatch
 
-from attr import NOTHING
-
 
 NoneType = type(None)
 T = TypeVar('T')
@@ -176,11 +174,12 @@ class Converter(object):
     def unstructure_attrs_asdict(self, obj):
         """Our version of `attrs.asdict`, so we can call back to us."""
         attrs = obj.__class__.__attrs_attrs__
+        dispatch = self.unstructure_func.dispatch
         rv = self._dict_factory()
         for a in attrs:
             name = a.name
             v = getattr(obj, name)
-            rv[name] = self.unstructure(v)
+            rv[name] = dispatch(type(v))(v)
         return rv
 
     def unstructure_attrs_astuple(self, obj):
@@ -199,7 +198,8 @@ class Converter(object):
     def _unstructure_seq(self, seq):
         """Convert a sequence to primitive equivalents."""
         # We can reuse the sequence class, so tuples stay tuples.
-        return seq.__class__(self.unstructure(e) for e in seq)
+        dispatch = self.unstructure_func.dispatch
+        return seq.__class__(dispatch(type(e))(e) for e in seq)
 
     def _unstructure_mapping(self, mapping):
         # type: (Mapping) -> Any
@@ -207,7 +207,8 @@ class Converter(object):
 
         # We can reuse the mapping class, so dicts stay dicts and OrderedDicts
         # stay OrderedDicts.
-        return mapping.__class__((self.unstructure(k), self.unstructure(v))
+        dispatch = self.unstructure_func.dispatch
+        return mapping.__class__((dispatch(type(k))(k), dispatch(type(v))(v))
                                  for k, v in mapping.items())
 
     # Python primitives to classes.
@@ -269,30 +270,21 @@ class Converter(object):
         """Instantiate an attrs class from a mapping (dict)."""
         # For public use.
         conv_obj = obj.copy()  # Dict of converted parameters.
+        dispatch = self._structure.dispatch
         for a in cl.__attrs_attrs__:
-            name = a.name
             # We detect the type by metadata.
-            converted = self._structure_attr_from_dict(a, name, obj)
-            if converted is not NOTHING:
-                conv_obj[name] = converted
+            type_ = a.type
+            if type_ is None:
+                # No type.
+                continue
+            name = a.name
+            try:
+                val = obj[name]
+            except KeyError:
+                continue
+            conv_obj[name] = dispatch(type_)(val, type_)
 
         return cl(**conv_obj)
-
-    def _structure_attr_from_dict(self, a, name, mapping):
-        """Handle an individual attrs attribute structuring."""
-        val = mapping.get(name, NOTHING)
-        if val is NOTHING:
-            return NOTHING
-
-        type_ = a.type
-        if type_ is None:
-            # No type.
-            return val
-        if _is_union_type(type_):
-            if NoneType in type_.__args__ and val is None:
-                return None
-            return self._structure_union(val, type_)
-        return self._structure.dispatch(type_)(val, type_)
 
     def _structure_list(self, obj, cl):
         # type: (Type[GenericMeta], Iterable[T]) -> List[T]
@@ -350,6 +342,9 @@ class Converter(object):
         # Note that optionals are unions that contain NoneType. We check for
         # NoneType early and handle the case of obj being None, so
         # disambiguation functions don't need to handle NoneType.
+
+        if NoneType in union.__args__ and obj is None:
+            return None
 
         # Check the union registry first.
         handler = self._union_registry.get(union)
