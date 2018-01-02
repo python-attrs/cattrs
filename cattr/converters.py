@@ -1,7 +1,7 @@
 from enum import Enum
-from typing import (List, Mapping, Sequence, Optional, MutableSequence,
-                    TypeVar, Any, FrozenSet, MutableSet, Set, MutableMapping,
-                    Dict, Tuple, _Union)
+from typing import (Mapping, Sequence, Optional,
+                    TypeVar, Any, FrozenSet, MutableSet,
+                    Tuple, _Union)
 from ._compat import lru_cache, unicode, bytes, is_py2
 from .disambiguators import create_uniq_field_dis_func
 from .multistrategy_dispatch import MultiStrategyDispatch
@@ -71,15 +71,10 @@ class Converter(object):
         # store the function and switch the arguments in self.loads.
         self._structure_func = MultiStrategyDispatch(self._structure_default)
         self._structure_func.register_func_list([
-            (_subclass(List), self._structure_list),
             (_subclass(Sequence), self._structure_list),
-            (_subclass(MutableSequence), self._structure_list),
             (_subclass(MutableSet), self._structure_set),
-            (_subclass(Set), self._structure_set),
             (_subclass(FrozenSet), self._structure_frozenset),
-            (_subclass(Dict), self._structure_dict),
             (_subclass(Mapping), self._structure_dict),
-            (_subclass(MutableMapping), self._structure_dict),
             (_subclass(Tuple), self._structure_tuple),
             (_is_union_type, self._structure_union),
             (_is_attrs_class, self._structure_attrs),
