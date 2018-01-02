@@ -324,20 +324,9 @@ class Converter(object):
     def _structure_union(self, obj, union):
         # type: (_Union, Any): -> Any
         """Deal with converting a union."""
-
-        # Note that optionals are unions that contain NoneType. We check for
-        # NoneType early and handle the case of obj being None, so
-        # disambiguation functions don't need to handle NoneType.
-
-        if NoneType in union.__args__ and obj is None:
-            return None
-
-        # Check the union registry first.
-        handler = self._union_registry.get(union)
-        if handler is not None:
-            return handler(obj, union)
-
         # Unions with NoneType in them are basically optionals.
+        # We check for NoneType early and handle the case of obj being None,
+        # so disambiguation functions don't need to handle NoneType.
         union_params = union.__args__
         if NoneType in union_params:
             if obj is None:
@@ -348,6 +337,11 @@ class Converter(object):
                          else union_params[1])
                 # We can't actually have a Union of a Union, so this is safe.
                 return self._structure_func.dispatch(other)(obj, other)
+
+        # Check the union registry first.
+        handler = self._union_registry.get(union)
+        if handler is not None:
+            return handler(obj, union)
 
         # Getting here means either this is not an optional, or it's an
         # optional with more than one parameter.
