@@ -40,11 +40,15 @@ class Converter(object):
 
     def __init__(self, dict_factory=dict,
                  unstruct_strat=UnstructureStrategy.AS_DICT):
+        unstruct_strat = UnstructureStrategy(unstruct_strat)
 
         # Create a per-instance cache.
-        self.unstruct_strat = UnstructureStrategy(unstruct_strat)
-        if is_py2:  # in py2, the unstruct_strat property setter is not invoked
-            self._unstruct_strat(unstruct_strat)
+        if unstruct_strat is UnstructureStrategy.AS_DICT:
+            self.unstructure_attrs = self.unstructure_attrs_asdict
+            self.structure_attrs = self.structure_attrs_fromdict
+        else:
+            self.unstructure_attrs = self.unstructure_attrs_astuple
+            self.structure_attrs = self.structure_attrs_fromtuple
 
         self._dis_func_cache = lru_cache()(self._get_dis_func)
 
@@ -107,20 +111,6 @@ class Converter(object):
         return (UnstructureStrategy.AS_DICT
                 if self.unstructure_attrs == self.unstructure_attrs_asdict
                 else UnstructureStrategy.AS_TUPLE)
-
-    @unstruct_strat.setter
-    def unstruct_strat(self, val):
-        # type: (UnstructureStrategy) -> None
-        self._unstruct_strat(val)
-
-    def _unstruct_strat(self, val):
-        # type: (UnstructureStrategy) -> None
-        if val is UnstructureStrategy.AS_DICT:
-            self.unstructure_attrs = self.unstructure_attrs_asdict
-            self.structure_attrs = self.structure_attrs_fromdict
-        else:
-            self.unstructure_attrs = self.unstructure_attrs_astuple
-            self.structure_attrs = self.structure_attrs_fromtuple
 
     def register_unstructure_hook(self, cls, func):
         # type: (Type[T], Callable[[T], Any]) -> None

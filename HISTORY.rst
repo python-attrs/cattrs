@@ -2,6 +2,11 @@
 History
 =======
 
+0.7.0 (UNRELEASED)
+------------------
+
+* Removed the undocumented ``Converter.unstruct_strat`` property setter.
+
 0.6.0 (2017-12-25)
 ------------------
 * Packaging fixes.
