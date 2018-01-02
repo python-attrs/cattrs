@@ -63,8 +63,7 @@ class Converter(object):
             (_subclass(Mapping), self._unstructure_mapping),
             (_subclass(Sequence), self._unstructure_seq),
             (_subclass(Enum), self._unstructure_enum),
-            (_is_attrs_class,
-             lambda *args, **kwargs: self._unstructure_attrs(*args, **kwargs)),
+            (_is_attrs_class, self._unstructure_attrs),
         ])
 
         # Per-instance register of to-attrs converters.
@@ -83,8 +82,7 @@ class Converter(object):
             (_subclass(MutableMapping), self._structure_dict),
             (_subclass(Tuple), self._structure_tuple),
             (_is_union_type, self._structure_union),
-            (_is_attrs_class,
-             lambda *args, **kwargs: self._structure_attrs(*args, **kwargs))
+            (_is_attrs_class, self._structure_attrs),
         ])
         # Strings are sequences.
         self._structure_func.register_cls_list([
