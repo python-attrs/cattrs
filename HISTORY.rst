@@ -6,6 +6,12 @@ History
 ------------------
 
 * Removed the undocumented ``Converter.unstruct_strat`` property setter.
+* Removed the ability to set the ``Converter.structure_attrs`` instance field.
+  As an alternative, create a new ``Converter``::
+
+.. code-block:: python
+
+    >>> converter = cattr.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
 
 0.6.0 (2017-12-25)
 ------------------

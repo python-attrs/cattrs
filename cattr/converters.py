@@ -34,8 +34,8 @@ def _subclass(typ):
 
 class Converter(object):
     """Converts between structured and unstructured data."""
-    __slots__ = ('_dis_func_cache', '_unstructure_func', 'unstructure_attrs',
-                 'structure_attrs', '_dict_factory',
+    __slots__ = ('_dis_func_cache', '_unstructure_func', '_unstructure_attrs',
+                 '_structure_attrs', '_dict_factory',
                  '_union_registry', '_structure_func')
 
     def __init__(self, dict_factory=dict,
@@ -44,11 +44,11 @@ class Converter(object):
 
         # Create a per-instance cache.
         if unstruct_strat is UnstructureStrategy.AS_DICT:
-            self.unstructure_attrs = self.unstructure_attrs_asdict
-            self.structure_attrs = self.structure_attrs_fromdict
+            self._unstructure_attrs = self.unstructure_attrs_asdict
+            self._structure_attrs = self.structure_attrs_fromdict
         else:
-            self.unstructure_attrs = self.unstructure_attrs_astuple
-            self.structure_attrs = self.structure_attrs_fromtuple
+            self._unstructure_attrs = self.unstructure_attrs_astuple
+            self._structure_attrs = self.structure_attrs_fromtuple
 
         self._dis_func_cache = lru_cache()(self._get_dis_func)
 
@@ -64,7 +64,7 @@ class Converter(object):
             (_subclass(Sequence), self._unstructure_seq),
             (_subclass(Enum), self._unstructure_enum),
             (_is_attrs_class,
-             lambda *args, **kwargs: self.unstructure_attrs(*args, **kwargs)),
+             lambda *args, **kwargs: self._unstructure_attrs(*args, **kwargs)),
         ])
 
         # Per-instance register of to-attrs converters.
@@ -84,7 +84,7 @@ class Converter(object):
             (_subclass(Tuple), self._structure_tuple),
             (_is_union_type, self._structure_union),
             (_is_attrs_class,
-             lambda *args, **kwargs: self.structure_attrs(*args, **kwargs))
+             lambda *args, **kwargs: self._structure_attrs(*args, **kwargs))
         ])
         # Strings are sequences.
         self._structure_func.register_cls_list([
@@ -109,7 +109,7 @@ class Converter(object):
         # type: () -> UnstructureStrategy
         """The default way of unstructuring ``attrs`` classes."""
         return (UnstructureStrategy.AS_DICT
-                if self.unstructure_attrs == self.unstructure_attrs_asdict
+                if self._unstructure_attrs == self.unstructure_attrs_asdict
                 else UnstructureStrategy.AS_TUPLE)
 
     def register_unstructure_hook(self, cls, func):
