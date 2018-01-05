@@ -35,7 +35,7 @@ def _subclass(typ):
 class Converter(object):
     """Converts between structured and unstructured data."""
     __slots__ = ('_dis_func_cache', 'unstructure_func', 'unstructure_attrs',
-                 'structure_attrs', '_structure', '_dict_factory',
+                 'structure_attrs', '_dict_factory',
                  '_union_registry', 'structure_func')
 
     def __init__(self, dict_factory=dict,
@@ -82,7 +82,6 @@ class Converter(object):
             (_is_attrs_class,
              lambda *args, **kwargs: self.structure_attrs(*args, **kwargs))
         ])
-
         # Strings are sequences.
         self.structure_func.register_cls_list([
             (unicode, self._structure_unicode if is_py2
@@ -92,7 +91,7 @@ class Converter(object):
             (float, self._structure_call),
             (Enum, self._structure_call),
         ])
-        self._structure = self.structure_func
+
         self._dict_factory = dict_factory
 
         # Unions are instances now, not classes. We use different registry.
@@ -153,7 +152,7 @@ class Converter(object):
         if _is_union_type(cl):
             self._union_registry[cl] = func
         else:
-            self._structure.register_cls_list([(cl, func)])
+            self.structure_func.register_cls_list([(cl, func)])
 
     def register_structure_hook_func(self, check_func, func):
         # type: (Callable[Any], Callable[T], Any]) -> None
@@ -260,14 +259,14 @@ class Converter(object):
         if type_ is None:
             # No type metadata.
             return value
-        return self._structure.dispatch(type_)(value, type_)
+        return self.structure_func.dispatch(type_)(value, type_)
 
     def structure_attrs_fromdict(self, obj, cl):
         # type: (Mapping, Type) -> Any
         """Instantiate an attrs class from a mapping (dict)."""
         # For public use.
         conv_obj = obj.copy()  # Dict of converted parameters.
-        dispatch = self._structure.dispatch
+        dispatch = self.structure_func.dispatch
         for a in cl.__attrs_attrs__:
             # We detect the type by metadata.
             type_ = a.type
@@ -290,7 +289,7 @@ class Converter(object):
             return [e for e in obj]
         else:
             elem_type = cl.__args__[0]
-            return [self._structure.dispatch(elem_type)(e, elem_type)
+            return [self.structure_func.dispatch(elem_type)(e, elem_type)
                     for e in obj]
 
     def _structure_set(self, obj, cl):
@@ -300,7 +299,7 @@ class Converter(object):
             return set(obj)
         else:
             elem_type = cl.__args__[0]
-            return {self._structure.dispatch(elem_type)(e, elem_type)
+            return {self.structure_func.dispatch(elem_type)(e, elem_type)
                     for e in obj}
 
     def _structure_frozenset(self, obj, cl):
@@ -310,8 +309,8 @@ class Converter(object):
             return frozenset(obj)
         else:
             elem_type = cl.__args__[0]
-            return frozenset((self._structure.dispatch(elem_type)(e, elem_type)
-                              for e in obj))
+            dispatch = self.structure_func.dispatch
+            return frozenset(dispatch(elem_type)(e, elem_type) for e in obj)
 
     def _structure_dict(self, obj, cl):
         # type: (Type[GenericMeta], Mapping[T, V]) -> Dict[T, V]
@@ -321,14 +320,14 @@ class Converter(object):
         else:
             key_type, val_type = cl.__args__
             if key_type is Any:
-                val_conv = self._structure.dispatch(val_type)
+                val_conv = self.structure_func.dispatch(val_type)
                 return {k: val_conv(v, val_type) for k, v in obj.items()}
             elif val_type is Any:
-                key_conv = self._structure.dispatch(key_type)
+                key_conv = self.structure_func.dispatch(key_type)
                 return {key_conv(k, key_type): v for k, v in obj.items()}
             else:
-                key_conv = self._structure.dispatch(key_type)
-                val_conv = self._structure.dispatch(val_type)
+                key_conv = self.structure_func.dispatch(key_type)
+                val_conv = self.structure_func.dispatch(val_type)
                 return {key_conv(k, key_type): val_conv(v, val_type)
                         for k, v in obj.items()}
 
@@ -358,13 +357,13 @@ class Converter(object):
                 other = (union_params[0] if union_params[1] is NoneType
                          else union_params[1])
                 # We can't actually have a Union of a Union, so this is safe.
-                return self._structure.dispatch(other)(obj, other)
+                return self.structure_func.dispatch(other)(obj, other)
 
         # Getting here means either this is not an optional, or it's an
         # optional with more than one parameter.
         # Let's support only unions of attr classes for now.
         cl = self._dis_func_cache(union)(obj)
-        return self._structure.dispatch(cl)(obj, cl)
+        return self.structure_func.dispatch(cl)(obj, cl)
 
     def _structure_tuple(self, obj, tup):
         # type: (Type[Tuple], Iterable) -> Any
@@ -377,11 +376,11 @@ class Converter(object):
         if has_ellipsis:
             # We're dealing with a homogenous tuple, Tuple[int, ...]
             tup_type = tup_params[0]
-            conv = self._structure.dispatch(tup_type)
+            conv = self.structure_func.dispatch(tup_type)
             return tuple(conv(e, tup_type) for e in obj)
         else:
             # We're dealing with a heterogenous tuple.
-            return tuple(self._structure.dispatch(t)(e, t)
+            return tuple(self.structure_func.dispatch(t)(e, t)
                          for t, e in zip(tup_params, obj))
 
     def _get_dis_func(self, union):
