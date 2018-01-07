@@ -292,7 +292,7 @@ converters work out of the box. Given a mapping ``d`` and class ``A``,
     >>> cattr.structure_attrs_fromtuple(['string', '2'], A)
     A(a='string', b=2)
 
-Loading from tuples can be made the by creating a new ``Converter`` with
+Loading from tuples can be made the default by creating a new ``Converter`` with
 ``unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE``.
 
 .. doctest::
