@@ -1,7 +1,7 @@
 from enum import Enum
-from typing import (List, Mapping, Sequence, Optional, MutableSequence,
-                    TypeVar, Any, FrozenSet, MutableSet, Set, MutableMapping,
-                    Dict, Tuple, _Union)
+from typing import (Mapping, Sequence, Optional,
+                    TypeVar, Any, FrozenSet, MutableSet,
+                    Tuple, _Union)
 from ._compat import lru_cache, unicode, bytes, is_py2
 from .disambiguators import create_uniq_field_dis_func
 from .multistrategy_dispatch import MultiStrategyDispatch
@@ -63,8 +63,7 @@ class Converter(object):
             (_subclass(Mapping), self._unstructure_mapping),
             (_subclass(Sequence), self._unstructure_seq),
             (_subclass(Enum), self._unstructure_enum),
-            (_is_attrs_class,
-             lambda *args, **kwargs: self._unstructure_attrs(*args, **kwargs)),
+            (_is_attrs_class, self._unstructure_attrs),
         ])
 
         # Per-instance register of to-attrs converters.
@@ -72,19 +71,13 @@ class Converter(object):
         # store the function and switch the arguments in self.loads.
         self._structure_func = MultiStrategyDispatch(self._structure_default)
         self._structure_func.register_func_list([
-            (_subclass(List), self._structure_list),
             (_subclass(Sequence), self._structure_list),
-            (_subclass(MutableSequence), self._structure_list),
             (_subclass(MutableSet), self._structure_set),
-            (_subclass(Set), self._structure_set),
             (_subclass(FrozenSet), self._structure_frozenset),
-            (_subclass(Dict), self._structure_dict),
             (_subclass(Mapping), self._structure_dict),
-            (_subclass(MutableMapping), self._structure_dict),
             (_subclass(Tuple), self._structure_tuple),
             (_is_union_type, self._structure_union),
-            (_is_attrs_class,
-             lambda *args, **kwargs: self._structure_attrs(*args, **kwargs))
+            (_is_attrs_class, self._structure_attrs),
         ])
         # Strings are sequences.
         self._structure_func.register_cls_list([
@@ -102,7 +95,7 @@ class Converter(object):
         self._union_registry = {}
 
     def unstructure(self, obj):
-        return self._unstructure_func.dispatch(type(obj))(obj)
+        return self._unstructure_func.dispatch(obj.__class__)(obj)
 
     @property
     def unstruct_strat(self):
@@ -165,7 +158,7 @@ class Converter(object):
         for a in attrs:
             name = a.name
             v = getattr(obj, name)
-            rv[name] = dispatch(type(v))(v)
+            rv[name] = dispatch(v.__class__)(v)
         return rv
 
     def unstructure_attrs_astuple(self, obj):
@@ -185,7 +178,7 @@ class Converter(object):
         """Convert a sequence to primitive equivalents."""
         # We can reuse the sequence class, so tuples stay tuples.
         dispatch = self._unstructure_func.dispatch
-        return seq.__class__(dispatch(type(e))(e) for e in seq)
+        return seq.__class__(dispatch(e.__class__)(e) for e in seq)
 
     def _unstructure_mapping(self, mapping):
         # type: (Mapping) -> Any
@@ -194,8 +187,10 @@ class Converter(object):
         # We can reuse the mapping class, so dicts stay dicts and OrderedDicts
         # stay OrderedDicts.
         dispatch = self._unstructure_func.dispatch
-        return mapping.__class__((dispatch(type(k))(k), dispatch(type(v))(v))
-                                 for k, v in mapping.items())
+        return mapping.__class__(
+            (dispatch(k.__class__)(k), dispatch(v.__class__)(v))
+            for k, v in mapping.items()
+        )
 
     # Python primitives to classes.
 
@@ -324,20 +319,9 @@ class Converter(object):
     def _structure_union(self, obj, union):
         # type: (_Union, Any): -> Any
         """Deal with converting a union."""
-
-        # Note that optionals are unions that contain NoneType. We check for
-        # NoneType early and handle the case of obj being None, so
-        # disambiguation functions don't need to handle NoneType.
-
-        if NoneType in union.__args__ and obj is None:
-            return None
-
-        # Check the union registry first.
-        handler = self._union_registry.get(union)
-        if handler is not None:
-            return handler(obj, union)
-
         # Unions with NoneType in them are basically optionals.
+        # We check for NoneType early and handle the case of obj being None,
+        # so disambiguation functions don't need to handle NoneType.
         union_params = union.__args__
         if NoneType in union_params:
             if obj is None:
@@ -348,6 +332,11 @@ class Converter(object):
                          else union_params[1])
                 # We can't actually have a Union of a Union, so this is safe.
                 return self._structure_func.dispatch(other)(obj, other)
+
+        # Check the union registry first.
+        handler = self._union_registry.get(union)
+        if handler is not None:
+            return handler(obj, union)
 
         # Getting here means either this is not an optional, or it's an
         # optional with more than one parameter.

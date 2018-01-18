@@ -12,6 +12,8 @@ History
 .. code-block:: python
 
     >>> converter = cattr.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
+* Some micro-optimizations were applied; a ``structure(unstructure(obj))`` roundtrip
+  is now up to 2 times faster.
 
 0.6.0 (2017-12-25)
 ------------------
