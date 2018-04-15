@@ -18,8 +18,6 @@ import os
 
 import pkg_resources  # part of setuptools
 
-from unittest.mock import Mock
-
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory is
 # relative to the documentation root, use os.path.abspath to make it
@@ -28,7 +26,7 @@ from unittest.mock import Mock
 
 # Get the project root dir, which is the parent dir of this
 cwd = os.getcwd()
-project_root = os.path.dirname(cwd)
+project_root = os.path.join(os.path.dirname(cwd), u'src')
 
 # Insert the project root dir as the first element in the PYTHONPATH.
 # This lets us ensure that the source package is imported, and that its

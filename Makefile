@@ -67,7 +67,7 @@ coverage: ## check code coverage quickly with the default Python
 docs: ## generate Sphinx HTML documentation, including API docs
 	rm -f docs/cattr.rst
 	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ cattr
+	sphinx-apidoc -o docs/ src/cattr
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs doctest
 	$(MAKE) -C docs html
