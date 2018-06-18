@@ -43,7 +43,6 @@ from . import (
     lists_of_primitives,
     dicts_of_primitives,
     enums_of_primitives,
-    simple_classes,
 )
 
 if is_py2:

@@ -310,4 +310,3 @@ def simple_classes(defaults=None):
 nested_classes = st.recursive(
     simple_classes(defaults=True), _create_hyp_nested_strategy
 )
-
