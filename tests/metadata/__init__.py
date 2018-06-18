@@ -3,9 +3,18 @@ from collections import OrderedDict
 
 import attr
 from attr import NOTHING
-from hypothesis.strategies import (booleans, composite, dictionaries,
-                                   floats, integers, just, lists, recursive,
-                                   text, tuples)
+from hypothesis.strategies import (
+    booleans,
+    composite,
+    dictionaries,
+    floats,
+    integers,
+    just,
+    lists,
+    recursive,
+    text,
+    tuples,
+)
 from typing import Any, Dict, List
 from cattr._compat import unicode
 
@@ -19,15 +28,19 @@ def simple_typed_classes(defaults=None):
 
 def lists_of_typed_attrs(defaults=None):
     # Python functions support up to 255 arguments.
-    return (lists(simple_typed_attrs(defaults), average_size=9, max_size=50)
-            .map(lambda l: sorted(l,
-                                  key=lambda t: t[0]._default is not NOTHING)))
+    return lists(
+        simple_typed_attrs(defaults), average_size=9, max_size=50
+    ).map(lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING))
 
 
 def simple_typed_attrs(defaults=None):
-    return (bare_typed_attrs(defaults) | int_typed_attrs(defaults) |
-            str_typed_attrs(defaults) | float_typed_attrs(defaults) |
-            dict_typed_attrs(defaults))
+    return (
+        bare_typed_attrs(defaults)
+        | int_typed_attrs(defaults)
+        | str_typed_attrs(defaults)
+        | float_typed_attrs(defaults)
+        | dict_typed_attrs(defaults)
+    )
 
 
 def _create_hyp_class(attrs_and_strategy):
@@ -37,17 +50,21 @@ def _create_hyp_class(attrs_and_strategy):
     The result is a tuple: an attrs class, and a tuple of values to
     instantiate it.
     """
+
     def key(t):
         return t[0].default is not attr.NOTHING
+
     attrs_and_strat = sorted(attrs_and_strategy, key=key)
     attrs = [a[0] for a in attrs_and_strat]
     for i, a in enumerate(attrs):
         a.counter = i
     vals = tuple((a[1]) for a in attrs_and_strat)
     return tuples(
-        just(make_class('HypClass',
-                        OrderedDict(zip(gen_attr_names(), attrs)))),
-        tuples(*vals))
+        just(
+            make_class("HypClass", OrderedDict(zip(gen_attr_names(), attrs)))
+        ),
+        tuples(*vals),
+    )
 
 
 @composite
@@ -59,7 +76,7 @@ def bare_typed_attrs(draw, defaults=None):
     default = attr.NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = None
-    return ((attr.ib(type=Any, default=default), just(None)))
+    return (attr.ib(type=Any, default=default), just(None))
 
 
 @composite
@@ -71,7 +88,7 @@ def int_typed_attrs(draw, defaults=None):
     default = attr.NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(integers())
-    return ((attr.ib(type=int, default=default), integers()))
+    return (attr.ib(type=int, default=default), integers())
 
 
 @composite
@@ -83,7 +100,7 @@ def str_typed_attrs(draw, defaults=None):
     default = NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(text())
-    return ((attr.ib(type=unicode, default=default), text()))
+    return (attr.ib(type=unicode, default=default), text())
 
 
 @composite
@@ -95,7 +112,7 @@ def float_typed_attrs(draw, defaults=None):
     default = attr.NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(floats())
-    return ((attr.ib(type=float, default=default), floats()))
+    return (attr.ib(type=float, default=default), floats())
 
 
 @composite
@@ -108,7 +125,7 @@ def dict_typed_attrs(draw, defaults=None):
     val_strat = dictionaries(keys=text(), values=integers())
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(val_strat)
-    return ((attr.ib(type=Dict[unicode, int], default=default), val_strat))
+    return (attr.ib(type=Dict[unicode, int], default=default), val_strat)
 
 
 def just_class(tup):
@@ -118,8 +135,12 @@ def just_class(tup):
     nested_cl_args = tup[1][1]
     default = attr.Factory(lambda: nested_cl(*nested_cl_args))
     combined_attrs = list(tup[0])
-    combined_attrs.append((attr.ib(type=nested_cl, default=default),
-                           just(nested_cl(*nested_cl_args))))
+    combined_attrs.append(
+        (
+            attr.ib(type=nested_cl, default=default),
+            just(nested_cl(*nested_cl_args)),
+        )
+    )
     return _create_hyp_class(combined_attrs)
 
 
@@ -128,8 +149,12 @@ def list_of_class(tup):
     nested_cl_args = tup[1][1]
     default = attr.Factory(lambda: [nested_cl(*nested_cl_args)])
     combined_attrs = list(tup[0])
-    combined_attrs.append((attr.ib(type=List[nested_cl], default=default),
-                           just([nested_cl(*nested_cl_args)])))
+    combined_attrs.append(
+        (
+            attr.ib(type=List[nested_cl], default=default),
+            just([nested_cl(*nested_cl_args)]),
+        )
+    )
     return _create_hyp_class(combined_attrs)
 
 
@@ -138,8 +163,12 @@ def dict_of_class(tup):
     nested_cl_args = tup[1][1]
     default = attr.Factory(lambda: {"cls": nested_cl(*nested_cl_args)})
     combined_attrs = list(tup[0])
-    combined_attrs.append((attr.ib(type=Dict[str, nested_cl], default=default),
-                           just({'cls': nested_cl(*nested_cl_args)})))
+    combined_attrs.append(
+        (
+            attr.ib(type=Dict[str, nested_cl], default=default),
+            just({"cls": nested_cl(*nested_cl_args)}),
+        )
+    )
     return _create_hyp_class(combined_attrs)
 
 
@@ -154,13 +183,15 @@ def _create_hyp_nested_strategy(simple_class_strategy):
     """
     # A strategy producing tuples of the form ([list of attributes], <given
     # class strategy>).
-    attrs_and_classes = tuples(lists_of_typed_attrs(),
-                               simple_class_strategy)
+    attrs_and_classes = tuples(lists_of_typed_attrs(), simple_class_strategy)
 
-    return (attrs_and_classes.flatmap(just_class) |
-            attrs_and_classes.flatmap(list_of_class) |
-            attrs_and_classes.flatmap(dict_of_class))
+    return (
+        attrs_and_classes.flatmap(just_class)
+        | attrs_and_classes.flatmap(list_of_class)
+        | attrs_and_classes.flatmap(dict_of_class)
+    )
 
 
-nested_typed_classes = recursive(simple_typed_classes(),
-                                 _create_hyp_nested_strategy)
+nested_typed_classes = recursive(
+    simple_typed_classes(), _create_hyp_nested_strategy
+)
