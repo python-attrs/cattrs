@@ -26,10 +26,10 @@ def test_structure_simple_from_dict_default(converter, cl_and_vals, data):
     """Test structuring non-nested attrs classes with default value."""
     cl, vals = cl_and_vals
     obj = cl(*vals)
-    attrs_with_defaults = [a for a in fields(cl)
-                           if a.default is not NOTHING]
-    to_remove = data.draw(lists(elements=sampled_from(attrs_with_defaults),
-                                unique=True))
+    attrs_with_defaults = [a for a in fields(cl) if a.default is not NOTHING]
+    to_remove = data.draw(
+        lists(elements=sampled_from(attrs_with_defaults), unique=True)
+    )
 
     for a in to_remove:
         if isinstance(a.default, Factory):
@@ -92,6 +92,28 @@ def test_structure_union(converter, cl_and_vals_a, cl_and_vals_b):
         assert obj == res
 
 
+@given(simple_classes(defaults=False), simple_classes(defaults=False))
+def test_structure_union_none(converter, cl_and_vals_a, cl_and_vals_b):
+    """Structuring of automatically-disambiguable unions works."""
+    # type: (Converter, Any, Any) -> None
+    cl_a, vals_a = cl_and_vals_a
+    cl_b, vals_b = cl_and_vals_b
+    a_field_names = {a.name for a in fields(cl_a)}
+    b_field_names = {a.name for a in fields(cl_b)}
+    assume(a_field_names)
+    assume(b_field_names)
+
+    common_names = a_field_names & b_field_names
+    if len(a_field_names) > len(common_names):
+        obj = cl_a(*vals_a)
+        dumped = asdict(obj)
+        res = converter.structure(dumped, Union[cl_a, cl_b, None])
+        assert isinstance(res, cl_a)
+        assert obj == res
+
+    assert converter.structure(None, Union[cl_a, cl_b, None]) is None
+
+
 @given(simple_classes(), simple_classes())
 def test_structure_union_explicit(converter, cl_and_vals_a, cl_and_vals_b):
     """Structuring of manually-disambiguable unions works."""
@@ -106,5 +128,6 @@ def test_structure_union_explicit(converter, cl_and_vals_a, cl_and_vals_b):
 
     inst = cl_a(*vals_a)
 
-    assert inst == converter.structure(converter.unstructure(inst),
-                                       Union[cl_a, cl_b])
+    assert inst == converter.structure(
+        converter.unstructure(inst), Union[cl_a, cl_b]
+    )
