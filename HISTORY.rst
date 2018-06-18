@@ -2,8 +2,9 @@
 History
 =======
 
-0.9.0 (UNRELEASED)
+0.8.1 (UNRELEASED)
 ------------------
+* The disambiguation function generator now supports unions of ``attrs`` classes and NoneType.
 
 0.8.0 (2018-04-14)
 ------------------
