@@ -11,6 +11,7 @@ from . import simple_classes
 
 def test_edge_errors():
     """Edge input cases cause errors."""
+
     @attr.s
     class A(object):
         pass
@@ -58,8 +59,8 @@ def test_fallback(cl_and_vals):
 
     attr_names = {a.name for a in attr.fields(cl)}
 
-    if 'xyz' not in attr_names:
-        fn({'xyz': 1}) is A  # Uses the fallback.
+    if "xyz" not in attr_names:
+        fn({"xyz": 1}) is A  # Uses the fallback.
 
 
 @given(simple_classes(), simple_classes())

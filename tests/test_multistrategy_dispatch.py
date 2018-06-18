@@ -30,9 +30,9 @@ def test_multistrategy_dispatch_register_cls():
 def test_multistrategy_dispatch_register_func():
     dispatch = MultiStrategyDispatch(_fallback)
     assert dispatch.dispatch(Foo) == _fallback
-    dispatch.register_func_list([
-        (lambda cls: issubclass(cls, Foo), _foo_func)
-    ])
+    dispatch.register_func_list(
+        [(lambda cls: issubclass(cls, Foo), _foo_func)]
+    )
     assert dispatch.dispatch(Foo) == _foo_func
 
 
@@ -43,8 +43,8 @@ def test_multistrategy_dispatch_conflict_class_wins():
     class dispatch should return.
     """
     dispatch = MultiStrategyDispatch(_fallback)
-    dispatch.register_func_list([
-        (lambda cls: issubclass(cls, Foo), _foo_func)
-    ])
+    dispatch.register_func_list(
+        [(lambda cls: issubclass(cls, Foo), _foo_func)]
+    )
     dispatch.register_cls_list([(Foo, _foo_cls)])
     assert dispatch.dispatch(Foo) == _foo_cls

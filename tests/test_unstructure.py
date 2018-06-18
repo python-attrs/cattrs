@@ -1,6 +1,11 @@
 """Tests for dumping."""
-from . import (seqs_of_primitives, dicts_of_primitives, enums_of_primitives,
-               simple_classes, nested_classes)
+from . import (
+    seqs_of_primitives,
+    dicts_of_primitives,
+    enums_of_primitives,
+    simple_classes,
+    nested_classes,
+)
 
 from cattr.converters import Converter, UnstructureStrategy
 
@@ -8,8 +13,9 @@ from attr import asdict, astuple
 from hypothesis import given
 from hypothesis.strategies import sampled_from, choices
 
-unstruct_strats = sampled_from([
-    UnstructureStrategy.AS_DICT, UnstructureStrategy.AS_TUPLE])
+unstruct_strats = sampled_from(
+    [UnstructureStrategy.AS_DICT, UnstructureStrategy.AS_TUPLE]
+)
 
 # Primitive stuff first.
 
@@ -76,15 +82,16 @@ def test_unstructure_hooks(converter, cl_and_vals):
     cl, vals = cl_and_vals
     inst = cl(*vals)
 
-    converter.register_unstructure_hook(cl, lambda val: 'test')
+    converter.register_unstructure_hook(cl, lambda val: "test")
 
-    assert converter.unstructure(inst) == 'test'
+    assert converter.unstructure(inst) == "test"
 
 
 def test_unstructure_hook_func(converter):
     """
     Unstructure hooks work.
     """
+
     def can_handle(cls):
         return cls.__name__.startswith("F")
 

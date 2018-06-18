@@ -9,7 +9,8 @@ class FunctionDispatch(object):
 
     objects that help determine dispatch should be instantiated objects.
     """
-    __slots__ = ('_handler_pairs', 'dispatch')
+
+    __slots__ = ("_handler_pairs", "dispatch")
 
     def __init__(self):
         self._handler_pairs = []

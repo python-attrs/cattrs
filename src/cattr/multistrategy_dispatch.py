@@ -6,6 +6,7 @@ from ._compat import singledispatch, lru_cache
 @attr.s
 class _DispatchNotFound(object):
     """ a dummy object to help signify a dispatch not found """
+
     pass
 
 
@@ -18,7 +19,8 @@ class MultiStrategyDispatch(object):
     registered for singledispatch, or an exception occurs,
     the FunctionDispatch instance is then used.
     """
-    __slots__ = ('_function_dispatch', '_single_dispatch', 'dispatch')
+
+    __slots__ = ("_function_dispatch", "_single_dispatch", "dispatch")
 
     def __init__(self, fallback_func):
         self._function_dispatch = FunctionDispatch()

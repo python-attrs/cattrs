@@ -14,10 +14,10 @@ def create_uniq_field_dis_func(*cls):
 
     The function is based on unique fields."""
     if len(cls) < 2:
-        raise ValueError('At least two classes required.')
+        raise ValueError("At least two classes required.")
     cls_and_attrs = [(cl, set(at.name for at in fields(cl))) for cl in cls]
     if len([attrs for _, attrs in cls_and_attrs if len(attrs) == 0]) > 1:
-        raise ValueError('At least two classes have no attributes.')
+        raise ValueError("At least two classes have no attributes.")
     # TODO: Deal with a single class having no required attrs.
     # For each class, attempt to generate a single unique required field.
     uniq_attrs_dict = OrderedDict()
@@ -26,12 +26,12 @@ def create_uniq_field_dis_func(*cls):
     fallback = None  # If none match, try this.
 
     for i, (cl, cl_reqs) in enumerate(cls_and_attrs):
-        other_classes = cls_and_attrs[i+1:]
+        other_classes = cls_and_attrs[i + 1 :]
         if other_classes:
             other_reqs = reduce(or_, (c_a[1] for c_a in other_classes))
             uniq = cl_reqs - other_reqs
             if not uniq:
-                m = '{} has no usable unique attributes.'.format(cl)
+                m = "{} has no usable unique attributes.".format(cl)
                 raise ValueError(m)
             uniq_attrs_dict[next(iter(uniq))] = cl
         else:
@@ -40,7 +40,7 @@ def create_uniq_field_dis_func(*cls):
     def dis_func(data):
         # type: (Mapping) -> Union
         if not isinstance(data, Mapping):
-            raise ValueError('Only input mappings are supported.')
+            raise ValueError("Only input mappings are supported.")
         for k, v in uniq_attrs_dict.items():
             if k in data:
                 return v
