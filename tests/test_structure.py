@@ -13,8 +13,6 @@ from typing import (
     Union,
 )
 
-import attr
-from attr import fields
 from cattr._compat import bytes, unicode, is_py2
 
 from pytest import raises
