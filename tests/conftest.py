@@ -12,5 +12,4 @@ def converter():
     return Converter()
 
 
-if platform.python_implementation() == "PyPy":
-    settings.default.suppress_health_check.append(HealthCheck.too_slow)
+settings.default.suppress_health_check.append(HealthCheck.too_slow)

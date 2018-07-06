@@ -8,9 +8,18 @@ from typing import (
     FrozenSet,
     MutableSet,
     Tuple,
-    _Union,
 )
-from ._compat import lru_cache, unicode, bytes, is_py2
+from ._compat import (
+    lru_cache,
+    unicode,
+    bytes,
+    is_py2,
+    is_bare,
+    is_frozenset,
+    is_mutable_set,
+    is_union_type,
+    is_sequence,
+)
 from .disambiguators import create_uniq_field_dis_func
 from .multistrategy_dispatch import MultiStrategyDispatch
 
@@ -29,11 +38,6 @@ class UnstructureStrategy(Enum):
 
 def _is_attrs_class(cls):
     return getattr(cls, "__attrs_attrs__", None) is not None
-
-
-def _is_union_type(obj):
-    """ returns true if the object is an instance of union. """
-    return isinstance(obj, _Union)
 
 
 def _subclass(typ):
@@ -93,12 +97,12 @@ class Converter(object):
         self._structure_func = MultiStrategyDispatch(self._structure_default)
         self._structure_func.register_func_list(
             [
-                (_subclass(Sequence), self._structure_list),
-                (_subclass(MutableSet), self._structure_set),
-                (_subclass(FrozenSet), self._structure_frozenset),
+                (is_sequence, self._structure_list),
+                (is_mutable_set, self._structure_set),
+                (is_frozenset, self._structure_frozenset),
                 (_subclass(Mapping), self._structure_dict),
                 (_subclass(Tuple), self._structure_tuple),
-                (_is_union_type, self._structure_union),
+                (is_union_type, self._structure_union),
                 (_is_attrs_class, self._structure_attrs),
             ]
         )
@@ -163,7 +167,7 @@ class Converter(object):
         is sometimes needed (for example, when dealing with generic classes).
         """
         # type: (Type[T], Callable[[Any, Type], T) -> None
-        if _is_union_type(cl):
+        if is_union_type(cl):
             self._union_registry[cl] = func
         else:
             self._structure_func.register_cls_list([(cl, func)])
@@ -303,7 +307,7 @@ class Converter(object):
     def _structure_list(self, obj, cl):
         # type: (Type[GenericMeta], Iterable[T]) -> List[T]
         """Convert an iterable to a potentially generic list."""
-        if not cl.__args__ or cl.__args__[0] is Any:
+        if is_bare(cl) or cl.__args__[0] is Any:
             return [e for e in obj]
         else:
             elem_type = cl.__args__[0]
@@ -315,7 +319,7 @@ class Converter(object):
     def _structure_set(self, obj, cl):
         # type: (Type[GenericMeta], Iterable[T]) -> MutableSet[T]
         """Convert an iterable into a potentially generic set."""
-        if not cl.__args__ or cl.__args__[0] is Any:
+        if is_bare(cl) or cl.__args__[0] is Any:
             return set(obj)
         else:
             elem_type = cl.__args__[0]
@@ -327,7 +331,7 @@ class Converter(object):
     def _structure_frozenset(self, obj, cl):
         # type: (Type[GenericMeta], Iterable[T]) -> FrozenSet[T]
         """Convert an iterable into a potentially generic frozenset."""
-        if not cl.__args__ or cl.__args__[0] is Any:
+        if is_bare(cl) or cl.__args__[0] is Any:
             return frozenset(obj)
         else:
             elem_type = cl.__args__[0]

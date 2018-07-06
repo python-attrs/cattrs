@@ -16,6 +16,18 @@ requirements = [
     "typing >= 3.5.3; python_version<'3.0'",
 ]
 
+dev_reqs = [
+    "bumpversion",
+    "wheel",
+    "watchdog",
+    "flake8",
+    "tox",
+    "coverage",
+    "Sphinx",
+    "pytest",
+    "hypothesis",
+]
+
 setup(
     name="cattrs",
     version="0.9.0.dev1",
@@ -28,6 +40,7 @@ setup(
     package_dir={"": "src"},
     include_package_data=True,
     install_requires=requirements,
+    extras_require={"dev": dev_reqs},
     license="MIT license",
     zip_safe=False,
     keywords="cattrs",
