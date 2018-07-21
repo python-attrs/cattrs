@@ -10,15 +10,17 @@ from typing import (
     Tuple,
 )
 from ._compat import (
-    lru_cache,
-    unicode,
     bytes,
-    is_py2,
     is_bare,
     is_frozenset,
+    is_mapping,
     is_mutable_set,
-    is_union_type,
+    is_py2,
     is_sequence,
+    is_tuple,
+    is_union_type,
+    lru_cache,
+    unicode,
 )
 from .disambiguators import create_uniq_field_dis_func
 from .multistrategy_dispatch import MultiStrategyDispatch
@@ -100,8 +102,8 @@ class Converter(object):
                 (is_sequence, self._structure_list),
                 (is_mutable_set, self._structure_set),
                 (is_frozenset, self._structure_frozenset),
-                (_subclass(Mapping), self._structure_dict),
-                (_subclass(Tuple), self._structure_tuple),
+                (is_tuple, self._structure_tuple),
+                (is_mapping, self._structure_dict),
                 (is_union_type, self._structure_union),
                 (_is_attrs_class, self._structure_attrs),
             ]
@@ -341,7 +343,7 @@ class Converter(object):
     def _structure_dict(self, obj, cl):
         # type: (Type[GenericMeta], Mapping[T, V]) -> Dict[T, V]
         """Convert a mapping into a potentially generic dict."""
-        if not cl.__args__ or cl.__args__ == (Any, Any):
+        if is_bare(cl) or cl.__args__ == (Any, Any):
             return dict(obj)
         else:
             key_type, val_type = cl.__args__

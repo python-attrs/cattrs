@@ -13,7 +13,8 @@ from typing import (
     Union,
 )
 
-from cattr._compat import bytes, unicode, is_py2
+from cattr.converters import NoneType
+from cattr._compat import bytes, unicode, is_py2, is_bare, is_union_type
 
 from pytest import raises
 
@@ -44,6 +45,7 @@ from . import (
     dicts_of_primitives,
     enums_of_primitives,
 )
+from ._compat import change_type_param
 
 if is_py2:
     ints_and_type = tuples(integers(max_value=sys.maxint), just(int))
@@ -205,7 +207,7 @@ def test_structuring_dicts_opts(converter, dict_and_type, data):
     # type: (Converter, Any, Any) -> None
     """Structure dicts, but with optional primitives."""
     d, t = dict_and_type
-    assume(t.__args__)
+    assume(not is_bare(t))
     t.__args__ = (t.__args__[0], Optional[t.__args__[1]])
     d = {k: v if data.draw(booleans()) else None for k, v in d.items()}
 
@@ -236,7 +238,7 @@ def test_structuring_optional_primitives(converter, primitive_and_type):
     assert converter.structure(None, Optional[type]) is None
 
 
-@given(lists_of_primitives().filter(lambda lp: lp[1].__args__))
+@given(lists_of_primitives().filter(lambda lp: not is_bare(lp[1])))
 def test_structuring_lists_of_opt(converter, list_and_type):
     # type: (Converter, List[Any]) -> None
     """Test structuring lists of Optional primitive types."""
@@ -245,12 +247,22 @@ def test_structuring_lists_of_opt(converter, list_and_type):
     l.append(None)
     args = t.__args__
 
-    if args and args[0] not in (Any, unicode, str, Optional):
-        with raises(TypeError):
+    is_optional = args[0] is Optional or (
+        is_union_type(args[0])
+        and len(args[0].__args__) == 2
+        and args[0].__args__[1] is NoneType
+    )
+
+    if not is_bare(t) and (
+        args[0] not in (Any, unicode, str) and not is_optional
+    ):
+        with raises((TypeError, ValueError)):
             converter.structure(l, t)
 
     optional_t = Optional[args[0]]
-    t.__args__ = (optional_t,)
+    # We want to create a generic type annotation with an optional
+    # type parameter.
+    t = change_type_param(t, optional_t)
 
     converted = converter.structure(l, t)
 

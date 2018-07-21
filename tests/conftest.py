@@ -12,4 +12,9 @@ def converter():
     return Converter()
 
 
-settings.default.suppress_health_check.append(HealthCheck.too_slow)
+settings.register_profile(
+    "tests", suppress_health_check=(HealthCheck.too_slow,)
+)
+
+settings.load_profile("tests")
+

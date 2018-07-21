@@ -1,5 +1,13 @@
 import sys
-from typing import FrozenSet, MutableSet, Sequence
+from typing import (
+    Dict,
+    FrozenSet,
+    Mapping,
+    MutableSet,
+    MutableSequence,
+    Sequence,
+    Tuple,
+)
 
 version_info = sys.version_info[0:3]
 is_py2 = version_info[0] == 2
@@ -29,8 +37,10 @@ if is_py37:
         )
 
     def is_sequence(type):
-        return type.__class__ is _GenericAlias and issubclass(
-            type.__origin__, Sequence
+        return (
+            type is List
+            or type.__class__ is _GenericAlias
+            and issubclass(type.__origin__, Sequence)
         )
 
     def is_frozenset(type):
@@ -43,12 +53,32 @@ if is_py37:
             type.__origin__, MutableSet
         )
 
+    def is_tuple(type):
+        return type is Tuple or (
+            type.__class__ is _GenericAlias
+            and issubclass(type.__origin__, Tuple)
+        )
+
+    def is_mapping(type):
+        return type is Mapping or (
+            type.__class__ is _GenericAlias
+            and issubclass(type.__origin__, Mapping)
+        )
+
     bare_list_args = List.__args__
     bare_seq_args = Sequence.__args__
+    bare_mapping_args = Mapping.__args__
+    bare_dict_args = Dict.__args__
+    bare_mutable_seq_args = MutableSequence.__args__
 
     def is_bare(type):
+        args = type.__args__
         return (
-            type.__args__ == bare_list_args or type.__args__ == bare_seq_args
+            args == bare_list_args
+            or args == bare_seq_args
+            or args == bare_mapping_args
+            or args == bare_dict_args
+            or args == bare_mutable_seq_args
         )
 
 
@@ -67,6 +97,12 @@ else:
 
     def is_sequence(type):
         return issubclass(type, Sequence)
+
+    def is_tuple(type):
+        return issubclass(type, Tuple)
+
+    def is_mapping(type):
+        return issubclass(type, Mapping)
 
     def is_bare(type):
         return not type.__args__
