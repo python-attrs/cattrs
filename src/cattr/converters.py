@@ -1,14 +1,5 @@
 from enum import Enum
-from typing import (
-    Mapping,
-    Sequence,
-    Optional,
-    TypeVar,
-    Any,
-    FrozenSet,
-    MutableSet,
-    Tuple,
-)
+from typing import Mapping, Sequence, Optional, TypeVar, Any
 from ._compat import (
     bytes,
     is_bare,
