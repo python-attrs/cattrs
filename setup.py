@@ -26,6 +26,7 @@ dev_reqs = [
     "Sphinx",
     "pytest",
     "hypothesis",
+    "pendulum",
 ]
 
 setup(
