@@ -65,4 +65,34 @@ And we can proceed with unstructuring and structuring instances of ``MyRecord``.
     MyRecord(a_string='test', a_datetime=DateTime(2018, 7, 28, 18, 24, 0, tzinfo=Timezone('UTC')))
 
 
+After a while, we realize we *will* need our datetimes to have timezone information.
+We decide to switch to using the ISO 8601 format for our unstructured datetime instances.
+
+.. testsetup:: pendulum-iso8601
+
+    import pendulum
+    from pendulum import DateTime
+
+    @attr.s
+    class MyRecord:
+        a_string: str = attr.ib()
+        a_datetime: DateTime = attr.ib()
+
+.. doctest:: pendulum-iso8601
+
+    >>> converter = cattr.Converter()
+    >>> converter.register_unstructure_hook(DateTime, lambda dt: dt.to_iso8601_string())
+    >>> converter.register_structure_hook(DateTime, lambda isostring, _: pendulum.parse(isostring))
+
+    >>> my_record = MyRecord('test', pendulum.datetime(2018, 7, 28, 18, 24, tz='Europe/Paris'))
+    >>> my_record
+    MyRecord(a_string='test', a_datetime=DateTime(2018, 7, 28, 18, 24, 0, tzinfo=Timezone('Europe/Paris')))
+
+    >>> converter.unstructure(my_record)
+    {'a_string': 'test', 'a_datetime': '2018-07-28T18:24:00+02:00'}
+
+    >>> converter.structure({'a_string': 'test', 'a_datetime': '2018-07-28T18:24:00+02:00'}, MyRecord)
+    MyRecord(a_string='test', a_datetime=DateTime(2018, 7, 28, 18, 24, 0, tzinfo=Timezone('+02:00')))
+
+
 .. _Pendulum: https://pendulum.eustace.io/
