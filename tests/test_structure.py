@@ -315,7 +315,7 @@ def test_structure_hook_func(converter):
     def can_handle(cls):
         return cls.__name__.startswith("F")
 
-    def handle(obj, cls):
+    def handle(obj, cls, context):
         return "hi"
 
     class Foo(object):
@@ -362,9 +362,9 @@ def test_subclass_registration_is_honored(converter):
     class Bar(Foo):
         pass
 
-    converter.register_structure_hook(Foo, lambda obj, cls: cls("foo"))
+    converter.register_structure_hook(Foo, lambda obj, cls, _: cls("foo"))
     assert converter.structure(None, Foo).value == "foo"
     assert converter.structure(None, Bar).value == "foo"
-    converter.register_structure_hook(Bar, lambda obj, cls: cls("bar"))
+    converter.register_structure_hook(Bar, lambda obj, cls, _: cls("bar"))
     assert converter.structure(None, Foo).value == "foo"
     assert converter.structure(None, Bar).value == "bar"

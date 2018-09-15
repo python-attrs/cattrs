@@ -68,7 +68,7 @@ def _create_hyp_class(attrs_and_strategy):
 
 
 @composite
-def bare_typed_attrs(draw, defaults=None):
+def bare_typed_attrs(draw, defaults=None, deferred=None):
     """
     Generate a tuple of an attribute and a strategy that yields values
     appropriate for that attribute.
@@ -76,11 +76,15 @@ def bare_typed_attrs(draw, defaults=None):
     default = attr.NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = None
-    return (attr.ib(type=Any, default=default), just(None))
+    if deferred is None:
+        deferred = draw(booleans())
+
+    type_ = "Any" if deferred else Any
+    return (attr.ib(type=type_, default=default), just(None))
 
 
 @composite
-def int_typed_attrs(draw, defaults=None):
+def int_typed_attrs(draw, defaults=None, deferred=None):
     """
     Generate a tuple of an attribute and a strategy that yields ints for that
     attribute.
@@ -88,7 +92,11 @@ def int_typed_attrs(draw, defaults=None):
     default = attr.NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(integers())
-    return (attr.ib(type=int, default=default), integers())
+    if deferred is None:
+        deferred = draw(booleans())
+
+    type_ = "int" if deferred else int
+    return (attr.ib(type=type_, default=default), integers())
 
 
 @composite
@@ -100,11 +108,12 @@ def str_typed_attrs(draw, defaults=None):
     default = NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(text())
+
     return (attr.ib(type=unicode, default=default), text())
 
 
 @composite
-def float_typed_attrs(draw, defaults=None):
+def float_typed_attrs(draw, defaults=None, deferred=None):
     """
     Generate a tuple of an attribute and a strategy that yields floats for that
     attribute.
@@ -112,7 +121,11 @@ def float_typed_attrs(draw, defaults=None):
     default = attr.NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(floats())
-    return (attr.ib(type=float, default=default), floats())
+    if deferred is None:
+        deferred = draw(booleans())
+
+    type_ = "float" if deferred else float
+    return (attr.ib(type=type_, default=default), floats())
 
 
 @composite
