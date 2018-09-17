@@ -143,13 +143,14 @@ class Converter(object):
         self._unstructure_func.register_cls_list([(cls, func)])
 
     def register_unstructure_hook_func(self, check_func, func):
+        # type: (Callable[Any], Callable[[T], Any]) -> None
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
         """
-        # type: (Callable[Any], Callable[T], Any]) -> None
         self._unstructure_func.register_func_list([(check_func, func)])
 
     def register_structure_hook(self, cl, func):
+        # type: (Type[T], Callable[[Any, Type], T]) -> None
         """Register a primitive-to-class converter function for a type.
 
         The converter function should take two arguments:
@@ -159,21 +160,19 @@ class Converter(object):
         and return the instance of the class. The type may seem redundant, but
         is sometimes needed (for example, when dealing with generic classes).
         """
-        # type: (Type[T], Callable[[Any, Type], T) -> None
         if is_union_type(cl):
             self._union_registry[cl] = func
         else:
             self._structure_func.register_cls_list([(cl, func)])
 
     def register_structure_hook_func(self, check_func, func):
-        # type: (Callable[Any], Callable[T], Any]) -> None
+        # type: (Callable[Any], Callable[[T], Any]) -> None
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
         """
         self._structure_func.register_func_list([(check_func, func)])
 
     def structure(self, obj, cl):
-        """Convert unstructured Python data structures to structured data."""
         # type: (Any, Type) -> Any
         return self._structure_func.dispatch(cl)(obj, cl)
 
