@@ -197,6 +197,8 @@ class Converter(object):
         for a in attrs:
             name = a.name
             v = getattr(obj, name)
+            if name.startswith("_"):
+                name = name[1:]
             rv[name] = dispatch(v.__class__)(v)
         return rv
 
