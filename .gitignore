@@ -67,3 +67,4 @@ settings.json
 
 .venv*
 .editorconfig
+.mypy_cache
