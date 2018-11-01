@@ -3,7 +3,7 @@ from collections import OrderedDict
 from functools import reduce
 from operator import or_
 
-from typing import (
+from typing import (  # noqa: F401, imported for Mypy.
     Callable,
     Dict,
     Mapping,
