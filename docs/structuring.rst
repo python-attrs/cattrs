@@ -326,7 +326,7 @@ annotations when using Python 3.6+, or by passing the appropriate type to
     ...     a: int = attr.ib()
     ...
     >>> attr.fields(A).a
-    Attribute(name='a', default=NOTHING, validator=None, repr=True, cmp=True, hash=None, init=True, metadata=mappingproxy({}), type=<class 'int'>, converter=None)
+    Attribute(name='a', default=NOTHING, validator=None, repr=True, cmp=True, hash=None, init=True, metadata=mappingproxy({}), type=<class 'int'>, converter=None, kw_only=False)
 
 Type information, when provided, can be used for all attribute types, not only
 attributes holding ``attrs`` classes.

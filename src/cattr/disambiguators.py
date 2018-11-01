@@ -4,14 +4,11 @@ from functools import reduce
 from operator import or_
 
 from typing import (
-    Any,
     Callable,
     Dict,
     Mapping,
     Optional,
-    Sequence,
     Type,
-    Union,
 )
 
 from attr import fields
