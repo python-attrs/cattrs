@@ -2,6 +2,11 @@
 History
 =======
 
+1.0.0 (UNRELEASED)
+------------------
+* ``attrs`` classes with private attributes can now be structured by default.
+* Structuring from dictionaries is now more lenient: extra keys are ignored.
+
 0.9.0 (2018-07-22)
 ------------------
 * Python 3.7 support.
