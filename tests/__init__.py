@@ -133,10 +133,14 @@ def gen_attr_names():
     Generate names for attributes, 'a'...'z', then 'aa'...'zz'.
     ~702 different attribute names should be enough in practice.
     Some short strings (such as 'as') are keywords, so we skip them.
+
+    Every second attribute name is private (starts with an underscore).
     """
     lc = string.ascii_lowercase
+    has_underscore = False
     for c in lc:
-        yield c
+        yield c if not has_underscore else "_" + c
+        has_underscore = not has_underscore
     for outer in lc:
         for inner in lc:
             res = outer + inner

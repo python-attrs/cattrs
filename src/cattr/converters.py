@@ -197,8 +197,6 @@ class Converter(object):
         for a in attrs:
             name = a.name
             v = getattr(obj, name)
-            if name[0] == "_":
-                name = name[1:]
             rv[name] = dispatch(v.__class__)(v)
         return rv
 
@@ -299,10 +297,14 @@ class Converter(object):
             # We detect the type by metadata.
             type_ = a.type
             name = a.name
+
             try:
                 val = obj[name]
             except KeyError:
                 continue
+
+            if name[0] == "_":
+                name = name[1:]
 
             conv_obj[name] = (
                 dispatch(type_)(val, type_) if type_ is not None else val
