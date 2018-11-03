@@ -293,20 +293,20 @@ class Converter(object):
         # type: (Mapping[str, Any], Type[T]) -> T
         """Instantiate an attrs class from a mapping (dict)."""
         # For public use.
-        conv_obj = dict(obj)  # Dict of converted parameters.
+        conv_obj = {}  # Start with a fresh dict, to ignore extra keys.
         dispatch = self._structure_func.dispatch
         for a in cl.__attrs_attrs__:  # type: ignore
             # We detect the type by metadata.
             type_ = a.type
-            if type_ is None:
-                # No type.
-                continue
             name = a.name
             try:
                 val = obj[name]
             except KeyError:
                 continue
-            conv_obj[name] = dispatch(type_)(val, type_)
+
+            conv_obj[name] = (
+                dispatch(type_)(val, type_) if type_ is not None else val
+            )
 
         return cl(**conv_obj)  # type: ignore
 
