@@ -1,10 +1,11 @@
 """Tests for dumping."""
 from . import (
-    seqs_of_primitives,
     dicts_of_primitives,
     enums_of_primitives,
-    simple_classes,
     nested_classes,
+    seqs_of_primitives,
+    sets_of_primitives,
+    simple_classes,
 )
 
 from cattr.converters import Converter, UnstructureStrategy
@@ -32,6 +33,20 @@ def test_seq_unstructure(seq_and_type, dump_strat):
     if not isinstance(seq, tuple):
         assert dumped is not seq
     assert type(dumped) is type(seq)
+
+
+@given(sets_of_primitives, unstruct_strats)
+def test_set_unstructure(set_and_type, dump_strat):
+    # type: (Any, UnstructureStrategy) -> None
+    """Dumping a set of primitives is a simple copy operation."""
+    converter = Converter(unstruct_strat=dump_strat)
+    assert converter.unstruct_strat is dump_strat
+    set = set_and_type[0]
+    dumped = converter.unstructure(set)
+    assert dumped == set
+    if set:
+        assert dumped is not set
+    assert type(dumped) is type(set)
 
 
 @given(dicts_of_primitives, unstruct_strats)

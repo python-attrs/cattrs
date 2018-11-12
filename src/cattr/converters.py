@@ -3,9 +3,11 @@ from typing import (  # noqa: F401, imported for Mypy.
     Any,
     Callable,
     Dict,
+    FrozenSet,
     Mapping,
     Optional,
     Sequence,
+    Set,
     Tuple,
     Type,
     TypeVar,
@@ -89,6 +91,8 @@ class Converter(object):
             [
                 (_subclass(Mapping), self._unstructure_mapping),
                 (_subclass(Sequence), self._unstructure_seq),
+                (_subclass(Set), self._unstructure_seq),
+                (_subclass(FrozenSet), self._unstructure_seq),
                 (_subclass(Enum), self._unstructure_enum),
                 (_is_attrs_class, self._unstructure_attrs),
             ]

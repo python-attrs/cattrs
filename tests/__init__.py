@@ -5,14 +5,16 @@ import os
 from collections import OrderedDict
 from enum import Enum
 from typing import (
-    Tuple,
-    Sequence,
-    MutableSequence,
-    List,
-    Dict,
-    MutableMapping,
-    Mapping,
     Any,
+    Dict,
+    List,
+    Mapping,
+    MutableMapping,
+    MutableSequence,
+    MutableSet,
+    Sequence,
+    Set,
+    Tuple,
 )
 from cattr._compat import is_py2, bytes, unicode
 
@@ -75,6 +77,7 @@ def enums_of_primitives(draw):
 
 
 list_types = st.sampled_from([List, Sequence, MutableSequence])
+set_types = st.sampled_from([Set, MutableSet])
 
 
 @st.composite
@@ -86,6 +89,22 @@ def lists_of_primitives(draw):
     prim_strat, t = draw(primitive_strategies)
     list_t = draw(list_types.map(lambda list_t: list_t[t]) | list_types)
     return draw(st.lists(prim_strat)), list_t
+
+
+@st.composite
+def mut_sets_of_primitives(draw):
+    """A strategy that generates mutable sets of primitives."""
+    prim_strat, t = draw(primitive_strategies)
+    set_t = draw(set_types.map(lambda set_t: set_t[t]) | set_types)
+    return draw(st.sets(prim_strat)), set_t
+
+
+@st.composite
+def frozen_sets_of_primitives(draw):
+    """A strategy that generates frozen sets of primitives."""
+    prim_strat, t = draw(primitive_strategies)
+    set_t = draw(st.just(Set) | st.just(Set[t]))
+    return frozenset(draw(st.sets(prim_strat))), set_t
 
 
 h_tuple_types = st.sampled_from([Tuple, Sequence])
@@ -101,6 +120,10 @@ h_tuples_of_primitives = primitive_strategies.flatmap(
 dict_types = st.sampled_from([Dict, MutableMapping, Mapping])
 
 seqs_of_primitives = st.one_of(lists_of_primitives(), h_tuples_of_primitives)
+
+sets_of_primitives = st.one_of(
+    mut_sets_of_primitives(), frozen_sets_of_primitives()
+)
 
 
 def create_generic_dict_type(type1, type2):

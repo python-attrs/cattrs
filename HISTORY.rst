@@ -6,6 +6,8 @@ History
 ------------------
 * ``attrs`` classes with private attributes can now be structured by default.
 * Structuring from dictionaries is now more lenient: extra keys are ignored.
+* ``cattrs`` has improved type annotations for use with Mypy.
+* Unstructuring sets and frozensets now works properly.
 
 0.9.0 (2018-07-22)
 ------------------
