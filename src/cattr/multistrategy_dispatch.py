@@ -1,3 +1,5 @@
+from typing import TypeVar
+
 import attr
 from .function_dispatch import FunctionDispatch
 from ._compat import singledispatch, lru_cache
@@ -28,14 +30,19 @@ class MultiStrategyDispatch(object):
         self._single_dispatch = singledispatch(_DispatchNotFound)
         self.dispatch = lru_cache(64)(self._dispatch)
 
-    def _dispatch(self, cl):
+    def _dispatch(self, cl, mappings: dict = None):
+        if isinstance(cl, TypeVar):
+            # We have a generic, lets try and check the mappings
+            cl = getattr(mappings, cl.__name__, cl)
+
         try:
             dispatch = self._single_dispatch.dispatch(cl)
             if dispatch is not _DispatchNotFound:
-                return dispatch
+                return lambda x: dispatch(x, cl, mappings)
         except Exception:
             pass
-        return self._function_dispatch.dispatch(cl)
+        dis = self._function_dispatch.dispatch(cl)
+        return lambda x: dis(x, cl, mappings)
 
     def register_cls_list(self, cls_and_handler):
         """ register a class to singledispatch """

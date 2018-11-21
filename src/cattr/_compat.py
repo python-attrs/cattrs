@@ -113,3 +113,8 @@ else:
         return not type.__args__
 
     is_bare_frozenset = is_bare
+
+
+def is_generic_alias(obj):
+    from typing import _GenericAlias
+    return isinstance(obj, _GenericAlias)
