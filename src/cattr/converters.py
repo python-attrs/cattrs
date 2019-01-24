@@ -258,13 +258,17 @@ class Converter(object):
         )
         raise ValueError(msg)
 
-    def _structure_call(self, obj, cl, mapping):
+    def _structure_call(self, obj, cl, mappings):
         """Just call ``cl`` with the given ``obj``.
 
         This is just an optimization on the ``_structure_default`` case, when
         we know we can skip the ``if`` s. Use for ``str``, ``bytes``, ``enum``,
         etc.
         """
+        if isinstance(cl, TypeVar):
+            # We have a generic, lets try and check the mappings
+            cl = getattr(mappings, cl.__name__, cl)
+
         return cl(obj)
 
     def _structure_unicode(self, obj, cl, mapping):
@@ -320,7 +324,7 @@ class Converter(object):
 
         inst_mapping = cls(**mapping)
 
-        return self._mapped_structure_dispatch(base, inst_mapping)(obj)
+        return self._mapped_structure_dispatch(base, inst_mapping)(obj, base, inst_mapping)
 
     def structure_attrs_fromdict(self, obj, cl, mappings):
         # type: (Mapping[str, Any], Type[T], dict) -> T
