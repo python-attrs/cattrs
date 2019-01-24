@@ -27,11 +27,15 @@ from ._compat import (
 )
 from .disambiguators import create_uniq_field_dis_func
 from .multistrategy_dispatch import MultiStrategyDispatch
+import attr
 
 
 NoneType = type(None)
 T = TypeVar("T")
 V = TypeVar("V")
+
+
+CATTRS_METADATA_KEY = 'cattrs_structure_key'
 
 
 class UnstructureStrategy(Enum):
@@ -200,8 +204,10 @@ class Converter(object):
         rv = self._dict_factory()
         for a in attrs:
             name = a.name
+            # get src_key if any and unstrucutre to that instead of a.name
+            src_key = a.metadata.get(CATTRS_METADATA_KEY, a.name)
             v = getattr(obj, name)
-            rv[name] = dispatch(v.__class__)(v)
+            rv[src_key] = dispatch(v.__class__)(v)
         return rv
 
     def unstructure_attrs_astuple(self, obj):
@@ -301,9 +307,11 @@ class Converter(object):
             # We detect the type by metadata.
             type_ = a.type
             name = a.name
+            # get src_key if any and structure from there instead of a.name
+            src_key = a.metadata.get(CATTRS_METADATA_KEY, a.name)
 
             try:
-                val = obj[name]
+                val = obj[src_key]
             except KeyError:
                 continue
 
@@ -433,3 +441,21 @@ class Converter(object):
                 "currently. Register a loads hook manually."
             )
         return create_uniq_field_dis_func(*union_types)
+
+    def ib(self, default=attr.NOTHING, validator=None, repr=True, cmp=True,
+           hash=None, init=True, convert=None, metadata=None, type=None,
+           converter=None, factory=None, kw_only=False, src_key=None):
+        """Custom verion of attr.ib with extra parameter src_key.
+
+        src_key will be stored in the attr metadata. The property will be strucutured
+        from and unstructured to src_key. Useful for properties in the unstructured data
+        (json) that are python keywords.
+
+        """
+        metadata = dict() if not metadata else metadata
+        if src_key:
+            metadata[CATTRS_METADATA_KEY] = src_key
+        return attr.ib(default=default, validator=validator, repr=repr,
+                       cmp=cmp, hash=hash, init=init, convert=convert,
+                       metadata=metadata, type=type, converter=converter,
+                       factory=factory, kw_only=kw_only)
