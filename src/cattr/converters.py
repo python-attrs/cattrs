@@ -204,8 +204,9 @@ class Converter(object):
         rv = self._dict_factory()
         for a in attrs:
             name = a.name
+            from_key = a.metadata.get(CATTRS_METADATA_KEY, a.name)
             v = getattr(obj, name)
-            rv[name] = dispatch(v.__class__)(v)
+            rv[from_key] = dispatch(v.__class__)(v)
         return rv
 
     def unstructure_attrs_astuple(self, obj):
