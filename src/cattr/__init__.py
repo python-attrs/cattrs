@@ -18,6 +18,7 @@ global_converter = Converter()
 
 unstructure = global_converter.unstructure
 structure = global_converter.structure
+ib = global_converter.ib
 structure_attrs_fromtuple = global_converter.structure_attrs_fromtuple
 structure_attrs_fromdict = global_converter.structure_attrs_fromdict
 register_structure_hook = global_converter.register_structure_hook

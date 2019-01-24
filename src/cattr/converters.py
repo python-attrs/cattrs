@@ -27,11 +27,15 @@ from ._compat import (
 )
 from .disambiguators import create_uniq_field_dis_func
 from .multistrategy_dispatch import MultiStrategyDispatch
+import attr
 
 
 NoneType = type(None)
 T = TypeVar("T")
 V = TypeVar("V")
+
+
+CATTRS_METADATA_KEY = 'cattrs_structure_key'
 
 
 class UnstructureStrategy(Enum):
@@ -301,9 +305,10 @@ class Converter(object):
             # We detect the type by metadata.
             type_ = a.type
             name = a.name
+            from_key = a.metadata.get(CATTRS_METADATA_KEY, a.name)
 
             try:
-                val = obj[name]
+                val = obj[from_key]
             except KeyError:
                 continue
 
@@ -433,3 +438,11 @@ class Converter(object):
                 "currently. Register a loads hook manually."
             )
         return create_uniq_field_dis_func(*union_types)
+
+    def ib(self, default=attr.NOTHING, validator=None, repr=True, cmp=True,
+           hash=None, init=True, convert=None, metadata={}, src_key=None):
+        metadata = dict() if not metadata else metadata
+        if src_key:
+            metadata[CATTRS_METADATA_KEY] = src_key
+        return attr.ib(default, validator, repr, cmp, hash,
+                       init, convert, metadata)
