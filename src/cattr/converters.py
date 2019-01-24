@@ -204,9 +204,10 @@ class Converter(object):
         rv = self._dict_factory()
         for a in attrs:
             name = a.name
-            from_key = a.metadata.get(CATTRS_METADATA_KEY, a.name)
+            # get src_key if any and unstrucutre to that instead of a.name
+            src_key = a.metadata.get(CATTRS_METADATA_KEY, a.name)
             v = getattr(obj, name)
-            rv[from_key] = dispatch(v.__class__)(v)
+            rv[src_key] = dispatch(v.__class__)(v)
         return rv
 
     def unstructure_attrs_astuple(self, obj):
@@ -306,10 +307,11 @@ class Converter(object):
             # We detect the type by metadata.
             type_ = a.type
             name = a.name
-            from_key = a.metadata.get(CATTRS_METADATA_KEY, a.name)
+            # get src_key if any and structure from there instead of a.name
+            src_key = a.metadata.get(CATTRS_METADATA_KEY, a.name)
 
             try:
-                val = obj[from_key]
+                val = obj[src_key]
             except KeyError:
                 continue
 
@@ -442,6 +444,13 @@ class Converter(object):
 
     def ib(self, default=attr.NOTHING, validator=None, repr=True, cmp=True,
            hash=None, init=True, convert=None, metadata={}, src_key=None):
+        """Custom verion of attr.ib with extra parameter src_key.
+
+        src_key will be stored in the attr metadata. The property will be strucutured
+        from and unstructured to src_key. Useful for properties in the unstructured data
+        (json) that are python keywords.
+
+        """
         metadata = dict() if not metadata else metadata
         if src_key:
             metadata[CATTRS_METADATA_KEY] = src_key
