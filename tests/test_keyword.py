@@ -2,12 +2,13 @@ import attr
 import cattr
 
 
-@attr.s(auto_attribs=True)
-class Test:
-    renamed: str = cattr.ib(src_key='class')
+@attr.s
+class MyClass(object):
+    renamed = cattr.ib(src_key='class', type=str)
 
 
 def test_structure_keywords():
+
     data = {'class': 'value'}
-    obj = cattr.structure(data, Test)
+    obj = cattr.structure(data, MyClass)
     assert cattr.unstructure(obj) == data

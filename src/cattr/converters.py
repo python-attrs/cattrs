@@ -443,7 +443,8 @@ class Converter(object):
         return create_uniq_field_dis_func(*union_types)
 
     def ib(self, default=attr.NOTHING, validator=None, repr=True, cmp=True,
-           hash=None, init=True, convert=None, metadata={}, src_key=None):
+           hash=None, init=True, convert=None, metadata=None, type=None,
+           converter=None, factory=None, kw_only=False, src_key=None):
         """Custom verion of attr.ib with extra parameter src_key.
 
         src_key will be stored in the attr metadata. The property will be strucutured
@@ -454,5 +455,7 @@ class Converter(object):
         metadata = dict() if not metadata else metadata
         if src_key:
             metadata[CATTRS_METADATA_KEY] = src_key
-        return attr.ib(default, validator, repr, cmp, hash,
-                       init, convert, metadata)
+        return attr.ib(default=default, validator=validator, repr=repr,
+                       cmp=cmp, hash=hash, init=init, convert=convert,
+                       metadata=metadata, type=type, converter=converter,
+                       factory=factory, kw_only=kw_only)
