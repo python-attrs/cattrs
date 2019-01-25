@@ -318,6 +318,10 @@ class Converter(object):
             if name[0] == "_":
                 name = name[1:]
 
+            if val is None and type_ is not None:
+                raise ValueError('property "{:s}" of type "{:s}" must not be None'.format(
+                    src_key, str(type_)))
+
             conv_obj[name] = (
                 dispatch(type_)(val, type_) if type_ is not None else val
             )
