@@ -241,7 +241,7 @@ class Converter(object):
 
     # Python primitives to classes.
 
-    def _structure_default(self, obj, cl):
+    def _structure_default(self, obj, cl, mappings):
         """This is the fallthrough case. Everything is a subclass of `Any`.
 
         A special condition here handles ``attrs`` classes.
@@ -249,6 +249,10 @@ class Converter(object):
         Bare optionals end here too (optionals with arguments are unions.) We
         treat bare optionals as Any.
         """
+        if isinstance(cl, TypeVar):
+            # We have a generic, lets try and check the mappings
+            cl = getattr(mappings, cl.__name__, cl)
+
         if cl is Any or cl is Optional:
             return obj
         # We don't know what this is, so we complain loudly.
@@ -316,20 +320,33 @@ class Converter(object):
 
         base = cl.__origin__
 
+        inst_mapping = self._generate_mapping(cl)
+
+        return self._mapped_structure_dispatch(base, inst_mapping)(obj, base, inst_mapping)
+
+    def _generate_mapping(self, cl: Type):
         mapping = {}
         for i, r in enumerate(cl.__args__):
             mapping[cl.__origin__.__parameters__[i].__name__] = r
 
         cls = make_class("GenericMapping", {x: attrib() for x in mapping.keys()}, frozen=True)
 
-        inst_mapping = cls(**mapping)
+        return cls(**mapping)
 
-        return self._mapped_structure_dispatch(base, inst_mapping)(obj, base, inst_mapping)
 
-    def structure_attrs_fromdict(self, obj, cl, mappings):
+    def structure_attrs_fromdict(self, obj, cl, mapping):
         # type: (Mapping[str, Any], Type[T], dict) -> T
         """Instantiate an attrs class from a mapping (dict)."""
         # For public use.
+
+        for base in getattr(cl, "__orig_bases__", ()):
+            if is_generic_alias(base) and not str(base).startswith("typing.Generic"):
+                mapping = self._generate_mapping(base)
+                break
+
+        if isinstance(cl, TypeVar):
+            cl = getattr(mapping, cl.__name__, cl)
+
         conv_obj = {}  # Start with a fresh dict, to ignore extra keys.
         dispatch = self._mapped_structure_dispatch
         for a in cl.__attrs_attrs__:  # type: ignore
@@ -346,7 +363,7 @@ class Converter(object):
                 name = name[1:]
 
             conv_obj[name] = (
-                dispatch(type_, mappings)(val, type_, mappings) if type_ is not None else val
+                dispatch(type_, mapping)(val, type_, mapping) if type_ is not None else val
             )
 
         return cl(**conv_obj)  # type: ignore
