@@ -27,7 +27,7 @@ from ._compat import (
     is_union_type,
     lru_cache,
     unicode,
-    is_generic)
+    is_generic, is_attrs_class)
 from .disambiguators import create_uniq_field_dis_func
 from .multistrategy_dispatch import MultiStrategyDispatch
 
@@ -42,10 +42,6 @@ class UnstructureStrategy(Enum):
 
     AS_DICT = "asdict"
     AS_TUPLE = "astuple"
-
-
-def _is_attrs_class(cls):
-    return getattr(cls, "__attrs_attrs__", None) is not None
 
 
 def _subclass(typ):
@@ -97,7 +93,7 @@ class Converter(object):
                 (_subclass(Set), self._unstructure_seq),
                 (_subclass(FrozenSet), self._unstructure_seq),
                 (_subclass(Enum), self._unstructure_enum),
-                (_is_attrs_class, self._unstructure_attrs),
+                (is_attrs_class, self._unstructure_attrs),
             ]
         )
 
@@ -114,7 +110,8 @@ class Converter(object):
                 (is_tuple, self._structure_tuple),
                 (is_mapping, self._structure_dict),
                 (is_union_type, self._structure_union),
-                (_is_attrs_class, self._structure_attrs),
+                (is_attrs_class, self._structure_attrs),
+
             ]
         )
         # Strings are sequences.

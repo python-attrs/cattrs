@@ -86,6 +86,9 @@ if is_py37 or is_py38:
     def is_generic(obj):
         return isinstance(obj, _GenericAlias)
 
+    def is_attrs_class(cls):
+        return getattr(cls, "__attrs_attrs__", None) is not None
+
 else:
     from typing import _Union, GenericMeta
 
@@ -117,6 +120,9 @@ else:
 
     def is_generic(obj):
         return isinstance(obj,GenericMeta)
+
+    def is_attrs_class(cls):
+        return getattr(cls, "__attrs_attrs__", None) is not None and getattr(cls, "__args__", None) is None
 
     is_bare_frozenset = is_bare
 
