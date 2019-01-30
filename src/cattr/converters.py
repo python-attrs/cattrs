@@ -27,7 +27,7 @@ from ._compat import (
     is_union_type,
     lru_cache,
     unicode,
-    is_generic_alias)
+    is_generic)
 from .disambiguators import create_uniq_field_dis_func
 from .multistrategy_dispatch import MultiStrategyDispatch
 
@@ -107,7 +107,7 @@ class Converter(object):
         self._structure_func = MultiStrategyDispatch(self._structure_default)
         self._structure_func.register_func_list(
             [
-                (is_generic_alias, self._structure_generic),
+                (is_generic, self._structure_generic),
                 (is_sequence, self._structure_list),
                 (is_mutable_set, self._structure_set),
                 (is_frozenset, self._structure_frozenset),
@@ -340,7 +340,7 @@ class Converter(object):
         # For public use.
 
         for base in getattr(cl, "__orig_bases__", ()):
-            if is_generic_alias(base) and not str(base).startswith("typing.Generic"):
+            if is_generic(base) and not str(base).startswith("typing.Generic"):
                 mapping = self._generate_mapping(base)
                 break
 

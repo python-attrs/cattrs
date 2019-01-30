@@ -83,8 +83,11 @@ if is_py37 or is_py38:
         )
 
 
+    def is_generic(obj):
+        return isinstance(obj, _GenericAlias)
+
 else:
-    from typing import _Union
+    from typing import _Union, GenericMeta
 
     def is_union_type(obj):
         """Return true if the object is a union. """
@@ -112,9 +115,9 @@ else:
     def is_bare(type):
         return not type.__args__
 
+    def is_generic(obj):
+        return isinstance(obj,GenericMeta)
+
     is_bare_frozenset = is_bare
 
 
-def is_generic_alias(obj):
-    from typing import _GenericAlias
-    return isinstance(obj, _GenericAlias)
