@@ -32,7 +32,6 @@ from hypothesis.strategies import (
     frozensets,
     just,
     binary,
-    choices,
     data,
 )
 
@@ -331,11 +330,11 @@ def test_structure_hook_func(converter):
         converter.structure(10, Bar)
 
 
-@given(choices(), enums_of_primitives())
-def test_structuring_enums(converter, choice, enum):
+@given(data(), enums_of_primitives())
+def test_structuring_enums(converter, data, enum):
     # type: (Converter, Any, Any) -> None
     """Test structuring enums by their values."""
-    val = choice(list(enum))
+    val = data.draw(sampled_from(list(enum)))
 
     assert converter.structure(val.value, enum) == val
 
