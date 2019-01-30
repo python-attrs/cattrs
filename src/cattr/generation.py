@@ -1,13 +1,8 @@
-from typing import Any, Callable, Dict, TypeVar, Type
-
 import attr
-from .converters import Converter
-
-T = TypeVar("T")
 
 
 @attr.s(slots=True)
-class AttributeOverride:
+class AttributeOverride(object):
     omit_if_default = attr.ib(default=False, type=bool)
 
 
