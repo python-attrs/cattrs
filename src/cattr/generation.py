@@ -8,19 +8,18 @@ T = TypeVar("T")
 
 @attr.s(slots=True)
 class AttributeOverride:
-    omit_if_default: bool = attr.ib(default=False)
+    omit_if_default = attr.ib(default=False, type=bool)
 
 
-def override(omit_if_default: bool = False):
+def override(omit_if_default=False):
     return AttributeOverride(omit_if_default=omit_if_default)
 
 
 _neutral = AttributeOverride()
 
 
-def make_dict_unstructure_fn(
-    cl: Type[T], converter: Converter, **kwargs
-) -> Callable[[T], Dict[str, Any]]:
+def make_dict_unstructure_fn(cl, converter, **kwargs):
+    # type: (Type[T], Converter) -> Callable[[T], Dict[str, Any]]
     """Generate a specialized dict unstructuring function for a class."""
     cl_name = cl.__name__
     fn_name = "unstructure_" + cl_name
