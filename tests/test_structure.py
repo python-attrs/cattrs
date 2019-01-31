@@ -1,6 +1,4 @@
 """Test structuring of collections and primitives."""
-import sys
-
 from typing import (
     List,
     Tuple,
