@@ -18,13 +18,13 @@ def make_dict_unstructure_fn(cl, converter, **kwargs):
     """Generate a specialized dict unstructuring function for a class."""
     cl_name = cl.__name__
     fn_name = "unstructure_" + cl_name
-    globs = {"__cattr_c": converter}
+    globs = {"__c_u": converter.unstructure}
     lines = []
     post_lines = []
 
     attrs = cl.__attrs_attrs__
 
-    lines.append("def {}(inst):".format(fn_name))
+    lines.append("def {}(i):".format(fn_name))
     lines.append("    res = {")
     for a in attrs:
         attr_name = a.name
@@ -39,30 +39,30 @@ def make_dict_unstructure_fn(cl, converter, **kwargs):
                     globs[def_name] = d.factory
                     if d.takes_self:
                         post_lines.append(
-                            "    if inst.{name} != {def_name}(inst):".format(
+                            "    if i.{name} != {def_name}(i):".format(
                                 name=attr_name, def_name=def_name
                             )
                         )
                     else:
                         post_lines.append(
-                            "    if inst.{name} != {def_name}():".format(
+                            "    if i.{name} != {def_name}():".format(
                                 name=attr_name, def_name=def_name
                             )
                         )
                     post_lines.append(
-                        "        res['{name}'] = inst.{name}".format(
+                        "        res['{name}'] = i.{name}".format(
                             name=attr_name
                         )
                     )
                 else:
                     globs[def_name] = d
                     post_lines.append(
-                        "    if inst.{name} != {def_name}:".format(
+                        "    if i.{name} != {def_name}:".format(
                             name=attr_name, def_name=def_name
                         )
                     )
                     post_lines.append(
-                        "        res['{name}'] = __cattr_c.unstructure(inst.{name})".format(
+                        "        res['{name}'] = __c_u(i.{name})".format(
                             name=attr_name
                         )
                     )
@@ -70,9 +70,7 @@ def make_dict_unstructure_fn(cl, converter, **kwargs):
             else:
                 # No default or no override.
                 lines.append(
-                    "        '{name}': __cattr_c.unstructure(inst.{name}),".format(
-                        name=attr_name
-                    )
+                    "        '{name}': __c_u(i.{name}),".format(name=attr_name)
                 )
         else:
             # Do the dispatch here and now.
@@ -86,20 +84,20 @@ def make_dict_unstructure_fn(cl, converter, **kwargs):
                     globs[def_name] = d.factory
                     if d.takes_self:
                         post_lines.append(
-                            "    if inst.{name} != {def_name}(inst):".format(
+                            "    if i.{name} != {def_name}(i):".format(
                                 name=attr_name, def_name=def_name
                             )
                         )
                     else:
                         post_lines.append(
-                            "    if inst.{name} != {def_name}():".format(
+                            "    if i.{name} != {def_name}():".format(
                                 name=attr_name, def_name=def_name
                             )
                         )
                     if conv_function == converter._unstructure_identity:
                         # Special case this, avoid a function call.
                         post_lines.append(
-                            "        res['{name}'] = inst.{name}".format(
+                            "        res['{name}'] = i.{name}".format(
                                 name=attr_name
                             )
                         )
@@ -109,7 +107,7 @@ def make_dict_unstructure_fn(cl, converter, **kwargs):
                         )
                         globs[unstruct_fn_name] = conv_function
                         post_lines.append(
-                            "        res['{name}'] = {fn}(inst.{name}),".format(
+                            "        res['{name}'] = {fn}(i.{name}),".format(
                                 name=attr_name, fn=unstruct_fn_name
                             )
                         )
@@ -117,13 +115,13 @@ def make_dict_unstructure_fn(cl, converter, **kwargs):
                     # Default is not a factory, but a constant.
                     globs[def_name] = d
                     post_lines.append(
-                        "    if inst.{name} != {def_name}:".format(
+                        "    if i.{name} != {def_name}:".format(
                             name=attr_name, def_name=def_name
                         )
                     )
                     if conv_function == converter._unstructure_identity:
                         post_lines.append(
-                            "        res['{name}'] = inst.{name}".format(
+                            "        res['{name}'] = i.{name}".format(
                                 name=attr_name
                             )
                         )
@@ -133,7 +131,7 @@ def make_dict_unstructure_fn(cl, converter, **kwargs):
                         )
                         globs[unstruct_fn_name] = conv_function
                         post_lines.append(
-                            "        res['{name}'] = {fn}(inst.{name})".format(
+                            "        res['{name}'] = {fn}(i.{name})".format(
                                 name=attr_name, fn=unstruct_fn_name
                             )
                         )
@@ -142,13 +140,13 @@ def make_dict_unstructure_fn(cl, converter, **kwargs):
                 if conv_function == converter._unstructure_identity:
                     # Special case this, avoid a function call.
                     lines.append(
-                        "    '{name}': inst.{name},".format(name=attr_name)
+                        "    '{name}': i.{name},".format(name=attr_name)
                     )
                 else:
                     unstruct_fn_name = "__cattr_unstruct_{}".format(attr_name)
                     globs[unstruct_fn_name] = conv_function
                     lines.append(
-                        "    '{name}': {fn}(inst.{name}),".format(
+                        "    '{name}': {fn}(i.{name}),".format(
                             name=attr_name, fn=unstruct_fn_name
                         )
                     )
