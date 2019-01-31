@@ -1,5 +1,5 @@
 """Tests for dumping."""
-from typing import Any, EnumMeta, Type
+from typing import Any, Type
 
 from attr import asdict, astuple
 from cattr.converters import Converter, UnstructureStrategy
@@ -67,7 +67,6 @@ def test_mapping_unstructure(map_and_type, dump_strat):
 
 @given(enums_of_primitives(), unstruct_strats, data())
 def test_enum_unstructure(enum, dump_strat, data):
-    # type: (EnumMeta, UnstructureStrategy) -> None
     """Dumping enums of primitives converts them to their primitives."""
     converter = Converter(unstruct_strat=dump_strat)
 
