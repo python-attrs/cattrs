@@ -35,7 +35,7 @@ if is_py2:
     # we exclude float checks from py2, because their stringification is not
     # consistent
     primitive_strategies = st.sampled_from(
-        [(st.integers(), int), (st.text(), unicode), (st.binary(), bytes)]
+        [(st.text(), unicode), (st.binary(), bytes)]
     )
 else:
     primitive_strategies = st.sampled_from(
