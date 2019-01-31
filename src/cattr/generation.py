@@ -1,4 +1,10 @@
+from typing import Any, Callable, Dict, Type, TypeVar
+
 import attr
+
+from cattr.converters import Converter
+
+T = TypeVar("T")
 
 
 @attr.s(slots=True)

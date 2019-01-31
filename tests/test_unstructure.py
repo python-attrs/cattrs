@@ -1,4 +1,13 @@
 """Tests for dumping."""
+from typing import Any, EnumMeta, Type
+
+from attr import asdict, astuple
+from cattr.converters import Converter, UnstructureStrategy
+
+from hypothesis import given
+from hypothesis.strategies import sampled_from, data
+
+
 from . import (
     dicts_of_primitives,
     enums_of_primitives,
@@ -8,11 +17,6 @@ from . import (
     simple_classes,
 )
 
-from cattr.converters import Converter, UnstructureStrategy
-
-from attr import asdict, astuple
-from hypothesis import given
-from hypothesis.strategies import sampled_from, data
 
 unstruct_strats = sampled_from(
     [UnstructureStrategy.AS_DICT, UnstructureStrategy.AS_TUPLE]

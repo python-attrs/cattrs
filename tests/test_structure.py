@@ -10,6 +10,7 @@ from typing import (
     FrozenSet,
     Dict,
     Optional,
+    Type,
     Union,
 )
 
