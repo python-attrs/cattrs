@@ -303,7 +303,7 @@ def str_attrs(draw, defaults=None, type_annotations=None):
     if defaults is True or (defaults is None and draw(st.booleans())):
         default = draw(st.text())
     if (type_annotations is None and draw(st.booleans())) or type_annotations:
-        type = str
+        type = unicode
     else:
         type = None
     return (attr.ib(default=default, type=type), st.text())
