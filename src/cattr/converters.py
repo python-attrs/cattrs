@@ -370,18 +370,24 @@ class Converter(object):
         if is_bare(cl) or cl.__args__[0] is Any:
             return [e for e in obj]
         else:
-            elem_type = cl.__args__[0]
+            elem_type = self._get_elem_type(cl, mapping)
             return [
                 self._mapped_structure_dispatch(elem_type, mapping)(e, elem_type, mapping)
                 for e in obj
             ]
+
+    def _get_elem_type(self, cl, mapping):
+        elem_type = cl.__args__[0]
+        if isinstance(elem_type, TypeVar):
+            return getattr(mapping, elem_type.__name__, elem_type)
+        return elem_type
 
     def _structure_set(self, obj, cl, mapping):
         """Convert an iterable into a potentially generic set."""
         if is_bare(cl) or cl.__args__[0] is Any:
             return set(obj)
         else:
-            elem_type = cl.__args__[0]
+            elem_type = self._get_elem_type(cl, mapping)
             return {
                 self._mapped_structure_dispatch(elem_type, mapping)(e, elem_type, mapping)
                 for e in obj
@@ -392,7 +398,7 @@ class Converter(object):
         if is_bare(cl) or cl.__args__[0] is Any:
             return frozenset(obj)
         else:
-            elem_type = cl.__args__[0]
+            elem_type = self._get_elem_type(cl, mapping)
             dispatch = self._mapped_structure_dispatch
             return frozenset(dispatch(elem_type, mapping)(e, elem_type, mapping) for e in obj)
 
