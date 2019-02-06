@@ -119,7 +119,7 @@ metadata.
 Consider unstructured data a low-level representation that needs to be converted
 to structured data to be handled, and use ``structure``. When you're done,
 ``unstructure`` the data to its unstructured form and pass it along to another
-library or module. Use [attrs type metadata](http://attrs.readthedocs.io/en/stable/examples.html#types)
+library or module. Use `attrs type metadata <http://attrs.readthedocs.io/en/stable/examples.html#types>`_
 to add type metadata to attributes, so ``cattrs`` will know how to structure and
 destructure them.
 
