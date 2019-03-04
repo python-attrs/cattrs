@@ -314,17 +314,22 @@ class Converter(object):
 
         if isinstance(cl, TypeVar):
             cl = getattr(mapping, cl.__name__, cl)
+        if is_generic(cl):
+            mapping = self._generate_mapping(cl, mapping)
 
         base = cl.__origin__
 
-        inst_mapping = self._generate_mapping(cl)
+        return self._mapped_structure_dispatch(base, mapping)(obj, base, mapping)
 
-        return self._mapped_structure_dispatch(base, inst_mapping)(obj, base, inst_mapping)
-
-    def _generate_mapping(self, cl: Type):
+    def _generate_mapping(self, cl: Type, old_mapping):
         mapping = {}
         for i, r in enumerate(cl.__args__):
+            if isinstance(r, TypeVar):
+                continue
             mapping[cl.__origin__.__parameters__[i].__name__] = r
+
+        if not mapping:
+            return old_mapping
 
         cls = make_class("GenericMapping", {x: attrib() for x in mapping.keys()}, frozen=True)
 
@@ -338,7 +343,7 @@ class Converter(object):
 
         for base in getattr(cl, "__orig_bases__", ()):
             if is_generic(base) and not str(base).startswith("typing.Generic"):
-                mapping = self._generate_mapping(base)
+                mapping = self._generate_mapping(base, mapping)
                 break
 
         if isinstance(cl, TypeVar):
