@@ -20,7 +20,7 @@ _neutral = AttributeOverride()
 
 
 def make_dict_unstructure_fn(cl, converter, **kwargs):
-    # type: (Type[T], Converter) -> Callable[[T], Dict[str, Any]]
+    # type: (Type[T], Converter, **AttributeOverride) -> Callable[[T], Dict[str, Any]]
     """Generate a specialized dict unstructuring function for a class."""
     cl_name = cl.__name__
     fn_name = "unstructure_" + cl_name
@@ -28,7 +28,7 @@ def make_dict_unstructure_fn(cl, converter, **kwargs):
     lines = []
     post_lines = []
 
-    attrs = cl.__attrs_attrs__
+    attrs = cl.__attrs_attrs__  # type: ignore
 
     lines.append("def {}(i):".format(fn_name))
     lines.append("    res = {")
