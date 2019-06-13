@@ -207,6 +207,8 @@ class Converter(object):
             # get src_key if any and unstrucutre to that instead of a.name
             src_key = a.metadata.get(CATTRS_METADATA_KEY, a.name)
             v = getattr(obj, name)
+            if v == a.default:
+                continue
             rv[src_key] = dispatch(v.__class__)(v)
         return rv
 
