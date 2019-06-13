@@ -1,4 +1,13 @@
 """Tests for dumping."""
+from typing import Any, Type
+
+from attr import asdict, astuple
+from cattr.converters import Converter, UnstructureStrategy
+
+from hypothesis import given
+from hypothesis.strategies import sampled_from, data
+
+
 from . import (
     dicts_of_primitives,
     enums_of_primitives,
@@ -8,11 +17,6 @@ from . import (
     simple_classes,
 )
 
-from cattr.converters import Converter, UnstructureStrategy
-
-from attr import asdict, astuple
-from hypothesis import given
-from hypothesis.strategies import sampled_from, choices
 
 unstruct_strats = sampled_from(
     [UnstructureStrategy.AS_DICT, UnstructureStrategy.AS_TUPLE]
@@ -61,13 +65,12 @@ def test_mapping_unstructure(map_and_type, dump_strat):
     assert type(dumped) is type(mapping)
 
 
-@given(enums_of_primitives(), unstruct_strats, choices())
-def test_enum_unstructure(enum, dump_strat, choice):
-    # type: (EnumMeta, UnstructureStrategy) -> None
+@given(enums_of_primitives(), unstruct_strats, data())
+def test_enum_unstructure(enum, dump_strat, data):
     """Dumping enums of primitives converts them to their primitives."""
     converter = Converter(unstruct_strat=dump_strat)
 
-    member = choice(list(enum.__members__.values()))
+    member = data.draw(sampled_from(list(enum.__members__.values())))
 
     assert converter.unstructure(member) == member.value
 

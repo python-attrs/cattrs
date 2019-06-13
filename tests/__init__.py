@@ -35,7 +35,7 @@ if is_py2:
     # we exclude float checks from py2, because their stringification is not
     # consistent
     primitive_strategies = st.sampled_from(
-        [(st.integers(), int), (st.text(), unicode), (st.binary(), bytes)]
+        [(st.text(), unicode), (st.binary(), bytes)]
     )
 else:
     primitive_strategies = st.sampled_from(
@@ -204,11 +204,34 @@ def just_class(tup):
     return _create_hyp_class(combined_attrs)
 
 
+def just_class_with_type(tup):
+    nested_cl = tup[1][0]
+    default = attr.Factory(nested_cl)
+    combined_attrs = list(tup[0])
+    combined_attrs.append(
+        (attr.ib(default=default, type=nested_cl), st.just(nested_cl()))
+    )
+    return _create_hyp_class(combined_attrs)
+
+
 def list_of_class(tup):
     nested_cl = tup[1][0]
     default = attr.Factory(lambda: [nested_cl()])
     combined_attrs = list(tup[0])
     combined_attrs.append((attr.ib(default=default), st.just([nested_cl()])))
+    return _create_hyp_class(combined_attrs)
+
+
+def list_of_class_with_type(tup):
+    nested_cl = tup[1][0]
+    default = attr.Factory(lambda: [nested_cl()])
+    combined_attrs = list(tup[0])
+    combined_attrs.append(
+        (
+            attr.ib(default=default, type=List[nested_cl]),
+            st.just([nested_cl()]),
+        )
+    )
     return _create_hyp_class(combined_attrs)
 
 
@@ -239,7 +262,9 @@ def _create_hyp_nested_strategy(simple_class_strategy):
 
     return (
         attrs_and_classes.flatmap(just_class)
+        | attrs_and_classes.flatmap(just_class_with_type)
         | attrs_and_classes.flatmap(list_of_class)
+        | attrs_and_classes.flatmap(list_of_class_with_type)
         | attrs_and_classes.flatmap(dict_of_class)
     )
 
@@ -269,7 +294,7 @@ def int_attrs(draw, defaults=None):
 
 
 @st.composite
-def str_attrs(draw, defaults=None):
+def str_attrs(draw, defaults=None, type_annotations=None):
     """
     Generate a tuple of an attribute and a strategy that yields strs for that
     attribute.
@@ -277,7 +302,11 @@ def str_attrs(draw, defaults=None):
     default = NOTHING
     if defaults is True or (defaults is None and draw(st.booleans())):
         default = draw(st.text())
-    return (attr.ib(default=default), st.text())
+    if (type_annotations is None and draw(st.booleans())) or type_annotations:
+        type = unicode
+    else:
+        type = None
+    return (attr.ib(default=default, type=type), st.text())
 
 
 @st.composite

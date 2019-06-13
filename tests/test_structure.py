@@ -1,6 +1,4 @@
 """Test structuring of collections and primitives."""
-import sys
-
 from typing import (
     List,
     Tuple,
@@ -10,6 +8,7 @@ from typing import (
     FrozenSet,
     Dict,
     Optional,
+    Type,
     Union,
 )
 
@@ -32,7 +31,6 @@ from hypothesis.strategies import (
     frozensets,
     just,
     binary,
-    choices,
     data,
 )
 
@@ -48,17 +46,22 @@ from . import (
 from ._compat import change_type_param
 
 if is_py2:
-    ints_and_type = tuples(integers(max_value=sys.maxint), just(int))
+    floats_and_type = tuples(floats(allow_nan=False), just(float))
+    strs_and_type = tuples(text(), just(unicode))
+    bytes_and_type = tuples(binary(), just(bytes))
+
+    primitives_and_type = one_of(
+        floats_and_type, strs_and_type, bytes_and_type
+    )
 else:
     ints_and_type = tuples(integers(), just(int))
+    floats_and_type = tuples(floats(allow_nan=False), just(float))
+    strs_and_type = tuples(text(), just(unicode))
+    bytes_and_type = tuples(binary(), just(bytes))
 
-floats_and_type = tuples(floats(allow_nan=False), just(float))
-strs_and_type = tuples(text(), just(unicode))
-bytes_and_type = tuples(binary(), just(bytes))
-
-primitives_and_type = one_of(
-    ints_and_type, floats_and_type, strs_and_type, bytes_and_type
-)
+    primitives_and_type = one_of(
+        ints_and_type, floats_and_type, strs_and_type, bytes_and_type
+    )
 
 mut_set_types = sampled_from([Set, MutableSet])
 set_types = one_of(mut_set_types, just(FrozenSet))
@@ -331,11 +334,11 @@ def test_structure_hook_func(converter):
         converter.structure(10, Bar)
 
 
-@given(choices(), enums_of_primitives())
-def test_structuring_enums(converter, choice, enum):
+@given(data(), enums_of_primitives())
+def test_structuring_enums(converter, data, enum):
     # type: (Converter, Any, Any) -> None
     """Test structuring enums by their values."""
-    val = choice(list(enum))
+    val = data.draw(sampled_from(list(enum)))
 
     assert converter.structure(val.value, enum) == val
 
