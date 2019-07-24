@@ -352,6 +352,8 @@ class Converter(object):
         conv_obj = {}  # Start with a fresh dict, to ignore extra keys.
         dispatch = self._mapped_structure_dispatch
         for a in cl.__attrs_attrs__:  # type: ignore
+            if not a.init:
+                continue
             # We detect the type by metadata.
             type_ = a.type
             name = a.name
