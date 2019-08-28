@@ -333,6 +333,10 @@ class Converter(object):
             conv_obj[name] = (
                 dispatch(type_)(val, type_) if type_ is not None else val
             )
+            # pop src_key if additional_properties are not allowed and name
+            # was mapped
+            if not self._additional_properties and src_key != a.name:
+                conv_obj.pop(src_key)
 
         try:
             return cl(**conv_obj)  # type: ignore
