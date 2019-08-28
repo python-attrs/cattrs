@@ -65,6 +65,7 @@ class Converter(object):
         "_dict_factory",
         "_union_registry",
         "_structure_func",
+        "_additional_properties",
     )
 
     def __init__(
@@ -137,6 +138,8 @@ class Converter(object):
 
         # Unions are instances now, not classes. We use different registry.
         self._union_registry = {}
+        # By default do not allow additional properties when structuring from dicts
+        self._additional_properties = False
 
     def unstructure(self, obj):
         # type: (Any) -> Any
@@ -189,10 +192,14 @@ class Converter(object):
         """
         self._structure_func.register_func_list([(check_func, func)])
 
-    def structure(self, obj, cl):
-        # type: (Any, Type[T]) -> T
-        """Convert unstructured Python data structures to structured data."""
+    def structure(self, obj, cl, additional_properties=False):
+        # type: (Any, Type[T], bool) -> T
+        """Convert unstructured Python data structures to structured data.
 
+        When additional_properties=False and obj is a dict and key that is not a property
+        of cl will raise an exception. Otherwise additional properties in obj that are
+        not on cl will be ignored (default: False)"""
+        self._additional_properties = additional_properties
         return self._structure_func.dispatch(cl)(obj, cl)
 
     # Classes to Python primitives.
@@ -303,7 +310,10 @@ class Converter(object):
         # type: (Mapping[str, Any], Type[T]) -> T
         """Instantiate an attrs class from a mapping (dict)."""
         # For public use.
-        conv_obj = {}  # Start with a fresh dict, to ignore extra keys.
+        if self._additional_properties:
+            conv_obj = {}  # Start with a fresh dict, to ignore extra keys.
+        else:
+            conv_obj = dict(obj)
         dispatch = self._structure_func.dispatch
         for a in cl.__attrs_attrs__:  # type: ignore
             # We detect the type by metadata.
@@ -324,7 +334,10 @@ class Converter(object):
                 dispatch(type_)(val, type_) if type_ is not None else val
             )
 
-        return cl(**conv_obj)  # type: ignore
+        try:
+            return cl(**conv_obj)  # type: ignore
+        except TypeError as e:
+            raise TypeError(f'{str(cl.__name__)}: {str(e)}')
 
     def _structure_list(self, obj, cl):
         """Convert an iterable to a potentially generic list."""
