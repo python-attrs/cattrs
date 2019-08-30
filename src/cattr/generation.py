@@ -1,7 +1,8 @@
-from typing import Any, Callable, Dict, Type, TypeVar
+from typing import Any, Callable, Dict, Sequence, Type, TypeVar
 
 import attr
 
+from ._compat import is_sequence
 from cattr.converters import Converter
 
 T = TypeVar("T")
@@ -81,6 +82,8 @@ def make_dict_unstructure_fn(cl, converter, **kwargs):
         else:
             # Do the dispatch here and now.
             type = a.type
+            if is_sequence(type):
+                type = Sequence
             conv_function = converter._unstructure_func.dispatch(type)
             if d is not attr.NOTHING and override.omit_if_default:
                 def_name = "__cattr_def_{}".format(attr_name)
