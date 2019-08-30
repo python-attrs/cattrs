@@ -97,7 +97,7 @@ else:
 
     def is_sequence(type):
         if is_py2:
-            is_string = issubclass(type, basestring)
+            is_string = issubclass(type, basestring)  # noqa:F821
         else:
             is_string = issubclass(type, str)
         return issubclass(type, Sequence) and not is_string
