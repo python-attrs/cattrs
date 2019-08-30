@@ -24,7 +24,7 @@ from attr import make_class, NOTHING
 from hypothesis import strategies as st, settings, HealthCheck
 
 settings.register_profile(
-    "CI", settings(suppress_health_check=[HealthCheck.too_slow])
+    "CI", settings(suppress_health_check=[HealthCheck.too_slow]), deadline=None
 )
 
 if "CI" in os.environ:
