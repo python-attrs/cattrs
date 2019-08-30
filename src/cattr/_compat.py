@@ -96,7 +96,11 @@ else:
         return issubclass(type, MutableSet)
 
     def is_sequence(type):
-        return issubclass(type, Sequence)
+        if is_py2:
+            is_string = issubclass(type, basestring)
+        else:
+            is_string = issubclass(type, str)
+        return issubclass(type, Sequence) and not is_string
 
     def is_tuple(type):
         return issubclass(type, Tuple)
