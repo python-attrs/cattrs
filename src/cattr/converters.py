@@ -138,7 +138,8 @@ class Converter(object):
 
         # Unions are instances now, not classes. We use different registry.
         self._union_registry = {}
-        # By default do not allow additional properties when structuring from dicts
+        # By default do not allow additional properties when
+        # structuring from dicts
         self._additional_properties = False
 
     def unstructure(self, obj):
@@ -196,8 +197,9 @@ class Converter(object):
         # type: (Any, Type[T], bool) -> T
         """Convert unstructured Python data structures to structured data.
 
-        When additional_properties=False and obj is a dict and key that is not a property
-        of cl will raise an exception. Otherwise additional properties in obj that are
+        When additional_properties=False and obj is a dict and key
+        that is not a property of cl will raise an exception.
+        Otherwise additional properties in obj that are
         not on cl will be ignored (default: False)"""
         self._additional_properties = additional_properties
         return self._structure_func.dispatch(cl)(obj, cl)
@@ -211,7 +213,7 @@ class Converter(object):
         rv = self._dict_factory()
         for a in attrs:
             name = a.name
-            # get src_key if any and unstrucutre to that instead of a.name
+            # get src_key if any and unstructure to that instead of a.name
             src_key = a.metadata.get(CATTRS_METADATA_KEY, a.name)
             v = getattr(obj, name)
             if v == a.default:
@@ -320,23 +322,27 @@ class Converter(object):
             type_ = a.type
             name = a.name
             # get src_key if any and structure from there instead of a.name
-            src_key = a.metadata.get(CATTRS_METADATA_KEY, a.name)
+            src_key = a.metadata.get(CATTRS_METADATA_KEY, name)
 
             try:
                 val = obj[src_key]
             except KeyError:
                 continue
 
+            # pop src_key if additional_properties are not allowed and name
+            # was mapped
+            if not self._additional_properties and src_key != name:
+                conv_obj.pop(src_key)
+
             if name[0] == "_":
+                # pop name if additional_properties are not allowed
+                if not self._additional_properties and name in conv_obj:
+                    conv_obj.pop(name)
                 name = name[1:]
 
             conv_obj[name] = (
                 dispatch(type_)(val, type_) if type_ is not None else val
             )
-            # pop src_key if additional_properties are not allowed and name
-            # was mapped
-            if not self._additional_properties and src_key != a.name:
-                conv_obj.pop(src_key)
 
         try:
             return cl(**conv_obj)  # type: ignore
@@ -466,9 +472,10 @@ class Converter(object):
            converter=None, factory=None, kw_only=False, src_key=None):
         """Custom verion of attr.ib with extra parameter src_key.
 
-        src_key will be stored in the attr metadata. The property will be strucutured
-        from and unstructured to src_key. Useful for properties in the unstructured data
-        (json) that are python keywords.
+        src_key will be stored in the attr metadata. The property
+        will be strucutured from and unstructured to src_key. Useful
+        for properties in the unstructured data (json) that are python
+        keywords.
 
         """
         metadata = dict() if not metadata else metadata
