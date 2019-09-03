@@ -11,7 +11,7 @@ def converter():
 
 
 settings.register_profile(
-    "tests", suppress_health_check=(HealthCheck.too_slow,)
+    "tests", suppress_health_check=(HealthCheck.too_slow,), deadline=None
 )
 
 settings.load_profile("tests")

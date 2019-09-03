@@ -68,7 +68,7 @@ Ready to contribute? Here's how to set up `cattrs` for local development.
 
     $ mkvirtualenv cattrs
     $ cd cattrs/
-    $ pip install -e .
+    $ pip install -e .\[dev\]
 
 4. Create a branch for local development::
 
