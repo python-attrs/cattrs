@@ -9,8 +9,10 @@ from . import simple_classes, nested_classes
 
 
 @given(nested_classes | simple_classes())
-@pytest.mark.skip('clash with not unstructuring defaults'
-                  ' - the custom unstructure function does not support this')
+@pytest.mark.skip(
+    "clash with not unstructuring defaults"
+    " - the custom unstructure function does not support this"
+)
 def test_unmodified_generated_unstructuring(converter, cl_and_vals):
     cl, vals = cl_and_vals
     fn = make_dict_unstructure_fn(cl, converter)
