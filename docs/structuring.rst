@@ -155,7 +155,7 @@ These generic types are composable with all other converters.
 .. doctest::
 
     >>> cattr.structure([[1, 2], [3, 4]], Set[FrozenSet[str]])
-    {frozenset({'4', '3'}), frozenset({'1', '2'})}
+    {frozenset({'1', '2'}), frozenset({'4', '3'})}
 
 Dictionaries
 ~~~~~~~~~~~~

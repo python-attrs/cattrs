@@ -1,6 +1,6 @@
 """Tests for dumping."""
 from typing import Any, Type
-
+import pytest
 from attr import asdict, astuple
 from cattr.converters import Converter, UnstructureStrategy
 
@@ -76,6 +76,7 @@ def test_enum_unstructure(enum, dump_strat, data):
 
 
 @given(nested_classes)
+@pytest.mark.skip(reason="attr asdict not the same as ours - we omit defaults")
 def test_attrs_asdict_unstructure(converter, nested_class):
     # type: (Converter, Type) -> None
     """Our dumping should be identical to `attrs`."""

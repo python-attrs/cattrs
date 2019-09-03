@@ -35,7 +35,7 @@ T = TypeVar("T")
 V = TypeVar("V")
 
 
-CATTRS_METADATA_KEY = 'cattrs_structure_key'
+CATTRS_METADATA_KEY = "cattrs_structure_key"
 
 
 class UnstructureStrategy(Enum):
@@ -65,6 +65,7 @@ class Converter(object):
         "_dict_factory",
         "_union_registry",
         "_structure_func",
+        "_additional_properties",
     )
 
     def __init__(
@@ -137,6 +138,9 @@ class Converter(object):
 
         # Unions are instances now, not classes. We use different registry.
         self._union_registry = {}
+        # By default do not allow additional properties when
+        # structuring from dicts
+        self._additional_properties = False
 
     def unstructure(self, obj):
         # type: (Any) -> Any
@@ -189,10 +193,15 @@ class Converter(object):
         """
         self._structure_func.register_func_list([(check_func, func)])
 
-    def structure(self, obj, cl):
-        # type: (Any, Type[T]) -> T
-        """Convert unstructured Python data structures to structured data."""
+    def structure(self, obj, cl, additional_properties=False):
+        # type: (Any, Type[T], bool) -> T
+        """Convert unstructured Python data structures to structured data.
 
+        When additional_properties=False and obj is a dict and key
+        that is not a property of cl will raise an exception.
+        Otherwise additional properties in obj that are
+        not on cl will be ignored (default: False)"""
+        self._additional_properties = additional_properties
         return self._structure_func.dispatch(cl)(obj, cl)
 
     # Classes to Python primitives.
@@ -204,7 +213,7 @@ class Converter(object):
         rv = self._dict_factory()
         for a in attrs:
             name = a.name
-            # get src_key if any and unstrucutre to that instead of a.name
+            # get src_key if any and unstructure to that instead of a.name
             src_key = a.metadata.get(CATTRS_METADATA_KEY, a.name)
             v = getattr(obj, name)
             if v == a.default:
@@ -303,28 +312,42 @@ class Converter(object):
         # type: (Mapping[str, Any], Type[T]) -> T
         """Instantiate an attrs class from a mapping (dict)."""
         # For public use.
-        conv_obj = {}  # Start with a fresh dict, to ignore extra keys.
+        if self._additional_properties:
+            conv_obj = {}  # Start with a fresh dict, to ignore extra keys.
+        else:
+            conv_obj = dict(obj)
         dispatch = self._structure_func.dispatch
         for a in cl.__attrs_attrs__:  # type: ignore
             # We detect the type by metadata.
             type_ = a.type
             name = a.name
             # get src_key if any and structure from there instead of a.name
-            src_key = a.metadata.get(CATTRS_METADATA_KEY, a.name)
+            src_key = a.metadata.get(CATTRS_METADATA_KEY, name)
 
             try:
                 val = obj[src_key]
             except KeyError:
                 continue
 
+            # pop src_key if additional_properties are not allowed and name
+            # was mapped
+            if not self._additional_properties and src_key != name:
+                conv_obj.pop(src_key)
+
             if name[0] == "_":
+                # pop name if additional_properties are not allowed
+                if not self._additional_properties and name in conv_obj:
+                    conv_obj.pop(name)
                 name = name[1:]
 
             conv_obj[name] = (
                 dispatch(type_)(val, type_) if type_ is not None else val
             )
 
-        return cl(**conv_obj)  # type: ignore
+        try:
+            return cl(**conv_obj)  # type: ignore
+        except TypeError as e:
+            raise TypeError(f"{str(cl.__name__)}: {str(e)}")
 
     def _structure_list(self, obj, cl):
         """Convert an iterable to a potentially generic list."""
@@ -444,20 +467,44 @@ class Converter(object):
             )
         return create_uniq_field_dis_func(*union_types)
 
-    def ib(self, default=attr.NOTHING, validator=None, repr=True, cmp=True,
-           hash=None, init=True, convert=None, metadata=None, type=None,
-           converter=None, factory=None, kw_only=False, src_key=None):
+    def ib(
+        self,
+        default=attr.NOTHING,
+        validator=None,
+        repr=True,
+        cmp=True,
+        hash=None,
+        init=True,
+        convert=None,
+        metadata=None,
+        type=None,
+        converter=None,
+        factory=None,
+        kw_only=False,
+        src_key=None,
+    ):
         """Custom verion of attr.ib with extra parameter src_key.
 
-        src_key will be stored in the attr metadata. The property will be strucutured
-        from and unstructured to src_key. Useful for properties in the unstructured data
-        (json) that are python keywords.
+        src_key will be stored in the attr metadata. The property
+        will be strucutured from and unstructured to src_key. Useful
+        for properties in the unstructured data (json) that are python
+        keywords.
 
         """
         metadata = dict() if not metadata else metadata
         if src_key:
             metadata[CATTRS_METADATA_KEY] = src_key
-        return attr.ib(default=default, validator=validator, repr=repr,
-                       cmp=cmp, hash=hash, init=init, convert=convert,
-                       metadata=metadata, type=type, converter=converter,
-                       factory=factory, kw_only=kw_only)
+        return attr.ib(
+            default=default,
+            validator=validator,
+            repr=repr,
+            cmp=cmp,
+            hash=hash,
+            init=init,
+            convert=convert,
+            metadata=metadata,
+            type=type,
+            converter=converter,
+            factory=factory,
+            kw_only=kw_only,
+        )
