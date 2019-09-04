@@ -200,8 +200,9 @@ class Converter(object):
         rv = self._dict_factory()
         for a in attrs:
             name = a.name
-            v = getattr(obj, name)
-            rv[name] = dispatch(v.__class__)(v)
+            if hasattr(obj, name):
+                v = getattr(obj, name)
+                rv[name] = dispatch(v.__class__)(v)
         return rv
 
     def unstructure_attrs_astuple(self, obj):
