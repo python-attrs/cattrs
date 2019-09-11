@@ -1,3 +1,4 @@
+import inspect
 import sys
 from functools import lru_cache, singledispatch  # noqa
 from typing import (
@@ -9,6 +10,11 @@ from typing import (
     Sequence,
     Tuple,
 )
+
+try:
+    from typing import ForwardRef
+except ImportError:
+    from typing import _ForwardRef as ForwardRef  # noqa
 
 version_info = sys.version_info[0:3]
 is_py37 = version_info[:2] == (3, 7)
@@ -26,6 +32,11 @@ if is_py37 or is_py38:
             obj is Union
             or isinstance(obj, _GenericAlias)
             and obj.__origin__ is Union
+        )
+
+    def is_forward_ref_type(obj):
+        return isinstance(obj, ForwardRef) or (
+            isinstance(obj, _GenericAlias) and obj.__origin__ is ForwardRef
         )
 
     def is_sequence(type):
@@ -80,6 +91,9 @@ else:
     def is_union_type(obj):
         """Return true if the object is a union. """
         return isinstance(obj, _Union)
+
+    def is_forward_ref_type(obj):
+        return isinstance(obj, ForwardRef)
 
     def is_frozenset(type):
         return issubclass(type, FrozenSet)

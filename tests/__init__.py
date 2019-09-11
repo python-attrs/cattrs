@@ -221,6 +221,19 @@ def list_of_class_with_type(tup):
     return _create_hyp_class(combined_attrs)
 
 
+def list_of_class_with_forward_ref_type(tup):
+    nested_cl = tup[1][0]
+    default = attr.Factory(lambda: [nested_cl()])
+    combined_attrs = list(tup[0])
+    combined_attrs.append(
+        (
+            attr.ib(default=default, type=List["HypClass"]),
+            st.just([nested_cl()]),
+        )
+    )
+    return _create_hyp_class(combined_attrs)
+
+
 def dict_of_class(tup):
     nested_cl = tup[1][0]
     default = attr.Factory(lambda: {"cls": nested_cl()})
@@ -251,6 +264,7 @@ def _create_hyp_nested_strategy(simple_class_strategy):
         | attrs_and_classes.flatmap(just_class_with_type)
         | attrs_and_classes.flatmap(list_of_class)
         | attrs_and_classes.flatmap(list_of_class_with_type)
+        | attrs_and_classes.flatmap(list_of_class_with_forward_ref_type)
         | attrs_and_classes.flatmap(dict_of_class)
     )
 

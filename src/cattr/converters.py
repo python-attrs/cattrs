@@ -1,3 +1,5 @@
+import sys
+
 from enum import Enum
 from typing import (  # noqa: F401, imported for Mypy.
     Any,
@@ -12,6 +14,11 @@ from typing import (  # noqa: F401, imported for Mypy.
     Type,
     TypeVar,
 )
+
+try:
+    from typing import ForwardRef
+except ImportError:
+    from typing import _ForwardRef as ForwardRef  # noqa
 from ._compat import (
     bytes,
     is_bare,
@@ -23,6 +30,7 @@ from ._compat import (
     is_union_type,
     lru_cache,
     unicode,
+    is_forward_ref_type,
 )
 from .disambiguators import create_uniq_field_dis_func
 from .multistrategy_dispatch import MultiStrategyDispatch
@@ -60,6 +68,7 @@ class Converter(object):
         "_dict_factory",
         "_union_registry",
         "_structure_func",
+        "_forward_ref_owners_registry",
     )
 
     def __init__(
@@ -109,6 +118,7 @@ class Converter(object):
                 (is_tuple, self._structure_tuple),
                 (is_mapping, self._structure_dict),
                 (is_union_type, self._structure_union),
+                (is_forward_ref_type, self._structure_forward_ref),
                 (_is_attrs_class, self._structure_attrs),
             ]
         )
@@ -127,6 +137,8 @@ class Converter(object):
 
         # Unions are instances now, not classes. We use different registry.
         self._union_registry = {}
+
+        self._forward_ref_owners_registry = {}
 
     def unstructure(self, obj):
         # type: (Any) -> Any
@@ -272,6 +284,7 @@ class Converter(object):
         conv_obj = []  # A list of converter parameters.
         for a, value in zip(cl.__attrs_attrs__, obj):  # type: ignore
             # We detect the type by the metadata.
+            self._update_forward_ref_owners_registry(a.type, cl)
             converted = self._structure_attr_from_tuple(a, a.name, value)
             conv_obj.append(converted)
 
@@ -303,7 +316,7 @@ class Converter(object):
 
             if name[0] == "_":
                 name = name[1:]
-
+            self._update_forward_ref_owners_registry(type_, cl)
             conv_obj[name] = (
                 dispatch(type_)(val, type_) if type_ is not None else val
             )
@@ -391,6 +404,17 @@ class Converter(object):
         cl = self._dis_func_cache(union)(obj)
         return self._structure_func.dispatch(cl)(obj, cl)
 
+    def _structure_forward_ref(self, obj, ref):
+        """Deal with converting a _ForwardRef."""
+        owner_class = self._forward_ref_owners_registry[ref]
+        globalns = vars(sys.modules[owner_class.__module__])
+        localns = getattr(owner_class, "__dict__", {})
+        try:
+            ref_type = ref._evaluate(globalns, localns)
+        except AttributeError:
+            ref_type = ref._eval_type(globalns, localns)
+        return self._structure_func.dispatch(ref_type)(obj, ref_type)
+
     def _structure_tuple(self, obj, tup):
         """Deal with converting to a tuple."""
         tup_params = tup.__args__
@@ -427,3 +451,21 @@ class Converter(object):
                 "currently. Register a loads hook manually."
             )
         return create_uniq_field_dis_func(*union_types)
+
+    def _update_forward_ref_owners_registry(self, type, cls):
+        if is_forward_ref_type(type):
+            if type not in self._forward_ref_owners_registry:
+                self._forward_ref_owners_registry[type] = cls
+            return
+        if not isinstance(type, NoneType) and type is not Any:
+            for type_check in [
+                is_union_type,
+                is_frozenset,
+                is_mutable_set,
+                is_sequence,
+                is_tuple,
+            ]:
+                if type_check(type):
+                    for sub_type in type.__args__:
+                        self._update_forward_ref_owners_registry(sub_type, cls)
+                    return
