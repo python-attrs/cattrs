@@ -1,6 +1,6 @@
-from cattr._compat import is_py37, is_bare
+from cattr._compat import is_py37_or_higher, is_bare
 
-if is_py37:
+if is_py37_or_higher:
 
     def change_type_param(cl, new_params):
         if is_bare(cl):
