@@ -472,15 +472,16 @@ class Converter(object):
         default=attr.NOTHING,
         validator=None,
         repr=True,
-        cmp=True,
+        cmp=None,
         hash=None,
         init=True,
-        convert=None,
         metadata=None,
         type=None,
         converter=None,
         factory=None,
         kw_only=False,
+        eq=None,
+        order=None,
         src_key=None,
     ):
         """Custom verion of attr.ib with extra parameter src_key.
@@ -501,10 +502,11 @@ class Converter(object):
             cmp=cmp,
             hash=hash,
             init=init,
-            convert=convert,
             metadata=metadata,
             type=type,
             converter=converter,
             factory=factory,
             kw_only=kw_only,
+            eq=eq,
+            order=order
         )
