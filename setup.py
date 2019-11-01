@@ -9,7 +9,7 @@ with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
 requirements = [
-    "attrs >= 17.3",
+    "attrs >= 19.3.0",
     "functools32 >= 3.2.3; python_version<'3.0'",
     "singledispatch >= 3.4.0.3; python_version<'3.0'",
     "enum34 >= 1.1.6; python_version<'3.0'",
