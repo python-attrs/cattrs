@@ -12,7 +12,7 @@ from typing import (
 version_info = sys.version_info[0:3]
 is_py2 = version_info[0] == 2
 is_py3 = version_info[0] == 3
-is_py37 = version_info[:2] == (3, 7)
+is_py37_or_newer = version_info[:2] >= (3, 7)
 
 if is_py2:
     from functools32 import lru_cache
@@ -26,7 +26,7 @@ else:
     unicode = str
     bytes = bytes
 
-if is_py37:
+if is_py37_or_newer:
     from typing import List, Union, _GenericAlias
 
     def is_union_type(obj):
