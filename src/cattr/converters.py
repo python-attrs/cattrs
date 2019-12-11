@@ -202,7 +202,10 @@ class Converter(object):
         for a in attrs:
             name = a.name
             v = getattr(obj, name)
-            rv[name] = dispatch(v.__class__)(v)
+            try:
+                rv[name] = dispatch(v.__class__)(v)
+            except Exception as ex:
+                raise
         return rv
 
     def unstructure_attrs_astuple(self, obj):
@@ -434,6 +437,8 @@ class Converter(object):
         # Unions with NoneType in them are basically optionals.
         # We check for NoneType early and handle the case of obj being None,
         # so disambiguation functions don't need to handle NoneType.
+        if isinstance(union, TypeVar):
+            union = getattr(mapping, union.__name__, union)
         union_params = union.__args__
         if NoneType in union_params:  # type: ignore
             if obj is None:
