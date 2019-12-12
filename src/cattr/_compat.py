@@ -73,7 +73,10 @@ if is_py37 or is_py38:
     bare_mutable_seq_args = MutableSequence.__args__
 
     def is_bare(type):
-        args = type.__args__
+        try:
+            args = type.__args__
+        except Exception as ex:
+            raise
         return (
             args == bare_list_args
             or args == bare_seq_args

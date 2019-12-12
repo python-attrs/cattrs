@@ -377,6 +377,8 @@ class Converter(object):
 
     def _structure_list(self, obj, cl, mapping):
         """Convert an iterable to a potentially generic list."""
+        if isinstance(cl, TypeVar):
+            cl = getattr(mapping, cl.__name__, obj)
         if is_bare(cl) or cl.__args__[0] is Any:
             return [e for e in obj]
         else:
@@ -394,6 +396,8 @@ class Converter(object):
 
     def _structure_set(self, obj, cl, mapping):
         """Convert an iterable into a potentially generic set."""
+        if isinstance(cl, TypeVar):
+            cl = getattr(mapping, cl.__name__, obj)
         if is_bare(cl) or cl.__args__[0] is Any:
             return set(obj)
         else:
@@ -405,6 +409,8 @@ class Converter(object):
 
     def _structure_frozenset(self, obj, cl, mapping):
         """Convert an iterable into a potentially generic frozenset."""
+        if isinstance(cl, TypeVar):
+            cl = getattr(mapping, cl.__name__, obj)
         if is_bare(cl) or cl.__args__[0] is Any:
             return frozenset(obj)
         else:
@@ -414,6 +420,8 @@ class Converter(object):
 
     def _structure_dict(self, obj, cl, mapping):
         """Convert a mapping into a potentially generic dict."""
+        if isinstance(cl, TypeVar):
+            cl = getattr(mapping, cl.__name__, obj)
         if is_bare(cl) or cl.__args__ == (Any, Any):
             return dict(obj)
         else:
