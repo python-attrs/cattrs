@@ -1,8 +1,4 @@
-from cattr._compat import (
-    is_py37,
-    is_py38,
-    is_bare
-)
+from cattr._compat import is_py37, is_py38, is_bare
 
 if is_py37 or is_py38:
 
