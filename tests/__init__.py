@@ -16,7 +16,7 @@ from typing import (
     Set,
     Tuple,
 )
-from cattr._compat import is_py2, bytes, unicode
+from cattr._compat import bytes, unicode
 
 import attr
 
@@ -31,34 +31,20 @@ if "CI" in os.environ:
     settings.load_profile("CI")
 
 
-if is_py2:
-    # we exclude float checks from py2, because their stringification is not
-    # consistent
-    primitive_strategies = st.sampled_from(
-        [(st.text(), unicode), (st.binary(), bytes)]
-    )
-else:
-    primitive_strategies = st.sampled_from(
-        [
-            (st.integers(), int),
-            (st.floats(allow_nan=False), float),
-            (st.text(), unicode),
-            (st.binary(), bytes),
-        ]
-    )
+primitive_strategies = st.sampled_from(
+    [
+        (st.integers(), int),
+        (st.floats(allow_nan=False), float),
+        (st.text(), unicode),
+        (st.binary(), bytes),
+    ]
+)
 
 
 @st.composite
 def enums_of_primitives(draw):
     """Generate enum classes with primitive values."""
-    if is_py2:
-        names = draw(
-            st.sets(
-                st.text(alphabet=string.ascii_letters, min_size=1), min_size=1
-            )
-        )
-    else:
-        names = draw(st.sets(st.text(min_size=1), min_size=1))
+    names = draw(st.sets(st.text(min_size=1), min_size=1))
     n = len(names)
     vals = draw(
         st.one_of(

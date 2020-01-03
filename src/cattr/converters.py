@@ -18,7 +18,6 @@ from ._compat import (
     is_frozenset,
     is_mapping,
     is_mutable_set,
-    is_py2,
     is_sequence,
     is_tuple,
     is_union_type,
@@ -116,12 +115,7 @@ class Converter(object):
         # Strings are sequences.
         self._structure_func.register_cls_list(
             [
-                (
-                    unicode,
-                    self._structure_unicode
-                    if is_py2
-                    else self._structure_call,
-                ),
+                (unicode, self._structure_call,),
                 (bytes, self._structure_call),
                 (int, self._structure_call),
                 (float, self._structure_call),

@@ -10,10 +10,6 @@ with open("HISTORY.rst") as history_file:
 
 requirements = [
     "attrs >= 17.3",
-    "functools32 >= 3.2.3; python_version<'3.0'",
-    "singledispatch >= 3.4.0.3; python_version<'3.0'",
-    "enum34 >= 1.1.6; python_version<'3.0'",
-    "typing >= 3.5.3; python_version<'3.0'",
 ]
 
 dev_reqs = [
@@ -50,7 +46,6 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",

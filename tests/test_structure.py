@@ -13,7 +13,7 @@ from typing import (
 )
 
 from cattr.converters import NoneType
-from cattr._compat import bytes, unicode, is_py2, is_bare, is_union_type
+from cattr._compat import bytes, unicode, is_bare, is_union_type
 
 from pytest import raises
 
@@ -45,23 +45,15 @@ from . import (
 )
 from ._compat import change_type_param
 
-if is_py2:
-    floats_and_type = tuples(floats(allow_nan=False), just(float))
-    strs_and_type = tuples(text(), just(unicode))
-    bytes_and_type = tuples(binary(), just(bytes))
 
-    primitives_and_type = one_of(
-        floats_and_type, strs_and_type, bytes_and_type
-    )
-else:
-    ints_and_type = tuples(integers(), just(int))
-    floats_and_type = tuples(floats(allow_nan=False), just(float))
-    strs_and_type = tuples(text(), just(unicode))
-    bytes_and_type = tuples(binary(), just(bytes))
+ints_and_type = tuples(integers(), just(int))
+floats_and_type = tuples(floats(allow_nan=False), just(float))
+strs_and_type = tuples(text(), just(unicode))
+bytes_and_type = tuples(binary(), just(bytes))
 
-    primitives_and_type = one_of(
-        ints_and_type, floats_and_type, strs_and_type, bytes_and_type
-    )
+primitives_and_type = one_of(
+    ints_and_type, floats_and_type, strs_and_type, bytes_and_type
+)
 
 mut_set_types = sampled_from([Set, MutableSet])
 set_types = one_of(mut_set_types, just(FrozenSet))
@@ -131,18 +123,6 @@ def test_structuring_sets(converter, set_and_type, set_type):
     assert isinstance(converted, type(set_))
 
 
-def _as_str(x):
-    # in python2, don't call str if the item is already an instance of unicode
-    # or bytes
-    if is_py2:
-        if not isinstance(x, (bytes, unicode)):
-            return str(x)
-        else:
-            return x
-    else:
-        return str(x)
-
-
 @given(sets_of_primitives)
 def test_stringifying_sets(converter, set_and_type):
     # type: (Converter, Any) -> None
@@ -153,7 +133,7 @@ def test_stringifying_sets(converter, set_and_type):
     converted = converter.structure(set_, input_set_type)
     assert len(converted) == len(set_)
     for e in set_:
-        assert _as_str(e) in converted
+        assert str(e) in converted
 
 
 @given(lists(primitives_and_type, min_size=1))
@@ -187,7 +167,7 @@ def test_stringifying_tuples(converter, list_of_vals_and_types):
     assert isinstance(converted, tuple)
 
     for x, y in zip(vals, converted):
-        assert _as_str(x) == y
+        assert str(x) == y
 
     for x in converted:
         # this should just be unicode, but in python2, '' is not unicode
@@ -228,7 +208,7 @@ def test_stringifying_dicts(converter, dict_and_type):
     converted = converter.structure(d, Dict[unicode, unicode])
 
     for k, v in d.items():
-        assert converted[_as_str(k)] == _as_str(v)
+        assert converted[str(k)] == str(v)
 
 
 @given(primitives_and_type)
@@ -289,7 +269,7 @@ def test_stringifying_lists_of_opt(converter, list_and_type):
         if x is None:
             assert x is y
         else:
-            assert _as_str(x) == y
+            assert str(x) == y
 
 
 @given(lists(integers()))

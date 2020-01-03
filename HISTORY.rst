@@ -2,6 +2,10 @@
 History
 =======
 
+1.1.0 (UNRELEASED)
+------------------
+* Python 2 support removal. If you need it, use a version below 1.1.0.
+
 1.0.0 (2019-12-27)
 ------------------
 * ``attrs`` classes with private attributes can now be structured by default.

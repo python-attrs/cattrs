@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .converters import Converter, UnstructureStrategy
 
 __all__ = (
