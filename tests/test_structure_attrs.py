@@ -22,7 +22,7 @@ def test_structure_simple_from_dict(converter, cl_and_vals):
     assert obj == loaded
 
 
-@given(simple_classes(defaults=True), data())
+@given(simple_classes(defaults=True, min_attrs=1), data())
 def test_structure_simple_from_dict_default(converter, cl_and_vals, data):
     """Test structuring non-nested attrs classes with default value."""
     cl, vals = cl_and_vals

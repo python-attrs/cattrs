@@ -345,19 +345,21 @@ def simple_attrs(defaults=None):
     )
 
 
-def lists_of_attrs(defaults=None):
+def lists_of_attrs(defaults=None, min_size=0):
     # Python functions support up to 255 arguments.
-    return st.lists(simple_attrs(defaults), max_size=10).map(
-        lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING)
-    )
+    return st.lists(
+        simple_attrs(defaults), min_size=min_size, max_size=10
+    ).map(lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING))
 
 
-def simple_classes(defaults=None):
+def simple_classes(defaults=None, min_attrs=0):
     """
     Return a strategy that yields tuples of simple classes and values to
     instantiate them.
     """
-    return lists_of_attrs(defaults).flatmap(_create_hyp_class)
+    return lists_of_attrs(defaults, min_size=min_attrs).flatmap(
+        _create_hyp_class
+    )
 
 
 # Ok, so st.recursive works by taking a base strategy (in this case,
