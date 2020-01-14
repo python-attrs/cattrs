@@ -11,6 +11,8 @@ from typing import (  # noqa: F401, imported for Mypy.
     Tuple,
     Type,
     TypeVar,
+    get_type_hints,
+    get_origin
 )
 
 from attr import make_class, attrib
@@ -27,7 +29,7 @@ from ._compat import (
     is_union_type,
     lru_cache,
     unicode,
-    is_generic, is_attrs_class)
+    is_generic, is_attrs_class, get_args)
 from .disambiguators import create_uniq_field_dis_func
 from .multistrategy_dispatch import MultiStrategyDispatch
 
@@ -284,24 +286,35 @@ class Converter(object):
 
     # Attrs classes.
 
-    def structure_attrs_fromtuple(self, obj, cl):
-        # type: (Tuple, Type[T]) -> T
+    def structure_attrs_fromtuple(self, obj, cl, mapping):
+        # type: (Tuple, Type[T], dict) -> T
         """Load an attrs class from a sequence (tuple)."""
+
+        for base in getattr(cl, "__orig_bases__", ()):
+            if is_generic(base) and not str(base).startswith("typing.Generic"):
+                mapping = self._generate_mapping(base, mapping)
+                break
+
+        if isinstance(cl, TypeVar):
+            cl = getattr(mapping, cl.__name__, cl)
+
         conv_obj = []  # A list of converter parameters.
+        type_hints = get_type_hints(cl)
         for a, value in zip(cl.__attrs_attrs__, obj):  # type: ignore
             # We detect the type by the metadata.
-            converted = self._structure_attr_from_tuple(a, a.name, value)
+            name = a.name
+            type_ = type_hints[name]
+            converted = self._structure_attr_from_tuple(type_, name, value, mapping)
             conv_obj.append(converted)
 
         return cl(*conv_obj)  # type: ignore
 
-    def _structure_attr_from_tuple(self, a, name, value):
+    def _structure_attr_from_tuple(self, type_, name, value, mapping):
         """Handle an individual attrs attribute."""
-        type_ = a.type
         if type_ is None:
             # No type metadata.
             return value
-        return self._structure_func.dispatch(type_)(value, type_)
+        return self._structure_func.dispatch(type_, mapping)(value, type_, mapping)
 
     def _mapped_structure_dispatch(self, cl: Type, mappings: Any):
         if isinstance(cl, TypeVar):
@@ -326,10 +339,10 @@ class Converter(object):
 
     def _generate_mapping(self, cl: Type, old_mapping):
         mapping = {}
-        for i, r in enumerate(cl.__args__):
-            if isinstance(r, TypeVar):
+        for p, t in zip(get_origin(cl).__parameters__, get_args(cl)):
+            if isinstance(t, TypeVar):
                 continue
-            mapping[cl.__origin__.__parameters__[i].__name__] = r
+            mapping[p.__name__] = t
 
         if not mapping:
             return old_mapping
@@ -354,12 +367,14 @@ class Converter(object):
 
         conv_obj = {}  # Start with a fresh dict, to ignore extra keys.
         dispatch = self._mapped_structure_dispatch
+
+        type_hints = get_type_hints(cl)
         for a in cl.__attrs_attrs__:  # type: ignore
             if not a.init:
                 continue
             # We detect the type by metadata.
-            type_ = a.type
             name = a.name
+            type_ = type_hints[name]
 
             try:
                 val = obj[name]

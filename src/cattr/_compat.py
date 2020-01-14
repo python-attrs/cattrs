@@ -27,6 +27,14 @@ else:
     unicode = str
     bytes = bytes
 
+
+if is_py38:
+    from typing import get_args
+else:
+    def get_args(cl):
+        return cl.__args__
+
+
 if is_py37 or is_py38:
     from typing import List, Union, _GenericAlias
 
