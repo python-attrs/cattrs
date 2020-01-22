@@ -12,7 +12,6 @@ from typing import (  # noqa: F401, imported for Mypy.
     Type,
     TypeVar,
     get_type_hints,
-    get_origin
 )
 
 from attr import make_class, attrib
@@ -29,7 +28,7 @@ from ._compat import (
     is_union_type,
     lru_cache,
     unicode,
-    is_generic, is_attrs_class, get_args)
+    is_generic, is_attrs_class, get_args, get_origin)
 from .disambiguators import create_uniq_field_dis_func
 from .multistrategy_dispatch import MultiStrategyDispatch
 

@@ -29,10 +29,13 @@ else:
 
 
 if is_py38:
-    from typing import get_args
+    from typing import get_args, get_origin
 else:
     def get_args(cl):
         return cl.__args__
+
+    def get_origin(cl):
+        return cl.__origin__
 
 
 if is_py37 or is_py38:
