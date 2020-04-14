@@ -478,7 +478,7 @@ class Converter(object):
         # Check the union registry first.
         handler = self._union_registry.get(union)
         if handler is not None:
-            return handler(obj, union)
+            return handler(obj, union, mapping)
 
         # Getting here means either this is not an optional, or it's an
         # optional with more than one parameter.
