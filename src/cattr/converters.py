@@ -336,6 +336,7 @@ class Converter(object):
 
         return self._mapped_structure_dispatch(base, mapping)(obj, base, mapping)
 
+    @lru_cache
     def _generate_mapping(self, cl: Type, old_mapping):
         mapping = {}
         for p, t in zip(get_origin(cl).__parameters__, get_args(cl)):
