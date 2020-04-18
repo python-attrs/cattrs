@@ -465,7 +465,7 @@ class Converter(object):
                 is_sequence,
                 is_tuple,
             ]:
-                if type_check(type):
+                if type is not Ellipsis and type_check(type):
                     for sub_type in type.__args__:
                         self._update_forward_ref_owners_registry(sub_type, cls)
                     return
