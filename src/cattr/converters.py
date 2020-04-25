@@ -1,3 +1,4 @@
+import sys
 from enum import Enum
 from typing import (  # noqa: F401, imported for Mypy.
     Any,
@@ -11,6 +12,7 @@ from typing import (  # noqa: F401, imported for Mypy.
     Tuple,
     Type,
     TypeVar,
+    Union
 )
 from ._compat import (
     bytes,
@@ -31,6 +33,25 @@ from .multistrategy_dispatch import MultiStrategyDispatch
 NoneType = type(None)
 T = TypeVar("T")
 V = TypeVar("V")
+
+
+@lru_cache(32)
+def _get_class_namespace(class_: type) -> Dict[str, Any]:
+    return vars(sys.modules[class_.__module__])
+
+@lru_cache(32)
+def _get_type(parent_class: type, type_: Union[type, str]) -> type:
+    """Returns the actual type if type_ is a string."""
+
+    if issubclass(type(type_), str):
+        # Try the namespace first in case the parent class accidentally masked
+        # a builtin.
+        try:
+            return _get_class_namespace(parent_class)[type_]
+        except KeyError:
+            return __builtins__[type_]
+    else:
+        return type_
 
 
 class UnstructureStrategy(Enum):
@@ -272,14 +293,14 @@ class Converter(object):
         conv_obj = []  # A list of converter parameters.
         for a, value in zip(cl.__attrs_attrs__, obj):  # type: ignore
             # We detect the type by the metadata.
-            converted = self._structure_attr_from_tuple(a, a.name, value)
+            converted = self._structure_attr_from_tuple(cl, a, a.name, value)
             conv_obj.append(converted)
 
         return cl(*conv_obj)  # type: ignore
 
-    def _structure_attr_from_tuple(self, a, name, value):
+    def _structure_attr_from_tuple(self, cl, a, name, value):
         """Handle an individual attrs attribute."""
-        type_ = a.type
+        type_ = _get_type(cl, a.type)
         if type_ is None:
             # No type metadata.
             return value
@@ -291,9 +312,10 @@ class Converter(object):
         # For public use.
         conv_obj = {}  # Start with a fresh dict, to ignore extra keys.
         dispatch = self._structure_func.dispatch
+
         for a in cl.__attrs_attrs__:  # type: ignore
             # We detect the type by metadata.
-            type_ = a.type
+            type_ = _get_type(cl, a.type)
             name = a.name
 
             try:
