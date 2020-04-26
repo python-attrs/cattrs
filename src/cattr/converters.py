@@ -12,7 +12,8 @@ from typing import (  # noqa: F401, imported for Mypy.
     Tuple,
     Type,
     TypeVar,
-    Union
+    Union,
+    ForwardRef
 )
 from ._compat import (
     bytes,
@@ -43,13 +44,9 @@ def _get_class_namespace(class_: type) -> Dict[str, Any]:
 def _get_type(parent_class: type, type_: Union[type, str]) -> type:
     """Returns the actual type if type_ is a string."""
 
-    if issubclass(type(type_), str):
-        # Try the namespace first in case the parent class accidentally masked
-        # a builtin.
-        try:
-            return _get_class_namespace(parent_class)[type_]
-        except KeyError:
-            return __builtins__[type_]
+    if isinstance(type_, str):
+        globalns = _get_class_namespace(parent_class)
+        return ForwardRef(type_, is_argument=False)._evaluate(globalns, None)
     else:
         return type_
 
@@ -203,7 +200,6 @@ class Converter(object):
     def structure(self, obj, cl):
         # type: (Any, Type[T]) -> T
         """Convert unstructured Python data structures to structured data."""
-
         return self._structure_func.dispatch(cl)(obj, cl)
 
     # Classes to Python primitives.
