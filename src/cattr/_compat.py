@@ -13,14 +13,13 @@ from typing import (
 version_info = sys.version_info[0:3]
 is_py37 = version_info[:2] == (3, 7)
 is_py38 = version_info[:2] == (3, 8)
-is_py37_or_later = version_info[:2] >= (3, 7)
 
 
 unicode = str
 bytes = bytes
 
 if is_py37 or is_py38:
-    from typing import List, Union, _GenericAlias
+    from typing import List, Union, _GenericAlias, ForwardRef, Any
 
     def is_union_type(obj):
         return (
@@ -74,6 +73,20 @@ if is_py37 or is_py38:
             or args == bare_mutable_seq_args
         )
 
+    @lru_cache(32)
+    def _get_class_namespace(class_: type) -> Dict[str, Any]:
+        return vars(sys.modules[class_.__module__])
+
+    @lru_cache(32)
+    def get_type(parent_class: type, type_: Union[type, str]) -> type:
+        """Returns the actual type if type_ is a string."""
+
+        if isinstance(type_, str):
+            globalns = _get_class_namespace(parent_class)
+            forwardRef = ForwardRef(type_, is_argument=False)
+            return forwardRef._evaluate(globalns, None)
+        else:
+            return type_
 
 else:
     from typing import _Union
@@ -102,3 +115,6 @@ else:
         return not type.__args__
 
     is_bare_frozenset = is_bare
+
+    def get_type(ignored: type, type_: type) -> type:
+        return type_

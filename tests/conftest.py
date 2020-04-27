@@ -1,3 +1,4 @@
+import sys
 import pytest
 
 from hypothesis import HealthCheck, settings
@@ -15,3 +16,9 @@ settings.register_profile(
 )
 
 settings.load_profile("tests")
+
+collect_ignore = []
+
+if sys.version_info[:2] < (3, 7):
+    # PEP563 only exists for python 3.7 and later
+    collect_ignore.append("test_563.py")
