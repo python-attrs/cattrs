@@ -13,6 +13,7 @@ from typing import (
 version_info = sys.version_info[0:3]
 is_py37 = version_info[:2] == (3, 7)
 is_py38 = version_info[:2] == (3, 8)
+is_py37_or_later = version_info[:2] >= (3, 7)
 
 
 unicode = str

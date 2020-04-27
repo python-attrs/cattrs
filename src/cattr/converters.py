@@ -12,9 +12,9 @@ from typing import (  # noqa: F401, imported for Mypy.
     Tuple,
     Type,
     TypeVar,
-    Union,
-    ForwardRef
+    Union
 )
+
 from ._compat import (
     bytes,
     is_bare,
@@ -26,7 +26,12 @@ from ._compat import (
     is_union_type,
     lru_cache,
     unicode,
+    is_py37_or_later
 )
+
+if is_py37_or_later:
+    from typing import ForwardRef
+
 from .disambiguators import create_uniq_field_dis_func
 from .multistrategy_dispatch import MultiStrategyDispatch
 
@@ -36,18 +41,23 @@ T = TypeVar("T")
 V = TypeVar("V")
 
 
-@lru_cache(32)
-def _get_class_namespace(class_: type) -> Dict[str, Any]:
-    return vars(sys.modules[class_.__module__])
+if is_py37_or_later:
+    @lru_cache(32)
+    def _get_class_namespace(class_: type) -> Dict[str, Any]:
+        return vars(sys.modules[class_.__module__])
 
-@lru_cache(32)
-def _get_type(parent_class: type, type_: Union[type, str]) -> type:
-    """Returns the actual type if type_ is a string."""
+    @lru_cache(32)
+    def _get_type(parent_class: type, type_: Union[type, str]) -> type:
+        """Returns the actual type if type_ is a string."""
 
-    if isinstance(type_, str):
-        globalns = _get_class_namespace(parent_class)
-        return ForwardRef(type_, is_argument=False)._evaluate(globalns, None)
-    else:
+        if isinstance(type_, str):
+            globalns = _get_class_namespace(parent_class)
+            forwardRef = ForwardRef(type_, is_argument=False)
+            return forwardRef._evaluate(globalns, None)
+        else:
+            return type_
+else:
+    def _get_type(ignored: type, type_: type) -> type:
         return type_
 
 
