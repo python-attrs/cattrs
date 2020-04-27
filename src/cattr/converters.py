@@ -1,4 +1,3 @@
-import sys
 from enum import Enum
 from typing import (  # noqa: F401, imported for Mypy.
     Any,
@@ -26,11 +25,8 @@ from ._compat import (
     is_union_type,
     lru_cache,
     unicode,
-    is_py37_or_later
+    get_type
 )
-
-if is_py37_or_later:
-    from typing import ForwardRef
 
 from .disambiguators import create_uniq_field_dis_func
 from .multistrategy_dispatch import MultiStrategyDispatch
@@ -39,26 +35,6 @@ from .multistrategy_dispatch import MultiStrategyDispatch
 NoneType = type(None)
 T = TypeVar("T")
 V = TypeVar("V")
-
-
-if is_py37_or_later:
-    @lru_cache(32)
-    def _get_class_namespace(class_: type) -> Dict[str, Any]:
-        return vars(sys.modules[class_.__module__])
-
-    @lru_cache(32)
-    def _get_type(parent_class: type, type_: Union[type, str]) -> type:
-        """Returns the actual type if type_ is a string."""
-
-        if isinstance(type_, str):
-            globalns = _get_class_namespace(parent_class)
-            forwardRef = ForwardRef(type_, is_argument=False)
-            return forwardRef._evaluate(globalns, None)
-        else:
-            return type_
-else:
-    def _get_type(ignored: type, type_: type) -> type:
-        return type_
 
 
 class UnstructureStrategy(Enum):
@@ -306,7 +282,7 @@ class Converter(object):
 
     def _structure_attr_from_tuple(self, cl, a, name, value):
         """Handle an individual attrs attribute."""
-        type_ = _get_type(cl, a.type)
+        type_ = get_type(cl, a.type)
         if type_ is None:
             # No type metadata.
             return value
@@ -321,7 +297,7 @@ class Converter(object):
 
         for a in cl.__attrs_attrs__:  # type: ignore
             # We detect the type by metadata.
-            type_ = _get_type(cl, a.type)
+            type_ = get_type(cl, a.type)
             name = a.name
 
             try:
