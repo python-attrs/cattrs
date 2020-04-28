@@ -88,6 +88,7 @@ if is_py37 or is_py38:
         else:
             return type_
 
+
 else:
     from typing import _Union
 

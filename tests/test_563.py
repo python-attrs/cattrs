@@ -1,4 +1,3 @@
-import typing
 from typing import Tuple, Optional, List, Dict
 from cattr.converters import Converter
 from hypothesis import given
@@ -29,15 +28,13 @@ def MakeRegion(values: RegionInput) -> region.Region:
     x, y = point_values
     offset_x, offset_y = offset_values
     return region.Region(
-        MakePoint(point_values),
-        MakePoint((x + offset_x, y + offset_y)))
+        MakePoint(point_values), MakePoint((x + offset_x, y + offset_y))
+    )
 
 
 def MakeRoi(values: RoiInput) -> roi.Roi:
     region_1_values, region_2_values = values
-    return roi.Roi(
-        MakeRegion(region_1_values),
-        MakeRegion(region_2_values))
+    return roi.Roi(MakeRegion(region_1_values), MakeRegion(region_2_values))
 
 
 def MakeOptionalPoint(values: Optional[PointInput]) -> Optional[point.Point]:
@@ -47,8 +44,9 @@ def MakeOptionalPoint(values: Optional[PointInput]) -> Optional[point.Point]:
     return MakePoint(values)
 
 
-def MakeOptionalRegion(values: Optional[RegionInput]) \
-        -> Optional[region.Region]:
+def MakeOptionalRegion(
+    values: Optional[RegionInput],
+) -> Optional[region.Region]:
 
     if values is None:
         return None
