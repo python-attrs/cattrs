@@ -86,6 +86,7 @@ if not is_py36:
         else:
             return type_
 
+
 else:
     from typing import _Union
 

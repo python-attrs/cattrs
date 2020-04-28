@@ -11,7 +11,7 @@ from typing import (  # noqa: F401, imported for Mypy.
     Tuple,
     Type,
     TypeVar,
-    Union
+    Union,
 )
 
 from ._compat import (
@@ -25,7 +25,7 @@ from ._compat import (
     is_union_type,
     lru_cache,
     unicode,
-    get_type
+    get_type,
 )
 
 from .disambiguators import create_uniq_field_dis_func
