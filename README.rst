@@ -52,6 +52,8 @@ strings.
 Here's a simple taste. The list containing a float, an int and a string
 gets converted into a tuple of three ints.
 
+.. code-block:: pycon
+
     >>> import cattr
     >>> from typing import Tuple
     >>>
@@ -59,6 +61,8 @@ gets converted into a tuple of three ints.
     (1, 2, 3)
 
 ``cattrs`` works well with ``attrs`` classes out of the box.
+
+.. code-block:: pycon
 
     >>> import attr, cattr
     >>>
@@ -75,6 +79,8 @@ gets converted into a tuple of three ints.
 
 Here's a much more complex example, involving ``attrs`` classes with type
 metadata.
+
+.. code-block:: pycon
 
     >>> from enum import unique, Enum
     >>> from typing import List, Optional, Sequence, Union
