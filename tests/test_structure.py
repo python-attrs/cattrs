@@ -98,7 +98,6 @@ def test_structuring_seqs(converter, seq_and_type):
 
 @given(sets_of_primitives, set_types)
 def test_structuring_sets(converter, set_and_type, set_type):
-    # type: (Converter, Any, Type) -> None
     """Test structuring generic sets."""
     set_, input_set_type = set_and_type
 

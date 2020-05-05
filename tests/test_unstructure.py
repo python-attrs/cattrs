@@ -23,7 +23,6 @@ unstruct_strats = sampled_from(
 
 @given(seqs_of_primitives, unstruct_strats)
 def test_seq_unstructure(seq_and_type, dump_strat):
-    # type: (Any, UnstructureStrategy) -> None
     """Dumping a sequence of primitives is a simple copy operation."""
     converter = Converter(unstruct_strat=dump_strat)
     assert converter.unstruct_strat is dump_strat
@@ -37,7 +36,6 @@ def test_seq_unstructure(seq_and_type, dump_strat):
 
 @given(sets_of_primitives, unstruct_strats)
 def test_set_unstructure(set_and_type, dump_strat):
-    # type: (Any, UnstructureStrategy) -> None
     """Dumping a set of primitives is a simple copy operation."""
     converter = Converter(unstruct_strat=dump_strat)
     assert converter.unstruct_strat is dump_strat
@@ -51,7 +49,6 @@ def test_set_unstructure(set_and_type, dump_strat):
 
 @given(dicts_of_primitives, unstruct_strats)
 def test_mapping_unstructure(map_and_type, dump_strat):
-    # type: (Any, UnstructureStrategy) -> None
     """Dumping a mapping of primitives is a simple copy operation."""
     converter = Converter(unstruct_strat=dump_strat)
     mapping = map_and_type[0]
@@ -73,7 +70,6 @@ def test_enum_unstructure(enum, dump_strat, data):
 
 @given(nested_classes)
 def test_attrs_asdict_unstructure(converter, nested_class):
-    # type: (Converter, Type) -> None
     """Our dumping should be identical to `attrs`."""
     instance = nested_class[0]()
     assert converter.unstructure(instance) == asdict(instance)
@@ -81,7 +77,6 @@ def test_attrs_asdict_unstructure(converter, nested_class):
 
 @given(nested_classes)
 def test_attrs_astuple_unstructure(nested_class):
-    # type: (Type) -> None
     """Our dumping should be identical to `attrs`."""
     converter = Converter(unstruct_strat=UnstructureStrategy.AS_TUPLE)
     instance = nested_class[0]()
