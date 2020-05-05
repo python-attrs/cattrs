@@ -1,50 +1,46 @@
 """Test structuring of collections and primitives."""
 from typing import (
-    List,
-    Tuple,
     Any,
-    Set,
-    MutableSet,
-    FrozenSet,
     Dict,
+    FrozenSet,
+    List,
+    MutableSet,
     Optional,
-    Type,
+    Set,
+    Tuple,
     Union,
 )
 
-from cattr.converters import NoneType
-from cattr._compat import bytes, unicode, is_bare, is_union_type
-
-from pytest import raises
-
 from hypothesis import assume, given
 from hypothesis.strategies import (
+    binary,
     booleans,
-    integers,
+    data,
     floats,
-    text,
+    frozensets,
+    integers,
+    just,
+    lists,
     one_of,
     sampled_from,
-    lists,
-    tuples,
     sets,
-    frozensets,
-    just,
-    binary,
-    data,
+    text,
+    tuples,
 )
+from pytest import raises
 
 from cattr import Converter
+from cattr._compat import bytes, is_bare, is_union_type, unicode
+from cattr.converters import NoneType
 
 from . import (
-    primitive_strategies,
-    seqs_of_primitives,
-    lists_of_primitives,
     dicts_of_primitives,
     enums_of_primitives,
+    lists_of_primitives,
+    primitive_strategies,
+    seqs_of_primitives,
 )
 from ._compat import change_type_param
-
 
 ints_and_type = tuples(integers(), just(int))
 floats_and_type = tuples(floats(allow_nan=False), just(float))

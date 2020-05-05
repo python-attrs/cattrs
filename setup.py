@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 with open("README.rst") as readme_file:
     readme = readme_file.read()
@@ -23,6 +23,8 @@ dev_reqs = [
     "pytest",
     "hypothesis",
     "pendulum",
+    "isort",
+    "black",
 ]
 
 setup(

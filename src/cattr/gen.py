@@ -1,11 +1,8 @@
-from typing import Any, Callable, Dict, Sequence, Type, TypeVar
+from typing import Sequence
 
 import attr
 
 from ._compat import is_sequence
-from cattr.converters import Converter
-
-T = TypeVar("T")
 
 
 @attr.s(slots=True)
@@ -20,8 +17,7 @@ def override(omit_if_default=False):
 _neutral = AttributeOverride()
 
 
-def make_dict_unstructure_fn(cl, converter, **kwargs):
-    # type: (Type[T], Converter, **AttributeOverride) -> Callable[[T], Dict[str, Any]]  # noqa:E501
+def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
     """Generate a specialized dict unstructuring function for a class."""
     cl_name = cl.__name__
     fn_name = "unstructure_" + cl_name
@@ -39,7 +35,9 @@ def make_dict_unstructure_fn(cl, converter, **kwargs):
         d = a.default
         if a.type is None:
             # No type annotation, doing runtime dispatch.
-            if d is not attr.NOTHING and override.omit_if_default:
+            if d is not attr.NOTHING and (
+                omit_if_default or override.omit_if_default
+            ):
                 def_name = "__cattr_def_{}".format(attr_name)
 
                 if isinstance(d, attr.Factory):
@@ -85,7 +83,9 @@ def make_dict_unstructure_fn(cl, converter, **kwargs):
             if is_sequence(type):
                 type = Sequence
             conv_function = converter._unstructure_func.dispatch(type)
-            if d is not attr.NOTHING and override.omit_if_default:
+            if d is not attr.NOTHING and (
+                omit_if_default or override.omit_if_default
+            ):
                 def_name = "__cattr_def_{}".format(attr_name)
 
                 if isinstance(d, attr.Factory):

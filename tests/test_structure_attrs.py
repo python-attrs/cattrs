@@ -1,9 +1,8 @@
 """Loading of attrs classes."""
-from typing import Any, Union
+from typing import Union
 
-from attr import asdict, astuple, Factory, fields, NOTHING
+from attr import NOTHING, Factory, asdict, astuple, fields
 from hypothesis import assume, given
-from cattr.converters import Converter
 from hypothesis.strategies import data, lists, sampled_from
 
 from . import simple_classes
