@@ -1,7 +1,6 @@
-import string
 import keyword
 import os
-
+import string
 from collections import OrderedDict
 from enum import Enum
 from typing import (
@@ -16,12 +15,13 @@ from typing import (
     Set,
     Tuple,
 )
-from cattr._compat import bytes, unicode
 
 import attr
+from attr import NOTHING, make_class
+from hypothesis import HealthCheck, settings
+from hypothesis import strategies as st
 
-from attr import make_class, NOTHING
-from hypothesis import strategies as st, settings, HealthCheck
+from cattr._compat import bytes, unicode
 
 settings.register_profile(
     "CI", settings(suppress_health_check=[HealthCheck.too_slow]), deadline=None
@@ -321,6 +321,20 @@ def dict_attrs(draw, defaults=None):
     return (attr.ib(default=default), val_strat)
 
 
+@st.composite
+def optional_attrs(draw, defaults=None):
+    """
+    Generate a tuple of an attribute and a strategy that yields values
+    for that attribute. The strategy generates optional integers.
+    """
+    default = NOTHING
+    val_strat = st.integers() | st.none()
+    if defaults is True or (defaults is None and draw(st.booleans())):
+        default = draw(val_strat)
+
+    return (attr.ib(default=default), val_strat)
+
+
 def simple_attrs(defaults=None):
     return (
         bare_attrs(defaults)
@@ -328,6 +342,7 @@ def simple_attrs(defaults=None):
         | str_attrs(defaults)
         | float_attrs(defaults)
         | dict_attrs(defaults)
+        | optional_attrs(defaults)
     )
 
 

@@ -3,6 +3,7 @@ from attr import Factory
 from attr._make import NOTHING
 from hypothesis import assume, given
 
+from cattr import Converter
 from cattr.gen import make_dict_unstructure_fn, override
 
 from . import nested_classes, simple_classes
@@ -72,6 +73,53 @@ def test_nodefs_generated_unstructuring_cl(converter, cl_and_vals):
 
     for attr, val in zip(cl.__attrs_attrs__, vals):
         if attr.default is not NOTHING:
+            if not isinstance(attr.default, Factory):
+                if val == attr.default:
+                    assert attr.name not in res
+                else:
+                    assert attr.name in res
+            else:
+                if val == attr.default.factory():
+                    assert attr.name not in res
+                else:
+                    assert attr.name in res
+
+
+@given(nested_classes | simple_classes())
+def test_individual_overrides(cl_and_vals):
+    """
+    Test omitting default values on a per-class basis, but with individual
+    overrides.
+    """
+    converter = Converter()
+    cl, vals = cl_and_vals
+
+    for attr, val in zip(cl.__attrs_attrs__, vals):
+        if attr.default is not NOTHING:
+            break
+    else:
+        assume(False)
+
+    chosen = attr
+
+    converter.register_unstructure_hook(
+        cl,
+        make_dict_unstructure_fn(
+            cl,
+            converter,
+            omit_if_default=True,
+            **{attr.name: override(omit_if_default=False)}
+        ),
+    )
+
+    inst = cl(*vals)
+
+    res = converter.unstructure(inst)
+
+    for attr, val in zip(cl.__attrs_attrs__, vals):
+        if attr is chosen:
+            assert attr.name in res
+        elif attr.default is not NOTHING:
             if not isinstance(attr.default, Factory):
                 if val == attr.default:
                     assert attr.name not in res

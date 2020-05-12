@@ -22,7 +22,6 @@ default or factory values.
 
 .. doctest::
 
-    >>> from cattr import Converter
     >>> from cattr.gen import make_dict_unstructure_fn, override
     >>>
     >>> @attr.s
@@ -30,7 +29,30 @@ default or factory values.
     ...    a = attr.ib()
     ...    b = attr.ib(factory=dict)
     >>>
-    >>> c = Converter()
+    >>> c = cattr.Converter()
     >>> c.register_unstructure_hook(WithDefault, make_dict_unstructure_fn(WithDefault, c, b=override(omit_if_default=True)))
     >>> c.unstructure(WithDefault(1))
     {'a': 1}
+
+Note that the per-attribute value overrides the per-class value. A side-effect
+of this rule is the ability to force the presence of a subset of fields.
+For example, consider a class with a `DateTime` field and a factory for it:
+skipping the unstructuring of the `DateTime` field would be inconsistent and
+based on the current time. So we apply the `omit_if_default` rule to the class,
+but not to the `DateTime` field.
+
+.. doctest::
+
+    >>> from pendulum import DateTime
+    >>> from cattr.gen import make_dict_unstructure_fn, override
+    >>>
+    >>> @attr.s
+    ... class TestClass:
+    ...     a: Optional[int] = attr.ib(default=None)
+    ...     b: DateTime = attr.ib(factory=DateTime.utcnow)
+    >>>
+    >>> c = cattr.Converter()
+    >>> hook = make_dict_unstructure_fn(TestClass, c, omit_if_default=True, b=override(omit_if_default=False))
+    >>> c.register_unstructure_hook(TestClass, hook)
+    >>> c.unstructure(TestClass())
+    {'b': ...}

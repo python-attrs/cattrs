@@ -1,16 +1,16 @@
-from typing import Sequence
+from typing import Optional, Sequence
 
 import attr
 
 from ._compat import is_sequence
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, frozen=True)
 class AttributeOverride(object):
-    omit_if_default = attr.ib(default=False, type=bool)
+    omit_if_default: Optional[bool] = attr.ib(default=None)
 
 
-def override(omit_if_default=False):
+def override(omit_if_default=None):
     return AttributeOverride(omit_if_default=omit_if_default)
 
 
@@ -36,7 +36,8 @@ def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
         if a.type is None:
             # No type annotation, doing runtime dispatch.
             if d is not attr.NOTHING and (
-                omit_if_default or override.omit_if_default
+                (omit_if_default and override.omit_if_default is not False)
+                or override.omit_if_default
             ):
                 def_name = "__cattr_def_{}".format(attr_name)
 
@@ -84,7 +85,8 @@ def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
                 type = Sequence
             conv_function = converter._unstructure_func.dispatch(type)
             if d is not attr.NOTHING and (
-                omit_if_default or override.omit_if_default
+                (omit_if_default and override.omit_if_default is not False)
+                or override.omit_if_default
             ):
                 def_name = "__cattr_def_{}".format(attr_name)
 
