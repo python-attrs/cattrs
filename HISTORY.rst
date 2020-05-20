@@ -5,6 +5,7 @@ History
 1.1.0 (UNRELEASED)
 ------------------
 * Python 2 support removal. If you need it, use a version below 1.1.0.
+* Python 3.9 support added.
 
 1.0.0 (2019-12-27)
 ------------------
