@@ -13,12 +13,12 @@ from typing import (
 version_info = sys.version_info[0:3]
 is_py37 = version_info[:2] == (3, 7)
 is_py38 = version_info[:2] == (3, 8)
-
+is_py39 = version_info[:2] == (3, 9)
 
 unicode = str
 bytes = bytes
 
-if is_py37 or is_py38:
+if is_py37 or is_py38 or is_py39:
     from typing import List, Union, _GenericAlias
 
     def is_union_type(obj):
