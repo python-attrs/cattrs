@@ -25,7 +25,7 @@ matrix:
     # Meta
     - python: "3.8"
       env: TOXENV=lint
-    - python: "3.6"
+    - python: "3.8"
       env: TOXENV=docs
 
 before_install:
