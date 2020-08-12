@@ -13,8 +13,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
+import sys
 
 import pkg_resources  # part of setuptools
 
@@ -60,7 +60,7 @@ master_doc = "index"
 
 # General information about the project.
 project = u"cattrs"
-copyright = u"2016, Tin Tvrtković"
+copyright = u"2020, Tin Tvrtković"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout

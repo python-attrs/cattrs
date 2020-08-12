@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 with open("README.rst") as readme_file:
     readme = readme_file.read()
@@ -10,10 +10,6 @@ with open("HISTORY.rst") as history_file:
 
 requirements = [
     "attrs >= 17.3",
-    "functools32 >= 3.2.3; python_version<'3.0'",
-    "singledispatch >= 3.4.0.3; python_version<'3.0'",
-    "enum34 >= 1.1.6; python_version<'3.0'",
-    "typing >= 3.5.3; python_version<'3.0'",
 ]
 
 dev_reqs = [
@@ -27,11 +23,13 @@ dev_reqs = [
     "pytest",
     "hypothesis",
     "pendulum",
+    "isort",
+    "black",
 ]
 
 setup(
     name="cattrs",
-    version="1.0.0rc0",
+    version="1.0.0",
     description="Composable complex class support for attrs.",
     long_description=readme + "\n\n" + history,
     author="Tin Tvrtković",
@@ -50,10 +48,9 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
     ],
 )

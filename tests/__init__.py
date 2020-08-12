@@ -1,7 +1,6 @@
-import string
 import keyword
 import os
-
+import string
 from collections import OrderedDict
 from enum import Enum
 from typing import (
@@ -16,12 +15,13 @@ from typing import (
     Set,
     Tuple,
 )
-from cattr._compat import is_py2, bytes, unicode
 
 import attr
+from attr import NOTHING, make_class
+from hypothesis import HealthCheck, settings
+from hypothesis import strategies as st
 
-from attr import make_class, NOTHING
-from hypothesis import strategies as st, settings, HealthCheck
+from cattr._compat import bytes, unicode
 
 settings.register_profile(
     "CI", settings(suppress_health_check=[HealthCheck.too_slow]), deadline=None
@@ -31,34 +31,20 @@ if "CI" in os.environ:
     settings.load_profile("CI")
 
 
-if is_py2:
-    # we exclude float checks from py2, because their stringification is not
-    # consistent
-    primitive_strategies = st.sampled_from(
-        [(st.text(), unicode), (st.binary(), bytes)]
-    )
-else:
-    primitive_strategies = st.sampled_from(
-        [
-            (st.integers(), int),
-            (st.floats(allow_nan=False), float),
-            (st.text(), unicode),
-            (st.binary(), bytes),
-        ]
-    )
+primitive_strategies = st.sampled_from(
+    [
+        (st.integers(), int),
+        (st.floats(allow_nan=False), float),
+        (st.text(), unicode),
+        (st.binary(), bytes),
+    ]
+)
 
 
 @st.composite
 def enums_of_primitives(draw):
     """Generate enum classes with primitive values."""
-    if is_py2:
-        names = draw(
-            st.sets(
-                st.text(alphabet=string.ascii_letters, min_size=1), min_size=1
-            )
-        )
-    else:
-        names = draw(st.sets(st.text(min_size=1), min_size=1))
+    names = draw(st.sets(st.text(min_size=1), min_size=1))
     n = len(names)
     vals = draw(
         st.one_of(
@@ -335,6 +321,20 @@ def dict_attrs(draw, defaults=None):
     return (attr.ib(default=default), val_strat)
 
 
+@st.composite
+def optional_attrs(draw, defaults=None):
+    """
+    Generate a tuple of an attribute and a strategy that yields values
+    for that attribute. The strategy generates optional integers.
+    """
+    default = NOTHING
+    val_strat = st.integers() | st.none()
+    if defaults is True or (defaults is None and draw(st.booleans())):
+        default = draw(val_strat)
+
+    return (attr.ib(default=default), val_strat)
+
+
 def simple_attrs(defaults=None):
     return (
         bare_attrs(defaults)
@@ -342,22 +342,25 @@ def simple_attrs(defaults=None):
         | str_attrs(defaults)
         | float_attrs(defaults)
         | dict_attrs(defaults)
+        | optional_attrs(defaults)
     )
 
 
-def lists_of_attrs(defaults=None):
+def lists_of_attrs(defaults=None, min_size=0):
     # Python functions support up to 255 arguments.
-    return st.lists(simple_attrs(defaults), max_size=10).map(
-        lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING)
-    )
+    return st.lists(
+        simple_attrs(defaults), min_size=min_size, max_size=10
+    ).map(lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING))
 
 
-def simple_classes(defaults=None):
+def simple_classes(defaults=None, min_attrs=0):
     """
     Return a strategy that yields tuples of simple classes and values to
     instantiate them.
     """
-    return lists_of_attrs(defaults).flatmap(_create_hyp_class)
+    return lists_of_attrs(defaults, min_size=min_attrs).flatmap(
+        _create_hyp_class
+    )
 
 
 # Ok, so st.recursive works by taking a base strategy (in this case,
