@@ -1,5 +1,6 @@
 """Tests for dumping."""
 from attr import asdict, astuple
+import attr
 from hypothesis import given
 from hypothesis.strategies import data, sampled_from
 
@@ -118,3 +119,27 @@ def test_unstructure_hook_func(converter):
     b = Bar()
     assert converter.unstructure(Foo()) == "hi"
     assert converter.unstructure(b) is b
+
+
+
+@attr.s
+class Cab:
+    a = attr.ib()
+    b = attr.ib(init=False)
+
+def test_unstructure_attr_init_false():
+    """
+    skip un-init attr.
+    """
+    converter = Converter()
+    converter_tuple = Converter(unstruct_strat= UnstructureStrategy.AS_TUPLE)
+
+    c1 = Cab(1)
+    assert converter.unstructure(c1) ==  {'a': 1} 
+    assert converter_tuple.unstructure(c1) ==  (1,)
+    
+    c1.b = 2
+    assert converter.unstructure(c1) ==  {'a': 1, 'b': 2} 
+    assert converter_tuple.unstructure(c1) ==  (1,2)
+
+
