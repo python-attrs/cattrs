@@ -194,15 +194,16 @@ class Converter(object):
         rv = self._dict_factory()
         for a in attrs:
             name = a.name
-            v = getattr(obj, name)
-            rv[name] = dispatch(v.__class__)(v)
+            if hasattr(obj, name):
+                v = getattr(obj, name)
+                rv[name] = dispatch(v.__class__)(v)
         return rv
 
     def unstructure_attrs_astuple(self, obj):
         # type: (Any) -> Tuple
         """Our version of `attrs.astuple`, so we can call back to us."""
         attrs = obj.__class__.__attrs_attrs__
-        return tuple(self.unstructure(getattr(obj, a.name)) for a in attrs)
+        return tuple(self.unstructure(getattr(obj, a.name)) for a in attrs if hasattr(obj, a.name))
 
     def _unstructure_enum(self, obj):
         """Convert an enum to its value."""
