@@ -68,3 +68,4 @@ settings.json
 .venv*
 .editorconfig
 .mypy_cache
+.pytest_cache
