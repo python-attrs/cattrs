@@ -79,10 +79,17 @@ def test_nodefs_generated_unstructuring_cl(converter, cl_and_vals):
                 else:
                     assert attr.name in res
             else:
-                if val == attr.default.factory():
-                    assert attr.name not in res
+                # The default is a factory, but might take self.
+                if attr.default.takes_self:
+                    if val == attr.default.factory(cl):
+                        assert attr.name not in res
+                    else:
+                        assert attr.name in res
                 else:
-                    assert attr.name in res
+                    if val == attr.default.factory():
+                        assert attr.name not in res
+                    else:
+                        assert attr.name in res
 
 
 @given(nested_classes | simple_classes())
@@ -126,7 +133,13 @@ def test_individual_overrides(cl_and_vals):
                 else:
                     assert attr.name in res
             else:
-                if val == attr.default.factory():
-                    assert attr.name not in res
+                if attr.default.takes_self:
+                    if val == attr.default.factory(inst):
+                        assert attr.name not in res
+                    else:
+                        assert attr.name in res
                 else:
-                    assert attr.name in res
+                    if val == attr.default.factory():
+                        assert attr.name not in res
+                    else:
+                        assert attr.name in res

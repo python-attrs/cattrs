@@ -52,7 +52,9 @@ def test_nested_roundtrip(cls_and_vals, strat):
     assert inst == converter.structure(converter.unstructure(inst), cl)
 
 
-@settings(suppress_health_check=[HealthCheck.filter_too_much])
+@settings(
+    suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow]
+)
 @given(
     simple_typed_classes(defaults=False),
     simple_typed_classes(defaults=False),

@@ -113,7 +113,10 @@ class Converter(object):
         # Strings are sequences.
         self._structure_func.register_cls_list(
             [
-                (str, self._structure_call,),
+                (
+                    str,
+                    self._structure_call,
+                ),
                 (bytes, self._structure_call),
                 (int, self._structure_call),
                 (float, self._structure_call),
@@ -389,9 +392,12 @@ class Converter(object):
         cl = self._dis_func_cache(union)(obj)
         return self._structure_func.dispatch(cl)(obj, cl)
 
-    def _structure_tuple(self, obj, tup):
+    def _structure_tuple(self, obj, tup: Type[T]):
         """Deal with converting to a tuple."""
-        tup_params = tup.__args__
+        if tup is Tuple:
+            tup_params = None
+        else:
+            tup_params = tup.__args__
         has_ellipsis = tup_params and tup_params[-1] is Ellipsis
         if tup_params is None or (has_ellipsis and tup_params[0] is Any):
             # Just a Tuple. (No generic information.)

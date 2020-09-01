@@ -3,10 +3,13 @@ from functools import lru_cache, singledispatch  # noqa
 from typing import (
     Dict,
     FrozenSet,
+    List,
     Mapping,
+    MutableMapping,
     MutableSequence,
     MutableSet,
     Sequence,
+    Set,
     Tuple,
 )
 
@@ -15,8 +18,14 @@ is_py37 = version_info[:2] == (3, 7)
 is_py38 = version_info[:2] == (3, 8)
 
 
+def is_tuple(type):
+    return type is Tuple or (
+        type.__class__ is _GenericAlias and issubclass(type.__origin__, Tuple)
+    )
+
+
 if is_py37 or is_py38:
-    from typing import List, Union, _GenericAlias
+    from typing import Union, _GenericAlias
 
     def is_union_type(obj):
         return (
@@ -32,20 +41,14 @@ if is_py37 or is_py38:
             and issubclass(type.__origin__, Sequence)
         )
 
-    def is_frozenset(type):
-        return type.__class__ is _GenericAlias and issubclass(
-            type.__origin__, FrozenSet
-        )
-
     def is_mutable_set(type):
         return type.__class__ is _GenericAlias and issubclass(
             type.__origin__, MutableSet
         )
 
-    def is_tuple(type):
-        return type is Tuple or (
-            type.__class__ is _GenericAlias
-            and issubclass(type.__origin__, Tuple)
+    def is_frozenset(type):
+        return type.__class__ is _GenericAlias and issubclass(
+            type.__origin__, FrozenSet
         )
 
     def is_mapping(type):
@@ -72,29 +75,51 @@ if is_py37 or is_py38:
 
 
 else:
-    from typing import _Union
+    # 3.9+
+    from typing import (
+        Union,
+        _GenericAlias,
+        _SpecialGenericAlias,
+        _UnionGenericAlias,
+    )
 
     def is_union_type(obj):
-        """Return true if the object is a union. """
-        return isinstance(obj, _Union)
-
-    def is_frozenset(type):
-        return issubclass(type, FrozenSet)
-
-    def is_mutable_set(type):
-        return issubclass(type, MutableSet)
+        return (
+            obj is Union
+            or isinstance(obj, _UnionGenericAlias)
+            and obj.__origin__ is Union
+        )
 
     def is_sequence(type):
-        is_string = issubclass(type, str)
-        return issubclass(type, Sequence) and not is_string
+        return (
+            type is List
+            or type is Sequence
+            or type is MutableSequence
+            or (
+                type.__class__ is _GenericAlias
+                and issubclass(type.__origin__, Sequence)
+            )
+        )
 
-    def is_tuple(type):
-        return issubclass(type, Tuple)
+    def is_mutable_set(type):
+        return type in (Set, MutableSet) or (
+            type.__class__ is _GenericAlias
+            and issubclass(type.__origin__, MutableSet)
+        )
 
-    def is_mapping(type):
-        return issubclass(type, Mapping)
+    def is_frozenset(type):
+        return type is FrozenSet or (
+            type.__class__ is _GenericAlias
+            and issubclass(type.__origin__, FrozenSet)
+        )
 
     def is_bare(type):
-        return not type.__args__
+        return isinstance(type, _SpecialGenericAlias) or (
+            not hasattr(type, "__origin__") and not hasattr(type, "__args__")
+        )
 
-    is_bare_frozenset = is_bare
+    def is_mapping(type):
+        return type in (Mapping, Dict, MutableMapping) or (
+            type.__class__ is _GenericAlias
+            and issubclass(type.__origin__, Mapping)
+        )

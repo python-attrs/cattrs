@@ -1,5 +1,6 @@
 """Tests for metadata functionality."""
 from collections import OrderedDict
+from typing import Any, Dict, List
 
 import attr
 from attr import NOTHING
@@ -15,8 +16,6 @@ from hypothesis.strategies import (
     text,
     tuples,
 )
-from typing import Any, Dict, List
-from cattr._compat import unicode
 
 from .. import gen_attr_names, make_class
 
@@ -100,7 +99,7 @@ def str_typed_attrs(draw, defaults=None):
     default = NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(text())
-    return (attr.ib(type=unicode, default=default), text())
+    return (attr.ib(type=str, default=default), text())
 
 
 @composite
@@ -125,7 +124,7 @@ def dict_typed_attrs(draw, defaults=None):
     val_strat = dictionaries(keys=text(), values=integers())
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(val_strat)
-    return (attr.ib(type=Dict[unicode, int], default=default), val_strat)
+    return (attr.ib(type=Dict[str, int], default=default), val_strat)
 
 
 def just_class(tup):

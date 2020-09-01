@@ -30,7 +30,7 @@ from hypothesis.strategies import (
 from pytest import raises
 
 from cattr import Converter
-from cattr._compat import bytes, is_bare, is_union_type, unicode
+from cattr._compat import is_bare, is_union_type
 from cattr.converters import NoneType
 
 from . import (
@@ -44,7 +44,7 @@ from ._compat import change_type_param
 
 ints_and_type = tuples(integers(), just(int))
 floats_and_type = tuples(floats(allow_nan=False), just(float))
-strs_and_type = tuples(text(), just(unicode))
+strs_and_type = tuples(text(), just(str))
 bytes_and_type = tuples(binary(), just(bytes))
 
 primitives_and_type = one_of(
@@ -87,9 +87,9 @@ def test_structuring_primitives(converter, primitive_and_type):
 
 
 @given(seqs_of_primitives)
-def test_structuring_seqs(converter, seq_and_type):
-    # type: (Converter, Any) -> None
+def test_structuring_seqs(seq_and_type):
     """Test structuring sequence generic types."""
+    converter = Converter()
     iterable, t = seq_and_type
     converted = converter.structure(iterable, t)
     for x, y in zip(iterable, converted):
@@ -97,11 +97,12 @@ def test_structuring_seqs(converter, seq_and_type):
 
 
 @given(sets_of_primitives, set_types)
-def test_structuring_sets(converter, set_and_type, set_type):
+def test_structuring_sets(set_and_type, set_type):
     """Test structuring generic sets."""
+    converter = Converter()
     set_, input_set_type = set_and_type
 
-    if input_set_type.__args__:
+    if input_set_type not in (Set, FrozenSet, MutableSet):
         set_type = set_type[input_set_type.__args__[0]]
 
     converted = converter.structure(set_, set_type)
@@ -119,12 +120,15 @@ def test_structuring_sets(converter, set_and_type, set_type):
 
 
 @given(sets_of_primitives)
-def test_stringifying_sets(converter, set_and_type):
-    # type: (Converter, Any) -> None
+def test_stringifying_sets(set_and_type):
     """Test structuring generic sets and converting the contents to str."""
+    converter = Converter()
     set_, input_set_type = set_and_type
 
-    input_set_type.__args__ = (unicode,)
+    if is_bare(input_set_type):
+        input_set_type = input_set_type[str]
+    else:
+        input_set_type.__args__ = (str,)
     converted = converter.structure(set_, input_set_type)
     assert len(converted) == len(set_)
     for e in set_:
@@ -155,7 +159,7 @@ def test_stringifying_tuples(converter, list_of_vals_and_types):
     # type: (Converter, List[Any]) -> None
     """Stringify all elements of a heterogeneous tuple."""
     vals = [e[0] for e in list_of_vals_and_types]
-    t = Tuple[(unicode,) * len(list_of_vals_and_types)]
+    t = Tuple[(str,) * len(list_of_vals_and_types)]
 
     converted = converter.structure(vals, t)
 
@@ -166,12 +170,12 @@ def test_stringifying_tuples(converter, list_of_vals_and_types):
 
     for x in converted:
         # this should just be unicode, but in python2, '' is not unicode
-        assert isinstance(x, (str, unicode))
+        assert isinstance(x, str)
 
 
 @given(dicts_of_primitives)
-def test_structuring_dicts(converter, dict_and_type):
-    # type: (Converter, Any) -> None
+def test_structuring_dicts(dict_and_type):
+    converter = Converter()
     d, t = dict_and_type
 
     converted = converter.structure(d, t)
@@ -200,7 +204,7 @@ def test_stringifying_dicts(converter, dict_and_type):
     # type: (Converter, Any) -> None
     d, t = dict_and_type
 
-    converted = converter.structure(d, Dict[unicode, unicode])
+    converted = converter.structure(d, Dict[str, str])
 
     for k, v in d.items():
         assert converted[str(k)] == str(v)
@@ -231,9 +235,7 @@ def test_structuring_lists_of_opt(converter, list_and_type):
         and args[0].__args__[1] is NoneType
     )
 
-    if not is_bare(t) and (
-        args[0] not in (Any, unicode, str) and not is_optional
-    ):
+    if not is_bare(t) and (args[0] not in (Any, str) and not is_optional):
         with raises((TypeError, ValueError)):
             converter.structure(l, t)
 
@@ -258,7 +260,7 @@ def test_stringifying_lists_of_opt(converter, list_and_type):
 
     l.append(None)
 
-    converted = converter.structure(l, List[Optional[unicode]])
+    converted = converter.structure(l, List[Optional[str]])
 
     for x, y in zip(l, converted):
         if x is None:
@@ -274,17 +276,17 @@ def test_structuring_primitive_union_hook(converter, ints):
 
     def structure_hook(val, cl):
         """Even ints are passed through, odd are stringified."""
-        return val if val % 2 == 0 else unicode(val)
+        return val if val % 2 == 0 else str(val)
 
-    converter.register_structure_hook(Union[unicode, int], structure_hook)
+    converter.register_structure_hook(Union[str, int], structure_hook)
 
-    converted = converter.structure(ints, List[Union[unicode, int]])
+    converted = converter.structure(ints, List[Union[str, int]])
 
     for x, y in zip(ints, converted):
         if x % 2 == 0:
             assert x == y
         else:
-            assert unicode(x) == y
+            assert str(x) == y
 
 
 def test_structure_hook_func(converter):
@@ -324,11 +326,11 @@ def test_structuring_unsupported(converter):
     with raises(ValueError):
         converter.structure(1, Converter)
     with raises(ValueError):
-        converter.structure(1, Union[int, unicode])
+        converter.structure(1, Union[int, str])
 
 
 def test_subclass_registration_is_honored(converter):
-    """ If a subclass is registered after a superclass,
+    """If a subclass is registered after a superclass,
     that subclass handler should be dispatched for
     structure
     """
