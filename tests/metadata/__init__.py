@@ -10,6 +10,7 @@ from hypothesis.strategies import (
     composite,
     dictionaries,
     floats,
+    frozensets,
     integers,
     just,
     lists,
@@ -179,7 +180,7 @@ def frozenset_typed_attrs(draw, defaults=None):
     for that attribute. The frozensets contain integers.
     """
     default = attr.NOTHING
-    val_strat = sets(integers())
+    val_strat = frozensets(integers())
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(val_strat)
     return (
