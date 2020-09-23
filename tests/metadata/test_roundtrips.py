@@ -97,10 +97,11 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
 
 
 @given(simple_typed_classes(defaults=False))
-def test_optional_field_roundtrip(converter, cl_and_vals):
+def test_optional_field_roundtrip(cl_and_vals):
     """
     Classes with optional fields can be unstructured and structured.
     """
+    converter = Converter()
     cl, vals = cl_and_vals
 
     @attr.s

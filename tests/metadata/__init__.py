@@ -1,6 +1,7 @@
 """Tests for metadata functionality."""
+import sys
 from collections import OrderedDict
-from typing import Any, Dict, List
+from typing import Any, Dict, FrozenSet, List
 
 import attr
 from attr import NOTHING
@@ -13,11 +14,14 @@ from hypothesis.strategies import (
     just,
     lists,
     recursive,
+    sets,
     text,
     tuples,
 )
 
 from .. import gen_attr_names, make_class
+
+is_39_or_later = sys.version_info[:2] >= (3, 9)
 
 
 def simple_typed_classes(defaults=None):
@@ -33,13 +37,26 @@ def lists_of_typed_attrs(defaults=None):
 
 
 def simple_typed_attrs(defaults=None):
-    return (
-        bare_typed_attrs(defaults)
-        | int_typed_attrs(defaults)
-        | str_typed_attrs(defaults)
-        | float_typed_attrs(defaults)
-        | dict_typed_attrs(defaults)
-    )
+    if not is_39_or_later:
+        return (
+            bare_typed_attrs(defaults)
+            | int_typed_attrs(defaults)
+            | str_typed_attrs(defaults)
+            | float_typed_attrs(defaults)
+            | dict_typed_attrs(defaults)
+        )
+    else:
+        return (
+            bare_typed_attrs(defaults)
+            | int_typed_attrs(defaults)
+            | str_typed_attrs(defaults)
+            | float_typed_attrs(defaults)
+            | dict_typed_attrs(defaults)
+            | new_dict_typed_attrs(defaults)
+            | set_typed_attrs(defaults)
+            | list_typed_attrs(defaults)
+            | frozenset_typed_attrs(defaults)
+        )
 
 
 def _create_hyp_class(attrs_and_strategy):
@@ -127,6 +144,72 @@ def dict_typed_attrs(draw, defaults=None):
     return (attr.ib(type=Dict[str, int], default=default), val_strat)
 
 
+@composite
+def new_dict_typed_attrs(draw, defaults=None):
+    """
+    Generate a tuple of an attribute and a strategy that yields dictionaries
+    for that attribute. The dictionaries map strings to integers.
+
+    Uses the new 3.9 dict annotation.
+    """
+    default = attr.NOTHING
+    val_strat = dictionaries(keys=text(), values=integers())
+    if defaults is True or (defaults is None and draw(booleans())):
+        default = draw(val_strat)
+    return (attr.ib(type=dict[str, int], default=default), val_strat)
+
+
+@composite
+def set_typed_attrs(draw, defaults=None):
+    """
+    Generate a tuple of an attribute and a strategy that yields sets
+    for that attribute. The sets contain integers.
+    """
+    default = attr.NOTHING
+    val_strat = sets(integers())
+    if defaults is True or (defaults is None and draw(booleans())):
+        default = draw(val_strat)
+    return (attr.ib(type=set[int], default=default), val_strat)
+
+
+@composite
+def frozenset_typed_attrs(draw, defaults=None):
+    """
+    Generate a tuple of an attribute and a strategy that yields frozensets
+    for that attribute. The frozensets contain integers.
+    """
+    default = attr.NOTHING
+    val_strat = sets(integers())
+    if defaults is True or (defaults is None and draw(booleans())):
+        default = draw(val_strat)
+    return (
+        attr.ib(
+            type=frozenset[int] if draw(booleans()) else FrozenSet[int],
+            default=default,
+        ),
+        val_strat,
+    )
+
+
+@composite
+def list_typed_attrs(draw, defaults=None):
+    """
+    Generate a tuple of an attribute and a strategy that yields lists
+    for that attribute. The lists contain floats.
+    """
+    default = attr.NOTHING
+    val_strat = lists(floats(allow_infinity=False, allow_nan=False))
+    if defaults is True or (defaults is None and draw(booleans())):
+        default = draw(val_strat)
+    return (
+        attr.ib(
+            type=list[float] if draw(booleans()) else List[float],
+            default=default,
+        ),
+        val_strat,
+    )
+
+
 def just_class(tup):
     # tup: Tuple[List[Tuple[_CountingAttr, Strategy]],
     #            Tuple[Type, Sequence[Any]]]
@@ -151,6 +234,21 @@ def list_of_class(tup):
     combined_attrs.append(
         (
             attr.ib(type=List[nested_cl], default=default),
+            just([nested_cl(*nested_cl_args)]),
+        )
+    )
+    return _create_hyp_class(combined_attrs)
+
+
+def new_list_of_class(tup):
+    """Uses the new 3.9 list type annotation."""
+    nested_cl = tup[1][0]
+    nested_cl_args = tup[1][1]
+    default = attr.Factory(lambda: [nested_cl(*nested_cl_args)])
+    combined_attrs = list(tup[0])
+    combined_attrs.append(
+        (
+            attr.ib(type=list[nested_cl], default=default),
             just([nested_cl(*nested_cl_args)]),
         )
     )

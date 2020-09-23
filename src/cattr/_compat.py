@@ -16,6 +16,7 @@ from typing import (
 version_info = sys.version_info[0:3]
 is_py37 = version_info[:2] == (3, 7)
 is_py38 = version_info[:2] == (3, 8)
+is_py39_plus = version_info[:2] >= (3, 9)
 
 
 def is_tuple(type):
@@ -92,25 +93,32 @@ else:
 
     def is_sequence(type):
         return (
-            type is List
-            or type is Sequence
-            or type is MutableSequence
+            type in (List, list, Sequence, MutableSequence)
             or (
                 type.__class__ is _GenericAlias
                 and issubclass(type.__origin__, Sequence)
             )
+            or (getattr(type, "__origin__", None) is list)
         )
 
     def is_mutable_set(type):
-        return type in (Set, MutableSet) or (
-            type.__class__ is _GenericAlias
-            and issubclass(type.__origin__, MutableSet)
+        return (
+            type in (Set, MutableSet, set)
+            or (
+                type.__class__ is _GenericAlias
+                and issubclass(type.__origin__, MutableSet)
+            )
+            or (getattr(type, "__origin__", None) is set)
         )
 
     def is_frozenset(type):
-        return type is FrozenSet or (
-            type.__class__ is _GenericAlias
-            and issubclass(type.__origin__, FrozenSet)
+        return (
+            type in (FrozenSet, frozenset)
+            or (
+                type.__class__ is _GenericAlias
+                and issubclass(type.__origin__, FrozenSet)
+            )
+            or (getattr(type, "__origin__", None) is frozenset)
         )
 
     def is_bare(type):
@@ -119,7 +127,11 @@ else:
         )
 
     def is_mapping(type):
-        return type in (Mapping, Dict, MutableMapping) or (
-            type.__class__ is _GenericAlias
-            and issubclass(type.__origin__, Mapping)
+        return (
+            type in (Mapping, Dict, MutableMapping, dict)
+            or (
+                type.__class__ is _GenericAlias
+                and issubclass(type.__origin__, Mapping)
+            )
+            or (getattr(type, "__origin__", None) is dict)
         )

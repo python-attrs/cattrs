@@ -5,6 +5,8 @@ from attr import NOTHING, Factory, asdict, astuple, fields
 from hypothesis import assume, given
 from hypothesis.strategies import data, lists, sampled_from
 
+from cattr.converters import Converter
+
 from . import simple_classes
 
 
@@ -45,8 +47,9 @@ def test_structure_simple_from_dict_default(converter, cl_and_vals, data):
 
 
 @given(simple_classes())
-def test_roundtrip(converter, cl_and_vals):
+def test_roundtrip(cl_and_vals):
     """We dump the class, then we load it."""
+    converter = Converter()
     cl, vals = cl_and_vals
     obj = cl(*vals)
 

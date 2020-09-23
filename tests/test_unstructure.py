@@ -84,10 +84,11 @@ def test_attrs_astuple_unstructure(nested_class):
 
 
 @given(simple_classes())
-def test_unstructure_hooks(converter, cl_and_vals):
+def test_unstructure_hooks(cl_and_vals):
     """
     Unstructure hooks work.
     """
+    converter = Converter()
     cl, vals = cl_and_vals
     inst = cl(*vals)
 
