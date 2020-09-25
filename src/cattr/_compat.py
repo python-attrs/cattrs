@@ -19,14 +19,14 @@ is_py38 = version_info[:2] == (3, 8)
 is_py39_plus = version_info[:2] >= (3, 9)
 
 
-def is_tuple(type):
-    return type is Tuple or (
-        type.__class__ is _GenericAlias and issubclass(type.__origin__, Tuple)
-    )
-
-
 if is_py37 or is_py38:
     from typing import Union, _GenericAlias
+
+    def is_tuple(type):
+        return type is Tuple or (
+            type.__class__ is _GenericAlias
+            and issubclass(type.__origin__, Tuple)
+        )
 
     def is_union_type(obj):
         return (
@@ -83,6 +83,16 @@ else:
         _SpecialGenericAlias,
         _UnionGenericAlias,
     )
+
+    def is_tuple(type):
+        return (
+            type in (Tuple, tuple)
+            or (
+                type.__class__ is _GenericAlias
+                and issubclass(type.__origin__, Tuple)
+            )
+            or (getattr(type, "__origin__", None) is tuple)
+        )
 
     def is_union_type(obj):
         return (

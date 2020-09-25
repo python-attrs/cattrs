@@ -1,7 +1,7 @@
 """Tests for metadata functionality."""
 import sys
 from collections import OrderedDict
-from typing import Any, Dict, FrozenSet, List
+from typing import Any, Dict, FrozenSet, List, Tuple
 
 import attr
 from attr import NOTHING
@@ -57,6 +57,7 @@ def simple_typed_attrs(defaults=None):
             | set_typed_attrs(defaults)
             | list_typed_attrs(defaults)
             | frozenset_typed_attrs(defaults)
+            | homo_tuple_typed_attrs(defaults)
         )
 
 
@@ -205,6 +206,25 @@ def list_typed_attrs(draw, defaults=None):
     return (
         attr.ib(
             type=list[float] if draw(booleans()) else List[float],
+            default=default,
+        ),
+        val_strat,
+    )
+
+
+@composite
+def homo_tuple_typed_attrs(draw, defaults=None):
+    """
+    Generate a tuple of an attribute and a strategy that yields homogenous
+    tuples for that attribute. The tuples contain strings.
+    """
+    default = attr.NOTHING
+    val_strat = tuples(text(), text(), text())
+    if defaults is True or (defaults is None and draw(booleans())):
+        default = draw(val_strat)
+    return (
+        attr.ib(
+            type=tuple[str, ...] if draw(booleans()) else Tuple[str, ...],
             default=default,
         ),
         val_strat,

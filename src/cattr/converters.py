@@ -394,7 +394,7 @@ class Converter(object):
 
     def _structure_tuple(self, obj, tup: Type[T]):
         """Deal with converting to a tuple."""
-        if tup is Tuple:
+        if tup in (Tuple, tuple):
             tup_params = None
         else:
             tup_params = tup.__args__

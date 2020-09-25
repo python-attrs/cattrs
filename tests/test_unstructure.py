@@ -69,8 +69,9 @@ def test_enum_unstructure(enum, dump_strat, data):
 
 
 @given(nested_classes)
-def test_attrs_asdict_unstructure(converter, nested_class):
+def test_attrs_asdict_unstructure(nested_class):
     """Our dumping should be identical to `attrs`."""
+    converter = Converter()
     instance = nested_class[0]()
     assert converter.unstructure(instance) == asdict(instance)
 
