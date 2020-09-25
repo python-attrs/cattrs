@@ -4,7 +4,7 @@ History
 
 1.1.0 (UNRELEASED)
 ------------------
-* Python 2 support removal. If you need it, use a version below 1.1.0.
+* Python 2, 3.5 and 3.6 support removal. If you need it, use a version below 1.1.0.
 * Python 3.9 support, including support for built-in generic types (``list[int]`` vs ``typing.List[int]``).
 
 1.0.0 (2019-12-27)

@@ -125,7 +125,7 @@ destructure them.
 
 * Free software: MIT license
 * Documentation: https://cattrs.readthedocs.io.
-* Python versions supported: 2.7, 3.5 and up.
+* Python versions supported: 3.7 and up.
 
 
 Features
