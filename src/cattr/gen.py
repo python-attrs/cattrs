@@ -1,6 +1,7 @@
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Type
 
 import attr
+from attr import NOTHING
 
 from ._compat import is_sequence
 
@@ -18,7 +19,7 @@ _neutral = AttributeOverride()
 
 
 def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
-    """Generate a specialized dict unstructuring function for a class."""
+    """Generate a specialized dict unstructuring function for an attrs class."""
     cl_name = cl.__name__
     fn_name = "unstructure_" + cl_name
     globs = {"__c_u": converter.unstructure}
@@ -164,6 +165,41 @@ def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
     lines.append("    }")
 
     total_lines = lines + post_lines + ["    return res"]
+
+    eval(compile("\n".join(total_lines), "", "exec"), globs)
+
+    fn = globs[fn_name]
+
+    return fn
+
+
+def make_dict_structure_fn(cl: Type, converter, **kwargs):
+    """Generate a specialized dict structuring function for an attrs class."""
+    cl_name = cl.__name__
+    fn_name = "structure_" + cl_name
+    globs = {"__c_s": converter.structure, "__cl": cl}
+    lines = []
+    post_lines = []
+
+    attrs = cl.__attrs_attrs__
+
+    lines.append(f"def {fn_name}(o, _):")
+    lines.append("  res = {")
+    for a in attrs:
+        an = a.name
+        type = a.type
+        kn = an if an[0] != "_" else an[1:]
+        globs[f"__c_t_{an}"] = type
+        if a.default is NOTHING:
+            lines.append(f"    '{kn}': __c_s(o['{an}'], __c_t_{an}),")
+        else:
+            post_lines.append(f"  if '{an}' in o:")
+            post_lines.append(
+                f"    res['{kn}'] = __c_s(o['{an}'], __c_t_{an})"
+            )
+    lines.append("    }")
+
+    total_lines = lines + post_lines + ["  return __cl(**res)"]
 
     eval(compile("\n".join(total_lines), "", "exec"), globs)
 

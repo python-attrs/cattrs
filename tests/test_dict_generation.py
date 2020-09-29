@@ -4,9 +4,14 @@ from attr._make import NOTHING
 from hypothesis import assume, given
 
 from cattr import Converter
-from cattr.gen import make_dict_unstructure_fn, override
+from cattr.gen import (
+    make_dict_structure_fn,
+    make_dict_unstructure_fn,
+    override,
+)
 
 from . import nested_classes, simple_classes
+from .metadata import nested_typed_classes, simple_typed_classes
 
 
 @given(nested_classes | simple_classes())
@@ -143,3 +148,20 @@ def test_individual_overrides(cl_and_vals):
                         assert attr.name not in res
                     else:
                         assert attr.name in res
+
+
+@given(nested_typed_classes | simple_typed_classes())
+def test_unmodified_generated_structuring(cl_and_vals):
+    converter = Converter()
+    cl, vals = cl_and_vals
+    fn = make_dict_structure_fn(cl, converter)
+
+    inst = cl(*vals)
+
+    unstructured = converter.unstructure(inst)
+
+    converter.register_structure_hook(cl, fn)
+
+    res = converter.structure(unstructured, cl)
+
+    assert inst == res
