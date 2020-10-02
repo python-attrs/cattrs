@@ -9,7 +9,7 @@ with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
 requirements = [
-    "attrs >= 17.3",
+    "attrs >= 20.1.0",
 ]
 
 dev_reqs = [

@@ -8,6 +8,8 @@ History
 * Python 3.9 support, including support for built-in generic types (``list[int]`` vs ``typing.List[int]``).
 * ``cattrs`` now includes functions to generate specialized structuring and unstructuring hooks. See the ``cattr.gen`` module.
 * Specialized hooks are faster and support overrides (`omit_if_default` and `rename`).
+* Generating specialized structuring hooks now invokes `attr.resolve_types` on a class if the class contains the new PEP 563 annotations.
+* ``cattrs`` now depends on ``attrs`` >= 20.1.0, because of ``attr.resolve_types``.
 
 1.0.0 (2019-12-27)
 ------------------
