@@ -1,7 +1,8 @@
 """Tests for generated dict functions."""
-from attr import Factory
+from attr import Factory, fields
 from attr._make import NOTHING
 from hypothesis import assume, given
+from hypothesis.strategies._internal.core import data, sampled_from
 
 from cattr import Converter
 from cattr.gen import (
@@ -15,7 +16,8 @@ from .metadata import nested_typed_classes, simple_typed_classes
 
 
 @given(nested_classes | simple_classes())
-def test_unmodified_generated_unstructuring(converter, cl_and_vals):
+def test_unmodified_generated_unstructuring(cl_and_vals):
+    converter = Converter()
     cl, vals = cl_and_vals
     fn = make_dict_unstructure_fn(cl, converter)
 
@@ -31,8 +33,9 @@ def test_unmodified_generated_unstructuring(converter, cl_and_vals):
 
 
 @given(nested_classes | simple_classes())
-def test_nodefs_generated_unstructuring(converter, cl_and_vals):
+def test_nodefs_generated_unstructuring(cl_and_vals):
     """Test omitting default values on a per-attribute basis."""
+    converter = Converter()
     cl, vals = cl_and_vals
 
     attr_is_default = False
@@ -58,8 +61,9 @@ def test_nodefs_generated_unstructuring(converter, cl_and_vals):
 
 
 @given(nested_classes | simple_classes())
-def test_nodefs_generated_unstructuring_cl(converter, cl_and_vals):
+def test_nodefs_generated_unstructuring_cl(cl_and_vals):
     """Test omitting default values on a per-class basis."""
+    converter = Converter()
     cl, vals = cl_and_vals
 
     for attr, val in zip(cl.__attrs_attrs__, vals):
@@ -165,3 +169,32 @@ def test_unmodified_generated_structuring(cl_and_vals):
     res = converter.structure(unstructured, cl)
 
     assert inst == res
+
+
+@given(simple_typed_classes(min_attrs=1), data())
+def test_renaming(cl_and_vals, data):
+    converter = Converter()
+    cl, vals = cl_and_vals
+    attrs = fields(cl)
+
+    to_replace = data.draw(sampled_from(attrs))
+
+    u_fn = make_dict_unstructure_fn(
+        cl, converter, **{to_replace.name: override(rename="class")}
+    )
+    s_fn = make_dict_structure_fn(
+        cl, converter, **{to_replace.name: override(rename="class")}
+    )
+
+    converter.register_structure_hook(cl, s_fn)
+    converter.register_unstructure_hook(cl, u_fn)
+
+    inst = cl(*vals)
+
+    raw = converter.unstructure(inst)
+
+    assert "class" in raw
+
+    new_inst = converter.structure(raw, cl)
+
+    assert inst == new_inst

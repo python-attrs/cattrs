@@ -25,16 +25,18 @@ from .. import gen_attr_names, make_class
 is_39_or_later = sys.version_info[:2] >= (3, 9)
 
 
-def simple_typed_classes(defaults=None):
+def simple_typed_classes(defaults=None, min_attrs=0):
     """Similar to simple_classes, but the attributes have metadata."""
-    return lists_of_typed_attrs(defaults).flatmap(_create_hyp_class)
-
-
-def lists_of_typed_attrs(defaults=None):
-    # Python functions support up to 255 arguments.
-    return lists(simple_typed_attrs(defaults), max_size=50).map(
-        lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING)
+    return lists_of_typed_attrs(defaults, min_size=min_attrs).flatmap(
+        _create_hyp_class
     )
+
+
+def lists_of_typed_attrs(defaults=None, min_size=0):
+    # Python functions support up to 255 arguments.
+    return lists(
+        simple_typed_attrs(defaults), min_size=min_size, max_size=50
+    ).map(lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING))
 
 
 def simple_typed_attrs(defaults=None):
