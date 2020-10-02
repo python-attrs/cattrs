@@ -1,7 +1,7 @@
 from typing import Optional, Type
 
 import attr
-from attr import NOTHING
+from attr import NOTHING, resolve_types
 
 
 @attr.s(slots=True, frozen=True)
@@ -99,6 +99,10 @@ def make_dict_structure_fn(cl: Type, converter, **kwargs):
     post_lines = []
 
     attrs = cl.__attrs_attrs__
+
+    if any(isinstance(a.type, str) for a in attrs):
+        # PEP 563 annotations - need to be resolved.
+        resolve_types(cl)
 
     lines.append(f"def {fn_name}(o, _):")
     lines.append("  res = {")
