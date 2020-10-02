@@ -10,8 +10,8 @@ a lot of ``cattrs`` machinery and be significantly faster than normal ``cattrs``
 
 Another reason is that it's possible to override behavior on a per-attribute basis.
 
-Currently, the overrides only support generating dict unstructuring functions
-(as opposed to tuples), and only support ``omit_if_default``.
+Currently, the overrides only support generating dictionary un/structuring functions
+(as opposed to tuples), and support ``omit_if_default`` and ``rename``.
 
 ``omit_if_default``
 -------------------
@@ -35,7 +35,7 @@ default or factory values.
     {'a': 1}
 
 Note that the per-attribute value overrides the per-class value. A side-effect
-of this rule is the ability to force the presence of a subset of fields.
+of this is the ability to force the presence of a subset of fields.
 For example, consider a class with a `DateTime` field and a factory for it:
 skipping the unstructuring of the `DateTime` field would be inconsistent and
 based on the current time. So we apply the `omit_if_default` rule to the class,
@@ -56,3 +56,32 @@ but not to the `DateTime` field.
     >>> c.register_unstructure_hook(TestClass, hook)
     >>> c.unstructure(TestClass())
     {'b': ...}
+
+This override has no effect when generating structuring functions.
+
+
+``rename``
+----------
+
+Using the rename override makes ``cattrs`` simply use the provided name instead
+of the real attribute name. This is useful if an attribute name is a reserved
+keyword in Python.
+
+.. doctest::
+
+    >>> from pendulum import DateTime
+    >>> from cattr.gen import make_dict_unstructure_fn, make_dict_structure_fn, override
+    >>>
+    >>> @attr.s
+    ... class ExampleClass:
+    ...     klass: Optional[int] = attr.ib()
+    >>>
+    >>> c = cattr.Converter()
+    >>> unst_hook = make_dict_unstructure_fn(ExampleClass, c, klass=override(rename="class"))
+    >>> st_hook = make_dict_structure_fn(ExampleClass, c, klass=override(rename="class"))
+    >>> c.register_unstructure_hook(ExampleClass, unst_hook)
+    >>> c.register_structure_hook(ExampleClass, st_hook)
+    >>> c.unstructure(ExampleClass(1))
+    {'class': 1}
+    >>> c.structure({'class': 1}, ExampleClass)
+    ExampleClass(klass=1)
