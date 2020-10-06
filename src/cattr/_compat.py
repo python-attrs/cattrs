@@ -18,6 +18,18 @@ is_py37 = version_info[:2] == (3, 7)
 is_py38 = version_info[:2] == (3, 8)
 is_py39_plus = version_info[:2] >= (3, 9)
 
+if is_py37:
+
+    def get_args(cl):
+        return cl.__args__
+
+    def get_origin(cl):
+        return cl.__origin__
+
+
+else:
+    from typing import get_args, get_origin
+
 
 if is_py37 or is_py38:
     from typing import Union, _GenericAlias
@@ -145,3 +157,7 @@ else:
             )
             or (getattr(type, "__origin__", None) is dict)
         )
+
+
+def is_generic(obj):
+    return isinstance(obj, _GenericAlias)

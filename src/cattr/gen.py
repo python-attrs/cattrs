@@ -1,7 +1,11 @@
-from typing import Optional, Type
+import re
+from copy import copy
+from typing import Optional, Type, TypeVar, get_origin
 
 import attr
 from attr import NOTHING, resolve_types
+
+from cattr._compat import is_generic, is_union_type, is_sequence, get_args
 
 
 @attr.s(slots=True, frozen=True)
@@ -15,6 +19,10 @@ def override(omit_if_default=None, rename=None):
 
 
 _neutral = AttributeOverride()
+
+
+def _is_attrs_class(cls):
+    return getattr(cls, "__attrs_attrs__", None) is not None
 
 
 def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
@@ -90,11 +98,54 @@ def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
     return fn
 
 
+def generate_mapping(cl: Type, old_mapping):
+    mapping = {}
+    for p, t in zip(get_origin(cl).__parameters__, get_args(cl)):
+        if isinstance(t, TypeVar):
+            continue
+        mapping[p.__name__] = t
+
+    if not mapping:
+        return old_mapping
+
+    cls = attr.make_class(
+        "GenericMapping",
+        {x: attr.attrib() for x in mapping.keys()},
+        frozen=True,
+    )
+
+    return cls(**mapping)
+
+
 def make_dict_structure_fn(cl: Type, converter, **kwargs):
     """Generate a specialized dict structuring function for an attrs class."""
+
+    mapping = None
+    if is_generic(cl):
+        base = get_origin(cl)
+        mapping = generate_mapping(cl, mapping)
+        cl = base
+
+    for base in getattr(cl, "__orig_bases__", ()):
+        if is_generic(base) and not str(base).startswith("typing.Generic"):
+            mapping = generate_mapping(base, mapping)
+            break
+
+    if isinstance(cl, TypeVar):
+        cl = getattr(mapping, cl.__name__, cl)
+
     cl_name = cl.__name__
     fn_name = "structure_" + cl_name
-    globs = {"__c_s": converter.structure, "__cl": cl}
+
+    # We have generic paramters and need to generate a unique name for the function
+    for p in getattr(cl, "__parameters__", ()):
+        # This is nasty, I am not sure how best to handle `typing.List[str]` or `TClass[int, int]` as a parameter type here
+        name_base = getattr(mapping, p.__name__)
+        name = getattr(name_base, "__name__", str(name_base))
+        name = re.sub(r"[\[\.\] ,]", "_", name)
+        fn_name += f"_{name}"
+
+    globs = {"__c_s": converter.structure, "__cl": cl, "__m": mapping}
     lines = []
     post_lines = []
 
@@ -104,12 +155,15 @@ def make_dict_structure_fn(cl: Type, converter, **kwargs):
         # PEP 563 annotations - need to be resolved.
         resolve_types(cl)
 
-    lines.append(f"def {fn_name}(o, _):")
+    lines.append(f"def {fn_name}(o, *_):")
     lines.append("  res = {")
     for a in attrs:
         an = a.name
         override = kwargs.pop(an, _neutral)
         type = a.type
+        if isinstance(type, TypeVar):
+            type = getattr(mapping, type.__name__, type)
+
         ian = an if an[0] != "_" else an[1:]
         kn = an if override.rename is None else override.rename
         globs[f"__c_t_{an}"] = type
@@ -126,6 +180,4 @@ def make_dict_structure_fn(cl: Type, converter, **kwargs):
 
     eval(compile("\n".join(total_lines), "", "exec"), globs)
 
-    fn = globs[fn_name]
-
-    return fn
+    return globs[fn_name]

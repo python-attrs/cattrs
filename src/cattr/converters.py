@@ -1,3 +1,4 @@
+from copy import copy
 from enum import Enum
 from typing import (  # noqa: F401, imported for Mypy.
     Any,
@@ -22,8 +23,11 @@ from ._compat import (
     is_tuple,
     is_union_type,
     lru_cache,
+    is_generic,
+    get_origin,
 )
 from .disambiguators import create_uniq_field_dis_func
+from .gen import make_dict_structure_fn
 from .multistrategy_dispatch import MultiStrategyDispatch
 
 NoneType = type(None)
@@ -101,6 +105,7 @@ class Converter(object):
         self._structure_func = MultiStrategyDispatch(self._structure_default)
         self._structure_func.register_func_list(
             [
+                (is_generic, self._structure_attrs),
                 (is_sequence, self._structure_list),
                 (is_mutable_set, self._structure_set),
                 (is_frozenset, self._structure_frozenset),
@@ -240,7 +245,7 @@ class Converter(object):
         Bare optionals end here too (optionals with arguments are unions.) We
         treat bare optionals as Any.
         """
-        if cl is Any or cl is Optional:
+        if cl is Any or cl is Optional or cl is None:
             return obj
         # We don't know what this is, so we complain loudly.
         msg = (
@@ -290,26 +295,10 @@ class Converter(object):
         # type: (Mapping[str, Any], Type[T]) -> T
         """Instantiate an attrs class from a mapping (dict)."""
         # For public use.
-        conv_obj = {}  # Start with a fresh dict, to ignore extra keys.
-        dispatch = self._structure_func.dispatch
-        for a in cl.__attrs_attrs__:  # type: ignore
-            # We detect the type by metadata.
-            type_ = a.type
-            name = a.name
 
-            try:
-                val = obj[name]
-            except KeyError:
-                continue
-
-            if name[0] == "_":
-                name = name[1:]
-
-            conv_obj[name] = (
-                dispatch(type_)(val, type_) if type_ is not None else val
-            )
-
-        return cl(**conv_obj)  # type: ignore
+        fn = make_dict_structure_fn(cl, self)
+        self.register_structure_hook(cl, fn)
+        return fn(obj)
 
     def _structure_list(self, obj, cl):
         """Convert an iterable to a potentially generic list."""
@@ -426,8 +415,14 @@ class Converter(object):
             )
 
         if not all(hasattr(e, "__attrs_attrs__") for e in union_types):
-            raise ValueError(
-                "Only unions of attr classes supported "
-                "currently. Register a loads hook manually."
+            origin_union_types = tuple(
+                get_origin(e) or e for e in union_types if e is not NoneType  # type: ignore
             )
+            if not all(
+                hasattr(e, "__attrs_attrs__") for e in origin_union_types
+            ):
+                raise ValueError(
+                    "Only unions of attr classes supported "
+                    "currently. Register a loads hook manually."
+                )
         return create_uniq_field_dis_func(*union_types)
