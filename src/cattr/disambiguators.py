@@ -13,6 +13,8 @@ from typing import (  # noqa: F401, imported for Mypy.
 
 from attr import fields
 
+from cattr._compat import get_origin
+
 
 def create_uniq_field_dis_func(*classes):
     # type: (*Type) -> Callable
@@ -21,7 +23,10 @@ def create_uniq_field_dis_func(*classes):
     The function is based on unique fields."""
     if len(classes) < 2:
         raise ValueError("At least two classes required.")
-    cls_and_attrs = [(cl, set(at.name for at in fields(cl))) for cl in classes]
+    cls_and_attrs = [
+        (cl, set(at.name for at in fields(get_origin(cl) or cl)))
+        for cl in classes
+    ]
     if len([attrs for _, attrs in cls_and_attrs if len(attrs) == 0]) > 1:
         raise ValueError("At least two classes have no attributes.")
     # TODO: Deal with a single class having no required attrs.
