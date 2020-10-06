@@ -414,15 +414,11 @@ class Converter(object):
                 e for e in union_types if e is not NoneType  # type: ignore
             )
 
-        if not all(hasattr(e, "__attrs_attrs__") for e in union_types):
-            origin_union_types = tuple(
-                get_origin(e) or e for e in union_types if e is not NoneType  # type: ignore
+        if not all(
+            hasattr(get_origin(e) or e, "__attrs_attrs__") for e in union_types
+        ):
+            raise ValueError(
+                "Only unions of attr classes supported "
+                "currently. Register a loads hook manually."
             )
-            if not all(
-                hasattr(e, "__attrs_attrs__") for e in origin_union_types
-            ):
-                raise ValueError(
-                    "Only unions of attr classes supported "
-                    "currently. Register a loads hook manually."
-                )
         return create_uniq_field_dis_func(*union_types)
