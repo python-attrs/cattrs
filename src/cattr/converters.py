@@ -105,7 +105,6 @@ class Converter(object):
         self._structure_func = MultiStrategyDispatch(self._structure_default)
         self._structure_func.register_func_list(
             [
-                (is_generic, self._structure_attrs),
                 (is_sequence, self._structure_list),
                 (is_mutable_set, self._structure_set),
                 (is_frozenset, self._structure_frozenset),
@@ -247,6 +246,12 @@ class Converter(object):
         """
         if cl is Any or cl is Optional or cl is None:
             return obj
+
+        if is_generic(cl):
+            fn = make_dict_structure_fn(cl, self)
+            self.register_structure_hook(cl, fn)
+            return fn(obj)
+
         # We don't know what this is, so we complain loudly.
         msg = (
             "Unsupported type: {0}. Register a structure hook for "
@@ -296,9 +301,26 @@ class Converter(object):
         """Instantiate an attrs class from a mapping (dict)."""
         # For public use.
 
-        fn = make_dict_structure_fn(cl, self)
-        self.register_structure_hook(cl, fn)
-        return fn(obj)
+        conv_obj = {}  # Start with a fresh dict, to ignore extra keys.
+        dispatch = self._structure_func.dispatch
+        for a in cl.__attrs_attrs__:  # type: ignore
+            # We detect the type by metadata.
+            type_ = a.type
+            name = a.name
+
+            try:
+                val = obj[name]
+            except KeyError:
+                continue
+
+            if name[0] == "_":
+                name = name[1:]
+
+            conv_obj[name] = (
+                dispatch(type_)(val, type_) if type_ is not None else val
+            )
+
+        return cl(**conv_obj)  # type: ignore
 
     def _structure_list(self, obj, cl):
         """Convert an iterable to a potentially generic list."""
