@@ -73,3 +73,13 @@ def test_structure_list_of_generic_unions(converter):
         [asdict(x) for x in data], List[Union[TClass[int, int], TClass2[str]]]
     )
     assert res == data
+
+
+def test_raises_if_no_generic_params_supplied(converter):
+    data = TClass(1, "a")
+
+    with pytest.raises(
+        ValueError,
+        match="Unsupported type: ~T. Register a structure hook for it.",
+    ):
+        converter.structure(asdict(data), TClass)

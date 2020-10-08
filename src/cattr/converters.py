@@ -1,4 +1,3 @@
-from copy import copy
 from enum import Enum
 from typing import (  # noqa: F401, imported for Mypy.
     Any,
