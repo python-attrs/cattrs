@@ -1,11 +1,10 @@
 import re
-from copy import copy
-from typing import Optional, Type, TypeVar, get_origin
+from typing import Optional, Type, TypeVar
 
 import attr
 from attr import NOTHING, resolve_types
 
-from cattr._compat import is_generic, is_union_type, is_sequence, get_args
+from cattr._compat import get_args, get_origin, is_generic
 
 
 @attr.s(slots=True, frozen=True)
