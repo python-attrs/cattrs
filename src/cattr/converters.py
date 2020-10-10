@@ -448,8 +448,23 @@ class Converter(object):
 class GenConverter(Converter):
     """A converter which generates specialized un/structuring functions."""
 
+    __slots__ = "omit_if_default"
+
+    def __init__(
+        self,
+        dict_factory=dict,
+        unstruct_strat=UnstructureStrategy.AS_DICT,
+        omit_if_default=False,
+    ):
+        super().__init__(
+            dict_factory=dict_factory, unstruct_strat=unstruct_strat
+        )
+        self.omit_if_default = omit_if_default
+
     def unstructure_attrs_asdict(self, obj: Any) -> Dict[str, Any]:
-        h = make_dict_unstructure_fn(obj.__class__, self)
+        h = make_dict_unstructure_fn(
+            obj.__class__, self, omit_if_default=self.omit_if_default
+        )
         self.register_unstructure_hook(obj.__class__, h)
         return h(obj)
 
