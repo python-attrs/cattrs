@@ -2,7 +2,6 @@
 from collections import OrderedDict
 from functools import reduce
 from operator import or_
-
 from typing import (  # noqa: F401, imported for Mypy.
     Callable,
     Dict,
@@ -16,8 +15,7 @@ from attr import fields
 from cattr._compat import get_origin
 
 
-def create_uniq_field_dis_func(*classes):
-    # type: (*Type) -> Callable
+def create_uniq_field_dis_func(*classes: Type) -> Callable:
     """Given attr classes, generate a disambiguation function.
 
     The function is based on unique fields."""

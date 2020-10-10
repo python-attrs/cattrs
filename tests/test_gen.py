@@ -1,9 +1,7 @@
-from typing import TypeVar, Generic, List, Union
+from typing import Generic, List, TypeVar, Union
 
 import pytest
-from attr import attrs, asdict
-
-from cattr.gen import make_dict_structure_fn
+from attr import asdict, attrs
 
 T = TypeVar("T")
 T2 = TypeVar("T2")

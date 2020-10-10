@@ -28,7 +28,7 @@ if is_py37:
 
 
 else:
-    from typing import get_args, get_origin
+    from typing import get_args, get_origin  # NOQA
 
 
 if is_py37 or is_py38:
