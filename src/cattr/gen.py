@@ -20,10 +20,6 @@ def override(omit_if_default=None, rename=None):
 _neutral = AttributeOverride()
 
 
-def _is_attrs_class(cls):
-    return getattr(cls, "__attrs_attrs__", None) is not None
-
-
 def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
     """Generate a specialized dict unstructuring function for an attrs class."""
     cl_name = cl.__name__

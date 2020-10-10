@@ -1,6 +1,20 @@
-==================================
-Generating unstructuring functions
-==================================
+================================
+Customizing class un/structuring
+================================
+
+This section deals with customizing the unstructuring and structuring processes
+in ``cattrs``.
+
+Manual un/structuring hooks
+***************************
+
+You can write your own structuring and unstructuring functions and register
+them for types using :py:attr:`.Converter.register_structure_hook` and
+:py:attr:`.Converter.register_unstructure_hook`. This approach is the most
+flexible but also requires the most amount of boilerplate.
+
+Using ``cattr.gen`` generators
+******************************
 
 ``cattrs`` includes a module, ``cattr.gen``, which allows for generating and
 compiling specialized functions for unstructuring ``attrs`` classes.
@@ -85,3 +99,11 @@ keyword in Python.
     {'class': 1}
     >>> c.structure({'class': 1}, ExampleClass)
     ExampleClass(klass=1)
+
+Using ``cattr.gen.GenConverter``
+********************************
+
+The ``cattr.gen`` module also contains a ``Converter`` subclass, the ``GenConverter``.
+The ``GenConverter``, upon first encountering an ``attrs`` class, will use
+the mentioned generation functions to generate the specialized hooks for it,
+register the hooks and use them.

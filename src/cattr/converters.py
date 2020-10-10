@@ -14,19 +14,19 @@ from typing import (  # noqa: F401, imported for Mypy.
 )
 
 from ._compat import (
+    get_origin,
     is_bare,
     is_frozenset,
+    is_generic,
     is_mapping,
     is_mutable_set,
     is_sequence,
     is_tuple,
     is_union_type,
     lru_cache,
-    is_generic,
-    get_origin,
 )
 from .disambiguators import create_uniq_field_dis_func
-from .gen import make_dict_structure_fn
+from .gen import make_dict_structure_fn, make_dict_unstructure_fn
 from .multistrategy_dispatch import MultiStrategyDispatch
 
 NoneType = type(None)
@@ -443,3 +443,19 @@ class Converter(object):
                 "currently. Register a loads hook manually."
             )
         return create_uniq_field_dis_func(*union_types)
+
+
+class GenConverter(Converter):
+    """A converter which generates specialized un/structuring functions."""
+
+    def unstructure_attrs_asdict(self, obj: Any) -> Dict[str, Any]:
+        h = make_dict_unstructure_fn(obj.__class__, self)
+        self.register_unstructure_hook(obj.__class__, h)
+        return h(obj)
+
+    def structure_attrs_fromdict(
+        self, obj: Mapping[str, Any], cl: Type[T]
+    ) -> T:
+        h = make_dict_structure_fn(cl, self)
+        self.register_structure_hook(cl, h)
+        return h(obj, cl)

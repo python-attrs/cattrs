@@ -17,7 +17,7 @@ Contents:
    converters
    structuring
    unstructuring
-   generating
+   customizing
    contributing
    history
 

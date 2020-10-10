@@ -7,7 +7,7 @@ built-in types and collections, and a type describing the data you want out.
 ``cattrs`` will convert the input data into the type you want, or throw an
 exception.
 
-All loading conversions are composable, where applicable. This is
+All structuring conversions are composable, where applicable. This is
 demonstrated further in the examples.
 
 Primitive values
@@ -17,7 +17,7 @@ Primitive values
 ~~~~~~~~~~~~~~
 
 Use ``typing.Any`` to avoid applying any conversions to the object you're
-loading; it will simply be passed through.
+structuring; it will simply be passed through.
 
 .. doctest::
 
@@ -111,6 +111,7 @@ Lists can be produced from any iterable object. Types converting to lists are:
 * ``Sequence[T]``
 * ``MutableSequence[T]``
 * ``List[T]``
+* ``list[T]``
 
 In all cases, a new list will be returned, so this operation can be used to
 copy an iterable into a list. A bare type, for example ``Sequence`` instead of
@@ -136,10 +137,12 @@ to sets are:
 
 * ``Set[T]``
 * ``MutableSet[T]``
+* ``set[T]``
 
 Types converting to frozensets are:
 
 * ``FrozenSet[T]``
+* ``frozenset[T]``
 
 In all cases, a new set or frozenset will be returned, so this operation can be
 used to copy an iterable into a set. A bare type, for example ``MutableSet``
@@ -168,6 +171,7 @@ argument. Types converting to dictionaries are:
 * ``Dict[K, V]``
 * ``MutableMapping[K, V]``
 * ``Mapping[K, V]``
+* ``dict[K, V]``
 
 In all cases, a new dict will be returned, so this operation can be
 used to copy a mapping into a dict. Any type parameters set to ``typing.Any``
@@ -196,10 +200,12 @@ Heterogeneous tuples require an iterable with the number of elements matching
 the number of type parameters exactly. Use:
 
 * ``Tuple[A, B, C, D]``
+* ``tuple[A, B, C, D]``
 
 Homogeneous tuples use:
 
 * ``Tuple[T, ...]``
+* ``tuple[T, ...]``
 
 In all cases a tuple will be returned. Any type parameters set to
 ``typing.Any`` will be passed through unconverted.
