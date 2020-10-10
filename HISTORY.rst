@@ -10,6 +10,7 @@ History
 * Specialized hooks are faster and support overrides (`omit_if_default` and `rename`).
 * Generating specialized structuring hooks now invokes `attr.resolve_types` on a class if the class contains the new PEP 563 annotations.
 * ``cattrs`` now depends on ``attrs`` >= 20.1.0, because of ``attr.resolve_types``.
+* Specialized hooks now support generic classes. The default converter will generate and use a specialized hook upon encountering a generic class.
 
 1.0.0 (2019-12-27)
 ------------------
