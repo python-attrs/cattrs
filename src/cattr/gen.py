@@ -30,7 +30,7 @@ def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
 
     attrs = cl.__attrs_attrs__  # type: ignore
 
-    lines.append("def {}(i):".format(fn_name))
+    lines.append(f"def {fn_name}(i):")
     lines.append("    res = {")
     for a in attrs:
         attr_name = a.name
@@ -41,47 +41,27 @@ def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
             (omit_if_default and override.omit_if_default is not False)
             or override.omit_if_default
         ):
-            def_name = "__cattr_def_{}".format(attr_name)
+            def_name = f"__cattr_def_{attr_name}"
 
             if isinstance(d, attr.Factory):
                 globs[def_name] = d.factory
                 if d.takes_self:
                     post_lines.append(
-                        "    if i.{name} != {def_name}(i):".format(
-                            name=attr_name, def_name=def_name
-                        )
+                        f"    if i.{attr_name} != {def_name}(i):"
                     )
                 else:
-                    post_lines.append(
-                        "    if i.{name} != {def_name}():".format(
-                            name=attr_name, def_name=def_name
-                        )
-                    )
-                post_lines.append(
-                    "        res['{kn}'] = i.{name}".format(
-                        name=attr_name, kn=kn
-                    )
-                )
+                    post_lines.append(f"    if i.{attr_name} != {def_name}():")
+                post_lines.append(f"        res['{kn}'] = i.{attr_name}")
             else:
                 globs[def_name] = d
+                post_lines.append(f"    if i.{attr_name} != {def_name}:")
                 post_lines.append(
-                    "    if i.{name} != {def_name}:".format(
-                        name=attr_name, def_name=def_name
-                    )
-                )
-                post_lines.append(
-                    "        res['{kn}'] = __c_u(i.{name})".format(
-                        name=attr_name, kn=kn
-                    )
+                    f"        res['{kn}'] = __c_u(i.{attr_name})"
                 )
 
         else:
             # No default or no override.
-            lines.append(
-                "        '{kn}': __c_u(i.{name}),".format(
-                    name=attr_name, kn=kn
-                )
-            )
+            lines.append(f"        '{kn}': __c_u(i.{attr_name}),")
     lines.append("    }")
 
     total_lines = lines + post_lines + ["    return res"]

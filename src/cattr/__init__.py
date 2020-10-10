@@ -1,4 +1,4 @@
-from .converters import Converter, UnstructureStrategy
+from .converters import Converter, GenConverter, UnstructureStrategy
 
 __all__ = (
     "global_converter",
@@ -7,6 +7,8 @@ __all__ = (
     "structure_attrs_fromtuple",
     "structure_attrs_fromdict",
     "UnstructureStrategy",
+    "Converter",
+    "GenConverter",
 )
 
 __author__ = "Tin Tvrtković"
