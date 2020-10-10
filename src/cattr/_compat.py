@@ -24,7 +24,7 @@ if is_py37:
         return cl.__args__
 
     def get_origin(cl):
-        return cl.__origin__
+        return getattr(cl, "__origin__", None)
 
 
 else:
