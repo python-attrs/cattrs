@@ -1,7 +1,7 @@
 """Tests for metadata functionality."""
 import sys
 from collections import OrderedDict
-from typing import Any, Dict, FrozenSet, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import attr
 from attr import NOTHING
@@ -188,7 +188,7 @@ def frozenset_typed_attrs(draw, defaults=None):
         default = draw(val_strat)
     return (
         attr.ib(
-            type=frozenset[int] if draw(booleans()) else FrozenSet[int],
+            type=frozenset[int],
             default=default,
         ),
         val_strat,

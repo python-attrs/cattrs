@@ -11,8 +11,9 @@ from . import simple_classes
 
 
 @given(simple_classes())
-def test_structure_simple_from_dict(converter, cl_and_vals):
+def test_structure_simple_from_dict(cl_and_vals):
     """Test structuring non-nested attrs classes dumped with asdict."""
+    converter = Converter()
     cl, vals = cl_and_vals
     obj = cl(*vals)
 
@@ -23,8 +24,9 @@ def test_structure_simple_from_dict(converter, cl_and_vals):
 
 
 @given(simple_classes(defaults=True, min_attrs=1, frozen=False), data())
-def test_structure_simple_from_dict_default(converter, cl_and_vals, data):
+def test_structure_simple_from_dict_default(cl_and_vals, data):
     """Test structuring non-nested attrs classes with default value."""
+    converter = Converter()
     cl, vals = cl_and_vals
     obj = cl(*vals)
     attrs_with_defaults = [a for a in fields(cl) if a.default is not NOTHING]
@@ -60,8 +62,9 @@ def test_roundtrip(cl_and_vals):
 
 
 @given(simple_classes())
-def test_structure_tuple(converter, cl_and_vals):
+def test_structure_tuple(cl_and_vals):
     """Test loading from a tuple, by registering the loader."""
+    converter = Converter()
     cl, vals = cl_and_vals
     converter.register_structure_hook(cl, converter.structure_attrs_fromtuple)
     obj = cl(*vals)
@@ -73,8 +76,9 @@ def test_structure_tuple(converter, cl_and_vals):
 
 
 @given(simple_classes(defaults=False), simple_classes(defaults=False))
-def test_structure_union(converter, cl_and_vals_a, cl_and_vals_b):
+def test_structure_union(cl_and_vals_a, cl_and_vals_b):
     """Structuring of automatically-disambiguable unions works."""
+    converter = Converter()
     cl_a, vals_a = cl_and_vals_a
     cl_b, vals_b = cl_and_vals_b
     a_field_names = {a.name for a in fields(cl_a)}
@@ -92,8 +96,9 @@ def test_structure_union(converter, cl_and_vals_a, cl_and_vals_b):
 
 
 @given(simple_classes(defaults=False), simple_classes(defaults=False))
-def test_structure_union_none(converter, cl_and_vals_a, cl_and_vals_b):
+def test_structure_union_none(cl_and_vals_a, cl_and_vals_b):
     """Structuring of automatically-disambiguable unions works."""
+    converter = Converter()
     cl_a, vals_a = cl_and_vals_a
     cl_b, vals_b = cl_and_vals_b
     a_field_names = {a.name for a in fields(cl_a)}
@@ -113,8 +118,9 @@ def test_structure_union_none(converter, cl_and_vals_a, cl_and_vals_b):
 
 
 @given(simple_classes(), simple_classes())
-def test_structure_union_explicit(converter, cl_and_vals_a, cl_and_vals_b):
+def test_structure_union_explicit(cl_and_vals_a, cl_and_vals_b):
     """Structuring of manually-disambiguable unions works."""
+    converter = Converter()
     cl_a, vals_a = cl_and_vals_a
     cl_b, vals_b = cl_and_vals_b
 

@@ -78,9 +78,9 @@ sets_of_primitives = one_of(mut_sets_of_primitives, frozen_sets_of_primitives)
 
 
 @given(primitives_and_type)
-def test_structuring_primitives(converter, primitive_and_type):
-    # type: (Converter, Any) -> None
+def test_structuring_primitives(primitive_and_type):
     """Test just structuring a primitive value."""
+    converter = Converter()
     val, t = primitive_and_type
     assert converter.structure(val, t) == val
     assert converter.structure(val, Any) == val
@@ -136,9 +136,9 @@ def test_stringifying_sets(set_and_type):
 
 
 @given(lists(primitives_and_type, min_size=1))
-def test_structuring_hetero_tuples(converter, list_of_vals_and_types):
-    # type: (Converter, List[Any]) -> None
+def test_structuring_hetero_tuples(list_of_vals_and_types):
     """Test structuring heterogenous tuples."""
+    converter = Converter()
     types = tuple(e[1] for e in list_of_vals_and_types)
     vals = [e[0] for e in list_of_vals_and_types]
     t = Tuple[types]
@@ -155,9 +155,10 @@ def test_structuring_hetero_tuples(converter, list_of_vals_and_types):
 
 
 @given(lists(primitives_and_type))
-def test_stringifying_tuples(converter, list_of_vals_and_types):
+def test_stringifying_tuples(list_of_vals_and_types):
     # type: (Converter, List[Any]) -> None
     """Stringify all elements of a heterogeneous tuple."""
+    converter = Converter()
     vals = [e[0] for e in list_of_vals_and_types]
     t = Tuple[(str,) * len(list_of_vals_and_types)]
 
@@ -185,9 +186,9 @@ def test_structuring_dicts(dict_and_type):
 
 
 @given(dicts_of_primitives, data())
-def test_structuring_dicts_opts(converter, dict_and_type, data):
-    # type: (Converter, Any, Any) -> None
+def test_structuring_dicts_opts(dict_and_type, data):
     """Structure dicts, but with optional primitives."""
+    converter = Converter()
     d, t = dict_and_type
     assume(not is_bare(t))
     t.__args__ = (t.__args__[0], Optional[t.__args__[1]])
@@ -200,8 +201,8 @@ def test_structuring_dicts_opts(converter, dict_and_type, data):
 
 
 @given(dicts_of_primitives)
-def test_stringifying_dicts(converter, dict_and_type):
-    # type: (Converter, Any) -> None
+def test_stringifying_dicts(dict_and_type):
+    converter = Converter()
     d, t = dict_and_type
 
     converted = converter.structure(d, Dict[str, str])
@@ -211,9 +212,9 @@ def test_stringifying_dicts(converter, dict_and_type):
 
 
 @given(primitives_and_type)
-def test_structuring_optional_primitives(converter, primitive_and_type):
-    # type: (Converter, Any) -> None
+def test_structuring_optional_primitives(primitive_and_type):
     """Test structuring Optional primitive types."""
+    converter = Converter()
     val, type = primitive_and_type
 
     assert converter.structure(val, Optional[type]) == val
@@ -221,9 +222,9 @@ def test_structuring_optional_primitives(converter, primitive_and_type):
 
 
 @given(lists_of_primitives().filter(lambda lp: not is_bare(lp[1])))
-def test_structuring_lists_of_opt(converter, list_and_type):
-    # type: (Converter, List[Any]) -> None
+def test_structuring_lists_of_opt(list_and_type):
     """Test structuring lists of Optional primitive types."""
+    converter = Converter()
     l, t = list_and_type
 
     l.append(None)
@@ -253,9 +254,9 @@ def test_structuring_lists_of_opt(converter, list_and_type):
 
 
 @given(lists_of_primitives())
-def test_stringifying_lists_of_opt(converter, list_and_type):
-    # type: (Converter, List[Any]) -> None
+def test_stringifying_lists_of_opt(list_and_type):
     """Test structuring Optional primitive types into strings."""
+    converter = Converter()
     l, t = list_and_type
 
     l.append(None)
@@ -270,9 +271,9 @@ def test_stringifying_lists_of_opt(converter, list_and_type):
 
 
 @given(lists(integers()))
-def test_structuring_primitive_union_hook(converter, ints):
-    # type: (Converter, List[int]) -> None
+def test_structuring_primitive_union_hook(ints):
     """Registering a union loading hook works."""
+    converter = Converter()
 
     def structure_hook(val, cl):
         """Even ints are passed through, odd are stringified."""
@@ -289,8 +290,9 @@ def test_structuring_primitive_union_hook(converter, ints):
             assert str(x) == y
 
 
-def test_structure_hook_func(converter):
+def test_structure_hook_func():
     """ testing the hook_func method """
+    converter = Converter()
 
     def can_handle(cls):
         return cls.__name__.startswith("F")
@@ -312,28 +314,29 @@ def test_structure_hook_func(converter):
 
 
 @given(data(), enums_of_primitives())
-def test_structuring_enums(converter, data, enum):
-    # type: (Converter, Any, Any) -> None
+def test_structuring_enums(data, enum):
     """Test structuring enums by their values."""
+    converter = Converter()
     val = data.draw(sampled_from(list(enum)))
 
     assert converter.structure(val.value, enum) == val
 
 
-def test_structuring_unsupported(converter):
-    # type: (Converter) -> None
+def test_structuring_unsupported():
     """Loading unsupported classes should throw."""
+    converter = Converter()
     with raises(ValueError):
         converter.structure(1, Converter)
     with raises(ValueError):
         converter.structure(1, Union[int, str])
 
 
-def test_subclass_registration_is_honored(converter):
+def test_subclass_registration_is_honored():
     """If a subclass is registered after a superclass,
     that subclass handler should be dispatched for
     structure
     """
+    converter = Converter()
 
     class Foo(object):
         def __init__(self, value):

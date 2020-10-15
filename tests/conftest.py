@@ -1,5 +1,4 @@
 import pytest
-
 from hypothesis import HealthCheck, settings
 
 from cattr import Converter
