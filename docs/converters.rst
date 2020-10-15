@@ -36,4 +36,22 @@ Currently, a converter contains the following state:
 * a LRU cache of union disambiguation functions.
 * a reference to an unstructuring strategy (either AS_DICT or AS_TUPLE).
 * a ``dict_factory`` callable, used for creating ``dicts`` when dumping
-  ``attrs`` classes using AS_DICT.
+  ``attrs`` classes using ``AS_DICT``.
+
+``cattr.GenConverter``
+----------------------
+
+The ``GenConverter`` is a converter subclass that automatically generates,
+compiles and caches specialized structuring and unstructuring hooks for ``attrs``
+classes.
+
+``GenConverter`` differs from the old ``cattr.Converter`` in the following ways:
+
+* structuring and unstructuring of ``attrs`` classes is slower the first time, but faster every subsequent time
+* structuring and unstructuring can be customized
+* support for ``attrs`` classes with PEP563 (postponed) annotations
+* support for generic ``attrs`` classes
+
+
+
+The ``GenConverter`` will become the default converter type in a later release.

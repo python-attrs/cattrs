@@ -15,6 +15,7 @@ from . import nested_typed_classes, simple_typed_attrs, simple_typed_classes
 unstructure_strats = sampled_from(list(UnstructureStrategy))
 
 
+@settings(max_examples=10000)
 @given(simple_typed_classes(), unstructure_strats)
 def test_simple_roundtrip(cls_and_vals, strat):
     """

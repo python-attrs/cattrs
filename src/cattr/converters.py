@@ -13,6 +13,8 @@ from typing import (  # noqa: F401, imported for Mypy.
     TypeVar,
 )
 
+from attr import fields, resolve_types
+
 from ._compat import (
     get_origin,
     is_bare,
@@ -133,12 +135,10 @@ class Converter(object):
         self._union_registry = {}
 
     def unstructure(self, obj):
-        # type: (Any) -> Any
         return self._unstructure_func.dispatch(obj.__class__)(obj)
 
     @property
-    def unstruct_strat(self):
-        # type: () -> UnstructureStrategy
+    def unstruct_strat(self) -> UnstructureStrategy:
         """The default way of unstructuring ``attrs`` classes."""
         return (
             UnstructureStrategy.AS_DICT
@@ -146,8 +146,9 @@ class Converter(object):
             else UnstructureStrategy.AS_TUPLE
         )
 
-    def register_unstructure_hook(self, cls, func):
-        # type: (Type[T], Callable[[T], Any]) -> None
+    def register_unstructure_hook(
+        self, cls: Type[T], func: Callable[[T], Any]
+    ) -> None:
         """Register a class-to-primitive converter function for a class.
 
         The converter function should take an instance of the class and return
@@ -155,13 +156,17 @@ class Converter(object):
         """
         self._unstructure_func.register_cls_list([(cls, func)])
 
-    def register_unstructure_hook_func(self, check_func, func):
+    def register_unstructure_hook_func(
+        self, check_func, func: Callable[[T], Any]
+    ):
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
         """
         self._unstructure_func.register_func_list([(check_func, func)])
 
-    def register_structure_hook(self, cl, func):
+    def register_structure_hook(
+        self, cl: Type[T], func: Callable[[Any, Type[V]], T]
+    ):
         """Register a primitive-to-class converter function for a type.
 
         The converter function should take two arguments:
@@ -176,22 +181,23 @@ class Converter(object):
         else:
             self._structure_func.register_cls_list([(cl, func)])
 
-    def register_structure_hook_func(self, check_func, func):
-        # type: (Callable[[Any], Any], Callable[[T], Any]) -> None
+    def register_structure_hook_func(
+        self,
+        check_func: Callable[[Type[T]], bool],
+        func: Callable[[Any, Type[V]], T],
+    ):
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
         """
         self._structure_func.register_func_list([(check_func, func)])
 
-    def structure(self, obj, cl):
-        # type: (Any, Type[T]) -> T
+    def structure(self, obj, cl: Type[T]) -> T:
         """Convert unstructured Python data structures to structured data."""
 
         return self._structure_func.dispatch(cl)(obj, cl)
 
     # Classes to Python primitives.
-    def unstructure_attrs_asdict(self, obj):
-        # type: (Any) -> Dict[str, Any]
+    def unstructure_attrs_asdict(self, obj) -> Dict[str, Any]:
         """Our version of `attrs.asdict`, so we can call back to us."""
         attrs = obj.__class__.__attrs_attrs__
         dispatch = self._unstructure_func.dispatch
@@ -202,8 +208,7 @@ class Converter(object):
             rv[name] = dispatch(v.__class__)(v)
         return rv
 
-    def unstructure_attrs_astuple(self, obj):
-        # type: (Any) -> Tuple
+    def unstructure_attrs_astuple(self, obj) -> Tuple[Any, ...]:
         """Our version of `attrs.astuple`, so we can call back to us."""
         attrs = obj.__class__.__attrs_attrs__
         return tuple(self.unstructure(getattr(obj, a.name)) for a in attrs)
@@ -276,8 +281,9 @@ class Converter(object):
 
     # Attrs classes.
 
-    def structure_attrs_fromtuple(self, obj, cl):
-        # type: (Tuple, Type[T]) -> T
+    def structure_attrs_fromtuple(
+        self, obj: Tuple[Any, ...], cl: Type[T]
+    ) -> T:
         """Load an attrs class from a sequence (tuple)."""
         conv_obj = []  # A list of converter parameters.
         for a, value in zip(cl.__attrs_attrs__, obj):  # type: ignore
@@ -295,8 +301,9 @@ class Converter(object):
             return value
         return self._structure_func.dispatch(type_)(value, type_)
 
-    def structure_attrs_fromdict(self, obj, cl):
-        # type: (Mapping[str, Any], Type[T]) -> T
+    def structure_attrs_fromdict(
+        self, obj: Mapping[str, Any], cl: Type[T]
+    ) -> T:
         """Instantiate an attrs class from a mapping (dict)."""
         # For public use.
 
@@ -448,22 +455,37 @@ class Converter(object):
 class GenConverter(Converter):
     """A converter which generates specialized un/structuring functions."""
 
-    __slots__ = "omit_if_default"
+    __slots__ = ("omit_if_default", "type_overrides")
 
     def __init__(
         self,
         dict_factory=dict,
         unstruct_strat=UnstructureStrategy.AS_DICT,
         omit_if_default=False,
+        type_overrides={},
     ):
         super().__init__(
             dict_factory=dict_factory, unstruct_strat=unstruct_strat
         )
         self.omit_if_default = omit_if_default
+        self.type_overrides = type_overrides
 
     def unstructure_attrs_asdict(self, obj: Any) -> Dict[str, Any]:
+        attribs = fields(obj.__class__)
+        if any(isinstance(a.type, str) for a in attribs):
+            # PEP 563 annotations - need to be resolved.
+            resolve_types(obj.__class__)
+        attrib_overrides = {
+            a.name: self.type_overrides[a.type]
+            for a in attribs
+            if a.type in self.type_overrides
+        }
+
         h = make_dict_unstructure_fn(
-            obj.__class__, self, omit_if_default=self.omit_if_default
+            obj.__class__,
+            self,
+            omit_if_default=self.omit_if_default,
+            **attrib_overrides
         )
         self.register_unstructure_hook(obj.__class__, h)
         return h(obj)
@@ -471,6 +493,15 @@ class GenConverter(Converter):
     def structure_attrs_fromdict(
         self, obj: Mapping[str, Any], cl: Type[T]
     ) -> T:
-        h = make_dict_structure_fn(cl, self)
+        attribs = fields(cl)
+        if any(isinstance(a.type, str) for a in attribs):
+            # PEP 563 annotations - need to be resolved.
+            resolve_types(cl)
+        attrib_overrides = {
+            a.name: self.type_overrides[a.type]
+            for a in attribs
+            if a.type in self.type_overrides
+        }
+        h = make_dict_structure_fn(cl, self, **attrib_overrides)
         self.register_structure_hook(cl, h)
         return h(obj, cl)

@@ -1,4 +1,5 @@
 from .converters import Converter, GenConverter, UnstructureStrategy
+from .gen import override
 
 __all__ = (
     "global_converter",
@@ -9,6 +10,7 @@ __all__ = (
     "UnstructureStrategy",
     "Converter",
     "GenConverter",
+    "override",
 )
 
 __author__ = "Tin Tvrtković"
