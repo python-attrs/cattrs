@@ -272,13 +272,6 @@ class Converter(object):
         """
         return cl(obj)
 
-    def _structure_unicode(self, obj, cl):
-        """Just call ``cl`` with the given ``obj``"""
-        if not isinstance(obj, (bytes, str)):
-            return cl(str(obj))
-        else:
-            return obj
-
     # Attrs classes.
 
     def structure_attrs_fromtuple(
