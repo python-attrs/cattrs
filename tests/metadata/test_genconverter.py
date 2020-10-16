@@ -116,3 +116,27 @@ def test_optional_field_roundtrip(cl_and_vals):
     unstructured = converter.unstructure(inst)
 
     assert inst == converter.structure(unstructured, C)
+
+
+@given(simple_typed_classes(defaults=True))
+def test_omit_default_roundtrip(cl_and_vals):
+    """
+    Omit default on the converter works.
+    """
+    converter = Converter(omit_if_default=True)
+    cl, vals = cl_and_vals
+
+    @attr.s
+    class C(object):
+        a: int = attr.ib(default=1)
+        b: cl = attr.ib(factory=lambda: cl(*vals))
+
+    inst = C()
+    unstructured = converter.unstructure(inst)
+    assert unstructured == {}
+    assert inst == converter.structure(unstructured, C)
+
+    inst = C(0)
+    unstructured = converter.unstructure(inst)
+    assert unstructured == {"a": 0}
+    assert inst == converter.structure(unstructured, C)
