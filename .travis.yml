@@ -15,7 +15,7 @@ matrix:
       env: TOXENV=py38
       dist: xenial
       sudo: true
-    - python: "3.9-dev"
+    - python: "3.9"
       env: TOXENV=py39
 
     # Meta
