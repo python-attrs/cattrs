@@ -459,7 +459,7 @@ class GenConverter(Converter):
         dict_factory=dict,
         unstruct_strat=UnstructureStrategy.AS_DICT,
         omit_if_default=False,
-        type_overrides: Mapping[Type, AttributeOverride]={},
+        type_overrides: Mapping[Type, AttributeOverride] = {},
     ):
         super().__init__(
             dict_factory=dict_factory, unstruct_strat=unstruct_strat
