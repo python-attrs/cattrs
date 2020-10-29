@@ -3,12 +3,13 @@ from typing import Optional, Union
 
 import attr
 import pytest
-from attr import fields, make_class
+from attr import Factory, fields, make_class
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis.strategies import sampled_from
 
 from cattr import GenConverter as Converter
 from cattr import UnstructureStrategy
+from cattr.gen import override
 
 from . import nested_typed_classes, simple_typed_attrs, simple_typed_classes
 
@@ -140,3 +141,26 @@ def test_omit_default_roundtrip(cl_and_vals):
     unstructured = converter.unstructure(inst)
     assert unstructured == {"a": 0}
     assert inst == converter.structure(unstructured, C)
+
+
+@given(simple_typed_classes(defaults=True))
+def test_type_overrides(cl_and_vals):
+    """
+    Type overrides on the GenConverter work.
+    """
+    converter = Converter(type_overrides={int: override(omit_if_default=True)})
+    cl, vals = cl_and_vals
+
+    inst = cl(*vals)
+    unstructured = converter.unstructure(inst)
+    print(unstructured)
+
+    for field, val in zip(fields(cl), vals):
+        print(field, val)
+        if field.type is int:
+            if field.default is not None:
+                if isinstance(field.default, Factory):
+                    if not field.default.takes_self and field.default() == val:
+                        assert field.name not in unstructured
+                elif field.default == val:
+                    assert field.name not in unstructured

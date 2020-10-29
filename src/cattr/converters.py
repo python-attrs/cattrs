@@ -28,7 +28,11 @@ from ._compat import (
     lru_cache,
 )
 from .disambiguators import create_uniq_field_dis_func
-from .gen import make_dict_structure_fn, make_dict_unstructure_fn
+from .gen import (
+    AttributeOverride,
+    make_dict_structure_fn,
+    make_dict_unstructure_fn,
+)
 from .multistrategy_dispatch import MultiStrategyDispatch
 
 NoneType = type(None)
@@ -455,7 +459,7 @@ class GenConverter(Converter):
         dict_factory=dict,
         unstruct_strat=UnstructureStrategy.AS_DICT,
         omit_if_default=False,
-        type_overrides={},
+        type_overrides: Mapping[Type, AttributeOverride]={},
     ):
         super().__init__(
             dict_factory=dict_factory, unstruct_strat=unstruct_strat
