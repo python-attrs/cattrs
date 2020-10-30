@@ -43,6 +43,7 @@ setup(
     license="MIT license",
     zip_safe=False,
     keywords="cattrs",
+    python_requires='~=3.7',
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
