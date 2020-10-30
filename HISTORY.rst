@@ -2,8 +2,10 @@
 History
 =======
 
-1.2.0 (UNRELEASED)
+1.1.1 (2020-10-30)
 ------------------
+* Add metadata for supported Python versions.
+  (`#103 <https://github.com/Tinche/cattrs/pull/103>`_)
 
 1.1.0 (2020-10-29)
 ------------------
