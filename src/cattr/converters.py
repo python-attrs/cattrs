@@ -169,7 +169,7 @@ class Converter(object):
         self._unstructure_func.register_func_list([(check_func, func)])
 
     def register_structure_hook(
-        self, cl: Type[T], func: Callable[[Any, Type[V]], T]
+        self, cl: Type[T], func: Callable[[Any, Type[T]], T]
     ):
         """Register a primitive-to-class converter function for a type.
 
@@ -188,7 +188,7 @@ class Converter(object):
     def register_structure_hook_func(
         self,
         check_func: Callable[[Type[T]], bool],
-        func: Callable[[Any, Type[V]], T],
+        func: Callable[[Any, Type[T]], T],
     ):
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
