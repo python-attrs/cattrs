@@ -29,6 +29,7 @@ from hypothesis.strategies import (
 )
 from pytest import raises
 
+import attr
 from cattr import Converter
 from cattr._compat import is_bare, is_union_type
 from cattr.converters import NoneType
@@ -351,3 +352,21 @@ def test_subclass_registration_is_honored():
     converter.register_structure_hook(Bar, lambda obj, cls: cls("bar"))
     assert converter.structure(None, Foo).value == "foo"
     assert converter.structure(None, Bar).value == "bar"
+
+
+def test_structure_union_edge_case():
+    converter = Converter()
+
+    @attr.s(auto_attribs=True)
+    class A:
+        a1: Any
+        a2: Optional[Any] = None
+
+    @attr.s(auto_attribs=True)
+    class B:
+        b1: Any
+        b2: Optional[Any] = None
+
+    assert converter.structure(
+        [{"a1": "foo"}, {"b1": "bar"}], List[Union[A, B]]
+    ) == [A("foo"), B("bar")]

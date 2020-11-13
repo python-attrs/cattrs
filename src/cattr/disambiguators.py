@@ -10,7 +10,7 @@ from typing import (  # noqa: F401, imported for Mypy.
     Type,
 )
 
-from attr import fields
+from attr import fields, NOTHING
 
 from cattr._compat import get_origin
 
@@ -22,7 +22,14 @@ def create_uniq_field_dis_func(*classes: Type) -> Callable:
     if len(classes) < 2:
         raise ValueError("At least two classes required.")
     cls_and_attrs = [
-        (cl, set(at.name for at in fields(get_origin(cl) or cl)))
+        (
+            cl,
+            set(
+                at.name
+                for at in fields(get_origin(cl) or cl)
+                if at.default is NOTHING
+            ),
+        )
         for cl in classes
     ]
     if len([attrs for _, attrs in cls_and_attrs if len(attrs) == 0]) > 1:
