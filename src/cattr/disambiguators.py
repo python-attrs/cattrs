@@ -22,7 +22,8 @@ def create_uniq_field_dis_func(*classes: Type) -> Callable:
     if len(classes) < 2:
         raise ValueError("At least two classes required.")
     cls_and_attrs = [
-        (cl, set(at.name for at in fields(get_origin(cl) or cl))) for cl in classes
+        (cl, set(at.name for at in fields(get_origin(cl) or cl)))
+        for cl in classes
     ]
     if len([attrs for _, attrs in cls_and_attrs if len(attrs) == 0]) > 1:
         raise ValueError("At least two classes have no attributes.")
