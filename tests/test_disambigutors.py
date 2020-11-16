@@ -1,4 +1,6 @@
 """Tests for auto-disambiguators."""
+from typing import Any
+
 import attr
 import pytest
 
@@ -40,6 +42,18 @@ def test_edge_errors():
     with pytest.raises(ValueError):
         # No unique fields on either class.
         create_uniq_field_dis_func(C, D)
+
+    @attr.s
+    class E:
+        pass
+
+    @attr.s
+    class F:
+        b = attr.ib(default=Any)
+
+    with pytest.raises(ValueError):
+        # no usable non-default attributes
+        create_uniq_field_dis_func(E, F)
 
 
 @given(simple_classes(defaults=False))

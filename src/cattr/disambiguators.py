@@ -48,7 +48,7 @@ def create_uniq_field_dis_func(*classes: Type) -> Callable:
                 if getattr(cl_fields, attr_name).default is NOTHING:
                     break
             else:
-                raise Exception(f"{cl} has no usable non-default attributes.")
+                raise ValueError(f"{cl} has no usable non-default attributes.")
             uniq_attrs_dict[attr_name] = cl
         else:
             fallback = cl
