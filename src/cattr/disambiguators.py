@@ -49,7 +49,14 @@ def create_uniq_field_dis_func(*classes: Type) -> Callable:
             if not uniq:
                 m = "{} has no usable unique attributes.".format(cl)
                 raise ValueError(m)
-            uniq_attrs_dict[next(iter(uniq))] = cl
+            # We need a unique attribute with no default.
+            cl_fields = fields(get_origin(cl) or cl)
+            for attr_name in uniq:
+                if getattr(cl_fields, attr_name).default is NOTHING:
+                    break
+            else:
+                raise Exception(f"{cl} has no usable non-default attributes.")
+            uniq_attrs_dict[attr_name] = cl
         else:
             fallback = cl
 
