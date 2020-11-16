@@ -2,6 +2,11 @@
 History
 =======
 
+1.1.2 (unrelased)
+-----------------
+* Disambigualation do not pick non required field.
+  (`#108 <https://github.com/Tinche/cattrs/pull/108>`_)
+
 1.1.1 (2020-10-30)
 ------------------
 * Add metadata for supported Python versions.
