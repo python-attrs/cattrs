@@ -2,7 +2,8 @@
 import attr
 import pytest
 
-from hypothesis import assume, given
+from attr import NOTHING
+from hypothesis import HealthCheck, assume, given, settings
 
 from cattr.disambiguators import create_uniq_field_dis_func
 
@@ -63,9 +64,12 @@ def test_fallback(cl_and_vals):
         fn({"xyz": 1}) is A  # Uses the fallback.
 
 
+@settings(
+    suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow]
+)
 @given(simple_classes(), simple_classes())
 def test_disambiguation(cl_and_vals_a, cl_and_vals_b):
-    """Disambiguation should work when there are unique fields."""
+    """Disambiguation should work when there are unique required fields."""
     cl_a, vals_a = cl_and_vals_a
     cl_b, vals_b = cl_and_vals_b
 
@@ -76,6 +80,10 @@ def test_disambiguation(cl_and_vals_a, cl_and_vals_b):
     assume(len(req_b))
 
     assume((req_a - req_b) or (req_b - req_a))
+    for attr_name in req_a - req_b:
+        assume(getattr(attr.fields(cl_a), attr_name).default is NOTHING)
+    for attr_name in req_b - req_a:
+        assume(getattr(attr.fields(cl_b), attr_name).default is NOTHING)
 
     fn = create_uniq_field_dis_func(cl_a, cl_b)
 
