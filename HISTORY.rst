@@ -2,10 +2,13 @@
 History
 =======
 
-1.1.2 (unrelased)
+1.1.2 (UNRELEASED)
 -----------------
-* Disambigualation do not pick non required field.
+* The default disambiguator will not consider non-required fields any more.
   (`#108 <https://github.com/Tinche/cattrs/pull/108>`_)
+* Fix a couple type annotations.
+  (`#107 <https://github.com/Tinche/cattrs/pull/107>`_)
+  (`#105 <https://github.com/Tinche/cattrs/issues/105`_)
 
 1.1.1 (2020-10-30)
 ------------------
