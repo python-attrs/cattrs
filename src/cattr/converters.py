@@ -169,7 +169,7 @@ class Converter(object):
         self._unstructure_func.register_func_list([(check_func, func)])
 
     def register_structure_hook(
-        self, cl: Type[T], func: Callable[[Any, Type[T]], T]
+        self, cl: Any, func: Callable[[Any, Type[T]], T]
     ):
         """Register a primitive-to-class converter function for a type.
 
