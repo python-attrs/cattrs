@@ -7,7 +7,7 @@ cattrs
         :target: https://pypi.python.org/pypi/cattrs
 
 .. image:: https://img.shields.io/travis/Tinche/cattrs.svg
-        :target: https://travis-ci.org/Tinche/cattrs
+        :target: https://travis-ci.com/github/Tinche/cattrs
 
 .. image:: https://readthedocs.org/projects/cattrs/badge/?version=latest
         :target: https://cattrs.readthedocs.io/en/latest/?badge=latest
