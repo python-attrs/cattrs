@@ -34,5 +34,4 @@ install: pip install -U tox setuptools
 script: tox
 
 after_success:
-  - tox -e coverage-report
   - codecov
