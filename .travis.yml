@@ -24,6 +24,9 @@ matrix:
     - python: "3.8"
       env: TOXENV=docs
 
+before_install:
+  - pip install codecov
+
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install: pip install -U tox setuptools
 
@@ -31,4 +34,5 @@ install: pip install -U tox setuptools
 script: tox
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - tox -e coverage-report
+  - codecov
