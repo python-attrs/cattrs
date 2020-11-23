@@ -1,4 +1,4 @@
-from ._compat import lru_cache
+from functools import lru_cache
 
 
 class FunctionDispatch(object):

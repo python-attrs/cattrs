@@ -1,6 +1,7 @@
+from functools import lru_cache, singledispatch
+
 import attr
 
-from ._compat import lru_cache, singledispatch
 from .function_dispatch import FunctionDispatch
 
 
@@ -27,7 +28,7 @@ class MultiStrategyDispatch(object):
         self._function_dispatch = FunctionDispatch()
         self._function_dispatch.register(lambda cls: True, fallback_func)
         self._single_dispatch = singledispatch(_DispatchNotFound)
-        self.dispatch = lru_cache(64)(self._dispatch)
+        self.dispatch = lru_cache(maxsize=None)(self._dispatch)
 
     def _dispatch(self, cl):
         try:

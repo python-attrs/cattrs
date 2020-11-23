@@ -1,4 +1,5 @@
 from enum import Enum
+from functools import lru_cache
 from typing import (  # noqa: F401, imported for Mypy.
     Any,
     Callable,
@@ -25,7 +26,6 @@ from ._compat import (
     is_sequence,
     is_tuple,
     is_union_type,
-    lru_cache,
 )
 from .disambiguators import create_uniq_field_dis_func
 from .gen import (
@@ -135,7 +135,7 @@ class Converter(object):
 
         self._dict_factory = dict_factory
 
-        # Unions are instances now, not classes. We use different registry.
+        # Unions are instances now, not classes. We use a different registry.
         self._union_registry = {}
 
     def unstructure(self, obj):
