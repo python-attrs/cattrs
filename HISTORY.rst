@@ -2,13 +2,12 @@
 History
 =======
 
-1.1.2 (UNRELEASED)
------------------
+1.1.2 (2020-11-29)
+------------------
 * The default disambiguator will not consider non-required fields any more.
   (`#108 <https://github.com/Tinche/cattrs/pull/108>`_)
 * Fix a couple type annotations.
-  (`#107 <https://github.com/Tinche/cattrs/pull/107>`_)
-  (`#105 <https://github.com/Tinche/cattrs/issues/105`_)
+  (`#107 <https://github.com/Tinche/cattrs/pull/107>`_) (`#105 <https://github.com/Tinche/cattrs/issues/105>`_)
 * Fix a `GenConverter` unstructuring issue and tests.
 
 1.1.1 (2020-10-30)
