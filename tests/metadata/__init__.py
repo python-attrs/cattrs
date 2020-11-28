@@ -386,12 +386,19 @@ def nested_classes(
     cls, strat = class_and_strat
     defaults = tuple(draw(strat))
     init_vals = tuple(draw(strat))
-    return draw(
-        list_of_class((attrs, (cls, init_vals)), defaults)
-        | new_list_of_class((attrs, (cls, init_vals)), defaults)
-        | dict_of_class((attrs, (cls, init_vals)), defaults)
-        | just_class((attrs, (cls, init_vals)), defaults)
-    )
+    if is_39_or_later:
+        return draw(
+            list_of_class((attrs, (cls, init_vals)), defaults)
+            | new_list_of_class((attrs, (cls, init_vals)), defaults)
+            | dict_of_class((attrs, (cls, init_vals)), defaults)
+            | just_class((attrs, (cls, init_vals)), defaults)
+        )
+    else:
+        return draw(
+            list_of_class((attrs, (cls, init_vals)), defaults)
+            | dict_of_class((attrs, (cls, init_vals)), defaults)
+            | just_class((attrs, (cls, init_vals)), defaults)
+        )
 
 
 def nested_typed_classes_and_strat(
