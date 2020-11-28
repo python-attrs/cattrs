@@ -154,7 +154,7 @@ def test_individual_overrides(cl_and_vals):
                         assert attr.name in res
 
 
-@given(nested_typed_classes | simple_typed_classes())
+@given(nested_typed_classes() | simple_typed_classes())
 def test_unmodified_generated_structuring(cl_and_vals):
     converter = Converter()
     cl, vals = cl_and_vals

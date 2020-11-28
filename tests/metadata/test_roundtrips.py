@@ -40,7 +40,7 @@ def test_simple_roundtrip_defaults(cls_and_vals, strat):
     assert inst == converter.structure(converter.unstructure(inst), cl)
 
 
-@given(nested_typed_classes, unstructure_strats)
+@given(nested_typed_classes(), unstructure_strats)
 def test_nested_roundtrip(cls_and_vals, strat):
     """
     Nested classes with metadata can be unstructured and restructured.

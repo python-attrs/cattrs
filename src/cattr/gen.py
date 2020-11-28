@@ -51,7 +51,9 @@ def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
                     )
                 else:
                     post_lines.append(f"    if i.{attr_name} != {def_name}():")
-                post_lines.append(f"        res['{kn}'] = i.{attr_name}")
+                post_lines.append(
+                    f"        res['{kn}'] = __c_u(i.{attr_name})"
+                )
             else:
                 globs[def_name] = d
                 post_lines.append(f"    if i.{attr_name} != {def_name}:")

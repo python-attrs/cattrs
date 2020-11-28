@@ -5,7 +5,7 @@ import attr
 import pytest
 from attr import Factory, fields, make_class
 from hypothesis import HealthCheck, assume, given, settings
-from hypothesis.strategies import sampled_from
+from hypothesis.strategies import booleans, sampled_from
 
 from cattr import GenConverter as Converter
 from cattr import UnstructureStrategy
@@ -42,16 +42,23 @@ def test_simple_roundtrip_defaults(cls_and_vals, strat):
     assert inst == converter.structure(converter.unstructure(inst), cl)
 
 
-@given(nested_typed_classes, unstructure_strats)
-def test_nested_roundtrip(cls_and_vals, strat):
+@given(
+    nested_typed_classes(defaults=True, min_attrs=1),
+    unstructure_strats,
+    booleans(),
+)
+def test_nested_roundtrip(cls_and_vals, strat, omit_if_default):
     """
     Nested classes with metadata can be unstructured and restructured.
     """
-    converter = Converter(unstruct_strat=strat)
+    converter = Converter(
+        unstruct_strat=strat, omit_if_default=omit_if_default
+    )
     cl, vals = cls_and_vals
     # Vals are a tuple, convert into a dictionary.
     inst = cl(*vals)
-    assert inst == converter.structure(converter.unstructure(inst), cl)
+    unstructured = converter.unstructure(inst)
+    assert inst == converter.structure(unstructured, cl)
 
 
 @settings(
@@ -153,10 +160,8 @@ def test_type_overrides(cl_and_vals):
 
     inst = cl(*vals)
     unstructured = converter.unstructure(inst)
-    print(unstructured)
 
     for field, val in zip(fields(cl), vals):
-        print(field, val)
         if field.type is int:
             if field.default is not None:
                 if isinstance(field.default, Factory):

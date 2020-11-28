@@ -9,6 +9,7 @@ History
 * Fix a couple type annotations.
   (`#107 <https://github.com/Tinche/cattrs/pull/107>`_)
   (`#105 <https://github.com/Tinche/cattrs/issues/105`_)
+* Fix a `GenConverter` unstructuring issue and tests.
 
 1.1.1 (2020-10-30)
 ------------------

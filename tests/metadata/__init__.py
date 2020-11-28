@@ -1,11 +1,13 @@
 """Tests for metadata functionality."""
 import sys
 from collections import OrderedDict
-from typing import Any, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Tuple, Type, TypeVar
 
 import attr
 from attr import NOTHING
+from attr._make import _CountingAttr
 from hypothesis.strategies import (
+    SearchStrategy,
     booleans,
     composite,
     dictionaries,
@@ -23,23 +25,39 @@ from hypothesis.strategies import (
 from .. import gen_attr_names, make_class
 
 is_39_or_later = sys.version_info[:2] >= (3, 9)
+PosArg = Any
+PosArgs = Tuple[Any]
+T = TypeVar("T")
 
 
 def simple_typed_classes(defaults=None, min_attrs=0):
-    """Similar to simple_classes, but the attributes have metadata."""
+    """Yield tuples of (class, values)."""
     return lists_of_typed_attrs(defaults, min_size=min_attrs).flatmap(
         _create_hyp_class
     )
 
 
-def lists_of_typed_attrs(defaults=None, min_size=0):
+def simple_typed_classes_and_strats(
+    defaults=None, min_attrs=0
+) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
+    """Yield tuples of (class, (strategies))."""
+    return lists_of_typed_attrs(defaults, min_size=min_attrs).flatmap(
+        _create_hyp_class_and_strat
+    )
+
+
+def lists_of_typed_attrs(
+    defaults=None, min_size=0
+) -> SearchStrategy[List[Tuple[_CountingAttr, SearchStrategy[PosArg]]]]:
     # Python functions support up to 255 arguments.
     return lists(
         simple_typed_attrs(defaults), min_size=min_size, max_size=50
     ).map(lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING))
 
 
-def simple_typed_attrs(defaults=None):
+def simple_typed_attrs(
+    defaults=None,
+) -> SearchStrategy[Tuple[_CountingAttr, SearchStrategy[PosArgs]]]:
     if not is_39_or_later:
         return (
             bare_typed_attrs(defaults)
@@ -63,7 +81,9 @@ def simple_typed_attrs(defaults=None):
         )
 
 
-def _create_hyp_class(attrs_and_strategy):
+def _create_hyp_class(
+    attrs_and_strategy: List[Tuple[_CountingAttr, SearchStrategy[PosArgs]]]
+) -> SearchStrategy[Tuple[Type, PosArgs]]:
     """
     A helper function for Hypothesis to generate attrs classes.
 
@@ -84,6 +104,25 @@ def _create_hyp_class(attrs_and_strategy):
             make_class("HypClass", OrderedDict(zip(gen_attr_names(), attrs)))
         ),
         tuples(*vals),
+    )
+
+
+def _create_hyp_class_and_strat(
+    attrs_and_strategy: List[Tuple[_CountingAttr, SearchStrategy[PosArg]]],
+) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
+    def key(t):
+        return t[0].default is not attr.NOTHING
+
+    attrs_and_strat = sorted(attrs_and_strategy, key=key)
+    attrs = [a[0] for a in attrs_and_strat]
+    for i, a in enumerate(attrs):
+        a.counter = i
+    vals = tuple((a[1]) for a in attrs_and_strat)
+    return tuples(
+        just(
+            make_class("HypClass", OrderedDict(zip(gen_attr_names(), attrs)))
+        ),
+        just(tuples(*vals)),
     )
 
 
@@ -233,12 +272,15 @@ def homo_tuple_typed_attrs(draw, defaults=None):
     )
 
 
-def just_class(tup):
-    # tup: Tuple[List[Tuple[_CountingAttr, Strategy]],
-    #            Tuple[Type, Sequence[Any]]]
+def just_class(
+    tup: Tuple[
+        List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs]
+    ],
+    defaults: PosArgs,
+):
     nested_cl = tup[1][0]
     nested_cl_args = tup[1][1]
-    default = attr.Factory(lambda: nested_cl(*nested_cl_args))
+    default = attr.Factory(lambda: nested_cl(*defaults))
     combined_attrs = list(tup[0])
     combined_attrs.append(
         (
@@ -246,13 +288,18 @@ def just_class(tup):
             just(nested_cl(*nested_cl_args)),
         )
     )
-    return _create_hyp_class(combined_attrs)
+    return _create_hyp_class_and_strat(combined_attrs)
 
 
-def list_of_class(tup):
+def list_of_class(
+    tup: Tuple[
+        List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs]
+    ],
+    defaults: PosArgs,
+) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
     nested_cl = tup[1][0]
     nested_cl_args = tup[1][1]
-    default = attr.Factory(lambda: [nested_cl(*nested_cl_args)])
+    default = attr.Factory(lambda: [nested_cl(*defaults)])
     combined_attrs = list(tup[0])
     combined_attrs.append(
         (
@@ -260,14 +307,19 @@ def list_of_class(tup):
             just([nested_cl(*nested_cl_args)]),
         )
     )
-    return _create_hyp_class(combined_attrs)
+    return _create_hyp_class_and_strat(combined_attrs)
 
 
-def new_list_of_class(tup):
+def new_list_of_class(
+    tup: Tuple[
+        List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs]
+    ],
+    defaults: PosArgs,
+):
     """Uses the new 3.9 list type annotation."""
     nested_cl = tup[1][0]
     nested_cl_args = tup[1][1]
-    default = attr.Factory(lambda: [nested_cl(*nested_cl_args)])
+    default = attr.Factory(lambda: [nested_cl(*defaults)])
     combined_attrs = list(tup[0])
     combined_attrs.append(
         (
@@ -275,13 +327,18 @@ def new_list_of_class(tup):
             just([nested_cl(*nested_cl_args)]),
         )
     )
-    return _create_hyp_class(combined_attrs)
+    return _create_hyp_class_and_strat(combined_attrs)
 
 
-def dict_of_class(tup):
+def dict_of_class(
+    tup: Tuple[
+        List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs]
+    ],
+    defaults: PosArgs,
+):
     nested_cl = tup[1][0]
     nested_cl_args = tup[1][1]
-    default = attr.Factory(lambda: {"cls": nested_cl(*nested_cl_args)})
+    default = attr.Factory(lambda: {"cls": nested_cl(*defaults)})
     combined_attrs = list(tup[0])
     combined_attrs.append(
         (
@@ -289,10 +346,12 @@ def dict_of_class(tup):
             just({"cls": nested_cl(*nested_cl_args)}),
         )
     )
-    return _create_hyp_class(combined_attrs)
+    return _create_hyp_class_and_strat(combined_attrs)
 
 
-def _create_hyp_nested_strategy(simple_class_strategy):
+def _create_hyp_nested_strategy(
+    simple_class_strategy: SearchStrategy,
+) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
     """
     Create a recursive attrs class.
     Given a strategy for building (simpler) classes, create and return
@@ -303,15 +362,52 @@ def _create_hyp_nested_strategy(simple_class_strategy):
     """
     # A strategy producing tuples of the form ([list of attributes], <given
     # class strategy>).
-    attrs_and_classes = tuples(lists_of_typed_attrs(), simple_class_strategy)
+    attrs_and_classes: SearchStrategy[
+        Tuple[
+            List[Tuple[_CountingAttr, PosArgs]],
+            Tuple[Type, SearchStrategy[PosArgs]],
+        ]
+    ] = tuples(lists_of_typed_attrs(), simple_class_strategy)
 
-    return (
-        attrs_and_classes.flatmap(just_class)
-        | attrs_and_classes.flatmap(list_of_class)
-        | attrs_and_classes.flatmap(dict_of_class)
+    return nested_classes(attrs_and_classes)
+
+
+@composite
+def nested_classes(
+    draw: Callable[[SearchStrategy[T]], T],
+    attrs_and_classes: SearchStrategy[
+        Tuple[
+            List[Tuple[_CountingAttr, SearchStrategy]],
+            Tuple[Type, SearchStrategy[PosArgs]],
+        ]
+    ],
+) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
+    attrs, class_and_strat = draw(attrs_and_classes)
+    cls, strat = class_and_strat
+    defaults = tuple(draw(strat))
+    init_vals = tuple(draw(strat))
+    return draw(
+        list_of_class((attrs, (cls, init_vals)), defaults)
+        | new_list_of_class((attrs, (cls, init_vals)), defaults)
+        | dict_of_class((attrs, (cls, init_vals)), defaults)
+        | just_class((attrs, (cls, init_vals)), defaults)
     )
 
 
-nested_typed_classes = recursive(
-    simple_typed_classes(), _create_hyp_nested_strategy
-)
+def nested_typed_classes_and_strat(
+    defaults=None, min_attrs=0
+) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
+    return recursive(
+        simple_typed_classes_and_strats(
+            defaults=defaults, min_attrs=min_attrs
+        ),
+        _create_hyp_nested_strategy,
+    )
+
+
+@composite
+def nested_typed_classes(draw, defaults=None, min_attrs=0):
+    cl, strat = draw(
+        nested_typed_classes_and_strat(defaults=defaults, min_attrs=min_attrs)
+    )
+    return cl, draw(strat)
