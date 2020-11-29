@@ -29,7 +29,7 @@ dev_reqs = [
 
 setup(
     name="cattrs",
-    version="1.1.2",
+    version="1.2.0dev0",
     description="Composable complex class support for attrs.",
     long_description=readme + "\n\n" + history,
     author="Tin Tvrtković",
