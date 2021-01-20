@@ -138,7 +138,7 @@ class Converter(object):
         # Unions are instances now, not classes. We use a different registry.
         self._union_registry = {}
 
-    def unstructure(self, obj):
+    def unstructure(self, obj: Any) -> Any:
         return self._unstructure_func.dispatch(obj.__class__)(obj)
 
     @property
