@@ -28,9 +28,9 @@ class MultiStrategyDispatch(object):
         self._function_dispatch = FunctionDispatch()
         self._function_dispatch.register(lambda cls: True, fallback_func)
         self._single_dispatch = singledispatch(_DispatchNotFound)
-        self.dispatch = lru_cache(maxsize=None)(self._dispatch)
 
-    def _dispatch(self, cl):
+    @lru_cache(maxsize=None)
+    def dispatch(self, cl):
         try:
             dispatch = self._single_dispatch.dispatch(cl)
             if dispatch is not _DispatchNotFound:
