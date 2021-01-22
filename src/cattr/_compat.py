@@ -35,7 +35,7 @@ if is_py37 or is_py38:
     from typing import Union, _GenericAlias
 
     def is_tuple(type):
-        return type is Tuple or (
+        return type in (Tuple, tuple) or (
             type.__class__ is _GenericAlias
             and issubclass(type.__origin__, Tuple)
         )
@@ -48,24 +48,26 @@ if is_py37 or is_py38:
         )
 
     def is_sequence(type: Any) -> bool:
-        return type is List or (
+        return type in (List, list) or (
             type.__class__ is _GenericAlias
             and type.__origin__ is not Union
             and issubclass(type.__origin__, Sequence)
         )
 
     def is_mutable_set(type):
-        return type.__class__ is _GenericAlias and issubclass(
-            type.__origin__, MutableSet
+        return type is set or (
+            type.__class__ is _GenericAlias
+            and issubclass(type.__origin__, MutableSet)
         )
 
     def is_frozenset(type):
-        return type.__class__ is _GenericAlias and issubclass(
-            type.__origin__, FrozenSet
+        return type is frozenset or (
+            type.__class__ is _GenericAlias
+            and issubclass(type.__origin__, FrozenSet)
         )
 
     def is_mapping(type):
-        return type is Mapping or (
+        return type in (Mapping, dict) or (
             type.__class__ is _GenericAlias
             and issubclass(type.__origin__, Mapping)
         )
