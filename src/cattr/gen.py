@@ -37,6 +37,8 @@ def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
         override = kwargs.pop(attr_name, _neutral)
         kn = attr_name if override.rename is None else override.rename
         d = a.default
+        unstruct_type_name = f"__cattr_type_{attr_name}"
+        globs[unstruct_type_name] = a.type
         if d is not attr.NOTHING and (
             (omit_if_default and override.omit_if_default is not False)
             or override.omit_if_default
@@ -52,18 +54,20 @@ def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
                 else:
                     post_lines.append(f"    if i.{attr_name} != {def_name}():")
                 post_lines.append(
-                    f"        res['{kn}'] = __c_u(i.{attr_name})"
+                    f"        res['{kn}'] = __c_u(i.{attr_name}, unstructure_as={unstruct_type_name})"
                 )
             else:
                 globs[def_name] = d
                 post_lines.append(f"    if i.{attr_name} != {def_name}:")
                 post_lines.append(
-                    f"        res['{kn}'] = __c_u(i.{attr_name})"
+                    f"        res['{kn}'] = __c_u(i.{attr_name}, unstructure_as={unstruct_type_name})"
                 )
 
         else:
             # No default or no override.
-            lines.append(f"        '{kn}': __c_u(i.{attr_name}),")
+            lines.append(
+                f"        '{kn}': __c_u(i.{attr_name}, unstructure_as={unstruct_type_name}),"
+            )
     lines.append("    }")
 
     total_lines = lines + post_lines + ["    return res"]

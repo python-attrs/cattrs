@@ -5,6 +5,14 @@ Customizing class un/structuring
 This section deals with customizing the unstructuring and structuring processes
 in ``cattrs``.
 
+Using ``cattr.gen.GenConverter``
+********************************
+
+The ``cattr.gen`` module contains a ``Converter`` subclass, the ``GenConverter``.
+The ``GenConverter``, upon first encountering an ``attrs`` class, will use
+the generation functions mentioned here to generate the specialized hooks for it,
+register the hooks and use them.
+
 Manual un/structuring hooks
 ***************************
 
@@ -100,10 +108,3 @@ keyword in Python.
     >>> c.structure({'class': 1}, ExampleClass)
     ExampleClass(klass=1)
 
-Using ``cattr.gen.GenConverter``
-********************************
-
-The ``cattr.gen`` module also contains a ``Converter`` subclass, the ``GenConverter``.
-The ``GenConverter``, upon first encountering an ``attrs`` class, will use
-the mentioned generation functions to generate the specialized hooks for it,
-register the hooks and use them.
