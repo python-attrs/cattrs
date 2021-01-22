@@ -65,7 +65,7 @@ class Converter(object):
         "_unstructure_attrs",
         "_structure_attrs",
         "_dict_factory",
-        "_union_registry",
+        "_union_struct_registry",
         "_structure_func",
     )
 
@@ -95,12 +95,13 @@ class Converter(object):
         )
         self._unstructure_func.register_func_list(
             [
-                (_subclass(Mapping), self._unstructure_mapping),
-                (_subclass(Sequence), self._unstructure_seq),
-                (_subclass(Set), self._unstructure_seq),
-                (_subclass(FrozenSet), self._unstructure_seq),
+                (is_mapping, self._unstructure_mapping),
+                (is_sequence, self._unstructure_seq),
+                (is_mutable_set, self._unstructure_seq),
+                (is_frozenset, self._unstructure_seq),
                 (_subclass(Enum), self._unstructure_enum),
                 (_is_attrs_class, self._unstructure_attrs),
+                (is_union_type, self._unstructure_union),
             ]
         )
 
@@ -135,11 +136,15 @@ class Converter(object):
 
         self._dict_factory = dict_factory
 
-        # Unions are instances now, not classes. We use a different registry.
-        self._union_registry = {}
+        # Unions are instances now, not classes. We use different registries.
+        self._union_struct_registry: Dict[
+            Any, Callable[[Any, Type[T]], T]
+        ] = {}
 
-    def unstructure(self, obj: Any) -> Any:
-        return self._unstructure_func.dispatch(obj.__class__)(obj)
+    def unstructure(self, obj: Any, unstructure_as=None) -> Any:
+        return self._unstructure_func.dispatch(
+            obj.__class__ if unstructure_as is None else unstructure_as
+        )(obj)
 
     @property
     def unstruct_strat(self) -> UnstructureStrategy:
@@ -151,14 +156,19 @@ class Converter(object):
         )
 
     def register_unstructure_hook(
-        self, cls: Type[T], func: Callable[[T], Any]
+        self, cls: Any, func: Callable[[T], Any]
     ) -> None:
         """Register a class-to-primitive converter function for a class.
 
         The converter function should take an instance of the class and return
         its Python equivalent.
         """
-        self._unstructure_func.register_cls_list([(cls, func)])
+        if is_union_type(cls):
+            self._unstructure_func.register_func_list(
+                [(lambda t: t is cls, func)]
+            )
+        else:
+            self._unstructure_func.register_cls_list([(cls, func)])
 
     def register_unstructure_hook_func(
         self, check_func, func: Callable[[T], Any]
@@ -181,7 +191,7 @@ class Converter(object):
         is sometimes needed (for example, when dealing with generic classes).
         """
         if is_union_type(cl):
-            self._union_registry[cl] = func
+            self._union_struct_registry[cl] = func
         else:
             self._structure_func.register_cls_list([(cl, func)])
 
@@ -209,13 +219,19 @@ class Converter(object):
         for a in attrs:
             name = a.name
             v = getattr(obj, name)
-            rv[name] = dispatch(v.__class__)(v)
+            rv[name] = dispatch(a.type or v.__class__)(v)
         return rv
 
     def unstructure_attrs_astuple(self, obj) -> Tuple[Any, ...]:
         """Our version of `attrs.astuple`, so we can call back to us."""
         attrs = obj.__class__.__attrs_attrs__
-        return tuple(self.unstructure(getattr(obj, a.name)) for a in attrs)
+        dispatch = self._unstructure_func.dispatch
+        res = list()
+        for a in attrs:
+            name = a.name
+            v = getattr(obj, name)
+            res.append(dispatch(a.type or v.__class__)(v))
+        return tuple(res)
 
     def _unstructure_enum(self, obj):
         """Convert an enum to its value."""
@@ -241,6 +257,14 @@ class Converter(object):
             (dispatch(k.__class__)(k), dispatch(v.__class__)(v))
             for k, v in mapping.items()
         )
+
+    def _unstructure_union(self, obj):
+        """
+        Unstructure an object as a union.
+
+        By default, just unstructures the instance.
+        """
+        return self._unstructure_func.dispatch(obj.__class__)(obj)
 
     # Python primitives to classes.
 
@@ -396,7 +420,7 @@ class Converter(object):
                 return self._structure_func.dispatch(other)(obj, other)
 
         # Check the union registry first.
-        handler = self._union_registry.get(union)
+        handler = self._union_struct_registry.get(union)
         if handler is not None:
             return handler(obj, union)
 

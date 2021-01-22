@@ -18,6 +18,7 @@ Contents:
    structuring
    unstructuring
    customizing
+   unions
    contributing
    history
 

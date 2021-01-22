@@ -91,9 +91,8 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
         def handler(obj, _):
             return converter.structure(obj, cl_a)
 
-        converter._union_registry[Union[cl_a, cl_b]] = handler
+        converter.register_structure_hook(Union[cl_a, cl_b], handler)
         assert inst == converter.structure(converter.unstructure(inst), C)
-        del converter._union_registry[Union[cl_a, cl_b]]
 
 
 @given(simple_typed_classes(defaults=False))

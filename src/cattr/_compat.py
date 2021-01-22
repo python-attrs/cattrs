@@ -1,5 +1,6 @@
 import sys
 from typing import (
+    Any,
     Dict,
     FrozenSet,
     List,
@@ -46,7 +47,7 @@ if is_py37 or is_py38:
             and obj.__origin__ is Union
         )
 
-    def is_sequence(type):
+    def is_sequence(type: Any) -> bool:
         return type is List or (
             type.__class__ is _GenericAlias
             and type.__origin__ is not Union
@@ -112,7 +113,7 @@ else:
             and obj.__origin__ is Union
         )
 
-    def is_sequence(type):
+    def is_sequence(type: Any) -> bool:
         return (
             type in (List, list, Sequence, MutableSequence)
             or (

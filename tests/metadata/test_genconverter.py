@@ -75,7 +75,7 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     """
     converter = Converter(unstruct_strat=strat)
     cl_a, vals_a = cl_and_vals_a
-    cl_b, vals_b = cl_and_vals_b
+    cl_b, _ = cl_and_vals_b
     a_field_names = {a.name for a in fields(cl_a)}
     b_field_names = {a.name for a in fields(cl_b)}
     assume(a_field_names)
@@ -91,7 +91,10 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     inst = C(a=cl_a(*vals_a))
 
     if strat is UnstructureStrategy.AS_DICT:
-        assert inst == converter.structure(converter.unstructure(inst), C)
+        unstructured = converter.unstructure(inst)
+        assert inst == converter.structure(
+            converter.unstructure(unstructured), C
+        )
     else:
         # Our disambiguation functions only support dictionaries for now.
         with pytest.raises(ValueError):
@@ -100,9 +103,9 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
         def handler(obj, _):
             return converter.structure(obj, cl_a)
 
-        converter._union_registry[Union[cl_a, cl_b]] = handler
-        assert inst == converter.structure(converter.unstructure(inst), C)
-        del converter._union_registry[Union[cl_a, cl_b]]
+        converter.register_structure_hook(Union[cl_a, cl_b], handler)
+        unstructured = converter.unstructure(inst)
+        assert inst == converter.structure(unstructured, C)
 
 
 @given(simple_typed_classes(defaults=False))

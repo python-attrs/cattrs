@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Any, Callable
 
 
 class FunctionDispatch(object):
@@ -14,9 +15,9 @@ class FunctionDispatch(object):
 
     def __init__(self):
         self._handler_pairs = []
-        self.dispatch = lru_cache(64)(self._dispatch)
+        self.dispatch = lru_cache(None)(self._dispatch)
 
-    def register(self, can_handle, func):
+    def register(self, can_handle: Callable[[Any], bool], func):
         self._handler_pairs.insert(0, (can_handle, func))
         self.dispatch.cache_clear()
 
