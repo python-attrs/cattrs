@@ -2,6 +2,11 @@
 History
 =======
 
+1.2.0 (UNRELEASED)
+------------------
+* ``converter.unstructure`` now supports an optional parameter, `unstructure_as`, which can be used to unstructure something as a different type. Useful for unions.
+* Improve support for union un/structuring hooks. Flesh out docs for advanced union handling.
+
 1.1.2 (2020-11-29)
 ------------------
 * The default disambiguator will not consider non-required fields any more.
