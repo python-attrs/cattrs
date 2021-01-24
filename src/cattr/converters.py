@@ -508,7 +508,9 @@ class GenConverter(Converter):
             omit_if_default=self.omit_if_default,
             **attrib_overrides
         )
-        self.register_unstructure_hook(obj.__class__, h)
+        self._unstructure_func.register_cls_list(
+            [(obj.__class__, h)], no_singledispatch=True
+        )
         return h(obj)
 
     def structure_attrs_fromdict(
@@ -524,5 +526,8 @@ class GenConverter(Converter):
             if a.type in self.type_overrides
         }
         h = make_dict_structure_fn(cl, self, **attrib_overrides)
-        self.register_structure_hook(cl, h)
+        self._structure_func.register_cls_list(
+            [(cl, h)], no_singledispatch=True
+        )
+        # only direct dispatch so that subclasses get separately generated
         return h(obj, cl)

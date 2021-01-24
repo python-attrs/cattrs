@@ -15,16 +15,24 @@ class _DispatchNotFound(object):
 class MultiStrategyDispatch(object):
     """
     MultiStrategyDispatch uses a
-    combination of FunctionDispatch and singledispatch.
+    combination of exact-match dispatch, singledispatch, and FunctionDispatch.
 
-    singledispatch is attempted first. If nothing is
-    registered for singledispatch, or an exception occurs,
+    Exact match dispatch is attempted first, based on a direct
+    lookup of the exact class type, if the hook was registered to avoid singledispatch.
+    singledispatch is attempted next - it will handle subclasses of base classes using MRO
+    If nothing is registered for singledispatch, or an exception occurs,
     the FunctionDispatch instance is then used.
     """
 
-    __slots__ = ("_function_dispatch", "_single_dispatch", "dispatch")
+    __slots__ = (
+        "_direct_dispatch",
+        "_function_dispatch",
+        "_single_dispatch",
+        "dispatch",
+    )
 
     def __init__(self, fallback_func):
+        self._direct_dispatch = dict()
         self._function_dispatch = FunctionDispatch()
         self._function_dispatch.register(lambda _: True, fallback_func)
         self._single_dispatch = singledispatch(_DispatchNotFound)
@@ -32,6 +40,9 @@ class MultiStrategyDispatch(object):
 
     def _dispatch(self, cl):
         try:
+            direct_dispatch = self._direct_dispatch.get(cl)
+            if direct_dispatch:
+                return direct_dispatch
             dispatch = self._single_dispatch.dispatch(cl)
             if dispatch is not _DispatchNotFound:
                 return dispatch
@@ -39,10 +50,15 @@ class MultiStrategyDispatch(object):
             pass
         return self._function_dispatch.dispatch(cl)
 
-    def register_cls_list(self, cls_and_handler):
-        """ register a class to singledispatch """
+    def register_cls_list(
+        self, cls_and_handler, no_singledispatch: bool = False
+    ):
+        """ register a class to direct or singledispatch """
         for cls, handler in cls_and_handler:
-            self._single_dispatch.register(cls, handler)
+            if no_singledispatch:
+                self._direct_dispatch[cls] = handler
+            else:
+                self._single_dispatch.register(cls, handler)
         self.dispatch.cache_clear()
 
     def register_func_list(self, func_and_handler):
