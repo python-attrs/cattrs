@@ -32,7 +32,7 @@ class MultiStrategyDispatch(object):
     )
 
     def __init__(self, fallback_func):
-        self._direct_dispatch = dict()
+        self._direct_dispatch = {}
         self._function_dispatch = FunctionDispatch()
         self._function_dispatch.register(lambda _: True, fallback_func)
         self._single_dispatch = singledispatch(_DispatchNotFound)
@@ -41,7 +41,7 @@ class MultiStrategyDispatch(object):
     def _dispatch(self, cl):
         try:
             direct_dispatch = self._direct_dispatch.get(cl)
-            if direct_dispatch:
+            if direct_dispatch is not None:
                 return direct_dispatch
             dispatch = self._single_dispatch.dispatch(cl)
             if dispatch is not _DispatchNotFound:
