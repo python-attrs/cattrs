@@ -193,7 +193,7 @@ class Converter(object):
         """
         self._structure_func.register_func_list([(check_func, func)])
 
-    def structure(self, obj, cl: Type[T]) -> T:
+    def structure(self, obj: Any, cl: Type[T]) -> T:
         """Convert unstructured Python data structures to structured data."""
 
         return self._structure_func.dispatch(cl)(obj, cl)

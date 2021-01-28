@@ -40,12 +40,14 @@ class MultiStrategyDispatch(object):
 
     def _dispatch(self, cl):
         try:
-            direct_dispatch = self._direct_dispatch.get(cl)
-            if direct_dispatch is not None:
-                return direct_dispatch
             dispatch = self._single_dispatch.dispatch(cl)
             if dispatch is not _DispatchNotFound:
                 return dispatch
+
+            direct_dispatch = self._direct_dispatch.get(cl)
+            if direct_dispatch is not None:
+                return direct_dispatch
+
         except Exception:
             pass
         return self._function_dispatch.dispatch(cl)
