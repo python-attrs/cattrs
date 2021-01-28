@@ -172,3 +172,30 @@ def test_type_overrides(cl_and_vals):
                         assert field.name not in unstructured
                 elif field.default == val:
                     assert field.name not in unstructured
+
+
+def test_calling_back():
+    """Calling unstructure_attrs_asdict from a hook should not override a manual hook."""
+    converter = Converter()
+
+    @attr.define
+    class C:
+        a: int = attr.ib(default=1)
+
+    def handler(obj):
+        return {
+            "type_tag": obj.__class__.__name__,
+            **converter.unstructure_attrs_asdict(obj),
+        }
+
+    converter.register_unstructure_hook(C, handler)
+
+    inst = C()
+
+    expected = {"type_tag": "C", "a": 1}
+
+    unstructured1 = converter.unstructure(inst)
+    unstructured2 = converter.unstructure(inst)
+
+    assert unstructured1 == expected, repr(unstructured1)
+    assert unstructured2 == unstructured1, repr(unstructured2)

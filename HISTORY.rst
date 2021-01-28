@@ -9,6 +9,8 @@ History
   (`#115 <https://github.com/Tinche/cattrs/pull/115>`_)
 * Fix `GenConverter` behavior with inheritance hierarchies of `attrs` classes.
   (`#117 <https://github.com/Tinche/cattrs/pull/117>`_) (`#116 <https://github.com/Tinche/cattrs/issues/116>`_)
+* Refactor `GenConverter.un/structure_attrs_fromdict` into `GenConverter.gen_un/structure_attrs_fromdict` to allow calling back to `Converter.un/structure_attrs_fromdict` without sideeffects.
+  (`#118 https://github.com/Tinche/cattrs/issues/118`_)
 
 1.1.2 (2020-11-29)
 ------------------

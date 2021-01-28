@@ -1,8 +1,11 @@
-from cattr.converters import GenConverter
 import attr
+import pytest
+
+from cattr.converters import Converter, GenConverter
 
 
-def test_inheritance():
+@pytest.mark.parametrize("converter_cls", [GenConverter, Converter])
+def test_inheritance(converter_cls):
     @attr.s(auto_attribs=True)
     class A:
         i: int
@@ -11,7 +14,7 @@ def test_inheritance():
     class B(A):
         j: int
 
-    converter = GenConverter()
+    converter = converter_cls()
 
     # succeeds
     assert A(1) == converter.structure(dict(i=1), A)

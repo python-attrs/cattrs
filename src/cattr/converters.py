@@ -1,18 +1,6 @@
 from enum import Enum
 from functools import lru_cache
-from typing import (  # noqa: F401, imported for Mypy.
-    Any,
-    Callable,
-    Dict,
-    FrozenSet,
-    Mapping,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Type,
-    TypeVar,
-)
+from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, TypeVar
 
 from attr import fields, resolve_types
 
@@ -291,7 +279,8 @@ class Converter(object):
         )
         raise ValueError(msg)
 
-    def _structure_call(self, obj, cl):
+    @staticmethod
+    def _structure_call(obj, cl):
         """Just call ``cl`` with the given ``obj``.
 
         This is just an optimization on the ``_structure_default`` case, when
@@ -314,7 +303,7 @@ class Converter(object):
 
         return cl(*conv_obj)  # type: ignore
 
-    def _structure_attr_from_tuple(self, a, name, value):
+    def _structure_attr_from_tuple(self, a, _, value):
         """Handle an individual attrs attribute."""
         type_ = a.type
         if type_ is None:
@@ -452,7 +441,8 @@ class Converter(object):
                 for t, e in zip(tup_params, obj)
             )
 
-    def _get_dis_func(self, union):
+    @staticmethod
+    def _get_dis_func(union):
         # type: (Type) -> Callable[..., Type]
         """Fetch or try creating a disambiguation function for a union."""
         union_types = union.__args__
@@ -491,7 +481,20 @@ class GenConverter(Converter):
         self.omit_if_default = omit_if_default
         self.type_overrides = type_overrides
 
-    def unstructure_attrs_asdict(self, obj: Any) -> Dict[str, Any]:
+        if unstruct_strat is UnstructureStrategy.AS_DICT:
+            # Override the attrs handler.
+            self._unstructure_func.register_func_list(
+                [
+                    (_is_attrs_class, self.gen_unstructure_attrs_fromdict),
+                ]
+            )
+            self._structure_func.register_func_list(
+                [
+                    (_is_attrs_class, self.gen_structure_attrs_fromdict),
+                ]
+            )
+
+    def gen_unstructure_attrs_fromdict(self, obj: Any) -> Dict[str, Any]:
         attribs = fields(obj.__class__)
         if any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.
@@ -513,7 +516,7 @@ class GenConverter(Converter):
         )
         return h(obj)
 
-    def structure_attrs_fromdict(
+    def gen_structure_attrs_fromdict(
         self, obj: Mapping[str, Any], cl: Type[T]
     ) -> T:
         attribs = fields(cl)
