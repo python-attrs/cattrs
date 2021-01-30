@@ -2,7 +2,10 @@
 History
 =======
 
-1.2.0 (UNRELEASED)
+1.3.0 (UNRELEASED)
+------------------
+
+1.2.0 (2021-01-31)
 ------------------
 * ``converter.unstructure`` now supports an optional parameter, `unstructure_as`, which can be used to unstructure something as a different type. Useful for unions.
 * Improve support for union un/structuring hooks. Flesh out docs for advanced union handling.
@@ -10,7 +13,7 @@ History
 * Fix `GenConverter` behavior with inheritance hierarchies of `attrs` classes.
   (`#117 <https://github.com/Tinche/cattrs/pull/117>`_) (`#116 <https://github.com/Tinche/cattrs/issues/116>`_)
 * Refactor `GenConverter.un/structure_attrs_fromdict` into `GenConverter.gen_un/structure_attrs_fromdict` to allow calling back to `Converter.un/structure_attrs_fromdict` without sideeffects.
-  (`#118 https://github.com/Tinche/cattrs/issues/118`_)
+  (`#118 <https://github.com/Tinche/cattrs/issues/118>`_)
 
 1.1.2 (2020-11-29)
 ------------------
