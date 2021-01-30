@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 from setuptools import find_packages, setup
 
 with open("README.rst") as readme_file:
@@ -29,7 +27,7 @@ dev_reqs = [
 
 setup(
     name="cattrs",
-    version="1.2.0dev0",
+    version="1.2.0",
     description="Composable complex class support for attrs.",
     long_description=readme + "\n\n" + history,
     author="Tin Tvrtković",
