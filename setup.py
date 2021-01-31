@@ -19,6 +19,7 @@ dev_reqs = [
     "coverage",
     "Sphinx",
     "pytest",
+    "pytest-benchmark",
     "hypothesis",
     "pendulum",
     "isort",
