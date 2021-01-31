@@ -51,7 +51,7 @@ lint: ## check style with flake8
 	flake8 src/cattr tests
 
 test: ## run tests quickly with the default Python
-	pytest -x --ff
+	pytest -x --ff tests
 
 
 test-all: ## run tests on every Python version with tox
