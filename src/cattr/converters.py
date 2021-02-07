@@ -1,6 +1,6 @@
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, TypeVar
+from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, TypeVar, get_type_hints
 
 from attr import fields, resolve_types
 
@@ -331,6 +331,11 @@ class Converter(object):
 
             if name[0] == "_":
                 name = name[1:]
+
+            if a.converter:
+                hints = get_type_hints(a.converter)
+
+                type_ = next(v for k, v in hints.items() if k != "return")
 
             conv_obj[name] = (
                 dispatch(type_)(val, type_) if type_ is not None else val
