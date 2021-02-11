@@ -169,7 +169,7 @@ characteristic_.
 
 ``cattrs`` is tested with Hypothesis_, by David R. MacIver.
 
-``cattrs`` is benchmarked using perf_, by Victor Stinner.
+``cattrs`` is benchmarked using perf_ and pytest-benchmark_.
 
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
 
@@ -177,6 +177,7 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 .. _characteristic: https://github.com/hynek/characteristic
 .. _Hypothesis: http://hypothesis.readthedocs.io/en/latest/
 .. _perf: https://github.com/haypo/perf
+.. _pytest-benchmark: https://pytest-benchmark.readthedocs.io/en/latest/index.html
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
 
