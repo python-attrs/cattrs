@@ -16,12 +16,12 @@ from ._compat import (
     is_union_type,
 )
 from .disambiguators import create_uniq_field_dis_func
+from .dispatch import MultiStrategyDispatch
 from .gen import (
     AttributeOverride,
     make_dict_structure_fn,
     make_dict_unstructure_fn,
 )
-from .multistrategy_dispatch import MultiStrategyDispatch
 
 NoneType = type(None)
 T = TypeVar("T")
@@ -485,20 +485,24 @@ class GenConverter(Converter):
             # Override the attrs handler.
             self._unstructure_func.register_func_list(
                 [
-                    (_is_attrs_class, self.gen_unstructure_attrs_fromdict),
+                    (
+                        _is_attrs_class,
+                        self.gen_unstructure_attrs_fromdict,
+                        True,
+                    ),
                 ]
             )
             self._structure_func.register_func_list(
                 [
-                    (_is_attrs_class, self.gen_structure_attrs_fromdict),
+                    (_is_attrs_class, self.gen_structure_attrs_fromdict, True),
                 ]
             )
 
-    def gen_unstructure_attrs_fromdict(self, obj: Any) -> Dict[str, Any]:
-        attribs = fields(obj.__class__)
+    def gen_unstructure_attrs_fromdict(self, cl: Type[T]) -> Dict[str, Any]:
+        attribs = fields(cl)
         if any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.
-            resolve_types(obj.__class__)
+            resolve_types(cl)
         attrib_overrides = {
             a.name: self.type_overrides[a.type]
             for a in attribs
@@ -506,19 +510,12 @@ class GenConverter(Converter):
         }
 
         h = make_dict_unstructure_fn(
-            obj.__class__,
-            self,
-            omit_if_default=self.omit_if_default,
-            **attrib_overrides
+            cl, self, omit_if_default=self.omit_if_default, **attrib_overrides
         )
-        self._unstructure_func.register_cls_list(
-            [(obj.__class__, h)], no_singledispatch=True
-        )
-        return h(obj)
+        self._unstructure_func.register_cls_list([(cl, h)], direct=True)
+        return h
 
-    def gen_structure_attrs_fromdict(
-        self, obj: Mapping[str, Any], cl: Type[T]
-    ) -> T:
+    def gen_structure_attrs_fromdict(self, cl: Type[T]) -> T:
         attribs = fields(cl)
         if any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.
@@ -529,8 +526,6 @@ class GenConverter(Converter):
             if a.type in self.type_overrides
         }
         h = make_dict_structure_fn(cl, self, **attrib_overrides)
-        self._structure_func.register_cls_list(
-            [(cl, h)], no_singledispatch=True
-        )
+        self._structure_func.register_cls_list([(cl, h)], direct=True)
         # only direct dispatch so that subclasses get separately generated
-        return h(obj, cl)
+        return h
