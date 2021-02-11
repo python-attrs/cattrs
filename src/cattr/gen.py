@@ -24,7 +24,7 @@ def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
     """Generate a specialized dict unstructuring function for an attrs class."""
     cl_name = cl.__name__
     fn_name = "unstructure_" + cl_name
-    globs = {"__c_u": converter.unstructure}
+    globs = {}
     lines = []
     post_lines = []
 
@@ -37,8 +37,24 @@ def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
         override = kwargs.pop(attr_name, _neutral)
         kn = attr_name if override.rename is None else override.rename
         d = a.default
-        unstruct_type_name = f"__cattr_type_{attr_name}"
-        globs[unstruct_type_name] = a.type
+
+        # For each attribute, we try resolving the type here and now.
+        # If a type is manually overwritten, this function should be
+        # regenerated.
+        if a.type is not None:
+            handler = converter._unstructure_func.dispatch(a.type)
+        else:
+            handler = converter.unstructure
+
+        is_identity = handler == converter._unstructure_identity
+
+        if not is_identity:
+            unstruct_handler_name = f"__cattr_unstruct_handler_{attr_name}"
+            globs[unstruct_handler_name] = handler
+            invoke = f"{unstruct_handler_name}(i.{attr_name})"
+        else:
+            invoke = f"i.{attr_name}"
+
         if d is not attr.NOTHING and (
             (omit_if_default and override.omit_if_default is not False)
             or override.omit_if_default
@@ -53,21 +69,15 @@ def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
                     )
                 else:
                     post_lines.append(f"    if i.{attr_name} != {def_name}():")
-                post_lines.append(
-                    f"        res['{kn}'] = __c_u(i.{attr_name}, unstructure_as={unstruct_type_name})"
-                )
+                post_lines.append(f"        res['{kn}'] = {invoke}")
             else:
                 globs[def_name] = d
                 post_lines.append(f"    if i.{attr_name} != {def_name}:")
-                post_lines.append(
-                    f"        res['{kn}'] = __c_u(i.{attr_name}, unstructure_as={unstruct_type_name})"
-                )
+                post_lines.append(f"        res['{kn}'] = {invoke}")
 
         else:
             # No default or no override.
-            lines.append(
-                f"        '{kn}': __c_u(i.{attr_name}, unstructure_as={unstruct_type_name}),"
-            )
+            lines.append(f"        '{kn}': {invoke},")
     lines.append("    }")
 
     total_lines = lines + post_lines + ["    return res"]

@@ -1,5 +1,6 @@
 import pytest
-from cattr.function_dispatch import FunctionDispatch
+
+from cattr.dispatch import FunctionDispatch
 
 
 def test_function_dispatch():
