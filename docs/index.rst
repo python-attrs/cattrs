@@ -19,6 +19,7 @@ Contents:
    unstructuring
    customizing
    unions
+   benchmarking
    contributing
    history
 
