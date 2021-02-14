@@ -2,7 +2,7 @@ from enum import Enum
 from functools import lru_cache
 from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, TypeVar
 
-from attr import fields, resolve_types
+from attr import fields, has, resolve_types
 
 from ._compat import (
     get_origin,
@@ -33,10 +33,6 @@ class UnstructureStrategy(Enum):
 
     AS_DICT = "asdict"
     AS_TUPLE = "astuple"
-
-
-def _is_attrs_class(cls):
-    return getattr(cls, "__attrs_attrs__", None) is not None
 
 
 def _subclass(typ):
@@ -88,7 +84,7 @@ class Converter(object):
                 (is_mutable_set, self._unstructure_seq),
                 (is_frozenset, self._unstructure_seq),
                 (_subclass(Enum), self._unstructure_enum),
-                (_is_attrs_class, self._unstructure_attrs),
+                (has, self._unstructure_attrs),
                 (is_union_type, self._unstructure_union),
             ]
         )
@@ -105,7 +101,7 @@ class Converter(object):
                 (is_tuple, self._structure_tuple),
                 (is_mapping, self._structure_dict),
                 (is_union_type, self._structure_union),
-                (_is_attrs_class, self._structure_attrs),
+                (has, self._structure_attrs),
             ]
         )
         # Strings are sequences.
@@ -486,7 +482,7 @@ class GenConverter(Converter):
             self._unstructure_func.register_func_list(
                 [
                     (
-                        _is_attrs_class,
+                        has,
                         self.gen_unstructure_attrs_fromdict,
                         True,
                     ),
@@ -494,7 +490,7 @@ class GenConverter(Converter):
             )
             self._structure_func.register_func_list(
                 [
-                    (_is_attrs_class, self.gen_structure_attrs_fromdict, True),
+                    (has, self.gen_structure_attrs_fromdict, True),
                 ]
             )
 
