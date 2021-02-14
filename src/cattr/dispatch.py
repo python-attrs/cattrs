@@ -78,6 +78,10 @@ class MultiStrategyDispatch:
                 )
         self.dispatch.cache_clear()
 
+    def clear_direct(self):
+        """Clear the direct dispatch."""
+        self._direct_dispatch.clear()
+
 
 class FunctionDispatch:
     """
@@ -88,19 +92,17 @@ class FunctionDispatch:
     objects that help determine dispatch should be instantiated objects.
     """
 
-    __slots__ = ("_handler_pairs", "dispatch")
+    __slots__ = ("_handler_pairs",)
 
     def __init__(self):
         self._handler_pairs = []
-        self.dispatch = lru_cache(None)(self._dispatch)
 
     def register(
         self, can_handle: Callable[[Any], bool], func, is_generator=False
     ):
         self._handler_pairs.insert(0, (can_handle, func, is_generator))
-        self.dispatch.cache_clear()
 
-    def _dispatch(self, typ):
+    def dispatch(self, typ):
         """
         returns the appropriate handler, for the object passed.
         """
