@@ -3,6 +3,8 @@ from typing import Generic, List, TypeVar, Union
 import pytest
 from attr import asdict, attrs
 
+from cattr import Converter
+
 T = TypeVar("T")
 T2 = TypeVar("T2")
 
@@ -21,7 +23,7 @@ class TClass(Generic[T, T2]):
         (List[int], str, TClass([1, 2, 3], "a")),
     ),
 )
-def test_able_to_structure_generics(converter, t, t2, result):
+def test_able_to_structure_generics(converter: Converter, t, t2, result):
     res = converter.structure(asdict(result), TClass[t, t2])
 
     assert res == result
