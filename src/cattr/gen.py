@@ -155,15 +155,28 @@ def make_dict_structure_fn(cl: Type, converter, **kwargs):
         if isinstance(type, TypeVar):
             type = getattr(mapping, type.__name__, type)
 
+        # For each attribute, we try resolving the type here and now.
+        # If a type is manually overwritten, this function should be
+        # regenerated.
+        if type is not None:
+            handler = converter._structure_func.dispatch(type)
+        else:
+            handler = converter.structure
+
+        struct_handler_name = f"__cattr_struct_handler_{an}"
+        globs[struct_handler_name] = handler
+
         ian = an if an[0] != "_" else an[1:]
         kn = an if override.rename is None else override.rename
         globs[f"__c_t_{an}"] = type
         if a.default is NOTHING:
-            lines.append(f"    '{ian}': __c_s(o['{kn}'], __c_t_{an}),")
+            lines.append(
+                f"    '{ian}': {struct_handler_name}(o['{kn}'], __c_t_{an}),"
+            )
         else:
             post_lines.append(f"  if '{kn}' in o:")
             post_lines.append(
-                f"    res['{ian}'] = __c_s(o['{kn}'], __c_t_{an})"
+                f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], __c_t_{an})"
             )
     lines.append("    }")
 
