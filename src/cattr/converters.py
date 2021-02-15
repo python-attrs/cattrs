@@ -147,11 +147,14 @@ class Converter(object):
         The converter function should take an instance of the class and return
         its Python equivalent.
         """
+        if has(cls):
+            resolve_types(cls)
         if is_union_type(cls):
             self._unstructure_func.register_func_list(
                 [(lambda t: t is cls, func)]
             )
         else:
+            self._unstructure_func.clear_direct()
             self._unstructure_func.register_cls_list([(cls, func)])
 
     def register_unstructure_hook_func(
@@ -174,9 +177,12 @@ class Converter(object):
         and return the instance of the class. The type may seem redundant, but
         is sometimes needed (for example, when dealing with generic classes).
         """
+        if has(cl):
+            resolve_types(cl)
         if is_union_type(cl):
             self._union_struct_registry[cl] = func
         else:
+            self._structure_func.clear_direct()
             self._structure_func.register_cls_list([(cl, func)])
 
     def register_structure_hook_func(
