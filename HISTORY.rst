@@ -8,7 +8,8 @@ History
   (`#123 <https://github.com/Tinche/cattrs/pull/123>`_)
 * Fix an issue unstructuring tuples of non-primitives.
   (`#125 <https://github.com/Tinche/cattrs/issues/125>`_)
-
+* ``cattrs`` now calls ``attr.resolve_types`` on ``attrs`` classes when registering un/structuring hooks.
+* ``GenConverter`` structuring and unstructuring of ``attrs`` classes is significantly faster.
 
 1.2.0 (2021-01-31)
 ------------------
