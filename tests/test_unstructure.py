@@ -1,7 +1,7 @@
 """Tests for dumping."""
 from attr import asdict, astuple
 from hypothesis import given
-from hypothesis.strategies import data, sampled_from
+from hypothesis.strategies import data, lists, sampled_from
 
 from cattr.converters import Converter, UnstructureStrategy
 
@@ -93,7 +93,7 @@ def test_unstructure_hooks(cl_and_vals):
     cl, vals = cl_and_vals
     inst = cl(*vals)
 
-    converter.register_unstructure_hook(cl, lambda val: "test")
+    converter.register_unstructure_hook(cl, lambda _: "test")
 
     assert converter.unstructure(inst) == "test"
 
@@ -106,7 +106,7 @@ def test_unstructure_hook_func(converter):
     def can_handle(cls):
         return cls.__name__.startswith("F")
 
-    def handle(obj):
+    def handle(_):
         return "hi"
 
     class Foo(object):
@@ -120,3 +120,14 @@ def test_unstructure_hook_func(converter):
     b = Bar()
     assert converter.unstructure(Foo()) == "hi"
     assert converter.unstructure(b) is b
+
+
+@given(lists(simple_classes()), sampled_from([tuple, list]))
+def test_seq_of_simple_classes_unstructure(cls_and_vals, seq_type):
+    """Dumping a sequence of primitives is a simple copy operation."""
+    converter = Converter()
+
+    inputs = seq_type(cl(*vals) for cl, vals in cls_and_vals)
+    outputs = converter.unstructure(inputs)
+    assert type(outputs) == seq_type
+    assert all(type(e) is dict for e in outputs)
