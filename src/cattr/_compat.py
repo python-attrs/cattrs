@@ -117,12 +117,12 @@ else:
 
     def is_sequence(type: Any) -> bool:
         return (
-            type in (List, list, Sequence, MutableSequence)
+            type in (List, list, Sequence, MutableSequence, tuple)
             or (
                 type.__class__ is _GenericAlias
                 and issubclass(type.__origin__, Sequence)
             )
-            or (getattr(type, "__origin__", None) is list)
+            or (getattr(type, "__origin__", None) in (list, tuple))
         )
 
     def is_mutable_set(type):

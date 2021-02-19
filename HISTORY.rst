@@ -6,6 +6,8 @@ History
 ------------------
 * ``cattrs`` now has a benchmark suite to help make and keep cattrs the fastest it can be. The instructions on using it can be found under the `Benchmarking <https://cattrs.readthedocs.io/en/latest/benchmarking.html>` section in the docs.
   (`#123 <https://github.com/Tinche/cattrs/pull/123>`_)
+* Fix an issue unstructuring tuples of non-primitives.
+  (`#125 <https://github.com/Tinche/cattrs/issues/125>`_)
 
 
 1.2.0 (2021-01-31)
