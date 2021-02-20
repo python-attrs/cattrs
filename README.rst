@@ -6,8 +6,8 @@ cattrs
 .. image:: https://img.shields.io/pypi/v/cattrs.svg
         :target: https://pypi.python.org/pypi/cattrs
 
-.. image:: https://img.shields.io/travis/Tinche/cattrs.svg
-        :target: https://travis-ci.com/github/Tinche/cattrs
+.. image:: https://github.com/Tinche/cattrs/workflows/CI/badge.svg
+        :target: https://github.com/Tinche/cattrs/actions?workflow=CI
 
 .. image:: https://readthedocs.org/projects/cattrs/badge/?version=latest
         :target: https://cattrs.readthedocs.io/en/latest/?badge=latest
