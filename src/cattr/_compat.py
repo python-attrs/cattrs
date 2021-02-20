@@ -48,7 +48,7 @@ if is_py37 or is_py38:
         )
 
     def is_sequence(type: Any) -> bool:
-        return type in (List, list) or (
+        return type in (List, list, Tuple, tuple) or (
             type.__class__ is _GenericAlias
             and type.__origin__ is not Union
             and issubclass(type.__origin__, Sequence)
