@@ -222,6 +222,29 @@ def test_overriding_generated_unstructure():
     assert r.i.a == 2
 
 
+def test_overriding_generated_unstructure_hook_func():
+    """Test overriding a generated unstructure hook works."""
+    converter = Converter()
+
+    @attr.define
+    class Inner:
+        a: int
+
+    @attr.define
+    class Outer:
+        i: Inner
+
+    inst = Outer(Inner(1))
+    converter.unstructure(inst)
+
+    converter.register_unstructure_hook_func(
+        lambda t: t is Inner, lambda _: {"a": 2}
+    )
+
+    r = converter.structure(converter.unstructure(inst), Outer)
+    assert r.i.a == 2
+
+
 def test_overriding_generated_structure():
     """Test overriding a generated structure hook works."""
     converter = Converter()
@@ -239,6 +262,30 @@ def test_overriding_generated_structure():
     converter.structure(raw, Outer)
 
     converter.register_structure_hook(Inner, lambda p, _: Inner(p["a"] + 1))
+
+    r = converter.structure(raw, Outer)
+    assert r.i.a == 2
+
+
+def test_overriding_generated_structure_hook_func():
+    """Test overriding a generated structure hook works."""
+    converter = Converter()
+
+    @attr.define
+    class Inner:
+        a: int
+
+    @attr.define
+    class Outer:
+        i: Inner
+
+    inst = Outer(Inner(1))
+    raw = converter.unstructure(inst)
+    converter.structure(raw, Outer)
+
+    converter.register_structure_hook_func(
+        lambda t: t is Inner, lambda p, _: Inner(p["a"] + 1)
+    )
 
     r = converter.structure(raw, Outer)
     assert r.i.a == 2

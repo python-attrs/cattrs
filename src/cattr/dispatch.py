@@ -53,6 +53,7 @@ class MultiStrategyDispatch:
                 self._direct_dispatch[cls] = handler
             else:
                 self._single_dispatch.register(cls, handler)
+                self.clear_direct()
         self.dispatch.cache_clear()
 
     def register_func_list(
@@ -76,6 +77,7 @@ class MultiStrategyDispatch:
                 self._function_dispatch.register(
                     func, handler, is_generator=is_gen
                 )
+        self.clear_direct()
         self.dispatch.cache_clear()
 
     def clear_direct(self):

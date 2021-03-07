@@ -4,6 +4,7 @@ History
 
 1.4.0 (UNRELEASED)
 ------------------
+* Fix an issue with `GenConverter` un/structuring hooks when a function hook is registered after the converter has already been used.
 
 1.3.0 (2021-02-25)
 ------------------

@@ -154,11 +154,10 @@ class Converter(object):
                 [(lambda t: t is cls, func)]
             )
         else:
-            self._unstructure_func.clear_direct()
             self._unstructure_func.register_cls_list([(cls, func)])
 
     def register_unstructure_hook_func(
-        self, check_func, func: Callable[[T], Any]
+        self, check_func: Callable[[Any], bool], func: Callable[[T], Any]
     ):
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
@@ -182,7 +181,6 @@ class Converter(object):
         if is_union_type(cl):
             self._union_struct_registry[cl] = func
         else:
-            self._structure_func.clear_direct()
             self._structure_func.register_cls_list([(cl, func)])
 
     def register_structure_hook_func(
