@@ -97,6 +97,12 @@ else:
         _SpecialGenericAlias,
         _UnionGenericAlias,
     )
+    from collections.abc import (
+        MutableSequence as AbcMutableSequence,
+        Sequence as AbcSequence,
+        MutableSet as AbcMutableSet,
+        Set as AbcSet,
+    )
 
     def is_tuple(type):
         return (
@@ -117,12 +123,26 @@ else:
 
     def is_sequence(type: Any) -> bool:
         return (
-            type in (List, list, Sequence, MutableSequence, tuple)
+            type
+            in (
+                List,
+                list,
+                Sequence,
+                MutableSequence,
+                AbcMutableSequence,
+                tuple,
+            )
             or (
                 type.__class__ is _GenericAlias
-                and issubclass(type.__origin__, Sequence)
+                and issubclass(
+                    type.__origin__,
+                    Sequence,
+                )
             )
-            or (getattr(type, "__origin__", None) in (list, tuple))
+            or (
+                getattr(type, "__origin__", None)
+                in (list, tuple, AbcMutableSequence, AbcSequence)
+            )
         )
 
     def is_mutable_set(type):
@@ -132,7 +152,10 @@ else:
                 type.__class__ is _GenericAlias
                 and issubclass(type.__origin__, MutableSet)
             )
-            or (getattr(type, "__origin__", None) is set)
+            or (
+                getattr(type, "__origin__", None)
+                in (set, AbcMutableSet, AbcSet)
+            )
         )
 
     def is_frozenset(type):

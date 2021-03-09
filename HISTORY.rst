@@ -4,7 +4,9 @@ History
 
 1.4.0 (UNRELEASED)
 ------------------
-* Fix an issue with `GenConverter` un/structuring hooks when a function hook is registered after the converter has already been used.
+* Fix an issue with ``GenConverter`` un/structuring hooks when a function hook is registered after the converter has already been used.
+* Add support for ``collections.abc.{Sequence, MutableSequence, Set, MutableSet}``. These should be used on 3.9+ instead of their ``typing`` alternatives, which are deprecated.
+  (`#128 <https://github.com/Tinche/cattrs/issues/128>`_)
 
 1.3.0 (2021-02-25)
 ------------------

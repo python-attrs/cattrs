@@ -1,7 +1,23 @@
 """Tests for metadata functionality."""
 import sys
 from collections import OrderedDict
-from typing import Any, Callable, Dict, List, Tuple, Type, TypeVar
+from collections.abc import (
+    MutableSequence as AbcMutableSequence,
+    Sequence as AbcSequence,
+    Set as AbcSet,
+    MutableSet as AbcMutableSet,
+)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    MutableSequence,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+)
 
 import attr
 from attr import NOTHING
@@ -65,6 +81,8 @@ def simple_typed_attrs(
             | str_typed_attrs(defaults)
             | float_typed_attrs(defaults)
             | dict_typed_attrs(defaults)
+            | mutable_seq_typed_attrs(defaults)
+            | seq_typed_attrs(defaults)
         )
     else:
         return (
@@ -78,6 +96,8 @@ def simple_typed_attrs(
             | list_typed_attrs(defaults)
             | frozenset_typed_attrs(defaults)
             | homo_tuple_typed_attrs(defaults)
+            | mutable_seq_typed_attrs(defaults)
+            | seq_typed_attrs(defaults)
         )
 
 
@@ -212,7 +232,15 @@ def set_typed_attrs(draw, defaults=None):
     val_strat = sets(integers())
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(val_strat)
-    return (attr.ib(type=set[int], default=default), val_strat)
+    return (
+        attr.ib(
+            type=set[int]
+            if draw(booleans())
+            else (AbcSet[int] if draw(booleans()) else AbcMutableSet[int]),
+            default=default,
+        ),
+        val_strat,
+    )
 
 
 @composite
@@ -247,6 +275,48 @@ def list_typed_attrs(draw, defaults=None):
     return (
         attr.ib(
             type=list[float] if draw(booleans()) else List[float],
+            default=default,
+        ),
+        val_strat,
+    )
+
+
+@composite
+def mutable_seq_typed_attrs(draw, defaults=None):
+    """
+    Generate a tuple of an attribute and a strategy that yields lists
+    for that attribute. The lists contain floats.
+    """
+    default = attr.NOTHING
+    val_strat = lists(integers())
+    if defaults is True or (defaults is None and draw(booleans())):
+        default = draw(val_strat)
+    return (
+        attr.ib(
+            type=Sequence[int]
+            if not is_39_or_later or draw(booleans())
+            else AbcSequence[int],
+            default=default,
+        ),
+        val_strat,
+    )
+
+
+@composite
+def seq_typed_attrs(draw, defaults=None):
+    """
+    Generate a tuple of an attribute and a strategy that yields lists
+    for that attribute. The lists contain floats.
+    """
+    default = attr.NOTHING
+    val_strat = lists(floats(allow_infinity=False, allow_nan=False))
+    if defaults is True or (defaults is None and draw(booleans())):
+        default = draw(val_strat)
+    return (
+        attr.ib(
+            type=MutableSequence[float]
+            if not is_39_or_later
+            else AbcMutableSequence[float],
             default=default,
         ),
         val_strat,
