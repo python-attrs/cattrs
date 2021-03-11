@@ -1,5 +1,6 @@
 """Tests for metadata functionality."""
 import sys
+from functools import partial
 from collections import OrderedDict
 from collections.abc import (
     MutableSequence as AbcMutableSequence,
@@ -46,11 +47,11 @@ PosArgs = Tuple[Any]
 T = TypeVar("T")
 
 
-def simple_typed_classes(defaults=None, min_attrs=0):
+def simple_typed_classes(defaults=None, min_attrs=0, frozen=False):
     """Yield tuples of (class, values)."""
-    return lists_of_typed_attrs(defaults, min_size=min_attrs).flatmap(
-        _create_hyp_class
-    )
+    return lists_of_typed_attrs(
+        defaults, min_size=min_attrs, for_frozen=frozen
+    ).flatmap(partial(_create_hyp_class, frozen=frozen))
 
 
 def simple_typed_classes_and_strats(
@@ -63,16 +64,18 @@ def simple_typed_classes_and_strats(
 
 
 def lists_of_typed_attrs(
-    defaults=None, min_size=0
+    defaults=None, min_size=0, for_frozen=False
 ) -> SearchStrategy[List[Tuple[_CountingAttr, SearchStrategy[PosArg]]]]:
     # Python functions support up to 255 arguments.
     return lists(
-        simple_typed_attrs(defaults), min_size=min_size, max_size=50
+        simple_typed_attrs(defaults, for_frozen=for_frozen),
+        min_size=min_size,
+        max_size=50,
     ).map(lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING))
 
 
 def simple_typed_attrs(
-    defaults=None,
+    defaults=None, for_frozen=False
 ) -> SearchStrategy[Tuple[_CountingAttr, SearchStrategy[PosArgs]]]:
     if not is_39_or_later:
         return (
@@ -85,24 +88,32 @@ def simple_typed_attrs(
             | seq_typed_attrs(defaults)
         )
     else:
-        return (
+        res = (
             bare_typed_attrs(defaults)
             | int_typed_attrs(defaults)
             | str_typed_attrs(defaults)
             | float_typed_attrs(defaults)
-            | dict_typed_attrs(defaults)
-            | new_dict_typed_attrs(defaults)
-            | set_typed_attrs(defaults)
-            | list_typed_attrs(defaults)
             | frozenset_typed_attrs(defaults)
             | homo_tuple_typed_attrs(defaults)
-            | mutable_seq_typed_attrs(defaults)
-            | seq_typed_attrs(defaults)
         )
+
+        if not for_frozen:
+            res = (
+                res
+                | dict_typed_attrs(defaults)
+                | new_dict_typed_attrs(defaults)
+                | set_typed_attrs(defaults)
+                | list_typed_attrs(defaults)
+                | mutable_seq_typed_attrs(defaults)
+                | seq_typed_attrs(defaults)
+            )
+
+        return res
 
 
 def _create_hyp_class(
-    attrs_and_strategy: List[Tuple[_CountingAttr, SearchStrategy[PosArgs]]]
+    attrs_and_strategy: List[Tuple[_CountingAttr, SearchStrategy[PosArgs]]],
+    frozen=False,
 ) -> SearchStrategy[Tuple[Type, PosArgs]]:
     """
     A helper function for Hypothesis to generate attrs classes.
@@ -121,7 +132,11 @@ def _create_hyp_class(
     vals = tuple((a[1]) for a in attrs_and_strat)
     return tuples(
         just(
-            make_class("HypClass", OrderedDict(zip(gen_attr_names(), attrs)))
+            make_class(
+                "HypClass",
+                OrderedDict(zip(gen_attr_names(), attrs)),
+                frozen=frozen,
+            )
         ),
         tuples(*vals),
     )

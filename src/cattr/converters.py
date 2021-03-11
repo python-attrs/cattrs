@@ -21,6 +21,7 @@ from .gen import (
     AttributeOverride,
     make_dict_structure_fn,
     make_dict_unstructure_fn,
+    make_iterable_unstructure_fn,
 )
 
 NoneType = type(None)
@@ -498,6 +499,30 @@ class GenConverter(Converter):
                 ]
             )
 
+        self._unstructure_func.register_func_list(
+            [
+                (
+                    is_sequence,
+                    self.gen_unstructure_iterable,
+                    True,
+                ),
+                (
+                    is_mutable_set,
+                    lambda cl: self.gen_unstructure_iterable(
+                        cl, unstructure_to=set
+                    ),
+                    True,
+                ),
+                (
+                    is_frozenset,
+                    lambda cl: self.gen_unstructure_iterable(
+                        cl, unstructure_to=frozenset
+                    ),
+                    True,
+                ),
+            ]
+        )
+
     def gen_unstructure_attrs_fromdict(self, cl: Type[T]) -> Dict[str, Any]:
         attribs = fields(cl)
         if any(isinstance(a.type, str) for a in attribs):
@@ -528,4 +553,11 @@ class GenConverter(Converter):
         h = make_dict_structure_fn(cl, self, **attrib_overrides)
         self._structure_func.register_cls_list([(cl, h)], direct=True)
         # only direct dispatch so that subclasses get separately generated
+        return h
+
+    def gen_unstructure_iterable(self, cl: Any, unstructure_to=list):
+        h = make_iterable_unstructure_fn(
+            cl, self, unstructure_to=unstructure_to
+        )
+        self._unstructure_func.register_cls_list([(cl, h)], direct=True)
         return h

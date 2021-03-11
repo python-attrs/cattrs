@@ -1,5 +1,5 @@
 import re
-from typing import Optional, Type, TypeVar
+from typing import Any, Optional, Type, TypeVar
 
 import attr
 from attr import NOTHING, resolve_types
@@ -185,3 +185,30 @@ def make_dict_structure_fn(cl: Type, converter, **kwargs):
     eval(compile("\n".join(total_lines), "", "exec"), globs)
 
     return globs[fn_name]
+
+
+def make_iterable_unstructure_fn(cl: Any, converter, unstructure_to=None):
+    """Generate a specialized unstructure function for an iterable."""
+    handler = converter.unstructure
+
+    fn_name = f"unstructure_iterable"
+
+    # Let's try fishing out the type args.
+    if getattr(cl, "__args__", None) is not None:
+        type_arg = get_args(cl)[0]
+        # We can do the dispatch here and now.
+        handler = converter._unstructure_func.dispatch(type_arg)
+
+    globs = {"__cattr_seq_cl": unstructure_to or cl, "__cattr_u": handler}
+    lines = []
+
+    lines.append(f"def {fn_name}(iterable):")
+    lines.append("    res = __cattr_seq_cl(__cattr_u(i) for i in iterable)")
+
+    total_lines = lines + ["    return res"]
+
+    eval(compile("\n".join(total_lines), "", "exec"), globs)
+
+    fn = globs[fn_name]
+
+    return fn
