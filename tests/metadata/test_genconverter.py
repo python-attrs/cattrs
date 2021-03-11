@@ -1,11 +1,11 @@
 """Test both structuring and unstructuring."""
-from typing import Optional, Union
+from typing import List, MutableSequence, Optional, Sequence, Set, Tuple, Union
 
 import attr
 import pytest
 from attr import Factory, fields, make_class
 from hypothesis import HealthCheck, assume, given, settings
-from hypothesis.strategies import booleans, sampled_from
+from hypothesis.strategies import booleans, sampled_from, lists
 
 from cattr import GenConverter as Converter
 from cattr import UnstructureStrategy
@@ -289,3 +289,39 @@ def test_overriding_generated_structure_hook_func():
 
     r = converter.structure(raw, Outer)
     assert r.i.a == 2
+
+
+@given(
+    lists(simple_typed_classes(frozen=True), min_size=1),
+    sampled_from(
+        [
+            (tuple, Tuple),
+            (list, List),
+            (set, Set),
+            (frozenset, frozenset),
+            (list, MutableSequence),
+            (tuple, Sequence),
+        ]
+    ),
+)
+def test_seq_of_simple_classes_unstructure(
+    cls_and_vals, seq_type_and_annotation
+):
+    """Dumping a sequence of primitives is a simple copy operation."""
+    converter = Converter()
+
+    test_val = ("test", 1)
+
+    for cl, _ in cls_and_vals:
+        converter.register_unstructure_hook(cl, lambda _: test_val)
+        break  # Just register the first class.
+
+    seq_type, annotation = seq_type_and_annotation
+    inputs = seq_type(cl(*vals) for cl, vals in cls_and_vals)
+    outputs = converter.unstructure(
+        inputs,
+        unstructure_as=annotation[cl]
+        if annotation is not Tuple
+        else annotation[cl, ...],
+    )
+    assert all(e == test_val for e in outputs)

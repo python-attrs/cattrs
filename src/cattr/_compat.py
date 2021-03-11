@@ -134,15 +134,21 @@ else:
             )
             or (
                 type.__class__ is _GenericAlias
-                and issubclass(
-                    type.__origin__,
-                    Sequence,
+                and (
+                    ((origin := type.__origin__) is not tuple)
+                    and issubclass(
+                        origin,
+                        Sequence,
+                    )
+                    or origin is tuple
+                    and type.__args__[1] is ...
                 )
             )
             or (
-                getattr(type, "__origin__", None)
-                in (list, tuple, AbcMutableSequence, AbcSequence)
+                (origin := getattr(type, "__origin__", None))
+                in (list, AbcMutableSequence, AbcSequence)
             )
+            or (origin is tuple and type.__args__[1] is ...)
         )
 
     def is_mutable_set(type):

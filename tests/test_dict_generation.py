@@ -164,6 +164,8 @@ def test_unmodified_generated_structuring(cl_and_vals):
 
     unstructured = converter.unstructure(inst)
 
+    assert "HypClass" not in repr(unstructured)
+
     converter.register_structure_hook(cl, fn)
 
     res = converter.structure(unstructured, cl)

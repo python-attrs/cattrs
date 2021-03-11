@@ -37,13 +37,13 @@ class MultiStrategyDispatch:
             dispatch = self._single_dispatch.dispatch(cl)
             if dispatch is not _DispatchNotFound:
                 return dispatch
-
-            direct_dispatch = self._direct_dispatch.get(cl)
-            if direct_dispatch is not None:
-                return direct_dispatch
-
         except Exception:
             pass
+
+        direct_dispatch = self._direct_dispatch.get(cl)
+        if direct_dispatch is not None:
+            return direct_dispatch
+
         return self._function_dispatch.dispatch(cl)
 
     def register_cls_list(self, cls_and_handler, direct: bool = False):
@@ -113,11 +113,12 @@ class FunctionDispatch:
             # such as issubclass being called on an instance.
             # it's easier to just ignore that case.
             try:
-                if can_handle(typ):
-                    if is_generator:
-                        return handler(typ)
-                    else:
-                        return handler
+                ch = can_handle(typ)
             except Exception:
-                pass
+                continue
+            if ch:
+                if is_generator:
+                    return handler(typ)
+                else:
+                    return handler
         raise KeyError("unable to find handler for {0}".format(typ))
