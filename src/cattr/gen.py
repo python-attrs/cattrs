@@ -191,7 +191,7 @@ def make_iterable_unstructure_fn(cl: Any, converter, unstructure_to=None):
     """Generate a specialized unstructure function for an iterable."""
     handler = converter.unstructure
 
-    fn_name = f"unstructure_iterable"
+    fn_name = "unstructure_iterable"
 
     # Let's try fishing out the type args.
     if getattr(cl, "__args__", None) is not None:
