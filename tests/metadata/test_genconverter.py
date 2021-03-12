@@ -1,5 +1,14 @@
 """Test both structuring and unstructuring."""
-from typing import List, MutableSequence, Optional, Sequence, Set, Tuple, Union
+from typing import (
+    FrozenSet,
+    List,
+    MutableSequence,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import attr
 import pytest
@@ -12,6 +21,7 @@ from cattr import UnstructureStrategy
 from cattr.gen import override
 
 from . import nested_typed_classes, simple_typed_attrs, simple_typed_classes
+from cattr._compat import is_py39_plus
 
 unstructure_strats = sampled_from(list(UnstructureStrategy))
 
@@ -296,9 +306,22 @@ def test_overriding_generated_structure_hook_func():
     sampled_from(
         [
             (tuple, Tuple),
+            (tuple, tuple),
+            (list, list),
             (list, List),
             (set, Set),
+            (set, set),
             (frozenset, frozenset),
+            (frozenset, FrozenSet),
+            (list, MutableSequence),
+            (tuple, Sequence),
+        ]
+        if is_py39_plus
+        else [
+            (tuple, Tuple),
+            (list, List),
+            (set, Set),
+            (frozenset, FrozenSet),
             (list, MutableSequence),
             (tuple, Sequence),
         ]
