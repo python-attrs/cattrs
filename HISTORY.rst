@@ -9,6 +9,8 @@ History
   (`#128 <https://github.com/Tinche/cattrs/issues/128>`_)
 * The ``GenConverter`` will unstructure iterables (``list[T]``, ``tuple[T, ...]``, ``set[T]``) using their type argument instead of the runtime class if its elements, if possible. These unstructuring operations are up to 40% faster.
   (`#129 <https://github.com/Tinche/cattrs/issues/129>`_)
+* Flesh out ``Converter`` and ``GenConverter`` initializer type annotations.
+  (`#131 <https://github.com/Tinche/cattrs/issues/131>`_)
 
 1.3.0 (2021-02-25)
 ------------------

@@ -55,8 +55,10 @@ class Converter(object):
     )
 
     def __init__(
-        self, dict_factory=dict, unstruct_strat=UnstructureStrategy.AS_DICT
-    ):
+        self,
+        dict_factory: Callable[[], Any] = dict,
+        unstruct_strat: UnstructureStrategy = UnstructureStrategy.AS_DICT,
+    ) -> None:
         unstruct_strat = UnstructureStrategy(unstruct_strat)
 
         # Create a per-instance cache.
@@ -471,9 +473,9 @@ class GenConverter(Converter):
 
     def __init__(
         self,
-        dict_factory=dict,
-        unstruct_strat=UnstructureStrategy.AS_DICT,
-        omit_if_default=False,
+        dict_factory: Callable[[], Any] = dict,
+        unstruct_strat: UnstructureStrategy = UnstructureStrategy.AS_DICT,
+        omit_if_default: bool = False,
         type_overrides: Mapping[Type, AttributeOverride] = {},
     ):
         super().__init__(
