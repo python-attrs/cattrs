@@ -122,6 +122,7 @@ else:
         )
 
     def is_sequence(type: Any) -> bool:
+        origin = getattr(type, "__origin__", None)
         return (
             type
             in (
@@ -135,7 +136,7 @@ else:
             or (
                 type.__class__ is _GenericAlias
                 and (
-                    ((origin := type.__origin__) is not tuple)
+                    (origin is not tuple)
                     and issubclass(
                         origin,
                         Sequence,
@@ -144,10 +145,7 @@ else:
                     and type.__args__[1] is ...
                 )
             )
-            or (
-                (origin := getattr(type, "__origin__", None))
-                in (list, AbcMutableSequence, AbcSequence)
-            )
+            or (origin in (list, AbcMutableSequence, AbcSequence))
             or (origin is tuple and type.__args__[1] is ...)
         )
 
