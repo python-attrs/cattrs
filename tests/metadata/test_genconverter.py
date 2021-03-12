@@ -344,7 +344,7 @@ def test_seq_of_simple_classes_unstructure(
     outputs = converter.unstructure(
         inputs,
         unstructure_as=annotation[cl]
-        if annotation is not Tuple
+        if annotation not in (Tuple, tuple)
         else annotation[cl, ...],
     )
     assert all(e == test_val for e in outputs)
