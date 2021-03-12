@@ -78,15 +78,19 @@ def simple_typed_attrs(
     defaults=None, for_frozen=False
 ) -> SearchStrategy[Tuple[_CountingAttr, SearchStrategy[PosArgs]]]:
     if not is_39_or_later:
-        return (
+        res = (
             bare_typed_attrs(defaults)
             | int_typed_attrs(defaults)
             | str_typed_attrs(defaults)
             | float_typed_attrs(defaults)
-            | dict_typed_attrs(defaults)
-            | mutable_seq_typed_attrs(defaults)
-            | seq_typed_attrs(defaults)
         )
+        if not for_frozen:
+            res = (
+                res
+                | dict_typed_attrs(defaults)
+                | mutable_seq_typed_attrs(defaults)
+                | seq_typed_attrs(defaults)
+            )
     else:
         res = (
             bare_typed_attrs(defaults)
@@ -108,7 +112,7 @@ def simple_typed_attrs(
                 | seq_typed_attrs(defaults)
             )
 
-        return res
+    return res
 
 
 def _create_hyp_class(
