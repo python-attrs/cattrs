@@ -154,7 +154,7 @@ class Converter(object):
             resolve_types(cls)
         if is_union_type(cls):
             self._unstructure_func.register_func_list(
-                [(lambda t: t is cls, func)]
+                [(lambda t: t == cls, func)]
             )
         else:
             self._unstructure_func.register_cls_list([(cls, func)])
