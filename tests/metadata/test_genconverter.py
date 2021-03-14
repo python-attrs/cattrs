@@ -348,3 +348,38 @@ def test_seq_of_simple_classes_unstructure(
         else annotation[cl, ...],
     )
     assert all(e == test_val for e in outputs)
+
+
+@pytest.mark.skipif(not is_py39_plus, reason="3.9+ only")
+def test_annotated_attrs():
+    """Annotation support works for attrs classes."""
+    from typing import Annotated
+
+    converter = Converter()
+
+    @attr.define
+    class Inner:
+        a: int
+
+    @attr.define
+    class Outer:
+        i: Annotated[Inner, "test"]
+        j: list[Annotated[Inner, "test"]]
+
+    orig = Outer(Inner(1), [Inner(1)])
+    raw = converter.unstructure(orig)
+
+    assert raw == {"i": {"a": 1}, "j": [{"a": 1}]}
+
+    structured = converter.structure(raw, Outer)
+    assert structured == orig
+
+    # Now register a hook and rerun the test.
+    converter.register_unstructure_hook(Inner, lambda v: {"a": 2})
+
+    raw = converter.unstructure(Outer(Inner(1), [Inner(1)]))
+
+    assert raw == {"i": {"a": 2}, "j": [{"a": 2}]}
+
+    structured = converter.structure(raw, Outer)
+    assert structured == Outer(Inner(2), [Inner(2)])

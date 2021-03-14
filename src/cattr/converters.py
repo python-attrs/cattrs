@@ -14,6 +14,7 @@ from ._compat import (
     is_sequence,
     is_tuple,
     is_union_type,
+    is_annotated,
 )
 from .disambiguators import create_uniq_field_dis_func
 from .dispatch import MultiStrategyDispatch
@@ -503,6 +504,7 @@ class GenConverter(Converter):
 
         self._unstructure_func.register_func_list(
             [
+                (is_annotated, self.gen_unstructure_annotated, True),
                 (
                     is_sequence,
                     self.gen_unstructure_iterable,
@@ -524,6 +526,19 @@ class GenConverter(Converter):
                 ),
             ]
         )
+        self._structure_func.register_func_list(
+            [(is_annotated, self.gen_structure_annotated, True)]
+        )
+
+    def gen_unstructure_annotated(self, type):
+        origin = type.__origin__
+        h = self._unstructure_func.dispatch(origin)
+        return h
+
+    def gen_structure_annotated(self, type):
+        origin = type.__origin__
+        h = self._structure_func.dispatch(origin)
+        return h
 
     def gen_unstructure_attrs_fromdict(self, cl: Type[T]) -> Dict[str, Any]:
         attribs = fields(cl)
