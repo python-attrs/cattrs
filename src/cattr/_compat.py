@@ -34,6 +34,9 @@ else:
 if is_py37 or is_py38:
     from typing import Union, _GenericAlias
 
+    def is_annotated(_):
+        return False
+
     def is_tuple(type):
         return type in (Tuple, tuple) or (
             type.__class__ is _GenericAlias
@@ -96,6 +99,7 @@ else:
         _GenericAlias,
         _SpecialGenericAlias,
         _UnionGenericAlias,
+        _AnnotatedAlias,
     )
     from collections.abc import (
         MutableSequence as AbcMutableSequence,
@@ -103,6 +107,9 @@ else:
         MutableSet as AbcMutableSet,
         Set as AbcSet,
     )
+
+    def is_annotated(type) -> bool:
+        return getattr(type, "__class__", None) is _AnnotatedAlias
 
     def is_tuple(type):
         return (

@@ -11,6 +11,8 @@ History
   (`#129 <https://github.com/Tinche/cattrs/issues/129>`_)
 * Flesh out ``Converter`` and ``GenConverter`` initializer type annotations.
   (`#131 <https://github.com/Tinche/cattrs/issues/131>`_)
+* Add support for ``typing.Annotated`` on Python 3.9+. ``cattrs`` will use the first annotation present. ``cattrs`` specific annotations may be added in the future.
+  (`#127 <https://github.com/Tinche/cattrs/issues/127>`_)
 
 1.3.0 (2021-02-25)
 ------------------
