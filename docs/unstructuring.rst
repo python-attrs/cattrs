@@ -35,6 +35,11 @@ a complex or recursive collection.
     >>> data is copy
     False
 
+``typing.Annotated``
+--------------------
+
+Fields marked as ``typing.Annotated[type, ...]`` are supported and are matched
+using the first type present in the annotated type.
 
 ``attrs`` classes
 -----------------

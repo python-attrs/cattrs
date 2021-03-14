@@ -264,6 +264,12 @@ Manual Disambiguation
 To support arbitrary unions, register a custom structuring hook for the union
 (see `Registering custom structuring hooks`_).
 
+``typing.Annotated``
+~~~~~~~~~~~~~~~~~~~~
+
+`PEP 593`_ annotations (``typing.Annotated[type, ...]``) are supported and are
+matched using the first type present in the annotated type.
+
 ``attrs`` classes
 -----------------
 
@@ -401,3 +407,5 @@ The function-based hooks are evaluated after the class-based hooks. In the case 
     >>> cattr.register_structure_hook_func(lambda cls: getattr(cls, "custom", False), lambda d, t: t.deserialize(d))
     >>> cattr.structure({'a': 2}, D)
     D(a=2)
+
+.. _`PEP 593` : https://www.python.org/dev/peps/pep-0593/
