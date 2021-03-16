@@ -1,6 +1,7 @@
 """Tests for metadata functionality."""
 import sys
 from functools import partial
+from dataclasses import make_dataclass, field
 from collections import OrderedDict
 from collections.abc import (
     MutableSequence as AbcMutableSequence,
@@ -21,7 +22,7 @@ from typing import (
 )
 
 import attr
-from attr import NOTHING
+from attr import Factory, NOTHING
 from attr._make import _CountingAttr
 from hypothesis.strategies import (
     SearchStrategy,
@@ -52,6 +53,13 @@ def simple_typed_classes(defaults=None, min_attrs=0, frozen=False):
     return lists_of_typed_attrs(
         defaults, min_size=min_attrs, for_frozen=frozen
     ).flatmap(partial(_create_hyp_class, frozen=frozen))
+
+
+def simple_typed_dataclasses(defaults=None, min_attrs=0, frozen=False):
+    """Yield tuples of (class, values)."""
+    return lists_of_typed_attrs(
+        defaults, min_size=min_attrs, for_frozen=frozen
+    ).flatmap(partial(_create_dataclass, frozen=frozen))
 
 
 def simple_typed_classes_and_strats(
@@ -146,6 +154,50 @@ def _create_hyp_class(
     )
 
 
+def _create_dataclass(
+    attrs_and_strategy: List[Tuple[_CountingAttr, SearchStrategy[PosArgs]]],
+    frozen=False,
+) -> SearchStrategy[Tuple[Type, PosArgs]]:
+    """
+    A helper function for Hypothesis to generate dataclasses.
+
+    The result is a tuple: a dataclass, and a tuple of values to
+    instantiate it.
+    """
+
+    def key(t):
+        return t[0].default is not attr.NOTHING
+
+    attrs_and_strat = sorted(attrs_and_strategy, key=key)
+    attrs = [a[0] for a in attrs_and_strat]
+    for i, a in enumerate(attrs):
+        a.counter = i
+    vals = tuple((a[1]) for a in attrs_and_strat)
+    return tuples(
+        just(
+            make_dataclass(
+                "HypDataclass",
+                [
+                    (n, a.type)
+                    if a.default is NOTHING
+                    else (
+                        (n, a.type, field(default=a.default))
+                        if not isinstance(a.default, Factory)
+                        else (
+                            n,
+                            a.type,
+                            field(default_factory=a.default.factory),
+                        )
+                    )
+                    for n, a in zip(gen_attr_names(), attrs)
+                ],
+                frozen=frozen,
+            )
+        ),
+        tuples(*vals),
+    )
+
+
 def _create_hyp_class_and_strat(
     attrs_and_strategy: List[Tuple[_CountingAttr, SearchStrategy[PosArg]]],
 ) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
@@ -223,6 +275,8 @@ def dict_typed_attrs(draw, defaults=None):
     val_strat = dictionaries(keys=text(), values=integers())
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(val_strat)
+        if draw(booleans()):
+            default = Factory(lambda: default)
     return (attr.ib(type=Dict[str, int], default=default), val_strat)
 
 

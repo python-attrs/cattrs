@@ -20,13 +20,18 @@ from cattr import GenConverter as Converter
 from cattr import UnstructureStrategy
 from cattr.gen import override
 
-from . import nested_typed_classes, simple_typed_attrs, simple_typed_classes
+from . import (
+    nested_typed_classes,
+    simple_typed_attrs,
+    simple_typed_classes,
+    simple_typed_dataclasses,
+)
 from cattr._compat import is_py39_plus
 
 unstructure_strats = sampled_from(list(UnstructureStrategy))
 
 
-@given(simple_typed_classes(), unstructure_strats)
+@given(simple_typed_classes() | simple_typed_dataclasses(), unstructure_strats)
 def test_simple_roundtrip(cls_and_vals, strat):
     """
     Simple classes with metadata can be unstructured and restructured.
@@ -34,7 +39,9 @@ def test_simple_roundtrip(cls_and_vals, strat):
     converter = Converter(unstruct_strat=strat)
     cl, vals = cls_and_vals
     inst = cl(*vals)
-    assert inst == converter.structure(converter.unstructure(inst), cl)
+    unstructured = converter.unstructure(inst)
+    assert "Hyp" not in repr(unstructured)
+    assert inst == converter.structure(unstructured, cl)
 
 
 @given(simple_typed_attrs(defaults=True), unstructure_strats)

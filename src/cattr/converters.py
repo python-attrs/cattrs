@@ -2,7 +2,7 @@ from enum import Enum
 from functools import lru_cache
 from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, TypeVar
 
-from attr import fields, has, resolve_types
+from attr import resolve_types
 
 from ._compat import (
     get_origin,
@@ -15,6 +15,8 @@ from ._compat import (
     is_tuple,
     is_union_type,
     is_annotated,
+    has,
+    fields,
 )
 from .disambiguators import create_uniq_field_dis_func
 from .dispatch import MultiStrategyDispatch
@@ -216,7 +218,7 @@ class Converter(object):
 
     def unstructure_attrs_astuple(self, obj) -> Tuple[Any, ...]:
         """Our version of `attrs.astuple`, so we can call back to us."""
-        attrs = obj.__class__.__attrs_attrs__
+        attrs = fields(obj.__class__)
         dispatch = self._unstructure_func.dispatch
         res = list()
         for a in attrs:
@@ -300,7 +302,7 @@ class Converter(object):
     ) -> T:
         """Load an attrs class from a sequence (tuple)."""
         conv_obj = []  # A list of converter parameters.
-        for a, value in zip(cl.__attrs_attrs__, obj):  # type: ignore
+        for a, value in zip(fields(cl), obj):  # type: ignore
             # We detect the type by the metadata.
             converted = self._structure_attr_from_tuple(a, a.name, value)
             conv_obj.append(converted)
