@@ -55,9 +55,8 @@ gets converted into a tuple of three ints.
 .. code-block:: pycon
 
     >>> import cattr
-    >>> from typing import Tuple
     >>>
-    >>> cattr.structure([1.0, 2, "3"], Tuple[int, int, int])
+    >>> cattr.structure([1.0, 2, "3"], tuple[int, int, int])
     (1, 2, 3)
 
 ``cattrs`` works well with ``attrs`` classes out of the box.
@@ -66,7 +65,7 @@ gets converted into a tuple of three ints.
 
     >>> import attr, cattr
     >>>
-    >>> @attr.s(slots=True, frozen=True)  # It works with normal classes too.
+    >>> @attr.frozen  # It works with normal classes too.
     ... class C:
     ...     a = attr.ib()
     ...     b = attr.ib()
@@ -83,7 +82,7 @@ metadata.
 .. code-block:: pycon
 
     >>> from enum import unique, Enum
-    >>> from typing import List, Optional, Sequence, Union
+    >>> from typing import Optional, Sequence, Union
     >>> from cattr import structure, unstructure
     >>> import attr
     >>>
@@ -93,27 +92,27 @@ metadata.
     ...     MAINE_COON = "maine_coon"
     ...     SACRED_BIRMAN = "birman"
     ...
-    >>> @attr.s
+    >>> @attr.define
     ... class Cat:
-    ...     breed: CatBreed = attr.ib()
-    ...     names: Sequence[str] = attr.ib()
+    ...     breed: CatBreed
+    ...     names: Sequence[str]
     ...
-    >>> @attr.s
+    >>> @attr.define
     ... class DogMicrochip:
     ...     chip_id = attr.ib()
     ...     time_chipped: float = attr.ib()
     ...
-    >>> @attr.s
+    >>> @attr.define
     ... class Dog:
-    ...     cuteness: int = attr.ib()
-    ...     chip: Optional[DogMicrochip] = attr.ib()
+    ...     cuteness: int
+    ...     chip: Optional[DogMicrochip]
     ...
     >>> p = unstructure([Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)),
     ...                  Cat(breed=CatBreed.MAINE_COON, names=('Fluffly', 'Fluffer'))])
     ...
     >>> print(p)
     [{'cuteness': 1, 'chip': {'chip_id': 1, 'time_chipped': 10.0}}, {'breed': 'maine_coon', 'names': ('Fluffly', 'Fluffer')}]
-    >>> print(structure(p, List[Union[Dog, Cat]]))
+    >>> print(structure(p, list[Union[Dog, Cat]]))
     [Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)), Cat(breed=<CatBreed.MAINE_COON: 'maine_coon'>, names=['Fluffly', 'Fluffer'])]
 
 Consider unstructured data a low-level representation that needs to be converted
