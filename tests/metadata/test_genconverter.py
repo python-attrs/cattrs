@@ -45,11 +45,11 @@ def test_simple_roundtrip(cls_and_vals, strat):
 
 
 @given(simple_typed_attrs(defaults=True), unstructure_strats)
-def test_simple_roundtrip_defaults(cls_and_vals, strat):
+def test_simple_roundtrip_defaults(attr_and_vals, strat):
     """
     Simple classes with metadata can be unstructured and restructured.
     """
-    a, _ = cls_and_vals
+    a, _ = attr_and_vals
     cl = make_class("HypClass", {"a": a})
     converter = Converter(unstruct_strat=strat)
     inst = cl()
