@@ -1,10 +1,11 @@
 import re
 from typing import Any, Optional, Type, TypeVar
+from dataclasses import is_dataclass
 
 import attr
 from attr import NOTHING, resolve_types
 
-from cattr._compat import get_args, get_origin, is_generic
+from cattr._compat import get_args, get_origin, is_generic, fields
 
 
 @attr.s(slots=True, frozen=True)
@@ -28,7 +29,7 @@ def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
     lines = []
     post_lines = []
 
-    attrs = cl.__attrs_attrs__  # type: ignore
+    attrs = fields(cl)  # type: ignore
 
     lines.append(f"def {fn_name}(i):")
     lines.append("    res = {")
@@ -140,7 +141,8 @@ def make_dict_structure_fn(cl: Type, converter, **kwargs):
     lines = []
     post_lines = []
 
-    attrs = cl.__attrs_attrs__
+    attrs = fields(cl)
+    is_dc = is_dataclass(cl)
 
     if any(isinstance(a.type, str) for a in attrs):
         # PEP 563 annotations - need to be resolved.
@@ -166,7 +168,7 @@ def make_dict_structure_fn(cl: Type, converter, **kwargs):
         struct_handler_name = f"__cattr_struct_handler_{an}"
         globs[struct_handler_name] = handler
 
-        ian = an if an[0] != "_" else an[1:]
+        ian = an if (is_dc or an[0] != "_") else an[1:]
         kn = an if override.rename is None else override.rename
         globs[f"__c_t_{an}"] = type
         if a.default is NOTHING:

@@ -1,4 +1,6 @@
 import sys
+from attr import has as attrs_has, fields as attrs_fields
+from dataclasses import is_dataclass, fields as dataclass_fields
 from typing import (
     Any,
     Dict,
@@ -29,6 +31,17 @@ if is_py37:
 
 else:
     from typing import get_args, get_origin  # NOQA
+
+
+def has(type):
+    return attrs_has(type) or is_dataclass(type)
+
+
+def fields(type):
+    if is_dataclass(type):
+        return dataclass_fields(type)
+    else:
+        return attrs_fields(type)
 
 
 if is_py37 or is_py38:
