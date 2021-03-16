@@ -266,7 +266,9 @@ def float_typed_attrs(draw, defaults=None):
 
 
 @composite
-def dict_typed_attrs(draw, defaults=None):
+def dict_typed_attrs(
+    draw, defaults=None
+) -> SearchStrategy[Tuple[_CountingAttr, SearchStrategy]]:
     """
     Generate a tuple of an attribute and a strategy that yields dictionaries
     for that attribute. The dictionaries map strings to integers.
@@ -274,9 +276,11 @@ def dict_typed_attrs(draw, defaults=None):
     default = attr.NOTHING
     val_strat = dictionaries(keys=text(), values=integers())
     if defaults is True or (defaults is None and draw(booleans())):
-        default = draw(val_strat)
+        default_val = draw(val_strat)
         if draw(booleans()):
-            default = Factory(lambda: default)
+            default = Factory(lambda: default_val)
+        else:
+            default = default_val
     return (attr.ib(type=Dict[str, int], default=default), val_strat)
 
 
