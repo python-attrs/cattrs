@@ -207,7 +207,7 @@ class Converter(object):
     # Classes to Python primitives.
     def unstructure_attrs_asdict(self, obj) -> Dict[str, Any]:
         """Our version of `attrs.asdict`, so we can call back to us."""
-        attrs = obj.__class__.__attrs_attrs__
+        attrs = fields(obj.__class__)
         dispatch = self._unstructure_func.dispatch
         rv = self._dict_factory()
         for a in attrs:
@@ -325,7 +325,7 @@ class Converter(object):
 
         conv_obj = {}  # Start with a fresh dict, to ignore extra keys.
         dispatch = self._structure_func.dispatch
-        for a in cl.__attrs_attrs__:  # type: ignore
+        for a in fields(cl):  # type: ignore
             # We detect the type by metadata.
             type_ = a.type
             name = a.name
@@ -460,7 +460,7 @@ class Converter(object):
             )
 
         if not all(
-            hasattr(get_origin(e) or e, "__attrs_attrs__") for e in union_types
+            has(get_origin(e) or e) for e in union_types
         ):
             raise ValueError(
                 "Only unions of attr classes supported "
