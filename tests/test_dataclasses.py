@@ -2,8 +2,9 @@ import dataclasses
 from typing import List
 
 import attr
+import pytest
 
-import cattr
+from cattr import Converter, GenConverter
 
 
 @dataclasses.dataclass
@@ -16,7 +17,8 @@ class Container:
     foos: List[Foo]
 
 
-def test_dataclasses_in_attrs():
+@pytest.mark.parametrize("converter_cls", [GenConverter, Converter])
+def test_dataclasses_in_attrs(converter_cls):
     struct = Container(
         [
             Foo("bar"),
@@ -29,11 +31,13 @@ def test_dataclasses_in_attrs():
         ]
     }
 
-    assert cattr.unstructure(struct) == unstruct
-    assert cattr.structure(unstruct, Container) == struct
+    converter = converter_cls()
+    assert converter.unstructure(struct) == unstruct
+    assert converter.structure(unstruct, Container) == struct
 
 
-def test_dataclasses_in_container():
+@pytest.mark.parametrize("converter_cls", [GenConverter, Converter])
+def test_dataclasses_in_container(converter_cls):
     struct = [
         Foo("bar"),
         Foo("bat"),
@@ -44,14 +48,17 @@ def test_dataclasses_in_container():
         {"bar": "bat"},
     ]
 
-    assert cattr.unstructure(struct) == unstruct
-    assert cattr.structure(unstruct, List[Foo]) == struct
+    converter = converter_cls()
+    assert converter.unstructure(struct) == unstruct
+    assert converter.structure(unstruct, List[Foo]) == struct
 
 
-def test_dataclasses():
+@pytest.mark.parametrize("converter_cls", [GenConverter, Converter])
+def test_dataclasses(converter_cls):
     struct = Foo("bar")
 
     unstruct = {"bar": "bar"}
 
-    assert cattr.unstructure(struct) == unstruct
-    assert cattr.structure(unstruct, Foo) == struct
+    converter = converter_cls()
+    assert converter.unstructure(struct) == unstruct
+    assert converter.structure(unstruct, Foo) == struct
