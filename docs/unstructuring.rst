@@ -41,14 +41,14 @@ a complex or recursive collection.
 Fields marked as ``typing.Annotated[type, ...]`` are supported and are matched
 using the first type present in the annotated type.
 
-``attrs`` classes
------------------
+``attrs`` classes and dataclasses
+---------------------------------
 
-``attrs`` classes are supported out of the box. :class:`.Converter` s
-support two unstructuring strategies:
+``attrs`` classes and dataclasses are supported out of the box.
+:class:`.Converter` s support two unstructuring strategies:
 
-    * ``UnstructureStrategy.AS_DICT`` - similar to ``attr.asdict``, unstructures ``attrs`` instances into dictionaries. This is the default.
-    * ``UnstructureStrategy.AS_TUPLE`` - similar to ``attr.astuple``, unstructures ``attrs`` instances into tuples.
+    * ``UnstructureStrategy.AS_DICT`` - similar to ``attr.asdict``, unstructures ``attrs`` and dataclass instances into dictionaries. This is the default.
+    * ``UnstructureStrategy.AS_TUPLE`` - similar to ``attr.astuple``, unstructures ``attrs`` and dataclass instances into tuples.
 
 .. doctest::
 
