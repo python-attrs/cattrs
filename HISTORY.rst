@@ -13,6 +13,8 @@ History
   (`#131 <https://github.com/Tinche/cattrs/issues/131>`_)
 * Add support for ``typing.Annotated`` on Python 3.9+. ``cattrs`` will use the first annotation present. ``cattrs`` specific annotations may be added in the future.
   (`#127 <https://github.com/Tinche/cattrs/issues/127>`_)
+* Add support for dataclasses.
+  (`#43 <https://github.com/Tinche/cattrs/issues/43>`_)
 
 1.3.0 (2021-02-25)
 ------------------

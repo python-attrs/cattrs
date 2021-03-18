@@ -270,15 +270,15 @@ To support arbitrary unions, register a custom structuring hook for the union
 `PEP 593`_ annotations (``typing.Annotated[type, ...]``) are supported and are
 matched using the first type present in the annotated type.
 
-``attrs`` classes
------------------
+``attrs`` classes and dataclasses
+---------------------------------
 
-Simple ``attrs`` classes
-~~~~~~~~~~~~~~~~~~~~~~~~
+Simple ``attrs`` classes and dataclasses
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``attrs`` classes using primitives, collections of primitives and their own
-converters work out of the box. Given a mapping ``d`` and class ``A``,
-``cattrs`` will simply instantiate ``A`` with ``d`` unpacked.
+``attrs`` classes and dataclasses using primitives, collections of primitives
+and their own converters work out of the box. Given a mapping ``d`` and class
+``A``, ``cattrs`` will simply instantiate ``A`` with ``d`` unpacked.
 
 .. doctest::
 
@@ -290,7 +290,7 @@ converters work out of the box. Given a mapping ``d`` and class ``A``,
     >>> cattr.structure({'a': 1, 'b': '2'}, A)
     A(a=1, b=2)
 
-``attrs`` classes deconstructed into tuples can be structured using
+Classes like these deconstructed into tuples can be structured using
 ``cattr.structure_attrs_fromtuple`` (``fromtuple`` as in the opposite of
 ``attr.astuple`` and ``converter.unstructure_attrs_astuple``).
 
@@ -321,11 +321,12 @@ Loading from tuples can be made the default by creating a new ``Converter`` with
 Structuring from tuples can also be made the default for specific classes only;
 see registering custom structure hooks below.
 
-Complex ``attrs`` classes
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Complex ``attrs`` classes and dataclasses
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Complex ``attrs`` classes are classes with type information available for some
-or all attributes. These classes support almost arbitrary nesting.
+Complex ``attrs`` classes and dataclasses are classes with type information
+available for some or all attributes. These classes support almost arbitrary
+nesting.
 
 Type information is supported by attrs directly, and can be set using type
 annotations when using Python 3.6+, or by passing the appropriate type to
@@ -341,7 +342,7 @@ annotations when using Python 3.6+, or by passing the appropriate type to
     Attribute(name='a', default=NOTHING, validator=None, repr=True, eq=True, order=True, hash=None, init=True, metadata=mappingproxy({}), type=<class 'int'>, converter=None, kw_only=False, inherited=False, on_setattr=None)
 
 Type information, when provided, can be used for all attribute types, not only
-attributes holding ``attrs`` classes.
+attributes holding ``attrs`` classes and dataclasses.
 
 .. doctest::
 
