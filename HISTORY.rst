@@ -2,7 +2,7 @@
 History
 =======
 
-1.4.0 (UNRELEASED)
+1.4.0 (2021-03-21)
 ------------------
 * Fix an issue with ``GenConverter`` un/structuring hooks when a function hook is registered after the converter has already been used.
 * Add support for ``collections.abc.{Sequence, MutableSequence, Set, MutableSet}``. These should be used on 3.9+ instead of their ``typing`` alternatives, which are deprecated.
