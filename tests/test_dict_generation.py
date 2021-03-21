@@ -1,5 +1,5 @@
 """Tests for generated dict functions."""
-from attr import Factory, fields
+from attr import Factory
 from attr._make import NOTHING
 from hypothesis import assume, given
 from hypothesis.strategies._internal.core import data, sampled_from
@@ -10,9 +10,14 @@ from cattr.gen import (
     make_dict_unstructure_fn,
     override,
 )
+from cattr._compat import fields, adapted_fields
 
 from . import nested_classes, simple_classes
-from .metadata import nested_typed_classes, simple_typed_classes
+from .metadata import (
+    nested_typed_classes,
+    simple_typed_classes,
+    simple_typed_dataclasses,
+)
 
 
 @given(nested_classes | simple_classes())
@@ -101,7 +106,7 @@ def test_nodefs_generated_unstructuring_cl(cl_and_vals):
                         assert attr.name in res
 
 
-@given(nested_classes | simple_classes())
+@given(nested_classes | simple_classes() | simple_typed_dataclasses())
 def test_individual_overrides(cl_and_vals):
     """
     Test omitting default values on a per-class basis, but with individual
@@ -110,13 +115,13 @@ def test_individual_overrides(cl_and_vals):
     converter = Converter()
     cl, vals = cl_and_vals
 
-    for attr, val in zip(cl.__attrs_attrs__, vals):
+    for attr, val in zip(adapted_fields(cl), vals):
         if attr.default is not NOTHING:
             break
     else:
         assume(False)
 
-    chosen = attr
+    chosen_name = attr.name
 
     converter.register_unstructure_hook(
         cl,
@@ -131,9 +136,11 @@ def test_individual_overrides(cl_and_vals):
     inst = cl(*vals)
 
     res = converter.unstructure(inst)
+    assert "Hyp" not in repr(res)
+    assert "Factory" not in repr(res)
 
-    for attr, val in zip(cl.__attrs_attrs__, vals):
-        if attr is chosen:
+    for attr, val in zip(adapted_fields(cl), vals):
+        if attr.name == chosen_name:
             assert attr.name in res
         elif attr.default is not NOTHING:
             if not isinstance(attr.default, Factory):
@@ -154,7 +161,11 @@ def test_individual_overrides(cl_and_vals):
                         assert attr.name in res
 
 
-@given(nested_typed_classes() | simple_typed_classes())
+@given(
+    nested_typed_classes()
+    | simple_typed_classes()
+    | simple_typed_dataclasses()
+)
 def test_unmodified_generated_structuring(cl_and_vals):
     converter = Converter()
     cl, vals = cl_and_vals
@@ -164,7 +175,7 @@ def test_unmodified_generated_structuring(cl_and_vals):
 
     unstructured = converter.unstructure(inst)
 
-    assert "HypClass" not in repr(unstructured)
+    assert "Hyp" not in repr(unstructured)
 
     converter.register_structure_hook(cl, fn)
 
@@ -173,7 +184,10 @@ def test_unmodified_generated_structuring(cl_and_vals):
     assert inst == res
 
 
-@given(simple_typed_classes(min_attrs=1), data())
+@given(
+    simple_typed_classes(min_attrs=1) | simple_typed_dataclasses(min_attrs=1),
+    data(),
+)
 def test_renaming(cl_and_vals, data):
     converter = Converter()
     cl, vals = cl_and_vals

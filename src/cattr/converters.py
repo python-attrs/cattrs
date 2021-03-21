@@ -2,7 +2,7 @@ from enum import Enum
 from functools import lru_cache
 from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, TypeVar
 
-from attr import resolve_types
+from attr import resolve_types, has as attrs_has
 
 from ._compat import (
     get_origin,
@@ -153,7 +153,7 @@ class Converter(object):
         The converter function should take an instance of the class and return
         its Python equivalent.
         """
-        if has(cls):
+        if attrs_has(cls):
             resolve_types(cls)
         if is_union_type(cls):
             self._unstructure_func.register_func_list(
@@ -182,7 +182,7 @@ class Converter(object):
         and return the instance of the class. The type may seem redundant, but
         is sometimes needed (for example, when dealing with generic classes).
         """
-        if has(cl):
+        if attrs_has(cl):
             resolve_types(cl)
         if is_union_type(cl):
             self._union_struct_registry[cl] = func
@@ -459,9 +459,7 @@ class Converter(object):
                 e for e in union_types if e is not NoneType  # type: ignore
             )
 
-        if not all(
-            has(get_origin(e) or e) for e in union_types
-        ):
+        if not all(has(get_origin(e) or e) for e in union_types):
             raise ValueError(
                 "Only unions of attr classes supported "
                 "currently. Register a loads hook manually."

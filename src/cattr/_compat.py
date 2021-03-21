@@ -1,6 +1,12 @@
 import sys
-from attr import has as attrs_has, fields as attrs_fields
-from dataclasses import is_dataclass, fields as dataclass_fields
+from attr import (
+    Factory,
+    NOTHING,
+    has as attrs_has,
+    fields as attrs_fields,
+    Attribute,
+)
+from dataclasses import MISSING, is_dataclass, fields as dataclass_fields
 from typing import (
     Any,
     Dict,
@@ -40,6 +46,33 @@ def has(type):
 def fields(type):
     if is_dataclass(type):
         return dataclass_fields(type)
+    else:
+        return attrs_fields(type)
+
+
+def adapted_fields(type) -> List[Attribute]:
+    """Return the attrs format of `fields()` for attrs and dataclasses."""
+    if is_dataclass(type):
+        return [
+            Attribute(
+                attr.name,
+                attr.default
+                if attr.default is not MISSING
+                else (
+                    Factory(attr.default_factory)
+                    if attr.default_factory is not MISSING
+                    else NOTHING
+                ),
+                None,
+                True,
+                None,
+                True,
+                attr.init,
+                True,
+                type=attr.type,
+            )
+            for attr in dataclass_fields(type)
+        ]
     else:
         return attrs_fields(type)
 
