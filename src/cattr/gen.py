@@ -5,7 +5,7 @@ from dataclasses import is_dataclass
 import attr
 from attr import NOTHING, resolve_types
 
-from cattr._compat import get_args, get_origin, is_generic, fields
+from ._compat import get_args, get_origin, is_generic, adapted_fields
 
 
 @attr.s(slots=True, frozen=True)
@@ -29,7 +29,7 @@ def make_dict_unstructure_fn(cl, converter, omit_if_default=False, **kwargs):
     lines = []
     post_lines = []
 
-    attrs = fields(cl)  # type: ignore
+    attrs = adapted_fields(cl)  # type: ignore
 
     lines.append(f"def {fn_name}(i):")
     lines.append("    res = {")
@@ -141,7 +141,7 @@ def make_dict_structure_fn(cl: Type, converter, **kwargs):
     lines = []
     post_lines = []
 
-    attrs = fields(cl)
+    attrs = adapted_fields(cl)
     is_dc = is_dataclass(cl)
 
     if any(isinstance(a.type, str) for a in attrs):

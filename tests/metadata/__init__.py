@@ -58,7 +58,10 @@ def simple_typed_classes(defaults=None, min_attrs=0, frozen=False):
 def simple_typed_dataclasses(defaults=None, min_attrs=0, frozen=False):
     """Yield tuples of (class, values)."""
     return lists_of_typed_attrs(
-        defaults, min_size=min_attrs, for_frozen=frozen
+        defaults,
+        min_size=min_attrs,
+        for_frozen=frozen,
+        allow_mutable_defaults=False,
     ).flatmap(partial(_create_dataclass, frozen=frozen))
 
 
@@ -72,18 +75,22 @@ def simple_typed_classes_and_strats(
 
 
 def lists_of_typed_attrs(
-    defaults=None, min_size=0, for_frozen=False
+    defaults=None, min_size=0, for_frozen=False, allow_mutable_defaults=True
 ) -> SearchStrategy[List[Tuple[_CountingAttr, SearchStrategy[PosArg]]]]:
     # Python functions support up to 255 arguments.
     return lists(
-        simple_typed_attrs(defaults, for_frozen=for_frozen),
+        simple_typed_attrs(
+            defaults,
+            for_frozen=for_frozen,
+            allow_mutable_defaults=allow_mutable_defaults,
+        ),
         min_size=min_size,
         max_size=50,
     ).map(lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING))
 
 
 def simple_typed_attrs(
-    defaults=None, for_frozen=False
+    defaults=None, for_frozen=False, allow_mutable_defaults=True
 ) -> SearchStrategy[Tuple[_CountingAttr, SearchStrategy[PosArgs]]]:
     if not is_39_or_later:
         res = (
@@ -96,7 +103,7 @@ def simple_typed_attrs(
             res = (
                 res
                 | dict_typed_attrs(defaults)
-                | mutable_seq_typed_attrs(defaults)
+                | mutable_seq_typed_attrs(defaults, allow_mutable_defaults)
                 | seq_typed_attrs(defaults)
             )
     else:
@@ -112,12 +119,12 @@ def simple_typed_attrs(
         if not for_frozen:
             res = (
                 res
-                | dict_typed_attrs(defaults)
-                | new_dict_typed_attrs(defaults)
-                | set_typed_attrs(defaults)
-                | list_typed_attrs(defaults)
-                | mutable_seq_typed_attrs(defaults)
-                | seq_typed_attrs(defaults)
+                | dict_typed_attrs(defaults, allow_mutable_defaults)
+                | new_dict_typed_attrs(defaults, allow_mutable_defaults)
+                | set_typed_attrs(defaults, allow_mutable_defaults)
+                | list_typed_attrs(defaults, allow_mutable_defaults)
+                | mutable_seq_typed_attrs(defaults, allow_mutable_defaults)
+                | seq_typed_attrs(defaults, allow_mutable_defaults)
             )
 
     return res
@@ -135,7 +142,7 @@ def _create_hyp_class(
     """
 
     def key(t):
-        return t[0].default is not attr.NOTHING
+        return t[0]._default is not attr.NOTHING
 
     attrs_and_strat = sorted(attrs_and_strategy, key=key)
     attrs = [a[0] for a in attrs_and_strat]
@@ -166,7 +173,7 @@ def _create_dataclass(
     """
 
     def key(t):
-        return t[0].default is not attr.NOTHING
+        return t[0]._default is not attr.NOTHING
 
     attrs_and_strat = sorted(attrs_and_strategy, key=key)
     attrs = [a[0] for a in attrs_and_strat]
@@ -179,14 +186,14 @@ def _create_dataclass(
                 "HypDataclass",
                 [
                     (n, a.type)
-                    if a.default is NOTHING
+                    if a._default is NOTHING
                     else (
-                        (n, a.type, field(default=a.default))
-                        if not isinstance(a.default, Factory)
+                        (n, a.type, field(default=a._default))
+                        if not isinstance(a._default, Factory)
                         else (
                             n,
                             a.type,
-                            field(default_factory=a.default.factory),
+                            field(default_factory=a._default.factory),
                         )
                     )
                     for n, a in zip(gen_attr_names(), attrs)
@@ -267,7 +274,7 @@ def float_typed_attrs(draw, defaults=None):
 
 @composite
 def dict_typed_attrs(
-    draw, defaults=None
+    draw, defaults=None, allow_mutable_defaults=True
 ) -> SearchStrategy[Tuple[_CountingAttr, SearchStrategy]]:
     """
     Generate a tuple of an attribute and a strategy that yields dictionaries
@@ -277,7 +284,7 @@ def dict_typed_attrs(
     val_strat = dictionaries(keys=text(), values=integers())
     if defaults is True or (defaults is None and draw(booleans())):
         default_val = draw(val_strat)
-        if draw(booleans()):
+        if not allow_mutable_defaults or draw(booleans()):
             default = Factory(lambda: default_val)
         else:
             default = default_val
@@ -285,30 +292,43 @@ def dict_typed_attrs(
 
 
 @composite
-def new_dict_typed_attrs(draw, defaults=None):
+def new_dict_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
     """
     Generate a tuple of an attribute and a strategy that yields dictionaries
     for that attribute. The dictionaries map strings to integers.
 
     Uses the new 3.9 dict annotation.
     """
-    default = attr.NOTHING
+    default_val = attr.NOTHING
     val_strat = dictionaries(keys=text(), values=integers())
     if defaults is True or (defaults is None and draw(booleans())):
-        default = draw(val_strat)
+        default_val = draw(val_strat)
+        if not allow_mutable_defaults or draw(booleans()):
+            default = Factory(lambda: default_val)
+        else:
+            default = default_val
+    else:
+        default = default_val
+
     return (attr.ib(type=dict[str, int], default=default), val_strat)
 
 
 @composite
-def set_typed_attrs(draw, defaults=None):
+def set_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
     """
     Generate a tuple of an attribute and a strategy that yields sets
     for that attribute. The sets contain integers.
     """
-    default = attr.NOTHING
+    default_val = attr.NOTHING
     val_strat = sets(integers())
     if defaults is True or (defaults is None and draw(booleans())):
-        default = draw(val_strat)
+        default_val = draw(val_strat)
+        if not allow_mutable_defaults or draw(booleans()):
+            default = Factory(lambda: default_val)
+        else:
+            default = default_val
+    else:
+        default = default_val
     return (
         attr.ib(
             type=set[int]
@@ -340,15 +360,21 @@ def frozenset_typed_attrs(draw, defaults=None):
 
 
 @composite
-def list_typed_attrs(draw, defaults=None):
+def list_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
     """
     Generate a tuple of an attribute and a strategy that yields lists
     for that attribute. The lists contain floats.
     """
-    default = attr.NOTHING
+    default_val = attr.NOTHING
     val_strat = lists(floats(allow_infinity=False, allow_nan=False))
     if defaults is True or (defaults is None and draw(booleans())):
-        default = draw(val_strat)
+        default_val = draw(val_strat)
+        if not allow_mutable_defaults or draw(booleans()):
+            default = Factory(lambda: default_val)
+        else:
+            default = default_val
+    else:
+        default = default_val
     return (
         attr.ib(
             type=list[float] if draw(booleans()) else List[float],
@@ -359,15 +385,22 @@ def list_typed_attrs(draw, defaults=None):
 
 
 @composite
-def mutable_seq_typed_attrs(draw, defaults=None):
+def seq_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
     """
     Generate a tuple of an attribute and a strategy that yields lists
     for that attribute. The lists contain floats.
     """
-    default = attr.NOTHING
+    default_val = attr.NOTHING
     val_strat = lists(integers())
     if defaults is True or (defaults is None and draw(booleans())):
-        default = draw(val_strat)
+        default_val = draw(val_strat)
+        if not allow_mutable_defaults or draw(booleans()):
+            default = Factory(lambda: default_val)
+        else:
+            default = default_val
+    else:
+        default = default_val
+
     return (
         attr.ib(
             type=Sequence[int]
@@ -380,15 +413,22 @@ def mutable_seq_typed_attrs(draw, defaults=None):
 
 
 @composite
-def seq_typed_attrs(draw, defaults=None):
+def mutable_seq_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
     """
     Generate a tuple of an attribute and a strategy that yields lists
     for that attribute. The lists contain floats.
     """
-    default = attr.NOTHING
+    default_val = attr.NOTHING
     val_strat = lists(floats(allow_infinity=False, allow_nan=False))
     if defaults is True or (defaults is None and draw(booleans())):
-        default = draw(val_strat)
+        default_val = draw(val_strat)
+        if not allow_mutable_defaults or draw(booleans()):
+            default = Factory(lambda: default_val)
+        else:
+            default = default_val
+    else:
+        default = default_val
+
     return (
         attr.ib(
             type=MutableSequence[float]
