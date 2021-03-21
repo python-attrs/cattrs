@@ -17,6 +17,7 @@ from ._compat import (
     is_annotated,
     has,
     fields,
+    has_with_generic,
 )
 from .disambiguators import create_uniq_field_dis_func
 from .dispatch import MultiStrategyDispatch
@@ -490,7 +491,7 @@ class GenConverter(Converter):
             self._unstructure_func.register_func_list(
                 [
                     (
-                        has,
+                        has_with_generic,
                         self.gen_unstructure_attrs_fromdict,
                         True,
                     ),
@@ -541,6 +542,9 @@ class GenConverter(Converter):
         return h
 
     def gen_unstructure_attrs_fromdict(self, cl: Type[T]) -> Dict[str, Any]:
+        origin = get_origin(cl)
+        if origin is not None:
+            cl = origin
         attribs = fields(cl)
         if any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.

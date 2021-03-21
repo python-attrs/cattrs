@@ -48,6 +48,11 @@ def has(cls):
     )
 
 
+def has_with_generic(cls):
+    """Test whether the class if a normal or generic attrs or dataclass."""
+    return has(cls) or has(get_origin(cls))
+
+
 def fields(type):
     try:
         return type.__attrs_attrs__

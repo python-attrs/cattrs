@@ -3,7 +3,7 @@ from typing import Generic, List, TypeVar, Union
 import pytest
 from attr import asdict, attrs
 
-from cattr import Converter
+from cattr import Converter, GenConverter
 
 T = TypeVar("T")
 T2 = TypeVar("T2")
@@ -83,3 +83,29 @@ def test_raises_if_no_generic_params_supplied(converter):
         match="Unsupported type: ~T. Register a structure hook for it.",
     ):
         converter.structure(asdict(data), TClass)
+
+
+def test_unstructure_generic_attrs():
+    c = GenConverter()
+
+    @attrs(auto_attribs=True)
+    class Inner(Generic[T]):
+        a: T
+
+    @attrs(auto_attribs=True)
+    class Outer:
+        inner: Inner[int]
+
+    initial = Outer(Inner(1))
+    raw = c.unstructure(initial)
+
+    assert raw == {"inner": {"a": 1}}
+
+    new = c.structure(raw, Outer)
+    assert initial == new
+
+    @attrs(auto_attribs=True)
+    class OuterStr:
+        inner: Inner[str]
+
+    assert c.structure(raw, OuterStr) == OuterStr(Inner("1"))
