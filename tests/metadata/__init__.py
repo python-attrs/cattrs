@@ -102,9 +102,9 @@ def simple_typed_attrs(
         if not for_frozen:
             res = (
                 res
-                | dict_typed_attrs(defaults)
+                | dict_typed_attrs(defaults, allow_mutable_defaults)
                 | mutable_seq_typed_attrs(defaults, allow_mutable_defaults)
-                | seq_typed_attrs(defaults)
+                | seq_typed_attrs(defaults, allow_mutable_defaults)
             )
     else:
         res = (
