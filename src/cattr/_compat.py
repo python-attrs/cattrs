@@ -2,11 +2,14 @@ import sys
 from attr import (
     Factory,
     NOTHING,
-    has as attrs_has,
     fields as attrs_fields,
     Attribute,
 )
-from dataclasses import MISSING, is_dataclass, fields as dataclass_fields
+from dataclasses import (
+    MISSING,
+    is_dataclass,
+    fields as dataclass_fields,
+)
 from typing import (
     Any,
     Dict,
@@ -39,15 +42,20 @@ else:
     from typing import get_args, get_origin  # NOQA
 
 
-def has(type):
-    return attrs_has(type) or is_dataclass(type)
+def has(cls):
+    return hasattr(cls, "__attrs_attrs__") or hasattr(
+        cls, "__dataclass_fields__"
+    )
 
 
 def fields(type):
-    if is_dataclass(type):
-        return dataclass_fields(type)
-    else:
-        return attrs_fields(type)
+    try:
+        return type.__attrs_attrs__
+    except AttributeError:
+        try:
+            return dataclass_fields(type)
+        except AttributeError:
+            raise Exception("Not an attrs or dataclass class.")
 
 
 def adapted_fields(type) -> List[Attribute]:
