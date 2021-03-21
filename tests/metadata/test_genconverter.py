@@ -370,8 +370,8 @@ def test_annotated_attrs():
 
     @attr.define
     class Outer:
-        i: Annotated[Inner, "test"]
-        j: list[Annotated[Inner, "test"]]
+        i: Annotated[Inner, "test"]  # noqa
+        j: list[Annotated[Inner, "test"]]  # noqa
 
     orig = Outer(Inner(1), [Inner(1)])
     raw = converter.unstructure(orig)
