@@ -27,9 +27,9 @@ cattrs
 ----
 
 ``cattrs`` is an open source Python library for structuring and unstructuring
-data. ``cattrs`` works best with ``attrs`` classes and the usual Python
-collections, but other kinds of classes are supported by manually registering
-converters.
+data. ``cattrs`` works best with ``attrs`` classes, dataclasses and the usual
+Python collections, but other kinds of classes are supported by manually
+registering converters.
 
 Python has a rich set of powerful, easy to use, built-in data types like
 dictionaries, lists and tuples. These data types are also the lingua franca
@@ -132,7 +132,7 @@ Features
 
 * Converts structured data into unstructured data, recursively:
 
-  * ``attrs`` classes are converted into dictionaries in a way similar to ``attr.asdict``, or into tuples in a way similar to ``attr.astuple``.
+  * ``attrs`` classes and dataclasses are converted into dictionaries in a way similar to ``attr.asdict``, or into tuples in a way similar to ``attr.astuple``.
   * Enumeration instances are converted to their values.
   * Other types are let through without conversion. This includes types such as
     integers, dictionaries, lists and instances of non-``attrs`` classes.
@@ -152,12 +152,9 @@ Features
     * Simple attributes are attributes that can be assigned unstructured data,
       like numbers, strings, and collections of unstructured data.
 
-  * All `attrs` classes with the usual ``__init__``, if their complex attributes
-    have type metadata.
-  * ``typing.Union`` s of supported ``attrs`` classes, given that all of the classes
-    have a unique field.
-  * ``typing.Union`` s of anything, given that you provide a disambiguation
-    function for it.
+  * All `attrs` classes and dataclasses with the usual ``__init__``, if their complex attributes have type metadata.
+  * ``typing.Union`` s of supported ``attrs`` classes, given that all of the classes have a unique field.
+  * ``typing.Union`` s of anything, given that you provide a disambiguation function for it.
   * Custom converters for any type can be registered using ``register_structure_hook``.
 
 Credits
