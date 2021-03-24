@@ -1,17 +1,16 @@
+import pytest
 from typing import Set
 
 import attr
 from cattr import GenConverter
-from cattr.converters import is_mutable_set, is_sequence, is_mapping
+from cattr.converters import is_mutable_set, is_sequence
 from functools import partial
 from cattr._compat import is_py39_plus
 
-if is_py39_plus:
-    from collections.abc import MutableSet, Set, Sequence, MutableSequence
-else:
-    from typing import Set, MutableSet, Sequence, MutableSequence
+from collections.abc import MutableSet, Set, Sequence, MutableSequence
 
 
+@pytest.mark.skipif(not is_py39_plus, reason="Requires Python 3.9+")
 def test_collection_unstructure_override_set():
     """Test overriding unstructuring sets."""
 
@@ -64,6 +63,7 @@ def test_collection_unstructure_override_set():
     assert c.unstructure({1, 2, 3}) == [1, 2, 3]
 
 
+@pytest.mark.skipif(not is_py39_plus, reason="Requires Python 3.9+")
 def test_collection_unstructure_override_seq():
     """Test overriding unstructuring seq."""
 
