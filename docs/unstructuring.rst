@@ -35,6 +35,57 @@ a complex or recursive collection.
     >>> data is copy
     False
 
+Customizing collection unstructuring
+------------------------------------
+
+Sometimes it's useful to be able to override collection unstructuring in a
+generic way. A common example is using a JSON library that doesn't support
+sets, but expects lists and tuples instead.
+
+Using ordinary unstructuring hooks for this is unwieldy due to the semantics of
+``singledispatch``; in other words, you'd need to register hooks for all
+specific types of set you're using (``set[int]``, ``set[float]``,
+``set[str]``...), which is not useful.
+
+Function-based hooks can be used instead, but come with their own set of
+challenges - they're complicated to write efficiently.
+
+The ``GenConverter`` supports easy customizations of collection unstructuring
+using its ``unstruct_collection_overrides`` parameter. For example, to
+unstructure all sets into lists, try the following:
+
+.. doctest::
+
+  >>> from collections.abc import Set
+  >>> converter = cattr.GenConverter(unstruct_collection_overrides={Set: list})
+  >>>
+  >>> converter.unstructure({1, 2, 3})
+  [1, 2, 3]
+
+Going even further, the ``GenConverter`` contains heuristics to support the
+following Python types, in order of decreasing generality:
+
+    * ``Sequence``, ``MutableSequence``, ``list``, ``tuple``
+    * ``Set``, ``MutableSet``, ``set``
+
+For example, if you override the unstructure type for ``Sequence``, but not for
+``MutableSequence``, ``list`` or ``tuple``, the override will also affect those
+types. An easy way to remember the rule:
+
+    * all ``MutableSequence`` s are ``Sequence`` s, so the override will apply
+    * all ``list`` s are ``MutableSequence`` s, so the override will apply
+    * all ``tuple`` s are ``Sequence`` s, so the override will apply
+
+If, however, you override only ``MutableSequence``, fields annotated as
+``Sequence`` will not be affected (since not all sequences are mutable
+sequences), and fields annotated as tuples will not be affected (since tuples
+are not mutable sequences in the first place).
+
+Similar logic applies to the set hierarchy.
+
+Make sure you're using the types from ``collections.abc`` on Python 3.9+, and
+from ``typing`` on older Python versions.
+
 ``typing.Annotated``
 --------------------
 
