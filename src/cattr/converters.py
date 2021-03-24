@@ -1,6 +1,15 @@
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Mapping,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+)
 
 from attr import resolve_types, has as attrs_has
 
@@ -18,6 +27,10 @@ from ._compat import (
     has,
     fields,
     has_with_generic,
+    Set,
+    MutableSet,
+    Sequence,
+    MutableSequence,
 )
 from .disambiguators import create_uniq_field_dis_func
 from .dispatch import MultiStrategyDispatch
@@ -471,7 +484,11 @@ class Converter(object):
 class GenConverter(Converter):
     """A converter which generates specialized un/structuring functions."""
 
-    __slots__ = ("omit_if_default", "type_overrides")
+    __slots__ = (
+        "omit_if_default",
+        "type_overrides",
+        "_unstruct_collection_overrides",
+    )
 
     def __init__(
         self,
@@ -479,12 +496,44 @@ class GenConverter(Converter):
         unstruct_strat: UnstructureStrategy = UnstructureStrategy.AS_DICT,
         omit_if_default: bool = False,
         type_overrides: Mapping[Type, AttributeOverride] = {},
+        unstruct_collection_overrides: Mapping[Type, Callable] = {},
     ):
         super().__init__(
             dict_factory=dict_factory, unstruct_strat=unstruct_strat
         )
         self.omit_if_default = omit_if_default
-        self.type_overrides = type_overrides
+        self.type_overrides = dict(type_overrides)
+
+        self._unstruct_collection_overrides = unstruct_collection_overrides
+
+        # Do a little post-processing magic to make things easier for users.
+        co = unstruct_collection_overrides
+
+        # abc.MutableSet overrrides, if defined, apply to sets
+        if MutableSet in co:
+            if set not in co:
+                co[set] = co[MutableSet]
+
+        # abc.Set overrides, if defined, apply to abc.MutableSets and sets
+        if Set in co:
+            if MutableSet not in co:
+                co[MutableSet] = co[Set]
+            if set not in co:
+                co[set] = co[Set]
+
+        # abc.MutableSequence overrides, if defined, can apply to lists
+        if MutableSequence in co:
+            if list not in co:
+                co[list] = co[MutableSequence]
+
+        # abc.Sequence overrides, if defined, can apply to MutableSequences, lists and tuples
+        if Sequence in co:
+            if MutableSequence not in co:
+                co[MutableSequence] = co[Sequence]
+            if list not in co:
+                co[list] = co[Sequence]
+            if tuple not in co:
+                co[tuple] = co[Sequence]
 
         if unstruct_strat is UnstructureStrategy.AS_DICT:
             # Override the attrs handler.
@@ -576,7 +625,10 @@ class GenConverter(Converter):
         # only direct dispatch so that subclasses get separately generated
         return h
 
-    def gen_unstructure_iterable(self, cl: Any, unstructure_to=list):
+    def gen_unstructure_iterable(self, cl: Any, unstructure_to=None):
+        unstructure_to = self._unstruct_collection_overrides.get(
+            get_origin(cl) or cl, unstructure_to or list
+        )
         h = make_iterable_unstructure_fn(
             cl, self, unstructure_to=unstructure_to
         )

@@ -15,12 +15,12 @@ from typing import (
     Dict,
     FrozenSet,
     List,
-    Mapping,
-    MutableMapping,
-    MutableSequence,
-    MutableSet,
-    Sequence,
-    Set,
+    Mapping as TypingMapping,
+    MutableMapping as TypingMutableMapping,
+    MutableSequence as TypingMutableSequence,
+    MutableSet as TypingMutableSet,
+    Sequence as TypingSequence,
+    Set as TypingSet,
     Tuple,
 )
 
@@ -91,6 +91,11 @@ def adapted_fields(type) -> List[Attribute]:
 
 
 if is_py37 or is_py38:
+    Set = TypingSet
+    MutableSet = TypingMutableSet
+    Sequence = TypingSequence
+    MutableSequence = TypingMutableSequence
+
     from typing import Union, _GenericAlias
 
     def is_annotated(_):
@@ -113,7 +118,7 @@ if is_py37 or is_py38:
         return type in (List, list, Tuple, tuple) or (
             type.__class__ is _GenericAlias
             and type.__origin__ is not Union
-            and issubclass(type.__origin__, Sequence)
+            and issubclass(type.__origin__, TypingSequence)
         )
 
     def is_mutable_set(type):
@@ -129,16 +134,16 @@ if is_py37 or is_py38:
         )
 
     def is_mapping(type):
-        return type in (Mapping, dict) or (
+        return type in (TypingMapping, dict) or (
             type.__class__ is _GenericAlias
-            and issubclass(type.__origin__, Mapping)
+            and issubclass(type.__origin__, TypingMapping)
         )
 
     bare_list_args = List.__args__
-    bare_seq_args = Sequence.__args__
-    bare_mapping_args = Mapping.__args__
+    bare_seq_args = TypingSequence.__args__
+    bare_mapping_args = TypingMapping.__args__
     bare_dict_args = Dict.__args__
-    bare_mutable_seq_args = MutableSequence.__args__
+    bare_mutable_seq_args = TypingMutableSequence.__args__
 
     def is_bare(type):
         args = type.__args__
@@ -167,6 +172,11 @@ else:
         Set as AbcSet,
     )
 
+    Set = AbcSet
+    MutableSet = AbcMutableSet
+    Sequence = AbcSequence
+    MutableSequence = AbcMutableSequence
+
     def is_annotated(type) -> bool:
         return getattr(type, "__class__", None) is _AnnotatedAlias
 
@@ -194,8 +204,8 @@ else:
             in (
                 List,
                 list,
-                Sequence,
-                MutableSequence,
+                TypingSequence,
+                TypingMutableSequence,
                 AbcMutableSequence,
                 tuple,
             )
@@ -205,7 +215,7 @@ else:
                     (origin is not tuple)
                     and issubclass(
                         origin,
-                        Sequence,
+                        TypingSequence,
                     )
                     or origin is tuple
                     and type.__args__[1] is ...
@@ -217,10 +227,10 @@ else:
 
     def is_mutable_set(type):
         return (
-            type in (Set, MutableSet, set)
+            type in (TypingSet, TypingMutableSet, set)
             or (
                 type.__class__ is _GenericAlias
-                and issubclass(type.__origin__, MutableSet)
+                and issubclass(type.__origin__, TypingMutableSet)
             )
             or (
                 getattr(type, "__origin__", None)
@@ -245,10 +255,10 @@ else:
 
     def is_mapping(type):
         return (
-            type in (Mapping, Dict, MutableMapping, dict)
+            type in (TypingMapping, Dict, TypingMutableMapping, dict)
             or (
                 type.__class__ is _GenericAlias
-                and issubclass(type.__origin__, Mapping)
+                and issubclass(type.__origin__, TypingMapping)
             )
             or (getattr(type, "__origin__", None) is dict)
         )
