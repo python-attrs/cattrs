@@ -38,6 +38,9 @@ a complex or recursive collection.
 Customizing collection unstructuring
 ------------------------------------
 
+.. important::
+   This feature is supported for Python 3.9 and later.
+
 Sometimes it's useful to be able to override collection unstructuring in a
 generic way. A common example is using a JSON library that doesn't support
 sets, but expects lists and tuples instead.
