@@ -1,5 +1,4 @@
 import pytest
-from typing import Set
 
 import attr
 from cattr import GenConverter
