@@ -39,6 +39,7 @@ from .gen import (
     make_dict_structure_fn,
     make_dict_unstructure_fn,
     make_iterable_unstructure_fn,
+    make_mapping_unstructure_fn,
 )
 
 NoneType = type(None)
@@ -560,6 +561,7 @@ class GenConverter(Converter):
                     self.gen_unstructure_iterable,
                     True,
                 ),
+                (is_mapping, self.gen_unstructure_mapping, True),
                 (
                     is_mutable_set,
                     lambda cl: self.gen_unstructure_iterable(
@@ -630,6 +632,16 @@ class GenConverter(Converter):
             get_origin(cl) or cl, unstructure_to or list
         )
         h = make_iterable_unstructure_fn(
+            cl, self, unstructure_to=unstructure_to
+        )
+        self._unstructure_func.register_cls_list([(cl, h)], direct=True)
+        return h
+
+    def gen_unstructure_mapping(self, cl: Any, unstructure_to=None):
+        unstructure_to = self._unstruct_collection_overrides.get(
+            get_origin(cl) or cl, unstructure_to or dict
+        )
+        h = make_mapping_unstructure_fn(
             cl, self, unstructure_to=unstructure_to
         )
         self._unstructure_func.register_cls_list([(cl, h)], direct=True)

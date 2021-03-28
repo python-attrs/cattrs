@@ -214,3 +214,51 @@ def make_iterable_unstructure_fn(cl: Any, converter, unstructure_to=None):
     fn = globs[fn_name]
 
     return fn
+
+
+def make_mapping_unstructure_fn(cl: Any, converter, unstructure_to=None):
+    """Generate a specialized unstructure function for a mapping."""
+    key_handler = converter.unstructure
+    val_handler = converter.unstructure
+
+    fn_name = "unstructure_mapping"
+
+    # Let's try fishing out the type args.
+    if getattr(cl, "__args__", None) is not None:
+        key_arg, val_arg = get_args(cl)
+        # We can do the dispatch here and now.
+        key_handler = converter._unstructure_func.dispatch(key_arg)
+        if key_handler == converter._unstructure_identity:
+            key_handler = None
+
+        val_handler = converter._unstructure_func.dispatch(val_arg)
+        if val_handler == converter._unstructure_identity:
+            val_handler = None
+
+    globs = {
+        "__cattr_mapping_cl": unstructure_to or cl,
+        "__cattr_k_u": key_handler,
+        "__cattr_v_u": val_handler,
+    }
+    if key_handler is not None:
+        globs["__cattr_k_u"]
+    if val_handler is not None:
+        globs["__cattr_v_u"]
+
+    k_u = "__cattr_k_u(k)" if key_handler is not None else "k"
+    v_u = "__cattr_v_u(v)" if val_handler is not None else "v"
+
+    lines = []
+
+    lines.append(f"def {fn_name}(mapping):")
+    lines.append(
+        f"    res = __cattr_mapping_cl(({k_u}, {v_u}) for k, v in mapping.items())"
+    )
+
+    total_lines = lines + ["    return res"]
+
+    eval(compile("\n".join(total_lines), "", "exec"), globs)
+
+    fn = globs[fn_name]
+
+    return fn
