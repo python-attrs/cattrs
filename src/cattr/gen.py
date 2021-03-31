@@ -129,7 +129,7 @@ def make_dict_structure_fn(cl: Type, converter, **kwargs):
     cl_name = cl.__name__
     fn_name = "structure_" + cl_name
 
-    # We have generic paramters and need to generate a unique name for the function
+    # We have generic parameters and need to generate a unique name for the function
     for p in getattr(cl, "__parameters__", ()):
         # This is nasty, I am not sure how best to handle `typing.List[str]` or `TClass[int, int]` as a parameter type here
         name_base = getattr(mapping, p.__name__)
