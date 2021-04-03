@@ -96,6 +96,7 @@ if is_py37 or is_py38:
     Sequence = TypingSequence
     MutableSequence = TypingMutableSequence
     MutableMapping = TypingMutableMapping
+    Mapping = TypingMapping
 
     from typing import Union, _GenericAlias
 
