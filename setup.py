@@ -24,6 +24,7 @@ dev_reqs = [
     "pendulum",
     "isort",
     "black",
+    "immutables",
 ]
 
 setup(

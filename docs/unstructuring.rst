@@ -70,6 +70,7 @@ following Python types, in order of decreasing generality:
 
     * ``Sequence``, ``MutableSequence``, ``list``, ``tuple``
     * ``Set``, ``MutableSet``, ``set``
+    * ``Mapping``, ``MutableMapping``, ``dict``, ``Counter``
 
 For example, if you override the unstructure type for ``Sequence``, but not for
 ``MutableSequence``, ``list`` or ``tuple``, the override will also affect those
@@ -84,7 +85,7 @@ If, however, you override only ``MutableSequence``, fields annotated as
 sequences), and fields annotated as tuples will not be affected (since tuples
 are not mutable sequences in the first place).
 
-Similar logic applies to the set hierarchy.
+Similar logic applies to the set and mapping hierarchies.
 
 Make sure you're using the types from ``collections.abc`` on Python 3.9+, and
 from ``typing`` on older Python versions.

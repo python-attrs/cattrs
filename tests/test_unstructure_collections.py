@@ -5,8 +5,17 @@ from cattr import GenConverter
 from cattr.converters import is_mutable_set, is_sequence
 from functools import partial
 from cattr._compat import is_py39_plus
+from immutables import Map
 
-from collections.abc import MutableSet, Set, Sequence, MutableSequence
+from collections.abc import (
+    MutableSet,
+    Set,
+    Sequence,
+    MutableSequence,
+    Mapping,
+    MutableMapping,
+)
+from collections import Counter
 
 
 @pytest.mark.skipif(not is_py39_plus, reason="Requires Python 3.9+")
@@ -173,4 +182,62 @@ def test_collection_unstructure_override_seq():
             2,
             3,
         ]
+    )
+
+
+@pytest.mark.skipif(not is_py39_plus, reason="Requires Python 3.9+")
+def test_collection_unstructure_override_mapping():
+    """Test overriding unstructuring mappings."""
+
+    # Using Counter
+    c = GenConverter(unstruct_collection_overrides={Counter: Map})
+    assert c.unstructure(Counter({1: 2})) == Map({1: 2})
+    assert c.unstructure(Counter({1: 2}), unstructure_as=Counter[int]) == Map(
+        {1: 2}
+    )
+    assert c.unstructure({1: 2}) == {1: 2}
+    assert c.unstructure({1: 2}, unstructure_as=MutableMapping[int, int]) == {
+        1: 2
+    }
+    assert c.unstructure({1: 2}, unstructure_as=Mapping[int, int]) == {1: 2}
+
+    # Using __builtins__.dict
+    c = GenConverter(unstruct_collection_overrides={dict: Map})
+
+    assert c.unstructure(Counter({1: 2})) == Map({1: 2})
+    assert c.unstructure(Counter({1: 2}), unstructure_as=Counter[int]) == Map(
+        {1: 2}
+    )
+    assert c.unstructure({1: 2}) == Map({1: 2})
+    assert c.unstructure({1: 2}, unstructure_as=MutableMapping[int, int]) == {
+        1: 2
+    }
+    assert c.unstructure({1: 2}, unstructure_as=Mapping[int, int]) == {1: 2}
+
+    # Using MutableMapping
+    c = GenConverter(unstruct_collection_overrides={MutableMapping: Map})
+
+    assert c.unstructure(Counter({1: 2})) == Map({1: 2})
+    assert c.unstructure(Counter({1: 2}), unstructure_as=Counter[int]) == Map(
+        {1: 2}
+    )
+    assert c.unstructure({1: 2}) == Map({1: 2})
+    assert c.unstructure(
+        {1: 2}, unstructure_as=MutableMapping[int, int]
+    ) == Map({1: 2})
+    assert c.unstructure({1: 2}, unstructure_as=Mapping[int, int]) == {1: 2}
+
+    # Using Mapping
+    c = GenConverter(unstruct_collection_overrides={Mapping: Map})
+
+    assert c.unstructure(Counter({1: 2})) == Map({1: 2})
+    assert c.unstructure(Counter({1: 2}), unstructure_as=Counter[int]) == Map(
+        {1: 2}
+    )
+    assert c.unstructure({1: 2}) == Map({1: 2})
+    assert c.unstructure(
+        {1: 2}, unstructure_as=MutableMapping[int, int]
+    ) == Map({1: 2})
+    assert c.unstructure({1: 2}, unstructure_as=Mapping[int, int]) == Map(
+        {1: 2}
     )

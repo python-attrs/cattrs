@@ -95,6 +95,7 @@ if is_py37 or is_py38:
     MutableSet = TypingMutableSet
     Sequence = TypingSequence
     MutableSequence = TypingMutableSequence
+    MutableMapping = TypingMutableMapping
 
     from typing import Union, _GenericAlias
 
@@ -170,12 +171,16 @@ else:
         Sequence as AbcSequence,
         MutableSet as AbcMutableSet,
         Set as AbcSet,
+        MutableMapping as AbcMutableMapping,
+        Mapping as AbcMapping,
     )
 
     Set = AbcSet
     MutableSet = AbcMutableSet
     Sequence = AbcSequence
     MutableSequence = AbcMutableSequence
+    MutableMapping = AbcMutableMapping
+    Mapping = AbcMapping
 
     def is_annotated(type) -> bool:
         return getattr(type, "__class__", None) is _AnnotatedAlias
@@ -255,12 +260,23 @@ else:
 
     def is_mapping(type):
         return (
-            type in (TypingMapping, Dict, TypingMutableMapping, dict)
+            type
+            in (
+                TypingMapping,
+                Dict,
+                TypingMutableMapping,
+                dict,
+                AbcMutableMapping,
+            )
             or (
                 type.__class__ is _GenericAlias
                 and issubclass(type.__origin__, TypingMapping)
             )
-            or (getattr(type, "__origin__", None) is dict)
+            or (
+                getattr(type, "__origin__", None)
+                in (dict, AbcMutableMapping, AbcMapping)
+            )
+            or issubclass(type, dict)
         )
 
 

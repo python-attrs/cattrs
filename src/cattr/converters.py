@@ -4,7 +4,6 @@ from typing import (
     Any,
     Callable,
     Dict,
-    Mapping,
     Optional,
     Tuple,
     Type,
@@ -31,6 +30,8 @@ from ._compat import (
     MutableSet,
     Sequence,
     MutableSequence,
+    Mapping,
+    MutableMapping,
 )
 from .disambiguators import create_uniq_field_dis_func
 from .dispatch import MultiStrategyDispatch
@@ -41,6 +42,7 @@ from .gen import (
     make_iterable_unstructure_fn,
     make_mapping_unstructure_fn,
 )
+from collections import Counter
 
 NoneType = type(None)
 T = TypeVar("T")
@@ -510,31 +512,42 @@ class GenConverter(Converter):
         # Do a little post-processing magic to make things easier for users.
         co = unstruct_collection_overrides
 
+        # abc.Set overrides, if defined, apply to abc.MutableSets and sets
+        if Set in co:
+            if MutableSet not in co:
+                co[MutableSet] = co[Set]
+
         # abc.MutableSet overrrides, if defined, apply to sets
         if MutableSet in co:
             if set not in co:
                 co[set] = co[MutableSet]
 
-        # abc.Set overrides, if defined, apply to abc.MutableSets and sets
-        if Set in co:
-            if MutableSet not in co:
-                co[MutableSet] = co[Set]
-            if set not in co:
-                co[set] = co[Set]
+        # abc.Sequence overrides, if defined, can apply to MutableSequences, lists and tuples
+        if Sequence in co:
+            if MutableSequence not in co:
+                co[MutableSequence] = co[Sequence]
+            if tuple not in co:
+                co[tuple] = co[Sequence]
 
         # abc.MutableSequence overrides, if defined, can apply to lists
         if MutableSequence in co:
             if list not in co:
                 co[list] = co[MutableSequence]
 
-        # abc.Sequence overrides, if defined, can apply to MutableSequences, lists and tuples
-        if Sequence in co:
-            if MutableSequence not in co:
-                co[MutableSequence] = co[Sequence]
-            if list not in co:
-                co[list] = co[Sequence]
-            if tuple not in co:
-                co[tuple] = co[Sequence]
+        # abc.Mapping overrides, if defined, can apply to MutableMappings
+        if Mapping in co:
+            if MutableMapping not in co:
+                co[MutableMapping] = co[Mapping]
+
+        # abc.MutableMapping overrides, if defined, can apply to dicts
+        if MutableMapping in co:
+            if dict not in co:
+                co[dict] = co[MutableMapping]
+
+        # builtins.dict overrides, if defined, can apply to counters
+        if dict in co:
+            if Counter not in co:
+                co[Counter] = co[dict]
 
         if unstruct_strat is UnstructureStrategy.AS_DICT:
             # Override the attrs handler.

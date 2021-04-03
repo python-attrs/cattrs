@@ -225,7 +225,12 @@ def make_mapping_unstructure_fn(cl: Any, converter, unstructure_to=None):
 
     # Let's try fishing out the type args.
     if getattr(cl, "__args__", None) is not None:
-        key_arg, val_arg = get_args(cl)
+        args = get_args(cl)
+        if len(args) == 2:
+            key_arg, val_arg = args
+        else:
+            # Probably a Counter
+            key_arg, val_arg = args, Any
         # We can do the dispatch here and now.
         key_handler = converter._unstructure_func.dispatch(key_arg)
         if key_handler == converter._unstructure_identity:
