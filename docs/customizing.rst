@@ -33,7 +33,8 @@ a lot of ``cattrs`` machinery and be significantly faster than normal ``cattrs``
 Another reason is that it's possible to override behavior on a per-attribute basis.
 
 Currently, the overrides only support generating dictionary un/structuring functions
-(as opposed to tuples), and support ``omit_if_default`` and ``rename``.
+(as opposed to tuples), and support ``omit_if_default``, ``forbid_extra_keys`` and
+``rename``.
 
 ``omit_if_default``
 -------------------
@@ -81,6 +82,37 @@ but not to the `DateTime` field.
 
 This override has no effect when generating structuring functions.
 
+``forbid_extra_keys``
+---------------------
+
+By default ``cattrs`` is lenient in accepting unstructured input.  If extra
+keys are present in a dictionary, they will be ignored when generating a
+structured object.  Sometimes it may be desirable to enforce a stricter
+contract, and to raise an error when unknown keys are present - in particular
+when fields have default values this may help with catching typos.
+`forbid_extra_keys` can also be enabled (or disabled) on a per-class basis when
+creating structure hooks with ``make_dict_structure_fn``.
+
+.. doctest::
+
+    >>> from cattr.gen import make_dict_structure_fn
+    >>>
+    >>> @attr.s
+    ... class TestClass:
+    ...    number: int = attr.ib(default=1)
+    >>>
+    >>> c = cattr.GenConverter(forbid_extra_keys=True)
+    >>> c.structure({"nummber": 2}, TestClass)
+    Traceback (most recent call last):
+    ...
+    Exception: Extra fields in constructor for TestClass: nummber
+    >>> hook = make_dict_structure_fn(TestClass, c, _cattr_forbid_extra_keys=False)
+    >>> c.register_structure_hook(TestClass, hook)
+    >>> c.structure({"nummber": 2}, TestClass)
+    TestClass(number=1)
+
+This behavior can only be applied to classes or to the default for the
+`GenConverter`, and has no effect when generating unstructuring functions.
 
 ``rename``
 ----------
