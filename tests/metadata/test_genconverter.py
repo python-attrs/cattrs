@@ -18,7 +18,7 @@ from hypothesis.strategies import booleans, sampled_from, lists
 
 from cattr import GenConverter as Converter
 from cattr import UnstructureStrategy
-from cattr.gen import override
+from cattr.gen import make_dict_structure_fn, override
 
 from . import (
     nested_typed_classes,
@@ -57,6 +57,79 @@ def test_simple_roundtrip_defaults(attr_and_vals, strat):
         converter.structure({}, cl)
     ) == converter.unstructure(inst)
     assert inst == converter.structure(converter.unstructure(inst), cl)
+
+
+@given(simple_typed_classes() | simple_typed_dataclasses(), unstructure_strats)
+def test_simple_roundtrip_with_extra_keys_forbidden(cls_and_vals, strat):
+    """
+    Simple classes can be unstructured and restructured with forbid_extra_keys=True.
+    """
+    converter = Converter(unstruct_strat=strat, forbid_extra_keys=True)
+    cl, vals = cls_and_vals
+    inst = cl(*vals)
+    unstructured = converter.unstructure(inst)
+    assert "Hyp" not in repr(unstructured)
+    assert inst == converter.structure(unstructured, cl)
+
+
+@given(simple_typed_classes() | simple_typed_dataclasses())
+def test_forbid_extra_keys(cls_and_vals):
+    """
+    Restructuring fails when extra keys are present (when configured)
+    """
+    converter = Converter(forbid_extra_keys=True)
+    cl, vals = cls_and_vals
+    inst = cl(*vals)
+    unstructured = converter.unstructure(inst)
+    bad_key = list(unstructured)[0] + "A" if unstructured else "Hyp"
+    while bad_key in unstructured:
+        bad_key += "A"
+    unstructured[bad_key] = 1
+    with pytest.raises(Exception):
+        converter.structure(unstructured, cl)
+
+
+@given(simple_typed_attrs(defaults=True))
+def test_forbid_extra_keys_defaults(attr_and_vals):
+    """
+    Restructuring fails when a dict key is renamed (if forbid_extra_keys set)
+    """
+    a, _ = attr_and_vals
+    cl = make_class("HypClass", {"a": a})
+    converter = Converter(forbid_extra_keys=True)
+    inst = cl()
+    unstructured = converter.unstructure(inst)
+    unstructured["aa"] = unstructured.pop("a")
+    with pytest.raises(Exception):
+        converter.structure(unstructured, cl)
+
+
+def test_forbid_extra_keys_nested_override():
+    @attr.s
+    class C:
+        a = attr.ib(type=int, default=1)
+
+    @attr.s
+    class A:
+        c = attr.ib(type=C)
+        a = attr.ib(type=int, default=2)
+
+    converter = Converter(forbid_extra_keys=True)
+    unstructured = {"a": 3, "c": {"a": 4}}
+    # at this point, structuring should still work
+    converter.structure(unstructured, A)
+    # if we break it in the subclass, we need it to raise
+    unstructured["c"]["aa"] = 5
+    with pytest.raises(Exception):
+        converter.structure(unstructured, A)
+    # we can "fix" that by disabling forbid_extra_keys on the subclass
+    hook = make_dict_structure_fn(C, converter, _cattr_forbid_extra_keys=False)
+    converter.register_structure_hook(C, hook)
+    converter.structure(unstructured, A)
+    # but we should still raise at the top level
+    unstructured["b"] = 6
+    with pytest.raises(Exception):
+        converter.structure(unstructured, A)
 
 
 @given(

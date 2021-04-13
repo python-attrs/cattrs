@@ -9,6 +9,8 @@ History
 * ``GenConverter`` has support for easy overriding of collection unstructuring types (for example, unstructure all sets to lists) through its ``unstruct_collection_overrides`` argument.
   (`#137 <https://github.com/Tinche/cattrs/pull/137>`_)
 * Unstructuring mappings with ``GenConverter`` is significantly faster.
+* ``GenConverter`` supports strict handling of unexpected dictionary keys through its ``forbid_extra_keys`` argument.
+  (`#142 <https://github.com/Tinche/cattrs/pull/142>`_)
 
 1.4.0 (2021-03-21)
 ------------------

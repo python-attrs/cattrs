@@ -109,7 +109,9 @@ def generate_mapping(cl: Type, old_mapping):
     return cls(**mapping)
 
 
-def make_dict_structure_fn(cl: Type, converter, **kwargs):
+def make_dict_structure_fn(
+    cl: Type, converter, _cattrs_forbid_extra_keys: bool = False, **kwargs
+):
     """Generate a specialized dict structuring function for an attrs class."""
 
     mapping = None
@@ -181,6 +183,16 @@ def make_dict_structure_fn(cl: Type, converter, **kwargs):
                 f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], __c_t_{an})"
             )
     lines.append("    }")
+    if _cattrs_forbid_extra_keys:
+        allowed_fields = {a.name for a in attrs}
+        globs["__c_a"] = allowed_fields
+        post_lines += [
+            "  unknown_fields = set(o.keys()) - __c_a",
+            "  if unknown_fields:",
+            "    raise Exception(",
+            f"      'Extra fields in constructor for {cl_name}: ' + ', '.join(unknown_fields)"
+            "    )",
+        ]
 
     total_lines = lines + post_lines + ["  return __cl(**res)"]
 

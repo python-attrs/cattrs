@@ -489,6 +489,7 @@ class GenConverter(Converter):
 
     __slots__ = (
         "omit_if_default",
+        "forbid_extra_keys",
         "type_overrides",
         "_unstruct_collection_overrides",
     )
@@ -498,6 +499,7 @@ class GenConverter(Converter):
         dict_factory: Callable[[], Any] = dict,
         unstruct_strat: UnstructureStrategy = UnstructureStrategy.AS_DICT,
         omit_if_default: bool = False,
+        forbid_extra_keys: bool = False,
         type_overrides: Mapping[Type, AttributeOverride] = {},
         unstruct_collection_overrides: Mapping[Type, Callable] = {},
     ):
@@ -505,6 +507,7 @@ class GenConverter(Converter):
             dict_factory=dict_factory, unstruct_strat=unstruct_strat
         )
         self.omit_if_default = omit_if_default
+        self.forbid_extra_keys = forbid_extra_keys
         self.type_overrides = dict(type_overrides)
 
         self._unstruct_collection_overrides = unstruct_collection_overrides
@@ -635,7 +638,12 @@ class GenConverter(Converter):
             for a in attribs
             if a.type in self.type_overrides
         }
-        h = make_dict_structure_fn(cl, self, **attrib_overrides)
+        h = make_dict_structure_fn(
+            cl,
+            self,
+            _cattrs_forbid_extra_keys=self.forbid_extra_keys,
+            **attrib_overrides
+        )
         self._structure_func.register_cls_list([(cl, h)], direct=True)
         # only direct dispatch so that subclasses get separately generated
         return h
