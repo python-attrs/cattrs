@@ -2,7 +2,7 @@
 History
 =======
 
-1.5.0 (UNRELEASED)
+1.5.0 (2021-04-15)
 ------------------
 * Fix an issue with ``GenConverter`` unstructuring ``attrs`` classes and dataclasses with generic fields.
   (`#65 <https://github.com/Tinche/cattrs/issues/65>`_)
