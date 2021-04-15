@@ -49,6 +49,7 @@ clean-test: ## remove test and coverage artifacts
 
 lint: ## check style with flake8
 	flake8 src/cattr tests
+	black --check --verbose src tests docs/conf.py
 
 test: ## run tests quickly with the default Python
 	pytest -x --ff tests
