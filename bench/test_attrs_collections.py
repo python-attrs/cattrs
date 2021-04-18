@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import FrozenSet, List, Mapping, Dict, MutableMapping, Tuple
+from typing import Dict, FrozenSet, List, Mapping, MutableMapping
 
 import attr
 import pytest
@@ -132,3 +132,34 @@ def test_unstructure_attrs_mappings(
             {i: FrozenCls(i) for i in range(30)},
         ),
     )
+
+
+@pytest.mark.parametrize(
+    "converter_cls",
+    [Converter, GenConverter],
+)
+def test_structure_attrs_mappings(benchmark, converter_cls):
+    """
+    Benchmark an attrs class containing mappings.
+    """
+
+    @attr.frozen
+    class FrozenCls:
+        a: int
+
+    @attr.define
+    class C:
+        a: Mapping[int, str]
+        b: Dict[float, bytes]
+        c: MutableMapping[int, FrozenCls]
+
+    c = converter_cls()
+
+    inst = C(
+        {i: str(i) for i in range(30)},
+        {float(i): bytes(i) for i in range(30)},
+        {i: FrozenCls(i) for i in range(30)},
+    )
+    raw = c.unstructure(inst)
+
+    benchmark(c.structure, raw, C)
