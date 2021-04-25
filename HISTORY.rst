@@ -2,6 +2,12 @@
 History
 =======
 
+1.6.0 (UNRELEASED)
+------------------
+* ``cattrs`` now uses Poetry.
+* ``GenConverter`` mapping structuring is now ~25% faster, and unstructuring heterogenous tuples is significantly faster.
+* Add ``cattr.preconf``. This package contains modules for making converters for particular serialization libraries. We currently support the standard library ``json``, and third-party ``ujson``, ``orjson``, ``msgpack``, ``bson``, ``pyyaml`` and ``tomlkit`` libraries.
+
 1.5.0 (2021-04-15)
 ------------------
 * Fix an issue with ``GenConverter`` unstructuring ``attrs`` classes and dataclasses with generic fields.

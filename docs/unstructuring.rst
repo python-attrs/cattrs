@@ -69,7 +69,7 @@ Going even further, the ``GenConverter`` contains heuristics to support the
 following Python types, in order of decreasing generality:
 
     * ``Sequence``, ``MutableSequence``, ``list``, ``tuple``
-    * ``Set``, ``MutableSet``, ``set``
+    * ``Set``, ``frozenset``, ``MutableSet``, ``set``
     * ``Mapping``, ``MutableMapping``, ``dict``, ``Counter``
 
 For example, if you override the unstructure type for ``Sequence``, but not for

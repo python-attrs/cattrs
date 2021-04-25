@@ -157,6 +157,9 @@ Features
   * ``typing.Union`` s of anything, given that you provide a disambiguation function for it.
   * Custom converters for any type can be registered using ``register_structure_hook``.
 
+``cattrs`` comes with preconfigured converters for a number of serialization libraries, including json, msgpack, bson, yaml and toml.
+For details, see the `cattrs.preconf package <https://cattrs.readthedocs.io/en/latest/benchmarking.html>`.
+
 Credits
 -------
 

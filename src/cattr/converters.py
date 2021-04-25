@@ -1,37 +1,35 @@
+from collections import Counter
 from enum import Enum
 from functools import lru_cache
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-)
+from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar
 
-from attr import resolve_types, has as attrs_has
+from attr import has as attrs_has
+from attr import resolve_types
 
 from ._compat import (
+    FrozenSetSubscriptable,
+    Mapping,
+    MutableMapping,
+    MutableSequence,
+    MutableSet,
+    Sequence,
+    Set,
+    TupleSubscriptable,
+    fields,
     get_origin,
+    has,
+    has_with_generic,
+    is_annotated,
     is_bare,
+    is_counter,
     is_frozenset,
     is_generic,
+    is_hetero_tuple,
     is_mapping,
     is_mutable_set,
     is_sequence,
     is_tuple,
     is_union_type,
-    is_annotated,
-    has,
-    fields,
-    has_with_generic,
-    Set,
-    MutableSet,
-    Sequence,
-    MutableSequence,
-    Mapping,
-    MutableMapping,
 )
 from .disambiguators import create_uniq_field_dis_func
 from .dispatch import MultiStrategyDispatch
@@ -39,10 +37,11 @@ from .gen import (
     AttributeOverride,
     make_dict_structure_fn,
     make_dict_unstructure_fn,
+    make_hetero_tuple_unstructure_fn,
     make_iterable_unstructure_fn,
+    make_mapping_structure_fn,
     make_mapping_unstructure_fn,
 )
-from collections import Counter
 
 NoneType = type(None)
 T = TypeVar("T")
@@ -519,6 +518,8 @@ class GenConverter(Converter):
         if Set in co:
             if MutableSet not in co:
                 co[MutableSet] = co[Set]
+            if FrozenSetSubscriptable not in co:
+                co[FrozenSetSubscriptable] = co[Set]
 
         # abc.MutableSet overrrides, if defined, apply to sets
         if MutableSet in co:
@@ -572,6 +573,7 @@ class GenConverter(Converter):
         self._unstructure_func.register_func_list(
             [
                 (is_annotated, self.gen_unstructure_annotated, True),
+                (is_hetero_tuple, self.gen_unstructure_hetero_tuple, True),
                 (
                     is_sequence,
                     self.gen_unstructure_iterable,
@@ -595,7 +597,11 @@ class GenConverter(Converter):
             ]
         )
         self._structure_func.register_func_list(
-            [(is_annotated, self.gen_structure_annotated, True)]
+            [
+                (is_annotated, self.gen_structure_annotated, True),
+                (is_mapping, self.gen_structure_mapping, True),
+                (is_counter, self.gen_structure_counter, True),
+            ]
         )
 
     def gen_unstructure_annotated(self, type):
@@ -658,12 +664,36 @@ class GenConverter(Converter):
         self._unstructure_func.register_cls_list([(cl, h)], direct=True)
         return h
 
-    def gen_unstructure_mapping(self, cl: Any, unstructure_to=None):
+    def gen_unstructure_hetero_tuple(self, cl: Any, unstructure_to=None):
+        unstructure_to = self._unstruct_collection_overrides.get(
+            get_origin(cl) or cl, unstructure_to or tuple
+        )
+        h = make_hetero_tuple_unstructure_fn(
+            cl, self, unstructure_to=unstructure_to
+        )
+        self._unstructure_func.register_cls_list([(cl, h)], direct=True)
+        return h
+
+    def gen_unstructure_mapping(
+        self, cl: Any, unstructure_to=None, key_handler=None
+    ):
         unstructure_to = self._unstruct_collection_overrides.get(
             get_origin(cl) or cl, unstructure_to or dict
         )
         h = make_mapping_unstructure_fn(
-            cl, self, unstructure_to=unstructure_to
+            cl, self, unstructure_to=unstructure_to, key_handler=key_handler
         )
         self._unstructure_func.register_cls_list([(cl, h)], direct=True)
+        return h
+
+    def gen_structure_counter(self, cl: Any):
+        h = make_mapping_structure_fn(
+            cl, self, structure_to=Counter, val_type=int
+        )
+        self._structure_func.register_cls_list([(cl, h)], direct=True)
+        return h
+
+    def gen_structure_mapping(self, cl: Any):
+        h = make_mapping_structure_fn(cl, self)
+        self._structure_func.register_cls_list([(cl, h)], direct=True)
         return h

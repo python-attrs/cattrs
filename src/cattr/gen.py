@@ -1,11 +1,11 @@
 import re
-from typing import Any, Optional, Type, TypeVar
 from dataclasses import is_dataclass
+from typing import Any, Optional, Type, TypeVar
 
 import attr
 from attr import NOTHING, resolve_types
 
-from ._compat import get_args, get_origin, is_generic, adapted_fields
+from ._compat import adapted_fields, get_args, get_origin, is_generic
 
 
 @attr.s(slots=True, frozen=True)
@@ -228,9 +228,53 @@ def make_iterable_unstructure_fn(cl: Any, converter, unstructure_to=None):
     return fn
 
 
-def make_mapping_unstructure_fn(cl: Any, converter, unstructure_to=None):
+def make_hetero_tuple_unstructure_fn(cl: Any, converter, unstructure_to=None):
+    """Generate a specialized unstructure function for a heterogenous tuple."""
+    fn_name = "unstructure_tuple"
+
+    type_args = get_args(cl)
+
+    # We can do the dispatch here and now.
+    handlers = [
+        converter._unstructure_func.dispatch(type_arg)
+        for type_arg in type_args
+    ]
+
+    globs = {f"__cattr_u_{i}": h for i, h in enumerate(handlers)}
+    if unstructure_to is not tuple:
+        globs["__cattr_seq_cl"] = unstructure_to or cl
+    lines = []
+
+    lines.append(f"def {fn_name}(tup):")
+    if unstructure_to is not tuple:
+        lines.append("    res = __cattr_seq_cl((")
+    else:
+        lines.append("    res = (")
+    for i in range(len(handlers)):
+        if handlers[i] == converter._unstructure_identity:
+            lines.append(f"        tup[{i}],")
+        else:
+            lines.append(f"        __cattr_u_{i}(tup[{i}]),")
+
+    if unstructure_to is not tuple:
+        lines.append("    ))")
+    else:
+        lines.append("    )")
+
+    total_lines = lines + ["    return res"]
+
+    eval(compile("\n".join(total_lines), "", "exec"), globs)
+
+    fn = globs[fn_name]
+
+    return fn
+
+
+def make_mapping_unstructure_fn(
+    cl: Any, converter, unstructure_to=None, key_handler=None
+):
     """Generate a specialized unstructure function for a mapping."""
-    key_handler = converter.unstructure
+    kh = key_handler or converter.unstructure
     val_handler = converter.unstructure
 
     fn_name = "unstructure_mapping"
@@ -244,9 +288,9 @@ def make_mapping_unstructure_fn(cl: Any, converter, unstructure_to=None):
             # Probably a Counter
             key_arg, val_arg = args, Any
         # We can do the dispatch here and now.
-        key_handler = converter._unstructure_func.dispatch(key_arg)
-        if key_handler == converter._unstructure_identity:
-            key_handler = None
+        kh = key_handler or converter._unstructure_func.dispatch(key_arg)
+        if kh == converter._unstructure_identity:
+            kh = None
 
         val_handler = converter._unstructure_func.dispatch(val_arg)
         if val_handler == converter._unstructure_identity:
@@ -254,15 +298,11 @@ def make_mapping_unstructure_fn(cl: Any, converter, unstructure_to=None):
 
     globs = {
         "__cattr_mapping_cl": unstructure_to or cl,
-        "__cattr_k_u": key_handler,
+        "__cattr_k_u": kh,
         "__cattr_v_u": val_handler,
     }
-    if key_handler is not None:
-        globs["__cattr_k_u"]
-    if val_handler is not None:
-        globs["__cattr_v_u"]
 
-    k_u = "__cattr_k_u(k)" if key_handler is not None else "k"
+    k_u = "__cattr_k_u(k)" if kh is not None else "k"
     v_u = "__cattr_v_u(v)" if val_handler is not None else "v"
 
     lines = []
@@ -271,6 +311,74 @@ def make_mapping_unstructure_fn(cl: Any, converter, unstructure_to=None):
     lines.append(
         f"    res = __cattr_mapping_cl(({k_u}, {v_u}) for k, v in mapping.items())"
     )
+
+    total_lines = lines + ["    return res"]
+
+    eval(compile("\n".join(total_lines), "", "exec"), globs)
+
+    fn = globs[fn_name]
+
+    return fn
+
+
+def make_mapping_structure_fn(
+    cl: Any, converter, structure_to=dict, key_type=NOTHING, val_type=NOTHING
+):
+    """Generate a specialized unstructure function for a mapping."""
+    fn_name = "structure_mapping"
+
+    # Let's try fishing out the type args.
+    if getattr(cl, "__args__", None) is not None:
+        args = get_args(cl)
+        if len(args) == 2:
+            key_arg_cand, val_arg_cand = args
+            if key_type is NOTHING:
+                key_type = key_arg_cand
+            if val_type is NOTHING:
+                val_type = val_arg_cand
+        else:
+            if key_type is not NOTHING and val_type is NOTHING:
+                (val_type,) = args
+            elif key_type is NOTHING and val_type is not NOTHING:
+                (key_type,) = args
+            else:
+                # Probably a Counter
+                (key_type,) = args
+                val_type = Any
+        # We can do the dispatch here and now.
+        key_handler = converter._structure_func.dispatch(key_type)
+        if key_handler == converter._structure_call:
+            key_handler = key_type
+
+        val_handler = converter._structure_func.dispatch(val_type)
+        if val_handler == converter._structure_call:
+            val_handler = val_type
+
+    globs = {
+        "__cattr_mapping_cl": structure_to,
+        "__cattr_k_s": key_handler,
+        "__cattr_v_s": val_handler,
+        "__cattr_k_t": key_type,
+        "__cattr_v_t": val_type,
+    }
+
+    k_s = (
+        "__cattr_k_s(k, __cattr_k_t)"
+        if key_handler != key_type
+        else "__cattr_k_s(k)"
+    )
+    v_s = (
+        "__cattr_v_s(v, __cattr_v_t)"
+        if val_handler != val_type
+        else "__cattr_v_s(v)"
+    )
+
+    lines = []
+
+    lines.append(f"def {fn_name}(mapping, _):")
+    lines.append(f"    res = {{{k_s}: {v_s} for k, v in mapping.items()}}")
+    if structure_to is not dict:
+        lines.append("    res = __cattr_mapping_cl(res)")
 
     total_lines = lines + ["    return res"]
 

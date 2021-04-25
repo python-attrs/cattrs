@@ -1,28 +1,18 @@
 import sys
-from attr import (
-    Factory,
-    NOTHING,
-    fields as attrs_fields,
-    Attribute,
-)
-from dataclasses import (
-    MISSING,
-    is_dataclass,
-    fields as dataclass_fields,
-)
-from typing import (
-    Any,
-    Dict,
-    FrozenSet,
-    List,
-    Mapping as TypingMapping,
-    MutableMapping as TypingMutableMapping,
-    MutableSequence as TypingMutableSequence,
-    MutableSet as TypingMutableSet,
-    Sequence as TypingSequence,
-    Set as TypingSet,
-    Tuple,
-)
+from dataclasses import MISSING
+from dataclasses import fields as dataclass_fields
+from dataclasses import is_dataclass
+from typing import Any, Dict, FrozenSet, List
+from typing import Mapping as TypingMapping
+from typing import MutableMapping as TypingMutableMapping
+from typing import MutableSequence as TypingMutableSequence
+from typing import MutableSet as TypingMutableSet
+from typing import Sequence as TypingSequence
+from typing import Set as TypingSet
+from typing import Tuple
+
+from attr import NOTHING, Attribute, Factory
+from attr import fields as attrs_fields
 
 version_info = sys.version_info[0:3]
 is_py37 = version_info[:2] == (3, 7)
@@ -90,6 +80,11 @@ def adapted_fields(type) -> List[Attribute]:
         return attrs_fields(type)
 
 
+def is_hetero_tuple(type: Any) -> bool:
+    origin = getattr(type, "__origin__", None)
+    return origin is tuple and ... not in type.__args__
+
+
 if is_py37 or is_py38:
     Set = TypingSet
     MutableSet = TypingMutableSet
@@ -97,8 +92,11 @@ if is_py37 or is_py38:
     MutableSequence = TypingMutableSequence
     MutableMapping = TypingMutableMapping
     Mapping = TypingMapping
+    FrozenSetSubscriptable = FrozenSet
+    TupleSubscriptable = Tuple
 
-    from typing import Union, _GenericAlias
+    from collections import Counter as ColCounter
+    from typing import Counter, Union, _GenericAlias
 
     def is_annotated(_):
         return False
@@ -157,23 +155,29 @@ if is_py37 or is_py38:
             or args == bare_mutable_seq_args
         )
 
+    def is_counter(type):
+        return (
+            type in (Counter, ColCounter)
+            or getattr(type, "__origin__", None) is ColCounter
+        )
+
 
 else:
     # 3.9+
+    from collections import Counter
+    from collections.abc import Mapping as AbcMapping
+    from collections.abc import MutableMapping as AbcMutableMapping
+    from collections.abc import MutableSequence as AbcMutableSequence
+    from collections.abc import MutableSet as AbcMutableSet
+    from collections.abc import Sequence as AbcSequence
+    from collections.abc import Set as AbcSet
+    from typing import Counter as TypingCounter
     from typing import (
         Union,
+        _AnnotatedAlias,
         _GenericAlias,
         _SpecialGenericAlias,
         _UnionGenericAlias,
-        _AnnotatedAlias,
-    )
-    from collections.abc import (
-        MutableSequence as AbcMutableSequence,
-        Sequence as AbcSequence,
-        MutableSet as AbcMutableSet,
-        Set as AbcSet,
-        MutableMapping as AbcMutableMapping,
-        Mapping as AbcMapping,
     )
 
     Set = AbcSet
@@ -182,6 +186,8 @@ else:
     MutableSequence = AbcMutableSequence
     MutableMapping = AbcMutableMapping
     Mapping = AbcMapping
+    FrozenSetSubscriptable = frozenset
+    TupleSubscriptable = tuple
 
     def is_annotated(type) -> bool:
         return getattr(type, "__class__", None) is _AnnotatedAlias
@@ -278,6 +284,12 @@ else:
                 in (dict, AbcMutableMapping, AbcMapping)
             )
             or issubclass(type, dict)
+        )
+
+    def is_counter(type):
+        return (
+            type in (Counter, TypingCounter)
+            or getattr(type, "__origin__", None) is Counter
         )
 
 

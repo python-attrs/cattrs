@@ -17,6 +17,7 @@ Contents:
    converters
    structuring
    unstructuring
+   preconf
    customizing
    unions
    benchmarking
