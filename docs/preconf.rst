@@ -20,6 +20,7 @@ These converters support the following classes and type annotations, both for st
 * lists, homogenous tuples, heterogenous tuples, dictionaries, counters, sets, frozensets
 * optionals
 * sequences, mutable sequences, mappings, mutable mappings, sets, mutable sets
+* ``datetime.datetime``
 
 Particular libraries may have additional constraints documented below.
 
@@ -28,7 +29,7 @@ Standard library ``json``
 
 Found at ``cattr.preconf.json``.
 
-Bytes are serialized as base 85 strings. Counters are serialized as dictionaries. Sets are serialized as lists, and deserialized back into sets. ``datetime``s are serialized as ISO 8601 strings.
+Bytes are serialized as base 85 strings. Counters are serialized as dictionaries. Sets are serialized as lists, and deserialized back into sets. ``datetime`` s are serialized as ISO 8601 strings.
 
 
 ``ujson``
@@ -36,7 +37,7 @@ Bytes are serialized as base 85 strings. Counters are serialized as dictionaries
 
 Found at ``cattr.preconf.ujson``.
 
-Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets. ``datetime``s are serialized as ISO 8601 strings.
+Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets. ``datetime`` s are serialized as ISO 8601 strings.
 
 ``ujson`` doesn't support integers less than -9223372036854775808, and greater than 9223372036854775807, nor does it support `float('inf')`.
 
@@ -46,7 +47,7 @@ Bytes are serialized as base 85 strings. Sets are serialized as lists, and deser
 
 Found at ``cattr.preconf.orjson``.
 
-Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets. ``datetime``s are serialized as ISO 8601 strings.
+Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets. ``datetime`` s are serialized as ISO 8601 strings.
 
 ``orjson`` doesn't support integers less than -9223372036854775808, and greater than 9223372036854775807.
 ``orjson`` only supports mappings with string keys so mappings will have their keys stringified before serialization, and destringified during deserialization.
@@ -57,7 +58,7 @@ Bytes are serialized as base 85 strings. Sets are serialized as lists, and deser
 
 Found at ``cattr.preconf.msgpack``.
 
-Sets are serialized as lists, and deserialized back into sets. ``datetime``s are serialized as UNIX timestamp float values.
+Sets are serialized as lists, and deserialized back into sets. ``datetime`` s are serialized as UNIX timestamp float values.
 
 ``msgpack`` doesn't support integers less than -9223372036854775808, and greater than 18446744073709551615.
 
