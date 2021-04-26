@@ -1,4 +1,5 @@
 from collections import Counter
+from collections.abc import MutableSet as AbcMutableSet
 from enum import Enum
 from functools import lru_cache
 from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar
@@ -14,7 +15,6 @@ from ._compat import (
     MutableSet,
     Sequence,
     Set,
-    TupleSubscriptable,
     fields,
     get_origin,
     has,
@@ -518,6 +518,7 @@ class GenConverter(Converter):
         if Set in co:
             if MutableSet not in co:
                 co[MutableSet] = co[Set]
+                co[AbcMutableSet] = co[Set]  # For 3.7/3.8 compatibility.
             if FrozenSetSubscriptable not in co:
                 co[FrozenSetSubscriptable] = co[Set]
 
@@ -525,6 +526,11 @@ class GenConverter(Converter):
         if MutableSet in co:
             if set not in co:
                 co[set] = co[MutableSet]
+
+        if FrozenSetSubscriptable in co:
+            co[frozenset] = co[
+                FrozenSetSubscriptable
+            ]  # For 3.7/3.8 compatibility.
 
         # abc.Sequence overrides, if defined, can apply to MutableSequences, lists and tuples
         if Sequence in co:

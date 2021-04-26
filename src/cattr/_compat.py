@@ -117,8 +117,11 @@ if is_py37 or is_py38:
     def is_sequence(type: Any) -> bool:
         return type in (List, list, Tuple, tuple) or (
             type.__class__ is _GenericAlias
-            and type.__origin__ is not Union
-            and issubclass(type.__origin__, TypingSequence)
+            and (
+                type.__origin__ not in (Union, Tuple, tuple)
+                and issubclass(type.__origin__, TypingSequence)
+            )
+            or (type.__origin__ in (Tuple, tuple) and type.__args__[1] is ...)
         )
 
     def is_mutable_set(type):

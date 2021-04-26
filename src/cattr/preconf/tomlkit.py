@@ -3,7 +3,7 @@ from base64 import b85decode, b85encode
 from datetime import datetime
 from typing import Any
 
-from .._compat import Set, TupleSubscriptable, is_mapping
+from .._compat import Set, is_mapping
 from ..converters import GenConverter
 from . import validate_datetime
 
@@ -37,7 +37,7 @@ def make_converter(*args, **kwargs) -> GenConverter:
     kwargs["unstruct_collection_overrides"] = {
         **kwargs.get("unstruct_collection_overrides", {}),
         Set: list,
-        TupleSubscriptable: list,
+        tuple: list,
     }
     res = GenConverter(*args, **kwargs)
     configure_converter(res)
