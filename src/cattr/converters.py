@@ -56,7 +56,7 @@ class UnstructureStrategy(Enum):
 
 
 def _subclass(typ):
-    """ a shortcut """
+    """a shortcut"""
     return lambda cls: issubclass(cls, typ)
 
 

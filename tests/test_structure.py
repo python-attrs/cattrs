@@ -11,6 +11,7 @@ from typing import (
     Union,
 )
 
+import attr
 from hypothesis import assume, given
 from hypothesis.strategies import (
     binary,
@@ -29,7 +30,6 @@ from hypothesis.strategies import (
 )
 from pytest import raises
 
-import attr
 from cattr import Converter
 from cattr._compat import is_bare, is_union_type
 from cattr.converters import NoneType
@@ -292,7 +292,7 @@ def test_structuring_primitive_union_hook(ints):
 
 
 def test_structure_hook_func():
-    """ testing the hook_func method """
+    """testing the hook_func method"""
     converter = Converter()
 
     def can_handle(cls):

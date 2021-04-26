@@ -47,7 +47,7 @@ class MultiStrategyDispatch:
         return self._function_dispatch.dispatch(cl)
 
     def register_cls_list(self, cls_and_handler, direct: bool = False):
-        """ register a class to direct or singledispatch """
+        """register a class to direct or singledispatch"""
         for cls, handler in cls_and_handler:
             if direct:
                 self._direct_dispatch[cls] = handler
