@@ -13,11 +13,8 @@ __all__ = (
     "override",
 )
 
-__author__ = "Tin Tvrtković"
-__email__ = "tinchester@gmail.com"
 
-
-global_converter = Converter()
+global_converter = GenConverter()
 
 unstructure = global_converter.unstructure
 structure = global_converter.structure
