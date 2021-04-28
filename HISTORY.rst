@@ -2,7 +2,7 @@
 History
 =======
 
-1.6.0 (UNRELEASED)
+1.6.0 (2021-04-28)
 ------------------
 * ``cattrs`` now uses Poetry.
 * ``GenConverter`` mapping structuring is now ~25% faster, and unstructuring heterogenous tuples is significantly faster.
