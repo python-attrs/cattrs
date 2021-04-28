@@ -11,7 +11,7 @@ known_first_party = ["cattr"]
 
 [tool.poetry]
 name = "cattrs"
-version = "1.6.0"
+version = "1.7.0dev0"
 description = "Composable complex class support for attrs and dataclasses."
 authors = ["Tin Tvrtkovic <tinchester@gmail.com>"]
 license = "MIT"
