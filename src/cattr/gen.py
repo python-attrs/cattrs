@@ -1,3 +1,4 @@
+import functools
 import re
 from dataclasses import is_dataclass
 from typing import Any, Optional, Type, TypeVar
@@ -6,6 +7,7 @@ import attr
 from attr import NOTHING, resolve_types
 
 from ._compat import adapted_fields, get_args, get_origin, is_generic
+from .errors import StructureHandlerNotFoundError
 
 
 @attr.s(slots=True, frozen=True)
@@ -162,10 +164,17 @@ def make_dict_structure_fn(
         # For each attribute, we try resolving the type here and now.
         # If a type is manually overwritten, this function should be
         # regenerated.
-        if type is not None:
+        if converter._prefer_attrib_converters and a.converter is not None:
+            # The attribute has defined its own conversion, so pass
+            # the original value through without invoking cattr hooks
+            handler = _passthru
+        elif type is not None:
             handler = converter._structure_func.dispatch(type)
         else:
             handler = converter.structure
+
+        if not converter._prefer_attrib_converters and a.converter is not None:
+            handler = _fallback_to_passthru(handler)
 
         struct_handler_name = f"__cattr_struct_handler_{an}"
         globs[struct_handler_name] = handler
@@ -199,6 +208,21 @@ def make_dict_structure_fn(
     eval(compile("\n".join(total_lines), "", "exec"), globs)
 
     return globs[fn_name]
+
+
+def _passthru(obj, _):
+    return obj
+
+
+def _fallback_to_passthru(func):
+    @functools.wraps(func)
+    def invoke(obj, type_):
+        try:
+            return func(obj, type_)
+        except StructureHandlerNotFoundError:
+            return obj
+
+    return invoke
 
 
 def make_iterable_unstructure_fn(cl: Any, converter, unstructure_to=None):

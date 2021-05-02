@@ -1,0 +1,2 @@
+class StructureHandlerNotFoundError(Exception):
+    pass

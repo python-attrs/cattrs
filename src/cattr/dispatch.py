@@ -3,6 +3,8 @@ from typing import Any, Callable, List, Tuple, Union
 
 import attr
 
+from .errors import StructureHandlerNotFoundError
+
 
 @attr.s
 class _DispatchNotFound:
@@ -121,4 +123,6 @@ class FunctionDispatch:
                     return handler(typ)
                 else:
                     return handler
-        raise KeyError("unable to find handler for {0}".format(typ))
+        raise StructureHandlerNotFoundError(
+            "unable to find handler for {0}".format(typ)
+        )

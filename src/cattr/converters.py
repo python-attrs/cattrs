@@ -1,9 +1,11 @@
 from collections import Counter
 from collections.abc import MutableSet as AbcMutableSet
+from dataclasses import Field
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar
+from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar, Union
 
+from attr import Attribute
 from attr import has as attrs_has
 from attr import resolve_types
 
@@ -33,6 +35,7 @@ from ._compat import (
 )
 from .disambiguators import create_uniq_field_dis_func
 from .dispatch import MultiStrategyDispatch
+from .errors import StructureHandlerNotFoundError
 from .gen import (
     AttributeOverride,
     make_dict_structure_fn,
@@ -71,14 +74,17 @@ class Converter(object):
         "_dict_factory",
         "_union_struct_registry",
         "_structure_func",
+        "_prefer_attrib_converters",
     )
 
     def __init__(
         self,
         dict_factory: Callable[[], Any] = dict,
         unstruct_strat: UnstructureStrategy = UnstructureStrategy.AS_DICT,
+        prefer_attrib_converters: bool = False,
     ) -> None:
         unstruct_strat = UnstructureStrategy(unstruct_strat)
+        self._prefer_attrib_converters = prefer_attrib_converters
 
         # Create a per-instance cache.
         if unstruct_strat is UnstructureStrategy.AS_DICT:
@@ -299,7 +305,7 @@ class Converter(object):
             "Unsupported type: {0}. Register a structure hook for "
             "it.".format(cl)
         )
-        raise ValueError(msg)
+        raise StructureHandlerNotFoundError(msg)
 
     @staticmethod
     def _structure_call(obj, cl):
@@ -320,18 +326,34 @@ class Converter(object):
         conv_obj = []  # A list of converter parameters.
         for a, value in zip(fields(cl), obj):  # type: ignore
             # We detect the type by the metadata.
-            converted = self._structure_attr_from_tuple(a, a.name, value)
+            converted = self._structure_attribute(a, value)
             conv_obj.append(converted)
 
         return cl(*conv_obj)  # type: ignore
 
-    def _structure_attr_from_tuple(self, a, _, value):
+    def _structure_attribute(
+        self, a: Union[Attribute, Field], value: Any
+    ) -> Any:
         """Handle an individual attrs attribute."""
         type_ = a.type
+        attrib_converter = getattr(a, "converter", None)
+        if self._prefer_attrib_converters and attrib_converter:
+            # A attrib converter is defined on this attribute, and prefer_attrib_converters is set
+            # to give these priority over registered structure hooks. So, pass through the raw
+            # value, which attrs will flow into the converter
+            return value
         if type_ is None:
             # No type metadata.
             return value
-        return self._structure_func.dispatch(type_)(value, type_)
+
+        try:
+            return self._structure_func.dispatch(type_)(value, type_)
+        except StructureHandlerNotFoundError:
+            if attrib_converter:
+                # Return the original value and fallback to using an attrib converter.
+                return value
+            else:
+                raise
 
     def structure_attrs_fromdict(
         self, obj: Mapping[str, Any], cl: Type[T]
@@ -340,10 +362,7 @@ class Converter(object):
         # For public use.
 
         conv_obj = {}  # Start with a fresh dict, to ignore extra keys.
-        dispatch = self._structure_func.dispatch
         for a in fields(cl):  # type: ignore
-            # We detect the type by metadata.
-            type_ = a.type
             name = a.name
 
             try:
@@ -354,9 +373,7 @@ class Converter(object):
             if name[0] == "_":
                 name = name[1:]
 
-            conv_obj[name] = (
-                dispatch(type_)(val, type_) if type_ is not None else val
-            )
+            conv_obj[name] = self._structure_attribute(a, val)
 
         return cl(**conv_obj)  # type: ignore
 
@@ -476,7 +493,7 @@ class Converter(object):
             )
 
         if not all(has(get_origin(e) or e) for e in union_types):
-            raise ValueError(
+            raise StructureHandlerNotFoundError(
                 "Only unions of attr classes supported "
                 "currently. Register a loads hook manually."
             )
@@ -501,9 +518,12 @@ class GenConverter(Converter):
         forbid_extra_keys: bool = False,
         type_overrides: Mapping[Type, AttributeOverride] = {},
         unstruct_collection_overrides: Mapping[Type, Callable] = {},
+        prefer_attrib_converters: bool = False,
     ):
         super().__init__(
-            dict_factory=dict_factory, unstruct_strat=unstruct_strat
+            dict_factory=dict_factory,
+            unstruct_strat=unstruct_strat,
+            prefer_attrib_converters=prefer_attrib_converters,
         )
         self.omit_if_default = omit_if_default
         self.forbid_extra_keys = forbid_extra_keys

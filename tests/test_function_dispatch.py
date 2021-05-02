@@ -1,12 +1,12 @@
 import pytest
 
-from cattr.dispatch import FunctionDispatch
+from cattr.dispatch import FunctionDispatch, StructureHandlerNotFoundError
 
 
 def test_function_dispatch():
     dispatch = FunctionDispatch()
 
-    with pytest.raises(KeyError):
+    with pytest.raises(StructureHandlerNotFoundError):
         dispatch.dispatch(float)
 
     test_func = object()

@@ -33,6 +33,7 @@ from pytest import raises
 from cattr import Converter
 from cattr._compat import is_bare, is_union_type
 from cattr.converters import NoneType
+from cattr.errors import StructureHandlerNotFoundError
 
 from . import (
     dicts_of_primitives,
@@ -326,9 +327,9 @@ def test_structuring_enums(data, enum):
 def test_structuring_unsupported():
     """Loading unsupported classes should throw."""
     converter = Converter()
-    with raises(ValueError):
+    with raises(StructureHandlerNotFoundError):
         converter.structure(1, Converter)
-    with raises(ValueError):
+    with raises(StructureHandlerNotFoundError):
         converter.structure(1, Union[int, str])
 
 
