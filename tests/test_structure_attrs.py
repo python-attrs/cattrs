@@ -1,11 +1,13 @@
 """Loading of attrs classes."""
-from typing import Union
+from typing import Literal, Union
 
-from attr import NOTHING, Factory, asdict, astuple, fields
+import pytest
+from attr import NOTHING, Factory, asdict, astuple, define, fields
 from hypothesis import assume, given
 from hypothesis.strategies import data, lists, sampled_from
 
-from cattr.converters import Converter
+from cattr._compat import is_py37
+from cattr.converters import Converter, GenConverter
 
 from . import simple_classes
 
@@ -134,3 +136,18 @@ def test_structure_union_explicit(cl_and_vals_a, cl_and_vals_b):
     assert inst == converter.structure(
         converter.unstructure(inst), Union[cl_a, cl_b]
     )
+
+
+@pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
+@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
+def test_structure_literal(converter_cls):
+    """Structuring a class with a literal field works."""
+    converter = converter_cls()
+
+    @define
+    class ClassWithLiteral:
+        literal_field: Literal[4] = 4
+
+    assert converter.structure(
+        {"literal_field": 4}, ClassWithLiteral
+    ) == ClassWithLiteral(4)

@@ -25,6 +25,7 @@ from ._compat import (
     is_frozenset,
     is_generic,
     is_hetero_tuple,
+    is_literal,
     is_mapping,
     is_mutable_set,
     is_sequence,
@@ -117,6 +118,7 @@ class Converter(object):
         self._structure_func = MultiStrategyDispatch(self._structure_default)
         self._structure_func.register_func_list(
             [
+                (is_literal, self._structure_literal),
                 (is_sequence, self._structure_list),
                 (is_mutable_set, self._structure_set),
                 (is_frozenset, self._structure_frozenset),
@@ -310,6 +312,12 @@ class Converter(object):
         etc.
         """
         return cl(obj)
+
+    @staticmethod
+    def _structure_literal(val, type):
+        if val != type.__args__[0]:
+            raise Exception(f"Literal {type} not equal to {val}")
+        return val
 
     # Attrs classes.
 
@@ -654,7 +662,7 @@ class GenConverter(Converter):
             cl,
             self,
             _cattrs_forbid_extra_keys=self.forbid_extra_keys,
-            **attrib_overrides
+            **attrib_overrides,
         )
         self._structure_func.register_cls_list([(cl, h)], direct=True)
         # only direct dispatch so that subclasses get separately generated
