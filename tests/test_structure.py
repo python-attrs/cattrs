@@ -157,7 +157,6 @@ def test_structuring_hetero_tuples(list_of_vals_and_types):
 
 @given(lists(primitives_and_type))
 def test_stringifying_tuples(list_of_vals_and_types):
-    # type: (Converter, List[Any]) -> None
     """Stringify all elements of a heterogeneous tuple."""
     converter = Converter()
     vals = [e[0] for e in list_of_vals_and_types]

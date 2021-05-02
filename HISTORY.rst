@@ -5,6 +5,7 @@ History
 1.7.0 (UNRELEASED)
 ------------------
 * ``cattr.global_converter`` (which provides ``cattr.unstructure``, ``cattr.structure`` etc.) is now an instance of ``cattr.GenConverter``.
+* ``Literal`` s are now supported and validated when structuring.
 
 1.6.0 (2021-04-28)
 ------------------

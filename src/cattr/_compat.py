@@ -164,6 +164,19 @@ if is_py37 or is_py38:
             or getattr(type, "__origin__", None) is ColCounter
         )
 
+    if is_py38:
+        from typing import Literal
+
+        def is_literal(type) -> bool:
+            return (
+                type.__class__ is _GenericAlias and type.__origin__ is Literal
+            )
+
+    else:
+        # No literals in 3.7.
+        def is_literal(_) -> bool:
+            return False
+
 
 else:
     # 3.9+
@@ -179,6 +192,7 @@ else:
         Union,
         _AnnotatedAlias,
         _GenericAlias,
+        _LiteralGenericAlias,
         _SpecialGenericAlias,
         _UnionGenericAlias,
     )
@@ -191,6 +205,9 @@ else:
     Mapping = AbcMapping
     FrozenSetSubscriptable = frozenset
     TupleSubscriptable = tuple
+
+    def is_literal(type) -> bool:
+        return type.__class__ is _LiteralGenericAlias
 
     def is_annotated(type) -> bool:
         return getattr(type, "__class__", None) is _AnnotatedAlias
