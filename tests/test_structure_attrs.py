@@ -1,5 +1,5 @@
 """Loading of attrs classes."""
-from typing import Literal, Union
+from typing import Union
 
 import pytest
 from attr import NOTHING, Factory, asdict, astuple, define, fields
@@ -142,6 +142,8 @@ def test_structure_union_explicit(cl_and_vals_a, cl_and_vals_b):
 @pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
 def test_structure_literal(converter_cls):
     """Structuring a class with a literal field works."""
+    from typing import Literal
+
     converter = converter_cls()
 
     @define
