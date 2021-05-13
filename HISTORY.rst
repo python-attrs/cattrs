@@ -6,6 +6,8 @@ History
 ------------------
 * ``cattr.global_converter`` (which provides ``cattr.unstructure``, ``cattr.structure`` etc.) is now an instance of ``cattr.GenConverter``.
 * ``Literal`` s are now supported and validated when structuring.
+* Fix dependency metadata information for ``attrs``.
+  (`#147 <https://github.com/Tinche/cattrs/issues/147>`_)
 
 1.6.0 (2021-04-28)
 ------------------
