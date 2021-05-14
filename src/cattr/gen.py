@@ -327,6 +327,13 @@ def make_mapping_structure_fn(
     """Generate a specialized unstructure function for a mapping."""
     fn_name = "structure_mapping"
 
+    globs = {
+        "__cattr_mapping_cl": structure_to,
+    }
+
+    lines = []
+    lines.append(f"def {fn_name}(mapping, _):")
+
     # Let's try fishing out the type args.
     if getattr(cl, "__args__", None) is not None:
         args = get_args(cl)
@@ -345,38 +352,40 @@ def make_mapping_structure_fn(
                 # Probably a Counter
                 (key_type,) = args
                 val_type = Any
-        # We can do the dispatch here and now.
-        key_handler = converter._structure_func.dispatch(key_type)
-        if key_handler == converter._structure_call:
-            key_handler = key_type
 
-        val_handler = converter._structure_func.dispatch(val_type)
-        if val_handler == converter._structure_call:
-            val_handler = val_type
+        is_bare_dict = val_type is Any and key_type is Any
+        if not is_bare_dict:
+            # We can do the dispatch here and now.
+            key_handler = converter._structure_func.dispatch(key_type)
+            if key_handler == converter._structure_call:
+                key_handler = key_type
 
-    globs = {
-        "__cattr_mapping_cl": structure_to,
-        "__cattr_k_s": key_handler,
-        "__cattr_v_s": val_handler,
-        "__cattr_k_t": key_type,
-        "__cattr_v_t": val_type,
-    }
+            val_handler = converter._structure_func.dispatch(val_type)
+            if val_handler == converter._structure_call:
+                val_handler = val_type
 
-    k_s = (
-        "__cattr_k_s(k, __cattr_k_t)"
-        if key_handler != key_type
-        else "__cattr_k_s(k)"
-    )
-    v_s = (
-        "__cattr_v_s(v, __cattr_v_t)"
-        if val_handler != val_type
-        else "__cattr_v_s(v)"
-    )
+            globs["__cattr_k_t"] = key_type
+            globs["__cattr_v_t"] = val_type
+            globs["__cattr_k_s"] = key_handler
+            globs["__cattr_v_s"] = val_handler
+            k_s = (
+                "__cattr_k_s(k, __cattr_k_t)"
+                if key_handler != key_type
+                else "__cattr_k_s(k)"
+            )
+            v_s = (
+                "__cattr_v_s(v, __cattr_v_t)"
+                if val_handler != val_type
+                else "__cattr_v_s(v)"
+            )
+    else:
+        is_bare_dict = True
 
-    lines = []
-
-    lines.append(f"def {fn_name}(mapping, _):")
-    lines.append(f"    res = {{{k_s}: {v_s} for k, v in mapping.items()}}")
+    if is_bare_dict:
+        # No args, it's a bare dict.
+        lines.append(f"    res = dict(mapping)")
+    else:
+        lines.append(f"    res = {{{k_s}: {v_s} for k, v in mapping.items()}}")
     if structure_to is not dict:
         lines.append("    res = __cattr_mapping_cl(res)")
 

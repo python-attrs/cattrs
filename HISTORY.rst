@@ -8,6 +8,8 @@ History
 * ``Literal`` s are now supported and validated when structuring.
 * Fix dependency metadata information for ``attrs``.
   (`#147 <https://github.com/Tinche/cattrs/issues/147>`_)
+* Fix ``GenConverter`` mapping structuring for unannotated dicts.
+  (`#148 <https://github.com/Tinche/cattrs/issues/148>`_)
 
 1.6.0 (2021-04-28)
 ------------------
