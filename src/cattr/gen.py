@@ -383,7 +383,7 @@ def make_mapping_structure_fn(
 
     if is_bare_dict:
         # No args, it's a bare dict.
-        lines.append(f"    res = dict(mapping)")
+        lines.append("    res = dict(mapping)")
     else:
         lines.append(f"    res = {{{k_s}: {v_s} for k, v in mapping.items()}}")
     if structure_to is not dict:
