@@ -192,10 +192,21 @@ else:
         Union,
         _AnnotatedAlias,
         _GenericAlias,
-        _LiteralGenericAlias,
         _SpecialGenericAlias,
         _UnionGenericAlias,
     )
+
+    try:
+        # Not present on 3.9.0, so we try carefully.
+        from typing import _LiteralGenericAlias
+
+        def is_literal(type) -> bool:
+            return type.__class__ is _LiteralGenericAlias
+
+    except ImportError:
+
+        def is_literal(_) -> bool:
+            return False
 
     Set = AbcSet
     MutableSet = AbcMutableSet
@@ -205,9 +216,6 @@ else:
     Mapping = AbcMapping
     FrozenSetSubscriptable = frozenset
     TupleSubscriptable = tuple
-
-    def is_literal(type) -> bool:
-        return type.__class__ is _LiteralGenericAlias
 
     def is_annotated(type) -> bool:
         return getattr(type, "__class__", None) is _AnnotatedAlias

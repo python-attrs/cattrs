@@ -2,6 +2,11 @@
 History
 =======
 
+1.7.1 (2021-05-28)
+------------------
+* ``Literal`` s are not supported on Python 3.9.0 (supported on 3.9.1 and later), so we skip importing them there.
+  (`#150 <https://github.com/Tinche/cattrs/issues/150>`_)
+
 1.7.0 (2021-05-26)
 ------------------
 * ``cattr.global_converter`` (which provides ``cattr.unstructure``, ``cattr.structure`` etc.) is now an instance of ``cattr.GenConverter``.
