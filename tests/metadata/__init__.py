@@ -286,7 +286,12 @@ def dict_typed_attrs(
             default = Factory(lambda: default_val)
         else:
             default = default_val
-    return (attr.ib(type=Dict[str, int], default=default), val_strat)
+    return (
+        attr.ib(
+            type=Dict[str, int] if draw(booleans()) else Dict, default=default
+        ),
+        val_strat,
+    )
 
 
 @composite

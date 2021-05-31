@@ -2,6 +2,11 @@
 History
 =======
 
+1.8.0 (UNRELEASED)
+------------------
+* Fix ``GenConverter`` mapping structuring for unannotated dicts on Python 3.8.
+  (`#151 <https://github.com/Tinche/cattrs/issues/151>`_)
+
 1.7.1 (2021-05-28)
 ------------------
 * ``Literal`` s are not supported on Python 3.9.0 (supported on 3.9.1 and later), so we skip importing them there.

@@ -5,7 +5,7 @@ from typing import Any, Optional, Type, TypeVar
 import attr
 from attr import NOTHING, resolve_types
 
-from ._compat import adapted_fields, get_args, get_origin, is_generic
+from ._compat import adapted_fields, get_args, get_origin, is_bare, is_generic
 
 
 @attr.s(slots=True, frozen=True)
@@ -335,7 +335,7 @@ def make_mapping_structure_fn(
     lines.append(f"def {fn_name}(mapping, _):")
 
     # Let's try fishing out the type args.
-    if getattr(cl, "__args__", None) is not None:
+    if not is_bare(cl):
         args = get_args(cl)
         if len(args) == 2:
             key_arg_cand, val_arg_cand = args

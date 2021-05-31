@@ -24,7 +24,7 @@ readme = "README.rst"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-attrs = ">= 20.1.0"
+attrs = ">= 20"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.9.0"
