@@ -6,6 +6,7 @@ History
 ------------------
 * Fix ``GenConverter`` mapping structuring for unannotated dicts on Python 3.8.
   (`#151 <https://github.com/Tinche/cattrs/issues/151>`_)
+* The source code for generated un/structuring functions is stored in the `linecache` cache, which enables more informative stack traces when un/structuring errors happen using the `GenConverter`. This behavior can optionally be disabled to save memory.
 
 1.7.1 (2021-05-28)
 ------------------
