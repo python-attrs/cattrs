@@ -298,7 +298,11 @@ class Converter(object):
             return obj
 
         if is_generic(cl):
-            fn = make_dict_structure_fn(cl, self, _cattrs_prefer_attrib_converters=self._prefer_attrib_converters)
+            fn = make_dict_structure_fn(
+                cl,
+                self,
+                _cattrs_prefer_attrib_converters=self._prefer_attrib_converters,
+            )
             self.register_structure_hook(cl, fn)
             return fn(obj)
 

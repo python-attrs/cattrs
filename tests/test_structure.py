@@ -315,6 +315,7 @@ def test_structure_hook_func():
 
     assert exc.value.type_ is Bar
 
+
 @given(data(), enums_of_primitives())
 def test_structuring_enums(data, enum):
     """Test structuring enums by their values."""
@@ -331,7 +332,7 @@ def test_structuring_unsupported():
         converter.structure(1, Converter)
 
     assert exc.value.type_ is Converter
-    
+
     with raises(StructureHandlerNotFoundError) as exc:
         converter.structure(1, Union[int, str])
 

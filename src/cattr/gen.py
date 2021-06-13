@@ -3,13 +3,16 @@ import linecache
 import re
 import uuid
 from dataclasses import is_dataclass
-from typing import Any, Optional, Type, TypeVar
+from typing import Any, Optional, TYPE_CHECKING, Type, TypeVar
 
 import attr
 from attr import NOTHING, resolve_types
 
 from ._compat import adapted_fields, get_args, get_origin, is_bare, is_generic
 from .errors import StructureHandlerNotFoundError
+
+if TYPE_CHECKING:
+    from cattr.converters import Converter
 
 
 @attr.s(slots=True, frozen=True)
@@ -132,7 +135,7 @@ def generate_mapping(cl: Type, old_mapping):
 
 def make_dict_structure_fn(
     cl: Type,
-    converter,
+    converter: "Converter",
     _cattrs_forbid_extra_keys: bool = False,
     _cattrs_use_linecache: bool = True,
     _cattrs_prefer_attrib_converters: bool = False,
@@ -212,9 +215,7 @@ def make_dict_structure_fn(
                     f"    '{ian}': {struct_handler_name}(o['{kn}'], type_{an}),"
                 )
             else:
-                lines.append(
-                    f"    '{ian}': o['{kn}'],"
-                )
+                lines.append(f"    '{ian}': o['{kn}'],")
         else:
             post_lines.append(f"  if '{kn}' in o:")
             if handler:
@@ -222,9 +223,7 @@ def make_dict_structure_fn(
                     f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], type_{an})"
                 )
             else:
-                post_lines.append(
-                    f"    res['{ian}'] = o['{kn}']"
-                )
+                post_lines.append(f"    res['{ian}'] = o['{kn}']")
 
     lines.append("    }")
     if _cattrs_forbid_extra_keys:

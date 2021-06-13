@@ -87,6 +87,7 @@ def test_raises_if_no_generic_params_supplied(converter):
 
     assert exc.value.type_ is T
 
+
 def test_unstructure_generic_attrs():
     c = GenConverter()
 
