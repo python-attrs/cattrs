@@ -298,7 +298,7 @@ class Converter(object):
             return obj
 
         if is_generic(cl):
-            fn = make_dict_structure_fn(cl, self)
+            fn = make_dict_structure_fn(cl, self, _cattrs_prefer_attrib_converters=self._prefer_attrib_converters)
             self.register_structure_hook(cl, fn)
             return fn(obj)
 
@@ -682,6 +682,7 @@ class GenConverter(Converter):
             cl,
             self,
             _cattrs_forbid_extra_keys=self.forbid_extra_keys,
+            _cattrs_prefer_attrib_converters=self._prefer_attrib_converters,
             **attrib_overrides,
         )
         self._structure_func.register_cls_list([(cl, h)], direct=True)

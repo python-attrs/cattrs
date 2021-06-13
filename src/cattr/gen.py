@@ -135,6 +135,7 @@ def make_dict_structure_fn(
     converter,
     _cattrs_forbid_extra_keys: bool = False,
     _cattrs_use_linecache: bool = True,
+    _cattrs_prefer_attrib_converters: bool = False,
     **kwargs,
 ):
     """Generate a specialized dict structuring function for an attrs class."""
@@ -187,7 +188,7 @@ def make_dict_structure_fn(
         # For each attribute, we try resolving the type here and now.
         # If a type is manually overwritten, this function should be
         # regenerated.
-        if converter._prefer_attrib_converters and a.converter is not None:
+        if _cattrs_prefer_attrib_converters and a.converter is not None:
             # The attribute has defined its own conversion, so pass
             # the original value through without invoking cattr hooks
             handler = _passthru
@@ -196,7 +197,7 @@ def make_dict_structure_fn(
         else:
             handler = converter.structure
 
-        if not converter._prefer_attrib_converters and a.converter is not None:
+        if not _cattrs_prefer_attrib_converters and a.converter is not None:
             handler = _fallback_to_passthru(handler)
 
         struct_handler_name = f"structure_{an}"

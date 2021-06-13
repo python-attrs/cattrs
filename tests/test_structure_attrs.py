@@ -166,7 +166,6 @@ def test_structure_literal(converter_cls):
     ) == ClassWithLiteral(4)
 
 
-
 @pytest.mark.parametrize("converter_type", [Converter, GenConverter])
 def test_structure_fallback_to_attrib_converters(converter_type):
     attrib_converter = Mock()
