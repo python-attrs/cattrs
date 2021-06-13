@@ -164,6 +164,19 @@ if is_py37 or is_py38:
             or getattr(type, "__origin__", None) is ColCounter
         )
 
+    if is_py38:
+        from typing import Literal
+
+        def is_literal(type) -> bool:
+            return (
+                type.__class__ is _GenericAlias and type.__origin__ is Literal
+            )
+
+    else:
+        # No literals in 3.7.
+        def is_literal(_) -> bool:
+            return False
+
 
 else:
     # 3.9+
@@ -182,6 +195,18 @@ else:
         _SpecialGenericAlias,
         _UnionGenericAlias,
     )
+
+    try:
+        # Not present on 3.9.0, so we try carefully.
+        from typing import _LiteralGenericAlias
+
+        def is_literal(type) -> bool:
+            return type.__class__ is _LiteralGenericAlias
+
+    except ImportError:
+
+        def is_literal(_) -> bool:
+            return False
 
     Set = AbcSet
     MutableSet = AbcMutableSet

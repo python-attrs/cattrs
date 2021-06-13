@@ -1,14 +1,12 @@
 """Tests for metadata functionality."""
 import sys
-from functools import partial
-from dataclasses import make_dataclass, field
 from collections import OrderedDict
-from collections.abc import (
-    MutableSequence as AbcMutableSequence,
-    Sequence as AbcSequence,
-    Set as AbcSet,
-    MutableSet as AbcMutableSet,
-)
+from collections.abc import MutableSequence as AbcMutableSequence
+from collections.abc import MutableSet as AbcMutableSet
+from collections.abc import Sequence as AbcSequence
+from collections.abc import Set as AbcSet
+from dataclasses import field, make_dataclass
+from functools import partial
 from typing import (
     Any,
     Callable,
@@ -22,7 +20,7 @@ from typing import (
 )
 
 import attr
-from attr import Factory, NOTHING
+from attr import NOTHING, Factory
 from attr._make import _CountingAttr
 from hypothesis.strategies import (
     SearchStrategy,
@@ -288,7 +286,12 @@ def dict_typed_attrs(
             default = Factory(lambda: default_val)
         else:
             default = default_val
-    return (attr.ib(type=Dict[str, int], default=default), val_strat)
+    return (
+        attr.ib(
+            type=Dict[str, int] if draw(booleans()) else Dict, default=default
+        ),
+        val_strat,
+    )
 
 
 @composite
@@ -310,7 +313,11 @@ def new_dict_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
     else:
         default = default_val
 
-    return (attr.ib(type=dict[str, int], default=default), val_strat)
+    type = (
+        dict[str, int] if draw(booleans()) else dict
+    )  # We also produce bare dicts.
+
+    return (attr.ib(type=type, default=default), val_strat)
 
 
 @composite

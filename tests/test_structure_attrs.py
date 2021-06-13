@@ -4,10 +4,20 @@ from typing import Union
 from unittest.mock import Mock
 
 import pytest
-from attr import NOTHING, Factory, asdict, astuple, attrib, fields, make_class
+from attr import (
+    NOTHING,
+    Factory,
+    asdict,
+    astuple,
+    attrib,
+    define,
+    fields,
+    make_class,
+)
 from hypothesis import assume, given
 from hypothesis.strategies import data, lists, sampled_from
 
+from cattr._compat import is_py37
 from cattr.converters import Converter, GenConverter
 
 from . import simple_classes
@@ -137,6 +147,24 @@ def test_structure_union_explicit(cl_and_vals_a, cl_and_vals_b):
     assert inst == converter.structure(
         converter.unstructure(inst), Union[cl_a, cl_b]
     )
+
+
+@pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
+@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
+def test_structure_literal(converter_cls):
+    """Structuring a class with a literal field works."""
+    from typing import Literal
+
+    converter = converter_cls()
+
+    @define
+    class ClassWithLiteral:
+        literal_field: Literal[4] = 4
+
+    assert converter.structure(
+        {"literal_field": 4}, ClassWithLiteral
+    ) == ClassWithLiteral(4)
+
 
 
 @pytest.mark.parametrize("converter_type", [Converter, GenConverter])

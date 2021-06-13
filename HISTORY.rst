@@ -2,9 +2,25 @@
 History
 =======
 
-1.7.0 (UNRELEASED)
+1.8.0 (UNRELEASED)
+------------------
+* Fix ``GenConverter`` mapping structuring for unannotated dicts on Python 3.8.
+  (`#151 <https://github.com/Tinche/cattrs/issues/151>`_)
+* The source code for generated un/structuring functions is stored in the `linecache` cache, which enables more informative stack traces when un/structuring errors happen using the `GenConverter`. This behavior can optionally be disabled to save memory.
+
+1.7.1 (2021-05-28)
+------------------
+* ``Literal`` s are not supported on Python 3.9.0 (supported on 3.9.1 and later), so we skip importing them there.
+  (`#150 <https://github.com/Tinche/cattrs/issues/150>`_)
+
+1.7.0 (2021-05-26)
 ------------------
 * ``cattr.global_converter`` (which provides ``cattr.unstructure``, ``cattr.structure`` etc.) is now an instance of ``cattr.GenConverter``.
+* ``Literal`` s are now supported and validated when structuring.
+* Fix dependency metadata information for ``attrs``.
+  (`#147 <https://github.com/Tinche/cattrs/issues/147>`_)
+* Fix ``GenConverter`` mapping structuring for unannotated dicts.
+  (`#148 <https://github.com/Tinche/cattrs/issues/148>`_)
 
 1.6.0 (2021-04-28)
 ------------------

@@ -11,10 +11,11 @@ known_first_party = ["cattr"]
 
 [tool.poetry]
 name = "cattrs"
-version = "1.7.0dev0"
+version = "1.7.1"
 description = "Composable complex class support for attrs and dataclasses."
 authors = ["Tin Tvrtkovic <tinchester@gmail.com>"]
 license = "MIT"
+repository = "https://github.com/Tinche/cattrs"
 documentation = "https://cattrs.readthedocs.io/en/latest/"
 keywords = ["attrs", "serialization", "dataclasses"]
 packages = [
@@ -24,7 +25,7 @@ readme = "README.rst"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-attrs = "*"
+attrs = ">= 20"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.9.0"
@@ -36,7 +37,7 @@ pytest-benchmark = "^3.2.3"
 hypothesis = "^6.9.2"
 pendulum = "^2.1.2"
 isort = "^5.8.0"
-black = "^20.8b1"
+black = "^21.5b1"
 immutables = "^0.15"
 ujson = "^4.0.2"
 orjson = "^3.5.2"
@@ -44,6 +45,10 @@ msgpack = "^1.0.2"
 bson = "^0.5.10"
 PyYAML = "^5.4.1"
 tomlkit = "^0.7.0"
+
+[tool.poetry.urls]
+"Changelog" = "https://cattrs.readthedocs.io/en/latest/history.html"
+"Bug Tracker" = "https://github.com/Tinche/cattrs/issues"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
