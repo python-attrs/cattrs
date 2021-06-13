@@ -4,6 +4,7 @@ import pytest
 from attr import asdict, attrs
 
 from cattr import Converter, GenConverter
+from cattr.errors import StructureHandlerNotFoundError
 
 T = TypeVar("T")
 T2 = TypeVar("T2")
@@ -79,11 +80,12 @@ def test_raises_if_no_generic_params_supplied(converter):
     data = TClass(1, "a")
 
     with pytest.raises(
-        ValueError,
+        StructureHandlerNotFoundError,
         match="Unsupported type: ~T. Register a structure hook for it.",
-    ):
+    ) as exc:
         converter.structure(asdict(data), TClass)
 
+    assert exc.value.type_ is T
 
 def test_unstructure_generic_attrs():
     c = GenConverter()

@@ -310,9 +310,10 @@ def test_structure_hook_func():
     converter.register_structure_hook_func(can_handle, handle)
 
     assert converter.structure(10, Foo) == "hi"
-    with raises(ValueError):
+    with raises(StructureHandlerNotFoundError) as exc:
         converter.structure(10, Bar)
 
+    assert exc.value.type_ is Bar
 
 @given(data(), enums_of_primitives())
 def test_structuring_enums(data, enum):
