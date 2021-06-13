@@ -191,7 +191,7 @@ def make_dict_structure_fn(
         if _cattrs_prefer_attrib_converters and a.converter is not None:
             # The attribute has defined its own conversion, so pass
             # the original value through without invoking cattr hooks
-            handler = _passthru
+            handler = None
         elif type is not None:
             handler = converter._structure_func.dispatch(type)
         else:
@@ -207,14 +207,25 @@ def make_dict_structure_fn(
         kn = an if override.rename is None else override.rename
         globs[f"type_{an}"] = type
         if a.default is NOTHING:
-            lines.append(
-                f"    '{ian}': {struct_handler_name}(o['{kn}'], type_{an}),"
-            )
+            if handler:
+                lines.append(
+                    f"    '{ian}': {struct_handler_name}(o['{kn}'], type_{an}),"
+                )
+            else:
+                lines.append(
+                    f"    '{ian}': o['{kn}'],"
+                )
         else:
             post_lines.append(f"  if '{kn}' in o:")
-            post_lines.append(
-                f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], type_{an})"
-            )
+            if handler:
+                post_lines.append(
+                    f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], type_{an})"
+                )
+            else:
+                post_lines.append(
+                    f"    res['{ian}'] = o['{kn}']"
+                )
+
     lines.append("    }")
     if _cattrs_forbid_extra_keys:
         allowed_fields = {a.name for a in attrs}
@@ -245,10 +256,6 @@ def make_dict_structure_fn(
         linecache.cache[fname] = len(script), None, total_lines, fname
 
     return globs[fn_name]
-
-
-def _passthru(obj, _):
-    return obj
 
 
 def _fallback_to_passthru(func):
