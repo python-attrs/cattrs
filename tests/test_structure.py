@@ -326,10 +326,15 @@ def test_structuring_enums(data, enum):
 def test_structuring_unsupported():
     """Loading unsupported classes should throw."""
     converter = Converter()
-    with raises(StructureHandlerNotFoundError):
+    with raises(StructureHandlerNotFoundError) as exc:
         converter.structure(1, Converter)
-    with raises(StructureHandlerNotFoundError):
+
+    assert exc.value.type_ is Converter
+    
+    with raises(StructureHandlerNotFoundError) as exc:
         converter.structure(1, Union[int, str])
+
+    assert exc.value.type_ is Union[int, str]
 
 
 def test_subclass_registration_is_honored():

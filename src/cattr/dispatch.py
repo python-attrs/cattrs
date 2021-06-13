@@ -124,5 +124,5 @@ class FunctionDispatch:
                 else:
                     return handler
         raise StructureHandlerNotFoundError(
-            "unable to find handler for {0}".format(typ)
+            f"unable to find handler for {typ}", type_=typ
         )

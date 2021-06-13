@@ -307,7 +307,7 @@ class Converter(object):
             "Unsupported type: {0}. Register a structure hook for "
             "it.".format(cl)
         )
-        raise StructureHandlerNotFoundError(msg)
+        raise StructureHandlerNotFoundError(msg, type_=cl)
 
     @staticmethod
     def _structure_call(obj, cl):
@@ -503,7 +503,8 @@ class Converter(object):
         if not all(has(get_origin(e) or e) for e in union_types):
             raise StructureHandlerNotFoundError(
                 "Only unions of attr classes supported "
-                "currently. Register a loads hook manually."
+                "currently. Register a loads hook manually.",
+                type_=union,
             )
         return create_uniq_field_dis_func(*union_types)
 
