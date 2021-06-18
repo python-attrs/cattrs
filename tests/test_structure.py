@@ -33,6 +33,7 @@ from pytest import raises
 from cattr import Converter
 from cattr._compat import is_bare, is_union_type
 from cattr.converters import NoneType
+from cattr.errors import StructureHandlerNotFoundError
 
 from . import (
     dicts_of_primitives,
@@ -309,8 +310,10 @@ def test_structure_hook_func():
     converter.register_structure_hook_func(can_handle, handle)
 
     assert converter.structure(10, Foo) == "hi"
-    with raises(ValueError):
+    with raises(StructureHandlerNotFoundError) as exc:
         converter.structure(10, Bar)
+
+    assert exc.value.type_ is Bar
 
 
 @given(data(), enums_of_primitives())
@@ -325,10 +328,15 @@ def test_structuring_enums(data, enum):
 def test_structuring_unsupported():
     """Loading unsupported classes should throw."""
     converter = Converter()
-    with raises(ValueError):
+    with raises(StructureHandlerNotFoundError) as exc:
         converter.structure(1, Converter)
-    with raises(ValueError):
+
+    assert exc.value.type_ is Converter
+
+    with raises(StructureHandlerNotFoundError) as exc:
         converter.structure(1, Union[int, str])
+
+    assert exc.value.type_ is Union[int, str]
 
 
 def test_subclass_registration_is_honored():

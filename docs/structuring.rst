@@ -284,8 +284,8 @@ and their own converters work out of the box. Given a mapping ``d`` and class
 
     >>> @attr.s
     ... class A:
-    ...     a = attr.ib()
-    ...     b = attr.ib(converter=int)
+    ...     a: int = attr.ib()
+    ...     b: int = attr.ib()
     ...
     >>> cattr.structure({'a': 1, 'b': '2'}, A)
     A(a=1, b=2)
@@ -298,8 +298,8 @@ Classes like these deconstructed into tuples can be structured using
 
     >>> @attr.s
     ... class A:
-    ...     a = attr.ib()
-    ...     b = attr.ib(converter=int)
+    ...     a: str = attr.ib()
+    ...     b: int = attr.ib()
     ...
     >>> cattr.structure_attrs_fromtuple(['string', '2'], A)
     A(a='string', b=2)
@@ -312,14 +312,52 @@ Loading from tuples can be made the default by creating a new ``Converter`` with
     >>> converter = cattr.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
     >>> @attr.s
     ... class A:
-    ...     a = attr.ib()
-    ...     b = attr.ib(converter=int)
+    ...     a: str = attr.ib()
+    ...     b: int = attr.ib()
     ...
     >>> converter.structure(['string', '2'], A)
     A(a='string', b=2)
 
 Structuring from tuples can also be made the default for specific classes only;
 see registering custom structure hooks below.
+
+
+Using attribute types and converters
+------------------------------------
+
+By default, calling "structure" will use hooks registered using ``cattr.register_structure_hook``,
+to convert values to the attribute type, and fallback to invoking any converters registered on
+attributes with ``attrib``.
+
+.. doctest::
+
+    >>> from ipaddress import IPv4Address, ip_address
+    >>> converter = cattr.Converter()
+
+    # Note: register_structure_hook has not been called, so this will fallback to 'ip_address'
+    >>> @attr.s
+    ... class A:
+    ...     a: IPv4Address = attr.ib(converter=ip_address)
+
+    >>> converter.structure({'a': '127.0.0.1'}, A)
+    A(a=IPv4Address('127.0.0.1'))
+
+Priority is still given to hooks registered with ``cattr.register_structure_hook``, but this priority
+can be inverted by setting ``prefer_attrib_converters`` to ``True``.
+
+.. doctest::
+
+    >>> converter = cattr.Converter(prefer_attrib_converters=True)
+
+    >>> converter.register_structure_hook(int, lambda v, t: int(v))
+
+    >>> @attr.s
+    ... class A:
+    ...     a: int = attr.ib(converter=lambda v: int(v) + 5)
+
+    >>> converter.structure({'a': '10'}, A)
+    A(a=15)
+
 
 Complex ``attrs`` classes and dataclasses
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -352,7 +390,7 @@ attributes holding ``attrs`` classes and dataclasses.
     ...
     >>> @attr.s
     ... class B:
-    ...     b = attr.ib(type=A)  # Legacy syntax.
+    ...     b: A = attr.ib()
     ...
     >>> cattr.structure({'b': {'a': '1'}}, B)
     B(b=A(a=1))
@@ -376,7 +414,7 @@ Here's an example involving a simple, classic (i.e. non-``attrs``) Python class.
     >>> cattr.structure({'a': 1}, C)
     Traceback (most recent call last):
     ...
-    ValueError: Unsupported type: <class '__main__.C'>. Register a structure hook for it.
+    StructureHandlerNotFoundError: Unsupported type: <class '__main__.C'>. Register a structure hook for it.
     >>>
     >>> cattr.register_structure_hook(C, lambda d, t: C(**d))
     >>> cattr.structure({'a': 1}, C)

@@ -1,8 +1,19 @@
 """Loading of attrs classes."""
+from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import Union
+from unittest.mock import Mock
 
 import pytest
-from attr import NOTHING, Factory, asdict, astuple, define, fields
+from attr import (
+    NOTHING,
+    Factory,
+    asdict,
+    astuple,
+    attrib,
+    define,
+    fields,
+    make_class,
+)
 from hypothesis import assume, given
 from hypothesis.strategies import data, lists, sampled_from
 
@@ -153,3 +164,74 @@ def test_structure_literal(converter_cls):
     assert converter.structure(
         {"literal_field": 4}, ClassWithLiteral
     ) == ClassWithLiteral(4)
+
+
+@pytest.mark.parametrize("converter_type", [Converter, GenConverter])
+def test_structure_fallback_to_attrib_converters(converter_type):
+    attrib_converter = Mock()
+    attrib_converter.side_effect = lambda val: str(val)
+
+    def called_after_default_converter(val):
+        if not isinstance(val, int):
+            raise ValueError(
+                "The 'int' conversion should have happened first by the built-in hooks"
+            )
+        return 42
+
+    converter = converter_type()
+    cl = make_class(
+        "HasConverter",
+        {
+            # non-built-in type with custom converter
+            "ip": attrib(
+                type=Union[IPv4Address, IPv6Address], converter=ip_address
+            ),
+            # attribute without type
+            "x": attrib(converter=attrib_converter),
+            # built-in types converters
+            "z": attrib(type=int, converter=called_after_default_converter),
+        },
+    )
+
+    inst = converter.structure(dict(ip="10.0.0.0", x=1, z="3"), cl)
+
+    assert inst.ip == IPv4Address("10.0.0.0")
+    assert inst.x == "1"
+    attrib_converter.assert_any_call(1)
+    assert inst.z == 42
+
+
+@pytest.mark.parametrize("converter_type", [Converter, GenConverter])
+def test_structure_prefers_attrib_converters(converter_type):
+    attrib_converter = Mock()
+    attrib_converter.side_effect = lambda val: str(val)
+
+    converter = converter_type(prefer_attrib_converters=True)
+    cl = make_class(
+        "HasConverter",
+        {
+            # non-built-in type with custom converter
+            "ip": attrib(
+                type=Union[IPv4Address, IPv6Address], converter=ip_address
+            ),
+            # attribute without type
+            "x": attrib(converter=attrib_converter),
+            # built-in types converters
+            "y": attrib(type=int, converter=attrib_converter),
+            # attribute with type and default value
+            "z": attrib(type=int, converter=attrib_converter, default=5),
+        },
+    )
+
+    inst = converter.structure(dict(ip="10.0.0.0", x=1, y=3), cl)
+
+    assert inst.ip == IPv4Address("10.0.0.0")
+
+    attrib_converter.assert_any_call(1)
+    assert inst.x == "1"
+
+    attrib_converter.assert_any_call(3)
+    assert inst.y == "3"
+
+    attrib_converter.assert_any_call(5)
+    assert inst.z == "5"
