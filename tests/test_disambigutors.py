@@ -3,7 +3,6 @@ from typing import Any
 
 import attr
 import pytest
-
 from attr import NOTHING
 from hypothesis import HealthCheck, assume, given, settings
 

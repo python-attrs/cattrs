@@ -10,7 +10,7 @@ from typing import (  # noqa: F401, imported for Mypy.
     Type,
 )
 
-from attr import fields, NOTHING
+from attr import NOTHING, fields
 
 from cattr._compat import get_origin
 

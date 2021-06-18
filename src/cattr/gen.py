@@ -3,7 +3,7 @@ import linecache
 import re
 import uuid
 from dataclasses import is_dataclass
-from typing import Any, Optional, TYPE_CHECKING, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
 
 import attr
 from attr import NOTHING, resolve_types
