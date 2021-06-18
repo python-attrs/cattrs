@@ -57,6 +57,11 @@ If you are proposing a feature:
 Get Started!
 ------------
 
+Prerequisites:
+
+* Install Python 3.7 or higher - https://www.python.org/downloads/
+* Install Poetry - https://python-poetry.org/docs/#installation
+
 Ready to contribute? Here's how to set up `cattrs` for local development.
 
 1. Fork the `cattrs` repo on GitHub.
@@ -64,25 +69,33 @@ Ready to contribute? Here's how to set up `cattrs` for local development.
 
     $ git clone git@github.com:your_name_here/cattrs.git
 
-3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
-
-    $ mkvirtualenv cattrs
-    $ cd cattrs/
-    $ pip install -e .\[dev\]
-
-4. Create a branch for local development::
+3. Create a branch for local development::
 
     $ git checkout -b name-of-your-bugfix-or-feature
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the tests, including testing other Python versions with tox::
+4. Start making changes! As you make changes, you can run tests incrementally to validator your work. 
+   Here are some common ways to run faster, shorter commands to validator your work:
 
-    $ flake8 cattrs tests
-    $ pytest
+    # Run just one unit test on your default Python version
+    # See https://docs.pytest.org/en/stable/usage.html#specifying-tests-selecting-tests for example args, or leave blank
+    # to run everything
+    $ poetry run pytest <PYTEST_ARGS_HERE>
+
+    # Run one test method but for multiple Python versions
+    $ tox -e py38,py39 -- <PYTEST_ARGS_HERE>
+
+    # Run code formatters
+    $ poetry run black .
+    $ poetry run isort .
+
+    # Test linting
+    $ tox -e lint
+
+5. When you're done making changes, run *all* of the tests using tox::
+
     $ tox
-
-   To get flake8 and tox, just pip install them into your virtualenv.
 
 6. Commit your changes and push your branch to GitHub::
 
