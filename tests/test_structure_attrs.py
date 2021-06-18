@@ -217,11 +217,13 @@ def test_structure_prefers_attrib_converters(converter_type):
             # attribute without type
             "x": attrib(converter=attrib_converter),
             # built-in types converters
-            "z": attrib(type=int, converter=attrib_converter),
+            "y": attrib(type=int, converter=attrib_converter),
+            # attribute with type and default value
+            "z": attrib(type=int, converter=attrib_converter, default=5),
         },
     )
 
-    inst = converter.structure(dict(ip="10.0.0.0", x=1, z=3), cl)
+    inst = converter.structure(dict(ip="10.0.0.0", x=1, y=3), cl)
 
     assert inst.ip == IPv4Address("10.0.0.0")
 
@@ -229,4 +231,7 @@ def test_structure_prefers_attrib_converters(converter_type):
     assert inst.x == "1"
 
     attrib_converter.assert_any_call(3)
-    assert inst.z == "3"
+    assert inst.y == "3"
+
+    attrib_converter.assert_any_call(5)
+    assert inst.z == "5"
