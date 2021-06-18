@@ -5,12 +5,12 @@ from hypothesis import assume, given
 from hypothesis.strategies._internal.core import data, sampled_from
 
 from cattr import Converter
+from cattr._compat import adapted_fields, fields
 from cattr.gen import (
     make_dict_structure_fn,
     make_dict_unstructure_fn,
     override,
 )
-from cattr._compat import fields, adapted_fields
 
 from . import nested_classes, simple_classes
 from .metadata import (

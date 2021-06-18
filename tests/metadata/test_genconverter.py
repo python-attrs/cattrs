@@ -14,10 +14,11 @@ import attr
 import pytest
 from attr import Factory, fields, make_class
 from hypothesis import HealthCheck, assume, given, settings
-from hypothesis.strategies import booleans, sampled_from, lists
+from hypothesis.strategies import booleans, lists, sampled_from
 
 from cattr import GenConverter as Converter
 from cattr import UnstructureStrategy
+from cattr._compat import is_py39_plus
 from cattr.gen import make_dict_structure_fn, override
 
 from . import (
@@ -26,7 +27,6 @@ from . import (
     simple_typed_classes,
     simple_typed_dataclasses,
 )
-from cattr._compat import is_py39_plus
 
 unstructure_strats = sampled_from(list(UnstructureStrategy))
 
