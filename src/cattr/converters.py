@@ -194,6 +194,22 @@ class Converter(object):
         """
         self._unstructure_func.register_func_list([(check_func, func)])
 
+    def register_unstructure_hook_factory(
+        self,
+        predicate: Callable[[Any], bool],
+        factory: Callable[[Any], Callable[[Any], Any]],
+    ) -> None:
+        """
+        Register a hook factory for a given predicate.
+
+        A predicate is a function that, given a type, returns whether the factory
+        can produce a hook for that type.
+
+        A factory is a callable that, given a type, produces an unstructuring
+        hook for that type. This unstructuring hook will be cached.
+        """
+        self._unstructure_func.register_func_list([(predicate, factory, True)])
+
     def register_structure_hook(
         self, cl: Any, func: Callable[[Any, Type[T]], T]
     ):
@@ -222,6 +238,22 @@ class Converter(object):
         a function to check if it's a match.
         """
         self._structure_func.register_func_list([(check_func, func)])
+
+    def register_structure_hook_factory(
+        self,
+        predicate: Callable[[Any], bool],
+        factory: Callable[[Any], Callable[[Any], Any]],
+    ) -> None:
+        """
+        Register a hook factory for a given predicate.
+
+        A predicate is a function that, given a type, returns whether the factory
+        can produce a hook for that type.
+
+        A factory is a callable that, given a type, produces a structuring
+        hook for that type. This structuring hook will be cached.
+        """
+        self._structure_func.register_func_list([(predicate, factory, True)])
 
     def structure(self, obj: Any, cl: Type[T]) -> T:
         """Convert unstructured Python data structures to structured data."""
@@ -594,53 +626,42 @@ class GenConverter(Converter):
 
         if unstruct_strat is UnstructureStrategy.AS_DICT:
             # Override the attrs handler.
-            self._unstructure_func.register_func_list(
-                [
-                    (
-                        has_with_generic,
-                        self.gen_unstructure_attrs_fromdict,
-                        True,
-                    ),
-                ]
+            self.register_unstructure_hook_factory(
+                has_with_generic, self.gen_unstructure_attrs_fromdict
             )
-            self._structure_func.register_func_list(
-                [
-                    (has, self.gen_structure_attrs_fromdict, True),
-                ]
+            self.register_structure_hook_factory(
+                has, self.gen_structure_attrs_fromdict
             )
-
-        self._unstructure_func.register_func_list(
-            [
-                (is_annotated, self.gen_unstructure_annotated, True),
-                (is_hetero_tuple, self.gen_unstructure_hetero_tuple, True),
-                (
-                    is_sequence,
-                    self.gen_unstructure_iterable,
-                    True,
-                ),
-                (is_mapping, self.gen_unstructure_mapping, True),
-                (
-                    is_mutable_set,
-                    lambda cl: self.gen_unstructure_iterable(
-                        cl, unstructure_to=set
-                    ),
-                    True,
-                ),
-                (
-                    is_frozenset,
-                    lambda cl: self.gen_unstructure_iterable(
-                        cl, unstructure_to=frozenset
-                    ),
-                    True,
-                ),
-            ]
+        self.register_unstructure_hook_factory(
+            is_annotated, self.gen_unstructure_annotated
         )
-        self._structure_func.register_func_list(
-            [
-                (is_annotated, self.gen_structure_annotated, True),
-                (is_mapping, self.gen_structure_mapping, True),
-                (is_counter, self.gen_structure_counter, True),
-            ]
+        self.register_unstructure_hook_factory(
+            is_hetero_tuple, self.gen_unstructure_hetero_tuple
+        )
+        self.register_unstructure_hook_factory(
+            is_sequence, self.gen_unstructure_iterable
+        )
+        self.register_unstructure_hook_factory(
+            is_mapping, self.gen_unstructure_mapping
+        )
+        self.register_unstructure_hook_factory(
+            is_mutable_set,
+            lambda cl: self.gen_unstructure_iterable(cl, unstructure_to=set),
+        )
+        self.register_unstructure_hook_factory(
+            is_frozenset,
+            lambda cl: self.gen_unstructure_iterable(
+                cl, unstructure_to=frozenset
+            ),
+        )
+        self.register_structure_hook_factory(
+            is_annotated, self.gen_structure_annotated
+        )
+        self.register_structure_hook_factory(
+            is_mapping, self.gen_structure_mapping
+        )
+        self.register_structure_hook_factory(
+            is_counter, self.gen_structure_counter
         )
 
     def gen_unstructure_annotated(self, type):
@@ -670,7 +691,6 @@ class GenConverter(Converter):
         h = make_dict_unstructure_fn(
             cl, self, omit_if_default=self.omit_if_default, **attrib_overrides
         )
-        self._unstructure_func.register_cls_list([(cl, h)], direct=True)
         return h
 
     def gen_structure_attrs_fromdict(self, cl: Type[T]) -> T:
@@ -690,7 +710,6 @@ class GenConverter(Converter):
             _cattrs_prefer_attrib_converters=self._prefer_attrib_converters,
             **attrib_overrides,
         )
-        self._structure_func.register_cls_list([(cl, h)], direct=True)
         # only direct dispatch so that subclasses get separately generated
         return h
 
