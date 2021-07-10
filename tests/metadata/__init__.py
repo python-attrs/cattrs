@@ -204,7 +204,7 @@ def _create_dataclass(
 
 
 def _create_hyp_class_and_strat(
-    attrs_and_strategy: List[Tuple[_CountingAttr, SearchStrategy[PosArg]]],
+    attrs_and_strategy: List[Tuple[_CountingAttr, SearchStrategy[PosArg]]]
 ) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
     def key(t):
         return t[0].default is not attr.NOTHING
@@ -357,13 +357,7 @@ def frozenset_typed_attrs(draw, defaults=None):
     val_strat = frozensets(integers())
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(val_strat)
-    return (
-        attr.ib(
-            type=frozenset[int],
-            default=default,
-        ),
-        val_strat,
-    )
+    return (attr.ib(type=frozenset[int], default=default), val_strat)
 
 
 @composite

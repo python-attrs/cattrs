@@ -172,10 +172,7 @@ class Converter(object):
         # Strings are sequences.
         self._structure_func.register_cls_list(
             [
-                (
-                    str,
-                    self._structure_call,
-                ),
+                (str, self._structure_call),
                 (bytes, self._structure_call),
                 (int, self._structure_call),
                 (float, self._structure_call),

@@ -19,17 +19,9 @@ class Container:
 
 @pytest.mark.parametrize("converter_cls", [GenConverter, Converter])
 def test_dataclasses_in_attrs(converter_cls):
-    struct = Container(
-        [
-            Foo("bar"),
-        ]
-    )
+    struct = Container([Foo("bar")])
 
-    unstruct = {
-        "foos": [
-            {"bar": "bar"},
-        ]
-    }
+    unstruct = {"foos": [{"bar": "bar"}]}
 
     converter = converter_cls()
     assert converter.unstructure(struct) == unstruct
@@ -38,15 +30,9 @@ def test_dataclasses_in_attrs(converter_cls):
 
 @pytest.mark.parametrize("converter_cls", [GenConverter, Converter])
 def test_dataclasses_in_container(converter_cls):
-    struct = [
-        Foo("bar"),
-        Foo("bat"),
-    ]
+    struct = [Foo("bar"), Foo("bat")]
 
-    unstruct = [
-        {"bar": "bar"},
-        {"bar": "bat"},
-    ]
+    unstruct = [{"bar": "bar"}, {"bar": "bat"}]
 
     converter = converter_cls()
     assert converter.unstructure(struct) == unstruct
