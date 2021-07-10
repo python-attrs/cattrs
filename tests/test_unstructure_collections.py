@@ -100,25 +100,9 @@ def test_collection_unstructure_override_seq():
     assert c.unstructure([1, 2, 3], unstructure_as=Sequence[int]) == [1, 2, 3]
     assert c.unstructure(
         [1, 2, 3], unstructure_as=MutableSequence[int]
-    ) == MyList(
-        [
-            1,
-            2,
-            3,
-        ]
-    )
-    assert c.unstructure([1, 2, 3]) == MyList(
-        [
-            1,
-            2,
-            3,
-        ]
-    )
-    assert c.unstructure((1, 2, 3)) == [
-        1,
-        2,
-        3,
-    ]
+    ) == MyList([1, 2, 3])
+    assert c.unstructure([1, 2, 3]) == MyList([1, 2, 3])
+    assert c.unstructure((1, 2, 3)) == [1, 2, 3]
 
     # Second approach, using abc.Sequence
     c = GenConverter(unstruct_collection_overrides={Sequence: MyList})
@@ -133,11 +117,7 @@ def test_collection_unstructure_override_seq():
     assert c.unstructure([1, 2, 3]) == MyList([1, 2, 3])
 
     assert c.unstructure((1, 2, 3), unstructure_as=tuple[int, ...]) == MyList(
-        [
-            1,
-            2,
-            3,
-        ]
+        [1, 2, 3]
     )
 
     # Second approach, using __builtins__.list
@@ -149,18 +129,8 @@ def test_collection_unstructure_override_seq():
         2,
         3,
     ]
-    assert c.unstructure([1, 2, 3]) == MyList(
-        [
-            1,
-            2,
-            3,
-        ]
-    )
-    assert c.unstructure((1, 2, 3)) == [
-        1,
-        2,
-        3,
-    ]
+    assert c.unstructure([1, 2, 3]) == MyList([1, 2, 3])
+    assert c.unstructure((1, 2, 3)) == [1, 2, 3]
 
     # Second approach, using __builtins__.tuple
     c = GenConverter(unstruct_collection_overrides={tuple: MyList})
@@ -171,18 +141,8 @@ def test_collection_unstructure_override_seq():
         2,
         3,
     ]
-    assert c.unstructure([1, 2, 3]) == [
-        1,
-        2,
-        3,
-    ]
-    assert c.unstructure((1, 2, 3)) == MyList(
-        [
-            1,
-            2,
-            3,
-        ]
-    )
+    assert c.unstructure([1, 2, 3]) == [1, 2, 3]
+    assert c.unstructure((1, 2, 3)) == MyList([1, 2, 3])
 
 
 @pytest.mark.skipif(not is_py39_plus, reason="Requires Python 3.9+")

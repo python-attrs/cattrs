@@ -253,10 +253,7 @@ else:
                 type.__class__ is _GenericAlias
                 and (
                     (origin is not tuple)
-                    and issubclass(
-                        origin,
-                        TypingSequence,
-                    )
+                    and issubclass(origin, TypingSequence)
                     or origin is tuple
                     and type.__args__[1] is ...
                 )
