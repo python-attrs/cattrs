@@ -113,7 +113,7 @@ def test_structure_union_none(cl_and_vals_a, cl_and_vals_b):
     """Structuring of automatically-disambiguable unions works."""
     converter = Converter()
     cl_a, vals_a = cl_and_vals_a
-    cl_b, vals_b = cl_and_vals_b
+    cl_b, _ = cl_and_vals_b
     a_field_names = {a.name for a in fields(cl_a)}
     b_field_names = {a.name for a in fields(cl_b)}
     assume(a_field_names)
@@ -126,8 +126,6 @@ def test_structure_union_none(cl_and_vals_a, cl_and_vals_b):
         res = converter.structure(dumped, Union[cl_a, cl_b, None])
         assert isinstance(res, cl_a)
         assert obj == res
-
-    assert converter.structure(None, Union[cl_a, cl_b, None]) is None
 
 
 @given(simple_classes(), simple_classes())

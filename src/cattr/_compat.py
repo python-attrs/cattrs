@@ -323,3 +323,7 @@ else:
 
 def is_generic(obj):
     return isinstance(obj, _GenericAlias)
+
+
+def is_generic_attrs(type):
+    return is_generic(type) and has(type.__origin__)
