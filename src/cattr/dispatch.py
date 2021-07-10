@@ -86,7 +86,13 @@ class MultiStrategyDispatch:
         """Clear the direct dispatch."""
         self._direct_dispatch.clear()
 
+    def clear_cache(self):
+        """Clear all caches."""
+        self._direct_dispatch.clear()
+        self.dispatch.cache_clear()
 
+
+@attr.s(slots=True)
 class FunctionDispatch:
     """
     FunctionDispatch is similar to functools.singledispatch, but
@@ -96,10 +102,7 @@ class FunctionDispatch:
     objects that help determine dispatch should be instantiated objects.
     """
 
-    __slots__ = ("_handler_pairs",)
-
-    def __init__(self):
-        self._handler_pairs = []
+    _handler_pairs: list = attr.ib(factory=list)
 
     def register(
         self, can_handle: Callable[[Any], bool], func, is_generator=False

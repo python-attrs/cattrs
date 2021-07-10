@@ -25,7 +25,7 @@ from ._compat import (
     is_bare,
     is_counter,
     is_frozenset,
-    is_generic,
+    is_generic_attrs,
     is_hetero_tuple,
     is_literal,
     is_mapping,
@@ -62,6 +62,26 @@ class UnstructureStrategy(Enum):
 def _subclass(typ):
     """a shortcut"""
     return lambda cls: issubclass(cls, typ)
+
+
+def is_attrs_union(typ):
+    return is_union_type(typ) and all(
+        has(get_origin(e) or e) for e in typ.__args__
+    )
+
+
+def is_attrs_union_or_none(typ):
+    return is_union_type(typ) and all(
+        e is NoneType or has(get_origin(e) or e) for e in typ.__args__
+    )
+
+
+def is_optional(typ):
+    return (
+        is_union_type(typ)
+        and NoneType in typ.__args__
+        and len(typ.__args__) == 2
+    )
 
 
 class Converter(object):
@@ -121,16 +141,31 @@ class Converter(object):
         # Per-instance register of to-attrs converters.
         # Singledispatch dispatches based on the first argument, so we
         # store the function and switch the arguments in self.loads.
-        self._structure_func = MultiStrategyDispatch(self._structure_default)
+        self._structure_func = MultiStrategyDispatch(self._structure_error)
         self._structure_func.register_func_list(
             [
+                (
+                    lambda cl: cl is Any or cl is Optional or cl is None,
+                    lambda v, _: v,
+                ),
+                (is_generic_attrs, self._gen_structure_generic, True),
                 (is_literal, self._structure_literal),
                 (is_sequence, self._structure_list),
                 (is_mutable_set, self._structure_set),
                 (is_frozenset, self._structure_frozenset),
                 (is_tuple, self._structure_tuple),
                 (is_mapping, self._structure_dict),
-                (is_union_type, self._structure_union),
+                (
+                    is_attrs_union_or_none,
+                    self._gen_attrs_union_structure,
+                    True,
+                ),
+                (
+                    lambda t: is_union_type(t)
+                    and t in self._union_struct_registry,
+                    self._structure_union,
+                ),
+                (is_optional, self._structure_optional),
                 (has, self._structure_attrs),
             ]
         )
@@ -226,6 +261,7 @@ class Converter(object):
             resolve_types(cl)
         if is_union_type(cl):
             self._union_struct_registry[cl] = func
+            self._structure_func.clear_cache()
         else:
             self._structure_func.register_cls_list([(cl, func)])
 
@@ -318,32 +354,41 @@ class Converter(object):
 
     # Python primitives to classes.
 
-    def _structure_default(self, obj, cl):
-        """This is the fallthrough case. Everything is a subclass of `Any`.
-
-        A special condition here handles ``attrs`` classes.
-
-        Bare optionals end here too (optionals with arguments are unions.) We
-        treat bare optionals as Any.
-        """
-        if cl is Any or cl is Optional or cl is None:
-            return obj
-
-        if is_generic(cl):
-            fn = make_dict_structure_fn(
-                cl,
-                self,
-                _cattrs_prefer_attrib_converters=self._prefer_attrib_converters,
-            )
-            self.register_structure_hook(cl, fn)
-            return fn(obj)
-
-        # We don't know what this is, so we complain loudly.
+    def _structure_error(self, _, cl):
+        """At the bottom of the condition stack, we explode if we can't handle it."""
         msg = (
             "Unsupported type: {0}. Register a structure hook for "
             "it.".format(cl)
         )
         raise StructureHandlerNotFoundError(msg, type_=cl)
+
+    def _gen_structure_generic(self, cl):
+        """Create and return a hook for structuring generics."""
+        fn = make_dict_structure_fn(
+            cl,
+            self,
+            _cattrs_prefer_attrib_converters=self._prefer_attrib_converters,
+        )
+        return fn
+
+    def _gen_attrs_union_structure(self, cl):
+        """Generate a structuring function for a union of attrs classes (and maybe None)."""
+        dis_fn = self._get_dis_func(cl)
+        has_none = NoneType in cl.__args__
+
+        if has_none:
+
+            def structure_attrs_union(obj, _):
+                if obj is None:
+                    return None
+                return self.structure(obj, dis_fn(obj))
+
+        else:
+
+            def structure_attrs_union(obj, _):
+                return self.structure(obj, dis_fn(obj))
+
+        return structure_attrs_union
 
     @staticmethod
     def _structure_call(obj, cl):
@@ -472,35 +517,20 @@ class Converter(object):
                     for k, v in obj.items()
                 }
 
-    def _structure_union(self, obj, union):
-        """Deal with converting a union."""
-        # Unions with NoneType in them are basically optionals.
-        # We check for NoneType early and handle the case of obj being None,
-        # so disambiguation functions don't need to handle NoneType.
+    def _structure_optional(self, obj, union):
+        if obj is None:
+            return None
         union_params = union.__args__
-        if NoneType in union_params:  # type: ignore
-            if obj is None:
-                return None
-            if len(union_params) == 2:
-                # This is just a NoneType and something else.
-                other = (
-                    union_params[0]
-                    if union_params[1] is NoneType  # type: ignore
-                    else union_params[1]
-                )
-                # We can't actually have a Union of a Union, so this is safe.
-                return self._structure_func.dispatch(other)(obj, other)
+        other = (
+            union_params[0] if union_params[1] is NoneType else union_params[1]
+        )
+        # We can't actually have a Union of a Union, so this is safe.
+        return self._structure_func.dispatch(other)(obj, other)
 
-        # Check the union registry first.
-        handler = self._union_struct_registry.get(union)
-        if handler is not None:
-            return handler(obj, union)
-
-        # Getting here means either this is not an optional, or it's an
-        # optional with more than one parameter.
-        # Let's support only unions of attr classes for now.
-        cl = self._dis_func_cache(union)(obj)
-        return self._structure_func.dispatch(cl)(obj, cl)
+    def _structure_union(self, obj, union):
+        """Deal with structuring a union."""
+        handler = self._union_struct_registry[union]
+        return handler(obj, union)
 
     def _structure_tuple(self, obj, tup: Type[T]):
         """Deal with converting to a tuple."""
@@ -538,7 +568,7 @@ class Converter(object):
 
         if not all(has(get_origin(e) or e) for e in union_types):
             raise StructureHandlerNotFoundError(
-                "Only unions of attr classes supported "
+                "Only unions of attrs classes supported "
                 "currently. Register a loads hook manually.",
                 type_=union,
             )

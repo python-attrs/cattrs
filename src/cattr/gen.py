@@ -1,4 +1,3 @@
-import functools
 import linecache
 import re
 import uuid
@@ -10,7 +9,6 @@ import attr
 from attr import NOTHING, resolve_types
 
 from ._compat import adapted_fields, get_args, get_origin, is_bare, is_generic
-from .errors import StructureHandlerNotFoundError
 
 if TYPE_CHECKING:
     from cattr.converters import Converter
@@ -211,17 +209,20 @@ def make_dict_structure_fn(
         # For each attribute, we try resolving the type here and now.
         # If a type is manually overwritten, this function should be
         # regenerated.
-        if _cattrs_prefer_attrib_converters and a.converter is not None:
-            # The attribute has defined its own conversion, so pass
-            # the original value through without invoking cattr hooks
+        if a.converter is not None and _cattrs_prefer_attrib_converters:
             handler = None
+        elif (
+            a.converter is not None
+            and not _cattrs_prefer_attrib_converters
+            and type is not None
+        ):
+            handler = converter._structure_func.dispatch(type)
+            if handler == converter._structure_error:
+                handler = None
         elif type is not None:
             handler = converter._structure_func.dispatch(type)
         else:
             handler = converter.structure
-
-        if not _cattrs_prefer_attrib_converters and a.converter is not None:
-            handler = _fallback_to_passthru(handler)
 
         struct_handler_name = f"structure_{an}"
         globs[struct_handler_name] = handler
@@ -275,17 +276,6 @@ def make_dict_structure_fn(
         linecache.cache[fname] = len(script), None, total_lines, fname
 
     return globs[fn_name]
-
-
-def _fallback_to_passthru(func):
-    @functools.wraps(func)
-    def invoke(obj, type_):
-        try:
-            return func(obj, type_)
-        except StructureHandlerNotFoundError:
-            return obj
-
-    return invoke
 
 
 def make_iterable_unstructure_fn(cl: Any, converter, unstructure_to=None):
