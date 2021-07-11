@@ -12,6 +12,8 @@ History
   (`#138 <https://github.com/Tinche/cattrs/issues/138>`_)
 * Fix structuring recursive classes.
   (`#159 <https://github.com/Tinche/cattrs/issues/159>`_)
+* Converters now support un/structuring hook factories. This is the most powerful and complex venue for customizing un/structuring. This had previously been an internal feature.
+* The `Common Usage Examples <https://cattrs.readthedocs.io/en/latest/usage.html#using-factory-hooks>`_ documentation page now has a section on advanced hook factory usage.
 
 1.7.1 (2021-05-28)
 ------------------
