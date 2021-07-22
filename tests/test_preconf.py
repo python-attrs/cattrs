@@ -185,6 +185,7 @@ def test_stdlib_json(everything: Everything):
 def test_ujson(everything: Everything):
     from ujson import dumps as ujson_dumps
     from ujson import loads as ujson_loads
+
     converter = ujson_make_converter()
     raw = ujson_dumps(converter.unstructure(everything))
     assert (
@@ -206,6 +207,7 @@ def test_ujson(everything: Everything):
 def test_orjson(everything: Everything):
     from orjson import dumps as orjson_dumps
     from orjson import loads as orjson_loads
+
     converter = orjson_make_converter()
     raw = orjson_dumps(converter.unstructure(everything))
     assert (
@@ -221,6 +223,7 @@ def test_orjson(everything: Everything):
 def test_msgpack(everything: Everything):
     from msgpack import dumps as msgpack_dumps
     from msgpack import loads as msgpack_loads
+
     converter = msgpack_make_converter()
     raw = msgpack_dumps(converter.unstructure(everything))
     assert (
@@ -243,6 +246,7 @@ def test_msgpack(everything: Everything):
 def test_bson(everything: Everything):
     from bson import dumps as bson_dumps
     from bson import loads as bson_loads
+
     converter = bson_make_converter()
     raw = bson_dumps(converter.unstructure(everything))
     assert (
@@ -257,6 +261,7 @@ def test_bson(everything: Everything):
 @given(everythings())
 def test_pyyaml(everything: Everything):
     from yaml import safe_dump, safe_load
+
     converter = pyyaml_make_converter()
     unstructured = converter.unstructure(everything)
     raw = safe_dump(unstructured)
@@ -280,6 +285,7 @@ def test_pyyaml(everything: Everything):
 def test_tomlkit(everything: Everything):
     from tomlkit import dumps as tomlkit_dumps
     from tomlkit import loads as tomlkit_loads
+
     converter = tomlkit_make_converter()
     unstructured = converter.unstructure(everything)
     raw = tomlkit_dumps(unstructured)
