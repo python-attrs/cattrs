@@ -10,6 +10,8 @@ History
 * Support using the attr converter callback during structure. 
   By default, this is a method of last resort, but it can be elevated to the default by setting `prefer_attrib_converters=True` on `Converter` or `GenConverter`. 
   (`#138 <https://github.com/Tinche/cattrs/issues/138>`_)
+* Fix structuring recursive classes.
+  (`#159 <https://github.com/Tinche/cattrs/issues/159>`_)
 
 1.7.1 (2021-05-28)
 ------------------

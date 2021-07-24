@@ -3,6 +3,7 @@ import linecache
 import re
 import uuid
 from dataclasses import is_dataclass
+from threading import local
 from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
 
 import attr
@@ -26,6 +27,7 @@ def override(omit_if_default=None, rename=None):
 
 
 _neutral = AttributeOverride()
+_already_generating = local()
 
 
 def make_dict_unstructure_fn(
@@ -44,72 +46,90 @@ def make_dict_unstructure_fn(
 
     attrs = adapted_fields(cl)  # type: ignore
 
-    lines.append(f"def {fn_name}(instance):")
-    lines.append("    res = {")
-    for a in attrs:
-        attr_name = a.name
-        override = kwargs.pop(attr_name, _neutral)
-        kn = attr_name if override.rename is None else override.rename
-        d = a.default
+    # We keep track of what we're generating to help with recursive
+    # class graphs.
+    try:
+        working_set = _already_generating.working_set
+    except AttributeError:
+        working_set = set()
+        _already_generating.working_set = working_set
+    if cl in working_set:
+        raise RecursionError()
+    else:
+        working_set.add(cl)
+    try:
+        lines.append(f"def {fn_name}(instance):")
+        lines.append("    res = {")
+        for a in attrs:
+            attr_name = a.name
+            override = kwargs.pop(attr_name, _neutral)
+            kn = attr_name if override.rename is None else override.rename
+            d = a.default
 
-        # For each attribute, we try resolving the type here and now.
-        # If a type is manually overwritten, this function should be
-        # regenerated.
-        if a.type is not None:
-            handler = converter._unstructure_func.dispatch(a.type)
-        else:
-            handler = converter.unstructure
-
-        is_identity = handler == converter._unstructure_identity
-
-        if not is_identity:
-            unstruct_handler_name = f"unstructure_{attr_name}"
-            globs[unstruct_handler_name] = handler
-            invoke = f"{unstruct_handler_name}(instance.{attr_name})"
-        else:
-            invoke = f"instance.{attr_name}"
-
-        if d is not attr.NOTHING and (
-            (omit_if_default and override.omit_if_default is not False)
-            or override.omit_if_default
-        ):
-            def_name = f"__cattr_def_{attr_name}"
-
-            if isinstance(d, attr.Factory):
-                globs[def_name] = d.factory
-                if d.takes_self:
-                    post_lines.append(
-                        f"    if instance.{attr_name} != {def_name}(instance):"
-                    )
-                else:
-                    post_lines.append(
-                        f"    if instance.{attr_name} != {def_name}():"
-                    )
-                post_lines.append(f"        res['{kn}'] = {invoke}")
+            # For each attribute, we try resolving the type here and now.
+            # If a type is manually overwritten, this function should be
+            # regenerated.
+            if a.type is not None:
+                try:
+                    handler = converter._unstructure_func.dispatch(a.type)
+                except RecursionError:
+                    # There's a circular reference somewhere down the line
+                    handler = converter.unstructure
             else:
-                globs[def_name] = d
-                post_lines.append(
-                    f"    if instance.{attr_name} != {def_name}:"
-                )
-                post_lines.append(f"        res['{kn}'] = {invoke}")
+                handler = converter.unstructure
 
-        else:
-            # No default or no override.
-            lines.append(f"        '{kn}': {invoke},")
-    lines.append("    }")
+            is_identity = handler == converter._unstructure_identity
 
-    total_lines = lines + post_lines + ["    return res"]
-    script = "\n".join(total_lines)
+            if not is_identity:
+                unstruct_handler_name = f"unstructure_{attr_name}"
+                globs[unstruct_handler_name] = handler
+                invoke = f"{unstruct_handler_name}(instance.{attr_name})"
+            else:
+                invoke = f"instance.{attr_name}"
 
-    fname = _generate_unique_filename(
-        cl, "unstructure", reserve=_cattrs_use_linecache
-    )
+            if d is not attr.NOTHING and (
+                (omit_if_default and override.omit_if_default is not False)
+                or override.omit_if_default
+            ):
+                def_name = f"__cattr_def_{attr_name}"
 
-    eval(compile(script, fname, "exec"), globs)
+                if isinstance(d, attr.Factory):
+                    globs[def_name] = d.factory
+                    if d.takes_self:
+                        post_lines.append(
+                            f"    if instance.{attr_name} != {def_name}(instance):"
+                        )
+                    else:
+                        post_lines.append(
+                            f"    if instance.{attr_name} != {def_name}():"
+                        )
+                    post_lines.append(f"        res['{kn}'] = {invoke}")
+                else:
+                    globs[def_name] = d
+                    post_lines.append(
+                        f"    if instance.{attr_name} != {def_name}:"
+                    )
+                    post_lines.append(f"        res['{kn}'] = {invoke}")
 
-    fn = globs[fn_name]
-    if _cattrs_use_linecache:
-        linecache.cache[fname] = len(script), None, total_lines, fname
+            else:
+                # No default or no override.
+                lines.append(f"        '{kn}': {invoke},")
+        lines.append("    }")
+
+        total_lines = lines + post_lines + ["    return res"]
+        script = "\n".join(total_lines)
+
+        fname = _generate_unique_filename(
+            cl, "unstructure", reserve=_cattrs_use_linecache
+        )
+
+        eval(compile(script, fname, "exec"), globs)
+
+        fn = globs[fn_name]
+        if _cattrs_use_linecache:
+            linecache.cache[fname] = len(script), None, total_lines, fname
+    finally:
+        working_set.remove(cl)
 
     return fn
 
