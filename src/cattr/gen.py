@@ -10,7 +10,7 @@ from attr import NOTHING, resolve_types
 
 from ._compat import adapted_fields, get_args, get_origin, is_bare, is_generic
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cattr.converters import Converter
 
 
