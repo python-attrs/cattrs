@@ -137,7 +137,7 @@ def make_dict_unstructure_fn(
     return fn
 
 
-def generate_mapping(cl: Type, old_mapping):
+def _generate_mapping(cl: Type, old_mapping):
     mapping = {}
     for p, t in zip(get_origin(cl).__parameters__, get_args(cl)):
         if isinstance(t, TypeVar):
@@ -169,12 +169,12 @@ def make_dict_structure_fn(
     mapping = None
     if is_generic(cl):
         base = get_origin(cl)
-        mapping = generate_mapping(cl, mapping)
+        mapping = _generate_mapping(cl, mapping)
         cl = base
 
     for base in getattr(cl, "__orig_bases__", ()):
         if is_generic(base) and not str(base).startswith("typing.Generic"):
-            mapping = generate_mapping(base, mapping)
+            mapping = _generate_mapping(base, mapping)
             break
 
     if isinstance(cl, TypeVar):
