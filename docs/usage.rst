@@ -97,11 +97,11 @@ We decide to switch to using the ISO 8601 format for our unstructured datetime i
 Using factory hooks
 -------------------
 
-For this example, let's assume you have some attrs classes with snake case fields, and you want to
+For this example, let's assume you have some attrs classes with snake case attributes, and you want to
 un/structure them as camel case.
 
-.. warning:: A simpler and better approach to this problem is to simply make your class fields camel case.
-   This is a good example of the power of hook factories and cattrs' component-based design, however.
+.. warning:: A simpler and better approach to this problem is to simply make your class attributes camel case.
+   However, this is a good example of the power of hook factories and cattrs' component-based design.
 
 Here's our simple data model:
 
@@ -140,7 +140,7 @@ maintenance burden and risking bugs. Obviously this won't do.
 
 Why write code when we can write code to write code for us? In this case this
 code has already been written for you. cattrs contains a module,
-`cattr.gen`, with functions to automatically generate hooks exactly like this.
+:py:mod:`cattr.gen`, with functions to automatically generate hooks exactly like this.
 These functions also take parameters to customize the generated hooks. 
 
 We can generate and register the renaming hooks we need:
@@ -168,11 +168,11 @@ let's grab one from Stack Overflow:
 
 .. code-block:: python
 
-    def to_camel_case(snake_str):
+    def to_camel_case(snake_str: str) -> str:
         components = snake_str.split("_")
         return components[0] + "".join(x.title() for x in components[1:])
 
-We can combine this with `attr.fields` to save us some typing:
+We can combine this with ``attr.fields`` to save us some typing:
 
 .. code-block:: python
     
@@ -209,7 +209,7 @@ boolean whether they handle it.
 
 We want our hook factories to trigger for all attrs classes, so we need a
 predicate to recognize whether a type is an attrs class. Luckily, attrs comes
-with `attr.has`, which is exactly this.
+with ``attr.has``, which is exactly this.
 
 As the final step, we can combine all of this into two hook factories:
 
@@ -245,7 +245,7 @@ As the final step, we can combine all of this into two hook factories:
         has, to_camel_case_structure
     )
 
-The `converter` instance will now un/structure every attrs class to camel case.
+The ``converter`` instance will now un/structure every attrs class to camel case.
 Nothing has been omitted from this final example; it's complete.
 
 .. _Pendulum: https://pendulum.eustace.io/
