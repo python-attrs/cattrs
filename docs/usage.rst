@@ -94,7 +94,7 @@ We decide to switch to using the ISO 8601 format for our unstructured datetime i
     >>> converter.structure({'a_string': 'test', 'a_datetime': '2018-07-28T18:24:00+02:00'}, MyRecord)
     MyRecord(a_string='test', a_datetime=DateTime(2018, 7, 28, 18, 24, 0, tzinfo=Timezone('+02:00')))
 
-Using Factory Hooks
+Using factory hooks
 -------------------
 
 For this example, let's assume you have some attrs classes with snake case fields, and you want to

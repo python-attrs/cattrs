@@ -377,7 +377,7 @@ annotations when using Python 3.6+, or by passing the appropriate type to
     ...     a: int = attr.ib()
     ...
     >>> attr.fields(A).a
-    Attribute(name='a', default=NOTHING, validator=None, repr=True, eq=True, order=True, hash=None, init=True, metadata=mappingproxy({}), type=<class 'int'>, converter=None, kw_only=False, inherited=False, on_setattr=None)
+    Attribute(name='a', default=NOTHING, validator=None, repr=True, eq=True, eq_key=None, order=True, order_key=None, hash=None, init=True, metadata=mappingproxy({}), type=<class 'int'>, converter=None, kw_only=False, inherited=False, on_setattr=None)
 
 Type information, when provided, can be used for all attribute types, not only
 attributes holding ``attrs`` classes and dataclasses.
@@ -428,7 +428,7 @@ When using ``cattr.register_structure_hook``, the hook will be registered on the
 If you want to avoid changing the global converter, create an instance of ``cattr.Converter`` and register the hook on that.
 
 In some situations, it is not possible to decide on the converter using typing mechanisms alone (such as with attrs classes). In these situations,
-cattrs provides a register_structure_func_hook instead, which accepts a function to determine whether that type can be handled instead.
+cattrs provides a register_structure_func_hook instead, which accepts a predicate function to determine whether that type can be handled instead.
 
 The function-based hooks are evaluated after the class-based hooks. In the case where both a class-based hook and a function-based hook are present, the class-based hook will be used.
 
@@ -446,5 +446,36 @@ The function-based hooks are evaluated after the class-based hooks. In the case 
     >>> cattr.register_structure_hook_func(lambda cls: getattr(cls, "custom", False), lambda d, t: t.deserialize(d))
     >>> cattr.structure({'a': 2}, D)
     D(a=2)
+
+Structuring hook factories
+--------------------------
+
+Hook factories operate one level higher than structuring hooks; structuring
+hooks are functions registered to a class or predicate, and hook factories
+are functions (registered via a predicate) that produce structuring hooks.
+
+Structuring hooks factories are registered using :py:attr:`cattr.Converter.register_structure_hook_factory`.
+
+Here's a small example showing how to use factory hooks to apply the `forbid_extra_keys` to all attrs classes:
+
+.. doctest::
+
+    >>> from attr import define, has
+    >>> from cattr.gen import make_dict_structure_fn
+    
+    >>> c = cattr.GenConverter()
+    >>> c.register_structure_hook_factory(has, lambda cl: make_dict_structure_fn(cl, c, _cattrs_forbid_extra_keys=True))
+
+    >>> @define
+    ... class E:
+    ...    an_int: int
+    
+    >>> c.structure({"an_int": 1, "else": 2}, E)
+    Traceback (most recent call last):
+    ...
+    Exception: Extra fields in constructor for E: else
+
+
+A complex use case for hook factories is described over at :ref:`Using factory hooks`.
 
 .. _`PEP 593` : https://www.python.org/dev/peps/pep-0593/

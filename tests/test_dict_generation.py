@@ -1,5 +1,5 @@
 """Tests for generated dict functions."""
-from attr import Factory
+from attr import Factory, define, field
 from attr._make import NOTHING
 from hypothesis import assume, given
 from hypothesis.strategies._internal.core import data, sampled_from
@@ -214,3 +214,18 @@ def test_renaming(cl_and_vals, data):
     new_inst = converter.structure(raw, cl)
 
     assert inst == new_inst
+
+
+def test_omitting():
+    converter = Converter()
+
+    @define
+    class A:
+        a: int
+        b: int = field(init=False)
+
+    converter.register_unstructure_hook(
+        A, make_dict_unstructure_fn(A, converter, b=override(omit=True))
+    )
+
+    assert converter.unstructure(A(1)) == {"a": 1}

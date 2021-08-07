@@ -15,13 +15,16 @@ if TYPE_CHECKING:
 
 
 @attr.s(slots=True, frozen=True)
-class AttributeOverride(object):
+class AttributeOverride:
     omit_if_default: Optional[bool] = attr.ib(default=None)
     rename: Optional[str] = attr.ib(default=None)
+    omit: bool = attr.ib(default=False)  # Omit the field completely.
 
 
-def override(omit_if_default=None, rename=None):
-    return AttributeOverride(omit_if_default=omit_if_default, rename=rename)
+def override(omit_if_default=None, rename=None, omit: bool = False):
+    return AttributeOverride(
+        omit_if_default=omit_if_default, rename=rename, omit=omit
+    )
 
 
 _neutral = AttributeOverride()
@@ -61,6 +64,8 @@ def make_dict_unstructure_fn(
         for a in attrs:
             attr_name = a.name
             override = kwargs.pop(attr_name, _neutral)
+            if override.omit:
+                continue
             kn = attr_name if override.rename is None else override.rename
             d = a.default
 
