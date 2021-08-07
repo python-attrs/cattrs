@@ -1,7 +1,8 @@
 """Preconfigured converters for bson."""
 from datetime import datetime
+from typing import Any
 
-from .._compat import Set
+from .._compat import Set, is_mapping
 from ..converters import GenConverter
 from . import validate_datetime
 
@@ -11,7 +12,18 @@ def configure_converter(converter: GenConverter):
     Configure the converter for use with the bson library.
 
     * sets are serialized as lists
+    * mapping keys are coerced into strings when unstructuring
     """
+
+    def gen_unstructure_mapping(cl: Any, unstructure_to=None):
+        return converter.gen_unstructure_mapping(
+            cl, unstructure_to=unstructure_to, key_handler=str
+        )
+
+    converter._unstructure_func.register_func_list(
+        [(is_mapping, gen_unstructure_mapping, True)]
+    )
+
     converter.register_structure_hook(datetime, validate_datetime)
 
 

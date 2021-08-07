@@ -40,9 +40,9 @@ immutables = "^0.15"
 ujson = "^4.0.2"
 orjson = "^3.5.2"
 msgpack = "^1.0.2"
-bson = "^0.5.10"
 PyYAML = "^5.4.1"
 tomlkit = "^0.7.0"
+motor = "^2.5.0"
 
 [tool.poetry.urls]
 "Changelog" = "https://cattrs.readthedocs.io/en/latest/history.html"

@@ -68,13 +68,16 @@ When parsing msgpack data from bytes, the library needs to be passed ``strict_ma
 ``bson``
 --------
 
-Found at ``cattr.preconf.bson``.
+Found at ``cattr.preconf.bson``. Tested against the ``bson`` module bundled with the ``pymongo`` library, not the standalone PyPI ``bson`` package.
 
 Sets are serialized as lists, and deserialized back into sets.
 
-``bson`` doesn't support integers less than -9223372036854775808, and greater than 18446744073709551615.
+``bson`` doesn't support integers less than -9223372036854775808 or greater than 9223372036854775807 (64-bit signed).
 ``bson`` does not support null bytes in mapping keys.
+``bson`` only supports mappings with string keys so mappings will have their keys stringified before serialization, and destringified during deserialization.
 The ``bson`` datetime representation doesn't support microsecond accuracy.
+
+When encoding and decoding, the library needs to be passed ``codec_options=bson.CodecOptions(tz_aware=True)`` to get the full range of compatibility.
 
 
 

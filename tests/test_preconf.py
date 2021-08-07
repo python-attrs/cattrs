@@ -5,6 +5,7 @@ from json import loads as json_loads
 from typing import Dict, List
 
 from attr import define
+from bson import CodecOptions
 from hypothesis import given
 from hypothesis.strategies import (
     binary,
@@ -225,18 +226,27 @@ def test_msgpack(everything: Everything):
 @given(
     everythings(
         min_int=-9223372036854775808,
-        max_int=18446744073709551615,
+        max_int=9223372036854775807,
         allow_null_bytes_in_keys=False,
         allow_datetime_microseconds=False,
     )
 )
 def test_bson(everything: Everything):
-    from bson import dumps as bson_dumps
-    from bson import loads as bson_loads
+    from bson import decode as bson_loads
+    from bson import encode as bson_dumps
 
     converter = bson_make_converter()
-    raw = bson_dumps(converter.unstructure(everything))
-    assert converter.structure(bson_loads(raw), Everything) == everything
+    raw = bson_dumps(
+        converter.unstructure(everything),
+        codec_options=CodecOptions(tz_aware=True),
+    )
+    assert (
+        converter.structure(
+            bson_loads(raw, codec_options=CodecOptions(tz_aware=True)),
+            Everything,
+        )
+        == everything
+    )
 
 
 @given(everythings())
