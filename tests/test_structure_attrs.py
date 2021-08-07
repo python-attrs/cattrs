@@ -164,6 +164,22 @@ def test_structure_literal(converter_cls):
     ) == ClassWithLiteral(4)
 
 
+@pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
+@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
+def test_structure_literal_error(converter_cls):
+    """Structuring a class with a literal field can raise an error."""
+    from typing import Literal
+
+    converter = converter_cls()
+
+    @define
+    class ClassWithLiteral:
+        literal_field: Literal[4] = 4
+
+    with pytest.raises(Exception):
+        converter.structure({"literal_field": 3}, ClassWithLiteral)
+
+
 @pytest.mark.parametrize("converter_type", [Converter, GenConverter])
 def test_structure_fallback_to_attrib_converters(converter_type):
     attrib_converter = Mock()
