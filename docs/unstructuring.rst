@@ -27,7 +27,7 @@ a complex or recursive collection.
 .. doctest::
 
     >>> # A dictionary of strings to lists of tuples of floats.
-    >>> data = {'a': [(1.0, 2.0), (3.0, 4.0)]}
+    >>> data = {'a': [[1.0, 2.0], [3.0, 4.0]]}
     >>>
     >>> copy = cattr.unstructure(data)
     >>> data == copy
@@ -165,3 +165,38 @@ Of course, these methods can be used directly as well, without changing the conv
     >>>
     >>> converter.unstructure_attrs_astuple(inst)  # Default is AS_DICT.
     (1, 'a')
+
+
+Unstructuring hook factories
+----------------------------
+
+Hook factories operate one level higher than unstructuring hooks; unstructuring
+hooks are functions registered to a class or predicate, and hook factories
+are functions (registered via a predicate) that produce unstructuring hooks.
+
+Unstructuring hooks factories are registered using :py:attr:`cattr.Converter.register_unstructure_hook_factory`.
+
+Here's a small example showing how to use factory hooks to skip unstructuring
+`init=False` attributes on all `attrs` classes.
+
+.. doctest::
+
+    >>> from attr import define, has, field, fields
+    >>> from cattr import override
+    >>> from cattr.gen import make_dict_unstructure_fn
+    
+    >>> c = cattr.GenConverter()
+    >>> c.register_unstructure_hook_factory(has, lambda cl: make_dict_unstructure_fn(cl, c, **{a.name: override(omit=True) for a in fields(cl) if not a.init}))
+
+    >>> @define
+    ... class E:
+    ...    an_int: int
+    ...    another_int: int = field(init=False)
+    
+    >>> inst = E(1)
+    >>> inst.another_int = 5
+    >>> c.unstructure(inst)
+    {'an_int': 1}
+
+
+A complex use case for hook factories is described over at :ref:`Using factory hooks`.

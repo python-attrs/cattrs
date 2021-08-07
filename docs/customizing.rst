@@ -33,8 +33,8 @@ a lot of ``cattrs`` machinery and be significantly faster than normal ``cattrs``
 Another reason is that it's possible to override behavior on a per-attribute basis.
 
 Currently, the overrides only support generating dictionary un/structuring functions
-(as opposed to tuples), and support ``omit_if_default``, ``forbid_extra_keys`` and
-``rename``.
+(as opposed to tuples), and support ``omit_if_default``, ``forbid_extra_keys``,
+``rename`` and ``omit``.
 
 ``omit_if_default``
 -------------------
@@ -140,3 +140,27 @@ keyword in Python.
     >>> c.structure({'class': 1}, ExampleClass)
     ExampleClass(klass=1)
 
+``omit``
+--------
+
+This override can only be applied to individual attributes. Using the ``omit``
+override will simply skip the attribute completely when generating an
+unstructuring function.
+
+
+.. doctest::
+
+    >>> from cattr.gen import make_dict_unstructure_fn, override
+    >>>
+    >>> @define
+    ... class ExampleClass:
+    ...     an_int: int
+    >>>
+    >>> c = cattr.Converter()
+    >>> unst_hook = make_dict_unstructure_fn(ExampleClass, c, an_int=override(omit=True))
+    >>> c.register_unstructure_hook(ExampleClass, unst_hook)
+    >>> c.unstructure(ExampleClass(1))
+    {}
+
+This override only affects unstructuring functions, and has no effect when
+generating structuring functions.

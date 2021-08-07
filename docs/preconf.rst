@@ -43,7 +43,7 @@ Bytes are serialized as base 85 strings. Sets are serialized as lists, and deser
 
 
 ``orjson``
----------
+----------
 
 Found at ``cattr.preconf.orjson``.
 
@@ -87,7 +87,7 @@ Frozensets are serialized as lists, and deserialized back into frozensets.
 
 
 ``tomlkit``
-----------
+-----------
 
 Found at ``cattr.preconf.tomlkit``.
 

@@ -44,6 +44,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinx.ext.doctest",
+    "sphinx.ext.autosectionlabel",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -284,6 +285,7 @@ texinfo_documents = [
 
 doctest_global_setup = (
     "import attr, cattr;"
+    "from attr import define;"
     "from typing import *;"
     "from enum import Enum, unique"
 )

@@ -52,6 +52,3 @@ classes.
 * support for ``attrs`` classes with PEP563 (postponed) annotations
 * support for generic ``attrs`` classes
 * support for easy overriding collection unstructuring
-
-
-The ``GenConverter`` will become the default converter type in a later release.
