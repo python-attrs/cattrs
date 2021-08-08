@@ -1,5 +1,5 @@
 =====================
-Common Usage Examples
+Common usage examples
 =====================
 
 This section covers common use examples of cattrs features.

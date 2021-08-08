@@ -38,7 +38,7 @@ toml.
 
 Data types like this, and mappings like ``dict`` s in particular, represent
 unstructured data. Your data is, in all likelihood, structured: not all
-combinations of field names are values are valid inputs to your programs. In
+combinations of field names or values are valid inputs to your programs. In
 Python, structured data is better represented with classes and enumerations.
 ``attrs`` is an excellent library for declaratively describing the structure of
 your data, and validating it.
@@ -159,6 +159,10 @@ Features
 
 ``cattrs`` comes with preconfigured converters for a number of serialization libraries, including json, msgpack, bson, yaml and toml.
 For details, see the `cattr.preconf package <https://cattrs.readthedocs.io/en/latest/preconf.html>`_.
+
+Additional documentation
+------------------------
+* `On structured and unstructured data, or the case for cattrs <https://threeofwands.com/on-structured-and-unstructured-data-or-the-case-for-cattrs/>`_
 
 Credits
 -------

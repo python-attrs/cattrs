@@ -1,8 +1,8 @@
 ========================
-Preconfigured Converters
+Preconfigured converters
 ========================
 
-The ``cattr.preconf`` package contains factories for preconfigured converters, specifically adjusted for particular serialization libraries.
+The :py:mod:`cattr.preconf` package contains factories for preconfigured converters, specifically adjusted for particular serialization libraries.
 
 For example, to get a converter configured for BSON:
 
@@ -27,7 +27,7 @@ Particular libraries may have additional constraints documented below.
 Standard library ``json``
 -------------------------
 
-Found at ``cattr.preconf.json``.
+Found at :py:mod:`cattr.preconf.json`.
 
 Bytes are serialized as base 85 strings. Counters are serialized as dictionaries. Sets are serialized as lists, and deserialized back into sets. ``datetime`` s are serialized as ISO 8601 strings.
 
@@ -35,7 +35,7 @@ Bytes are serialized as base 85 strings. Counters are serialized as dictionaries
 ``ujson``
 ---------
 
-Found at ``cattr.preconf.ujson``.
+Found at :py:mod:`cattr.preconf.ujson`.
 
 Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets. ``datetime`` s are serialized as ISO 8601 strings.
 
@@ -45,7 +45,7 @@ Bytes are serialized as base 85 strings. Sets are serialized as lists, and deser
 ``orjson``
 ----------
 
-Found at ``cattr.preconf.orjson``.
+Found at :py:mod:`cattr.preconf.orjson`.
 
 Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets. ``datetime`` s are serialized as ISO 8601 strings.
 
@@ -56,7 +56,7 @@ Bytes are serialized as base 85 strings. Sets are serialized as lists, and deser
 ``msgpack``
 -----------
 
-Found at ``cattr.preconf.msgpack``.
+Found at :py:mod:`cattr.preconf.msgpack`.
 
 Sets are serialized as lists, and deserialized back into sets. ``datetime`` s are serialized as UNIX timestamp float values.
 
@@ -68,7 +68,7 @@ When parsing msgpack data from bytes, the library needs to be passed ``strict_ma
 ``bson``
 --------
 
-Found at ``cattr.preconf.bson``. Tested against the ``bson`` module bundled with the ``pymongo`` library, not the standalone PyPI ``bson`` package.
+Found at :py:mod:`cattr.preconf.bson`. Tested against the ``bson`` module bundled with the ``pymongo`` library, not the standalone PyPI ``bson`` package.
 
 Sets are serialized as lists, and deserialized back into sets.
 
@@ -84,7 +84,7 @@ When encoding and decoding, the library needs to be passed ``codec_options=bson.
 ``pyyaml``
 ----------
 
-Found at ``cattr.preconf.pyyaml``.
+Found at :py:mod:`cattr.preconf.pyyaml`.
 
 Frozensets are serialized as lists, and deserialized back into frozensets.
 
@@ -92,7 +92,7 @@ Frozensets are serialized as lists, and deserialized back into frozensets.
 ``tomlkit``
 -----------
 
-Found at ``cattr.preconf.tomlkit``.
+Found at :py:mod:`cattr.preconf.tomlkit`.
 
 Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets.
 Tuples are serialized as lists, and deserialized back into tuples.

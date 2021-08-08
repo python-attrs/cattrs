@@ -1,5 +1,5 @@
 ========================
-Tips for Handling Unions
+Tips for handling unions
 ========================
 
 This sections contains information for advanced union handling.
