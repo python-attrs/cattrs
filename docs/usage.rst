@@ -213,7 +213,7 @@ with ``attr.has``, which is exactly this.
 
 As the final step, we can combine all of this into two hook factories:
 
-.. code-block: python
+.. code-block:: python
 
     from attr import has, fields
     from cattr.gen import make_dict_unstructure_fn, make_dict_structure_fn, override
