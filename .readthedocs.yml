@@ -2,5 +2,7 @@
 python:
   version: 3.8
   install:
+    - path: .
+      method: pip
     - path: furo
       method: pip
