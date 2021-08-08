@@ -3,3 +3,4 @@ python:
   version: 3.8
   install:
     - path: furo
+      method: pip
