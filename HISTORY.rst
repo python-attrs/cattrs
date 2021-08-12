@@ -2,6 +2,9 @@
 History
 =======
 
+1.9.0 (UNRELEASED)
+------------------
+
 1.8.0 (2021-08-13)
 ------------------
 * Fix ``GenConverter`` mapping structuring for unannotated dicts on Python 3.8.
