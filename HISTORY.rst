@@ -2,7 +2,7 @@
 History
 =======
 
-1.8.0 (UNRELEASED)
+1.8.0 (2021-08-13)
 ------------------
 * Fix ``GenConverter`` mapping structuring for unannotated dicts on Python 3.8.
   (`#151 <https://github.com/Tinche/cattrs/issues/151>`_)
