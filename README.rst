@@ -163,6 +163,7 @@ For details, see the `cattr.preconf package <https://cattrs.readthedocs.io/en/la
 Additional documentation
 ------------------------
 * `On structured and unstructured data, or the case for cattrs <https://threeofwands.com/on-structured-and-unstructured-data-or-the-case-for-cattrs/>`_
+* `Why I use attrs instead of pydantic <https://threeofwands.com/why-i-use-attrs-instead-of-pydantic/>`_
 
 Credits
 -------
