@@ -3,11 +3,12 @@ from typing import Optional, Union
 
 import attr
 import pytest
-from attr import fields, make_class
+from attr import define, fields, make_class
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis.strategies import sampled_from
 
 from cattr import Converter, UnstructureStrategy
+from cattr._compat import is_py310_plus
 
 from . import nested_typed_classes, simple_typed_attrs, simple_typed_classes
 
@@ -95,6 +96,50 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
         assert inst == converter.structure(converter.unstructure(inst), C)
 
 
+@pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
+@settings(
+    suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow]
+)
+@given(
+    simple_typed_classes(defaults=False),
+    simple_typed_classes(defaults=False),
+    unstructure_strats,
+)
+def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
+    """
+    Classes with union fields can be unstructured and structured.
+    """
+    converter = Converter(unstruct_strat=strat)
+    cl_a, vals_a = cl_and_vals_a
+    cl_b, vals_b = cl_and_vals_b
+    a_field_names = {a.name for a in fields(cl_a)}
+    b_field_names = {a.name for a in fields(cl_b)}
+    assume(a_field_names)
+    assume(b_field_names)
+
+    common_names = a_field_names & b_field_names
+    assume(len(a_field_names) > len(common_names))
+
+    @define
+    class C:
+        a: cl_a | cl_b
+
+    inst = C(a=cl_a(*vals_a))
+
+    if strat is UnstructureStrategy.AS_DICT:
+        assert inst == converter.structure(converter.unstructure(inst), C)
+    else:
+        # Our disambiguation functions only support dictionaries for now.
+        with pytest.raises(ValueError):
+            converter.structure(converter.unstructure(inst), C)
+
+        def handler(obj, _):
+            return converter.structure(obj, cl_a)
+
+        converter.register_structure_hook(cl_a | cl_b, handler)
+        assert inst == converter.structure(converter.unstructure(inst), C)
+
+
 @given(simple_typed_classes(defaults=False))
 def test_optional_field_roundtrip(cl_and_vals):
     """
@@ -106,6 +151,28 @@ def test_optional_field_roundtrip(cl_and_vals):
     @attr.s
     class C(object):
         a = attr.ib(type=Optional[cl])
+
+    inst = C(a=cl(*vals))
+    assert inst == converter.structure(converter.unstructure(inst), C)
+
+    inst = C(a=None)
+    unstructured = converter.unstructure(inst)
+
+    assert inst == converter.structure(unstructured, C)
+
+
+@pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
+@given(simple_typed_classes(defaults=False))
+def test_310_optional_field_roundtrip(cl_and_vals):
+    """
+    Classes with optional fields can be unstructured and structured.
+    """
+    converter = Converter()
+    cl, vals = cl_and_vals
+
+    @define
+    class C:
+        a: cl | None
 
     inst = C(a=cl(*vals))
     assert inst == converter.structure(converter.unstructure(inst), C)

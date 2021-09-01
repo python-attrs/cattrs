@@ -1,7 +1,7 @@
 from typing import Generic, List, TypeVar, Union
 
 import pytest
-from attr import asdict, attrs
+from attr import asdict, attrs, define
 
 from cattr import Converter, GenConverter
 from cattr.errors import StructureHandlerNotFoundError
@@ -10,7 +10,7 @@ T = TypeVar("T")
 T2 = TypeVar("T2")
 
 
-@attrs(auto_attribs=True)
+@define
 class TClass(Generic[T, T2]):
     a: T
     b: T2
@@ -37,7 +37,7 @@ def test_able_to_structure_generics(converter: Converter, t, t2, result):
         (List[TClass[int, int]], str, TClass([TClass(1, 2)], "a")),
     ),
 )
-def test_able_to_structure_nested_generics(converter, t, t2, result):
+def test_structure_nested_generics(converter: Converter, t, t2, result):
     res = converter.structure(asdict(result), TClass[t, t2])
 
     assert res == result

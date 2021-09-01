@@ -18,6 +18,7 @@ version_info = sys.version_info[0:3]
 is_py37 = version_info[:2] == (3, 7)
 is_py38 = version_info[:2] == (3, 8)
 is_py39_plus = version_info[:2] >= (3, 9)
+is_py310_plus = version_info[:2] >= (3, 10)
 
 if is_py37:
 
@@ -230,12 +231,28 @@ else:
             or (getattr(type, "__origin__", None) is tuple)
         )
 
-    def is_union_type(obj):
-        return (
-            obj is Union
-            or isinstance(obj, _UnionGenericAlias)
-            and obj.__origin__ is Union
-        )
+    if is_py310_plus:
+
+        def is_union_type(obj):
+            from types import UnionType
+
+            return (
+                obj is Union
+                or (
+                    isinstance(obj, _UnionGenericAlias)
+                    and obj.__origin__ is Union
+                )
+                or isinstance(obj, UnionType)
+            )
+
+    else:
+
+        def is_union_type(obj):
+            return (
+                obj is Union
+                or isinstance(obj, _UnionGenericAlias)
+                and obj.__origin__ is Union
+            )
 
     def is_sequence(type: Any) -> bool:
         origin = getattr(type, "__origin__", None)

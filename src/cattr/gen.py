@@ -187,7 +187,7 @@ def make_dict_structure_fn(
     for p in getattr(cl, "__parameters__", ()):
         # This is nasty, I am not sure how best to handle `typing.List[str]` or `TClass[int, int]` as a parameter type here
         name_base = getattr(mapping, p.__name__)
-        name = getattr(name_base, "__name__", str(name_base))
+        name = getattr(name_base, "__name__") or str(name_base)
         name = re.sub(r"[\[\.\] ,]", "_", name)
         fn_name += f"_{name}"
 

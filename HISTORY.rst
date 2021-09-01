@@ -4,6 +4,7 @@ History
 
 1.9.0 (UNRELEASED)
 ------------------
+* Python 3.10 support, including support for the new union syntax (``A | B`` vs ``Union[A, B]``).
 
 1.8.0 (2021-08-13)
 ------------------
