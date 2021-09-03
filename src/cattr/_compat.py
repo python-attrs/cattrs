@@ -2,7 +2,6 @@ import sys
 from dataclasses import MISSING
 from dataclasses import fields as dataclass_fields
 from dataclasses import is_dataclass
-from types import GenericAlias
 from typing import Any, Dict, FrozenSet, List
 from typing import Mapping as TypingMapping
 from typing import MutableMapping as TypingMutableMapping
@@ -192,6 +191,7 @@ else:
     from collections.abc import MutableSet as AbcMutableSet
     from collections.abc import Sequence as AbcSequence
     from collections.abc import Set as AbcSet
+    from types import GenericAlias
     from typing import Counter as TypingCounter
     from typing import (
         Union,
