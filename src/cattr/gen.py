@@ -3,7 +3,6 @@ import re
 import uuid
 from dataclasses import is_dataclass
 from threading import local
-from types import GenericAlias
 from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
 
 import attr
