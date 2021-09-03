@@ -2,6 +2,7 @@ import sys
 from dataclasses import MISSING
 from dataclasses import fields as dataclass_fields
 from dataclasses import is_dataclass
+from types import GenericAlias
 from typing import Any, Dict, FrozenSet, List
 from typing import Mapping as TypingMapping
 from typing import MutableMapping as TypingMutableMapping
@@ -178,6 +179,9 @@ if is_py37 or is_py38:
         def is_literal(_) -> bool:
             return False
 
+    def is_generic(obj):
+        return isinstance(obj, _GenericAlias)
+
 
 else:
     # 3.9+
@@ -334,9 +338,8 @@ else:
             or getattr(type, "__origin__", None) is Counter
         )
 
-
-def is_generic(obj):
-    return isinstance(obj, _GenericAlias)
+    def is_generic(obj):
+        return isinstance(obj, _GenericAlias) or isinstance(obj, GenericAlias)
 
 
 def is_generic_attrs(type):

@@ -1,9 +1,10 @@
-from typing import Generic, List, TypeVar, Union
+from typing import Dict, Generic, List, TypeVar, Union
 
 import pytest
 from attr import asdict, attrs, define
 
 from cattr import Converter, GenConverter
+from cattr._compat import is_py39_plus
 from cattr.errors import StructureHandlerNotFoundError
 
 T = TypeVar("T")
@@ -14,6 +15,13 @@ T2 = TypeVar("T2")
 class TClass(Generic[T, T2]):
     a: T
     b: T2
+
+
+@define
+class GenericCols(Generic[T]):
+    a: T
+    b: List[T]
+    c: Dict[str, T]
 
 
 @pytest.mark.parametrize(
@@ -28,6 +36,38 @@ def test_able_to_structure_generics(converter: Converter, t, t2, result):
     res = converter.structure(asdict(result), TClass[t, t2])
 
     assert res == result
+
+
+@pytest.mark.parametrize(
+    ("t", "result"),
+    (
+        (int, GenericCols(1, [2], {"3": 3})),
+        (str, GenericCols("1", ["2"], {"3": "3"})),
+    ),
+)
+def test_structure_generics_with_cols(t, result):
+    res = GenConverter().structure(asdict(result), GenericCols[t])
+
+    assert res == result
+
+
+@pytest.mark.skipif(not is_py39_plus, reason="3.9+ generics syntax")
+@pytest.mark.parametrize(
+    ("t", "result"),
+    ((int, (1, [2], {"3": 3})), (str, ("1", ["2"], {"3": "3"}))),
+)
+def test_39_structure_generics_with_cols(t, result):
+    @define
+    class GenericCols(Generic[T]):
+        a: T
+        b: list[T]
+        c: dict[str, T]
+
+    expected = GenericCols(*result)
+
+    res = GenConverter().structure(asdict(expected), GenericCols[t])
+
+    assert res == expected
 
 
 @pytest.mark.parametrize(

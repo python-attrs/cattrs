@@ -25,6 +25,7 @@ from ._compat import (
     is_bare,
     is_counter,
     is_frozenset,
+    is_generic,
     is_generic_attrs,
     is_hetero_tuple,
     is_literal,
@@ -657,7 +658,7 @@ class GenConverter(Converter):
                 has_with_generic, self.gen_unstructure_attrs_fromdict
             )
             self.register_structure_hook_factory(
-                has, self.gen_structure_attrs_fromdict
+                has_with_generic, self.gen_structure_attrs_fromdict
             )
         self.register_unstructure_hook_factory(
             is_annotated, self.gen_unstructure_annotated
@@ -721,7 +722,7 @@ class GenConverter(Converter):
         return h
 
     def gen_structure_attrs_fromdict(self, cl: Type[T]) -> T:
-        attribs = fields(cl)
+        attribs = fields(get_origin(cl) if is_generic(cl) else cl)
         if any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.
             resolve_types(cl)
