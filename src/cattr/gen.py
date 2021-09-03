@@ -3,6 +3,7 @@ import re
 import uuid
 from dataclasses import is_dataclass
 from threading import local
+from types import GenericAlias
 from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
 
 import attr
@@ -207,9 +208,14 @@ def make_dict_structure_fn(
     for a in attrs:
         an = a.name
         override = kwargs.pop(an, _neutral)
-        type = a.type
-        if isinstance(type, TypeVar):
-            type = getattr(mapping, type.__name__, type)
+        t = a.type
+        if isinstance(t, TypeVar):
+            t = getattr(mapping, t.__name__, t)
+        elif is_generic(t):
+            concrete_types = tuple(
+                getattr(mapping, t.__name__, t) for t in get_args(t)
+            )
+            t = t.__origin__[concrete_types]
 
         # For each attribute, we try resolving the type here and now.
         # If a type is manually overwritten, this function should be
@@ -219,13 +225,13 @@ def make_dict_structure_fn(
         elif (
             a.converter is not None
             and not _cattrs_prefer_attrib_converters
-            and type is not None
+            and t is not None
         ):
-            handler = converter._structure_func.dispatch(type)
+            handler = converter._structure_func.dispatch(t)
             if handler == converter._structure_error:
                 handler = None
-        elif type is not None:
-            handler = converter._structure_func.dispatch(type)
+        elif t is not None:
+            handler = converter._structure_func.dispatch(t)
         else:
             handler = converter.structure
 
@@ -234,7 +240,7 @@ def make_dict_structure_fn(
 
         ian = an if (is_dc or an[0] != "_") else an[1:]
         kn = an if override.rename is None else override.rename
-        globs[f"type_{an}"] = type
+        globs[f"type_{an}"] = t
         if a.default is NOTHING:
             if handler:
                 lines.append(

@@ -5,14 +5,16 @@ History
 1.9.0 (UNRELEASED)
 ------------------
 * Python 3.10 support, including support for the new union syntax (``A | B`` vs ``Union[A, B]``).
+* The ``GenConverter`` can now properly structure generic classes with generic collection fields.
+  (`#149 <https://github.com/Tinche/cattrs/issues/149>`_)
 
 1.8.0 (2021-08-13)
 ------------------
 * Fix ``GenConverter`` mapping structuring for unannotated dicts on Python 3.8.
   (`#151 <https://github.com/Tinche/cattrs/issues/151>`_)
 * The source code for generated un/structuring functions is stored in the `linecache` cache, which enables more informative stack traces when un/structuring errors happen using the `GenConverter`. This behavior can optionally be disabled to save memory.
-* Support using the attr converter callback during structure. 
-  By default, this is a method of last resort, but it can be elevated to the default by setting `prefer_attrib_converters=True` on `Converter` or `GenConverter`. 
+* Support using the attr converter callback during structure.
+  By default, this is a method of last resort, but it can be elevated to the default by setting `prefer_attrib_converters=True` on `Converter` or `GenConverter`.
   (`#138 <https://github.com/Tinche/cattrs/issues/138>`_)
 * Fix structuring recursive classes.
   (`#159 <https://github.com/Tinche/cattrs/issues/159>`_)
