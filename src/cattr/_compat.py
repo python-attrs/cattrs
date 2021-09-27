@@ -181,6 +181,10 @@ if is_py37 or is_py38:
     def is_generic(obj):
         return isinstance(obj, _GenericAlias)
 
+    def copy_with(type, args):
+        """Replace a generic type's arguments."""
+        return type.copy_with(args)
+
 
 else:
     # 3.9+
@@ -340,6 +344,10 @@ else:
 
     def is_generic(obj):
         return isinstance(obj, _GenericAlias) or isinstance(obj, GenericAlias)
+
+    def copy_with(type, args):
+        """Replace a generic type's arguments."""
+        return type.__origin__[args]
 
 
 def is_generic_attrs(type):

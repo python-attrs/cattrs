@@ -8,7 +8,15 @@ from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
 import attr
 from attr import NOTHING, resolve_types
 
-from ._compat import adapted_fields, get_args, get_origin, is_bare, is_generic
+from ._compat import (
+    adapted_fields,
+    copy_with,
+    get_args,
+    get_origin,
+    is_annotated,
+    is_bare,
+    is_generic,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from cattr.converters import Converter
@@ -210,11 +218,15 @@ def make_dict_structure_fn(
         t = a.type
         if isinstance(t, TypeVar):
             t = getattr(mapping, t.__name__, t)
-        elif is_generic(t):
+        elif is_generic(t) and not is_bare(t) and not is_annotated(t):
             concrete_types = tuple(
-                getattr(mapping, t.__name__, t) for t in get_args(t)
+                getattr(mapping, t.__name__, t)
+                if isinstance(t, TypeVar)
+                or (hasattr(t, "__name__") and is_generic(t))
+                else t
+                for t in get_args(t)
             )
-            t = t.__origin__[concrete_types]
+            t = copy_with(t, concrete_types)
 
         # For each attribute, we try resolving the type here and now.
         # If a type is manually overwritten, this function should be
