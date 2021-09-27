@@ -155,6 +155,20 @@ def _generate_mapping(cl: Type, old_mapping):
 
     return cls(**mapping)
 
+def _get_type(cl: Type, mapping) -> Type:
+    if isinstance(cl, TypeVar):
+        return getattr(mapping, cl.__name__, cl)
+
+    if not is_generic(cl):
+        return cl
+
+    base = get_origin(cl)
+    return base[
+        tuple(
+            _get_type(x, mapping)
+            for x in get_args(cl)
+        )
+    ]
 
 def make_dict_structure_fn(
     cl: Type,
@@ -184,12 +198,14 @@ def make_dict_structure_fn(
     fn_name = "structure_" + cl_name
 
     # We have generic parameters and need to generate a unique name for the function
-    for p in getattr(cl, "__parameters__", ()):
-        # This is nasty, I am not sure how best to handle `typing.List[str]` or `TClass[int, int]` as a parameter type here
-        name_base = getattr(mapping, p.__name__)
-        name = getattr(name_base, "__name__", None) or str(name_base)
-        name = re.sub(r"[\[\.\] ,]", "_", name)
-        fn_name += f"_{name}"
+    # If there is no mapping, then there is no need for a unique name
+    if mapping:
+        for p in getattr(cl, "__parameters__", ()):
+            # This is nasty, I am not sure how best to handle `typing.List[str]` or `TClass[int, int]` as a parameter type here
+            name_base = getattr(mapping, p.__name__)
+            name = getattr(name_base, "__name__", None) or str(name_base)
+            name = re.sub(r"[\[\.\] ,]", "_", name)
+            fn_name += f"_{name}"
 
     globs = {"__c_s": converter.structure, "__cl": cl, "__m": mapping}
     lines = []
@@ -207,14 +223,7 @@ def make_dict_structure_fn(
     for a in attrs:
         an = a.name
         override = kwargs.pop(an, _neutral)
-        t = a.type
-        if isinstance(t, TypeVar):
-            t = getattr(mapping, t.__name__, t)
-        elif is_generic(t):
-            concrete_types = tuple(
-                getattr(mapping, t.__name__, t) for t in get_args(t)
-            )
-            t = t.__origin__[concrete_types]
+        t = _get_type(a.type, mapping)
 
         # For each attribute, we try resolving the type here and now.
         # If a type is manually overwritten, this function should be

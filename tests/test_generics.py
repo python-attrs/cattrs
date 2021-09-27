@@ -1,4 +1,4 @@
-from typing import Dict, Generic, List, TypeVar, Union
+from typing import Dict, Generic, List, TypeVar, Union, Optional
 
 import pytest
 from attr import asdict, attrs, define
@@ -69,6 +69,21 @@ def test_39_structure_generics_with_cols(t, result):
 
     assert res == expected
 
+@pytest.mark.parametrize(
+    ("t", "result"),
+    ((int, (1, [1,2,3])), (int, (1, None))),
+)
+def test_structure_nested_generics_with_cols(t, result):
+    @define
+    class GenericCols(Generic[T]):
+        a: T
+        b: Optional[List[T]]
+
+    expected = GenericCols(*result)
+
+    res = GenConverter().structure(asdict(expected), GenericCols[t])
+
+    assert res == expected
 
 @pytest.mark.parametrize(
     ("t", "t2", "result"),
