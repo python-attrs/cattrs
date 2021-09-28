@@ -3,7 +3,7 @@ import re
 import uuid
 from dataclasses import is_dataclass
 from threading import local
-from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, Optional, Type, TypeVar
 
 import attr
 from attr import NOTHING, resolve_types
@@ -145,7 +145,9 @@ def make_dict_unstructure_fn(
     return fn
 
 
-def _generate_mapping(cl: Type, old_mapping):
+def _generate_mapping(
+    cl: Type, old_mapping: Dict[str, type]
+) -> Dict[str, type]:
     mapping = {}
     for p, t in zip(get_origin(cl).__parameters__, get_args(cl)):
         if isinstance(t, TypeVar):
@@ -155,13 +157,7 @@ def _generate_mapping(cl: Type, old_mapping):
     if not mapping:
         return old_mapping
 
-    cls = attr.make_class(
-        "GenericMapping",
-        {x: attr.attrib() for x in mapping.keys()},
-        frozen=True,
-    )
-
-    return cls(**mapping)
+    return mapping
 
 
 def make_dict_structure_fn(
@@ -174,7 +170,7 @@ def make_dict_structure_fn(
 ):
     """Generate a specialized dict structuring function for an attrs class."""
 
-    mapping = None
+    mapping = {}
     if is_generic(cl):
         base = get_origin(cl)
         mapping = _generate_mapping(cl, mapping)
@@ -186,7 +182,7 @@ def make_dict_structure_fn(
             break
 
     if isinstance(cl, TypeVar):
-        cl = getattr(mapping, cl.__name__, cl)
+        cl = mapping.get(cl.__name__, cl)
 
     cl_name = cl.__name__
     fn_name = "structure_" + cl_name
@@ -194,12 +190,12 @@ def make_dict_structure_fn(
     # We have generic parameters and need to generate a unique name for the function
     for p in getattr(cl, "__parameters__", ()):
         # This is nasty, I am not sure how best to handle `typing.List[str]` or `TClass[int, int]` as a parameter type here
-        name_base = getattr(mapping, p.__name__)
+        name_base = mapping[p.__name__]
         name = getattr(name_base, "__name__", None) or str(name_base)
         name = re.sub(r"[\[\.\] ,]", "_", name)
         fn_name += f"_{name}"
 
-    globs = {"__c_s": converter.structure, "__cl": cl, "__m": mapping}
+    globs = {"__c_s": converter.structure, "__cl": cl}
     lines = []
     post_lines = []
 
@@ -217,12 +213,12 @@ def make_dict_structure_fn(
         override = kwargs.pop(an, _neutral)
         t = a.type
         if isinstance(t, TypeVar):
-            t = getattr(mapping, t.__name__, t)
+            t = mapping.get(t.__name__, t)
         elif is_generic(t) and not is_bare(t) and not is_annotated(t):
             concrete_types = tuple(
-                getattr(mapping, t.__name__, t)
+                mapping.get(t.__name__, t)
                 if isinstance(t, TypeVar)
-                or (hasattr(t, "__name__") and is_generic(t))
+                or (getattr(t, "__name__", None) and is_generic(t))
                 else t
                 for t in get_args(t)
             )
