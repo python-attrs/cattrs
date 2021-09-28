@@ -160,6 +160,16 @@ def _generate_mapping(
     return mapping
 
 
+def _get_type(cl: Type, mapping) -> Type:
+    if isinstance(cl, TypeVar):
+        return mapping.get(cl.__name__, cl)
+
+    if not is_generic(cl) or is_bare(cl) or is_annotated(cl):
+        return cl
+
+    return copy_with(cl, tuple(_get_type(x, mapping) for x in get_args(cl)))
+
+
 def make_dict_structure_fn(
     cl: Type,
     converter: "Converter",
@@ -188,12 +198,14 @@ def make_dict_structure_fn(
     fn_name = "structure_" + cl_name
 
     # We have generic parameters and need to generate a unique name for the function
-    for p in getattr(cl, "__parameters__", ()):
-        # This is nasty, I am not sure how best to handle `typing.List[str]` or `TClass[int, int]` as a parameter type here
-        name_base = mapping[p.__name__]
-        name = getattr(name_base, "__name__", None) or str(name_base)
-        name = re.sub(r"[\[\.\] ,]", "_", name)
-        fn_name += f"_{name}"
+    # If there is no mapping, then there is no need for a unique name
+    if mapping:
+        for p in getattr(cl, "__parameters__", ()):
+            # This is nasty, I am not sure how best to handle `typing.List[str]` or `TClass[int, int]` as a parameter type here
+            name_base = mapping[p.__name__]
+            name = getattr(name_base, "__name__", None) or str(name_base)
+            name = re.sub(r"[\[\.\] ,]", "_", name)
+            fn_name += f"_{name}"
 
     globs = {"__c_s": converter.structure, "__cl": cl}
     lines = []
@@ -213,18 +225,7 @@ def make_dict_structure_fn(
         override = kwargs.pop(an, _neutral)
         if override.omit:
             continue
-        t = a.type
-        if isinstance(t, TypeVar):
-            t = mapping.get(t.__name__, t)
-        elif is_generic(t) and not is_bare(t) and not is_annotated(t):
-            concrete_types = tuple(
-                mapping.get(t.__name__, t)
-                if isinstance(t, TypeVar)
-                or (getattr(t, "__name__", None) and is_generic(t))
-                else t
-                for t in get_args(t)
-            )
-            t = copy_with(t, concrete_types)
+        t = _get_type(a.type, mapping)
 
         # For each attribute, we try resolving the type here and now.
         # If a type is manually overwritten, this function should be

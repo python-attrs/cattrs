@@ -178,6 +178,7 @@ class Converter(object):
                 (int, self._structure_call),
                 (float, self._structure_call),
                 (Enum, self._structure_call),
+                (NoneType, self._structure_none),
             ]
         )
 
@@ -514,6 +515,13 @@ class Converter(object):
                     key_conv(k, key_type): val_conv(v, val_type)
                     for k, v in obj.items()
                 }
+
+    def _structure_none(self, obj, type):
+        if obj is not None:
+            raise ValueError(
+                f"Unable to structure NoneType with a value of {obj}"
+            )
+        return None
 
     def _structure_optional(self, obj, union):
         if obj is None:
