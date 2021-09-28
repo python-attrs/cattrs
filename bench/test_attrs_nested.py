@@ -5,10 +5,7 @@ import pytest
 from cattr import Converter, GenConverter, UnstructureStrategy
 
 
-@pytest.mark.parametrize(
-    "converter_cls",
-    [Converter, GenConverter],
-)
+@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
 @pytest.mark.parametrize(
     "unstructure_strat",
     [UnstructureStrategy.AS_DICT, UnstructureStrategy.AS_TUPLE],
@@ -70,10 +67,7 @@ def test_unstructure_attrs_nested(benchmark, converter_cls, unstructure_strat):
     benchmark(c.unstructure, inst)
 
 
-@pytest.mark.parametrize(
-    "converter_cls",
-    [Converter, GenConverter],
-)
+@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
 @pytest.mark.parametrize(
     "unstructure_strat",
     [UnstructureStrategy.AS_DICT, UnstructureStrategy.AS_TUPLE],

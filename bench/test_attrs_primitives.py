@@ -45,10 +45,7 @@ class C:
     ad: E
 
 
-@pytest.mark.parametrize(
-    "converter_cls",
-    [Converter, GenConverter],
-)
+@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
 @pytest.mark.parametrize(
     "unstructure_strat",
     [UnstructureStrategy.AS_DICT, UnstructureStrategy.AS_TUPLE],
@@ -97,10 +94,7 @@ def test_unstructure_attrs_primitives(
     )
 
 
-@pytest.mark.parametrize(
-    "converter_cls",
-    [Converter, GenConverter],
-)
+@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
 @pytest.mark.parametrize(
     "unstructure_strat",
     [UnstructureStrategy.AS_DICT, UnstructureStrategy.AS_TUPLE],
