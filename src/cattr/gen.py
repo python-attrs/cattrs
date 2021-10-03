@@ -18,6 +18,9 @@ from ._compat import (
     is_generic,
 )
 
+from inspect import signature
+
+
 if TYPE_CHECKING:  # pragma: no cover
     from cattr.converters import Converter
 
@@ -43,6 +46,7 @@ def make_dict_unstructure_fn(
     cl,
     converter,
     omit_if_default: bool = False,
+    mapping: Optional[dict[str, Any]] = None,
     _cattrs_use_linecache: bool = True,
     **kwargs,
 ):
@@ -67,7 +71,7 @@ def make_dict_unstructure_fn(
     else:
         working_set.add(cl)
     try:
-        lines.append(f"def {fn_name}(instance):")
+        lines.append(f"def {fn_name}(instance, unstructure_as=None):")
         lines.append("    res = {")
         for a in attrs:
             attr_name = a.name
@@ -82,7 +86,7 @@ def make_dict_unstructure_fn(
             # regenerated.
             if a.type is not None:
                 try:
-                    handler = converter._unstructure_func.dispatch(a.type)
+                    handler = converter._unstructure_func.dispatch(_get_type(a.type, mapping))
                 except RecursionError:
                     # There's a circular reference somewhere down the line
                     handler = converter.unstructure
@@ -94,7 +98,12 @@ def make_dict_unstructure_fn(
             if not is_identity:
                 unstruct_handler_name = f"unstructure_{attr_name}"
                 globs[unstruct_handler_name] = handler
-                invoke = f"{unstruct_handler_name}(instance.{attr_name})"
+                if len(signature(handler).parameters) == 1:
+                    invoke = f"{unstruct_handler_name}(instance.{attr_name})"
+                else:
+                    unstruct_type_name = f"unstructure_type_{attr_name}"
+                    globs[unstruct_type_name] = _get_type(a.type, mapping)
+                    invoke = f"{unstruct_handler_name}(instance.{attr_name}, {unstruct_type_name})"
             else:
                 invoke = f"instance.{attr_name}"
 
@@ -161,6 +170,9 @@ def _generate_mapping(
 
 
 def _get_type(cl: Type, mapping) -> Type:
+    if not mapping:
+        return cl
+    
     if isinstance(cl, TypeVar):
         return mapping.get(cl.__name__, cl)
 

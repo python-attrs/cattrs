@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Dict, Generic, List, TypeVar, Union, Optional
 
 import pytest
@@ -168,3 +169,19 @@ def test_unstructure_generic_attrs():
         inner: Inner[str]
 
     assert c.structure(raw, OuterStr) == OuterStr(Inner("1"))
+
+
+def test_unstructure_deeply_nested_generics():
+    c = GenConverter()
+
+    @attrs(auto_attribs=True)
+    class Inner:
+        a: int
+
+    @attrs(auto_attribs=True)
+    class Outer(Generic[T]):
+        inner: T
+
+    initial = Outer[Inner](Inner(1))
+    raw = c.unstructure(initial, Outer[Inner])
+    assert raw == {"inner": {"a": 1}}

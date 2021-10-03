@@ -45,7 +45,7 @@ from .gen import (
     make_hetero_tuple_unstructure_fn,
     make_iterable_unstructure_fn,
     make_mapping_structure_fn,
-    make_mapping_unstructure_fn,
+    make_mapping_unstructure_fn, _generate_mapping,
 )
 
 NoneType = type(None)
@@ -712,7 +712,9 @@ class GenConverter(Converter):
 
     def gen_unstructure_attrs_fromdict(self, cl: Type[T]) -> Dict[str, Any]:
         origin = get_origin(cl)
+        mapping = {}
         if origin is not None:
+            mapping = _generate_mapping(cl, mapping)
             cl = origin
         attribs = fields(cl)
         if any(isinstance(a.type, str) for a in attribs):
@@ -725,7 +727,7 @@ class GenConverter(Converter):
         }
 
         h = make_dict_unstructure_fn(
-            cl, self, omit_if_default=self.omit_if_default, **attrib_overrides
+            cl, self, omit_if_default=self.omit_if_default, mapping=mapping, **attrib_overrides
         )
         return h
 
