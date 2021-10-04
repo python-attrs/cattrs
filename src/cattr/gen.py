@@ -84,9 +84,10 @@ def make_dict_unstructure_fn(
             # For each attribute, we try resolving the type here and now.
             # If a type is manually overwritten, this function should be
             # regenerated.
-            if a.type is not None:
+            typ = _get_type(a.type, mapping)
+            if typ is not None and not isinstance(typ, TypeVar):
                 try:
-                    handler = converter._unstructure_func.dispatch(_get_type(a.type, mapping))
+                    handler = converter._unstructure_func.dispatch(typ)
                 except RecursionError:
                     # There's a circular reference somewhere down the line
                     handler = converter.unstructure
@@ -98,7 +99,7 @@ def make_dict_unstructure_fn(
             if not is_identity:
                 unstruct_handler_name = f"unstructure_{attr_name}"
                 globs[unstruct_handler_name] = handler
-                if len(signature(handler).parameters) == 1:
+                if len(signature(handler).parameters) == 1 or isinstance(typ, TypeVar):
                     invoke = f"{unstruct_handler_name}(instance.{attr_name})"
                 else:
                     unstruct_type_name = f"unstructure_type_{attr_name}"
@@ -170,7 +171,7 @@ def _generate_mapping(
 
 
 def _get_type(cl: Type, mapping) -> Type:
-    if not mapping:
+    if not mapping or not cl:
         return cl
     
     if isinstance(cl, TypeVar):

@@ -185,3 +185,6 @@ def test_unstructure_deeply_nested_generics():
     initial = Outer[Inner](Inner(1))
     raw = c.unstructure(initial, Outer[Inner])
     assert raw == {"inner": {"a": 1}}
+
+    raw = c.unstructure(initial)
+    assert raw == {"inner": {"a": 1}}
