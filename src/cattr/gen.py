@@ -46,7 +46,7 @@ def make_dict_unstructure_fn(
     cl,
     converter,
     omit_if_default: bool = False,
-    mapping: Optional[dict[str, Any]] = None,
+    mapping: Optional[Dict[str, Any]] = None,
     _cattrs_use_linecache: bool = True,
     **kwargs,
 ):
