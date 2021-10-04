@@ -103,7 +103,7 @@ def make_dict_unstructure_fn(
                     invoke = f"{unstruct_handler_name}(instance.{attr_name})"
                 else:
                     unstruct_type_name = f"unstructure_type_{attr_name}"
-                    globs[unstruct_type_name] = _get_type(a.type, mapping)
+                    globs[unstruct_type_name] = typ
                     invoke = f"{unstruct_handler_name}(instance.{attr_name}, {unstruct_type_name})"
             else:
                 invoke = f"instance.{attr_name}"
