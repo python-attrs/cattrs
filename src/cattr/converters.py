@@ -3,7 +3,7 @@ from collections.abc import MutableSet as AbcMutableSet
 from dataclasses import Field
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar, Union, Protocol
 
 from attr import Attribute
 from attr import has as attrs_has
@@ -84,6 +84,8 @@ def is_optional(typ):
         and len(typ.__args__) == 2
     )
 
+def is_protocol(typ):
+    return getattr(typ, "_is_protocol", False)
 
 class Converter(object):
     """Converts between structured and unstructured data."""
@@ -129,6 +131,7 @@ class Converter(object):
         )
         self._unstructure_func.register_func_list(
             [
+                (is_protocol, self.unstructure),
                 (is_mapping, self._unstructure_mapping),
                 (is_sequence, self._unstructure_seq),
                 (is_mutable_set, self._unstructure_seq),
