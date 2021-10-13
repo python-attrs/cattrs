@@ -144,8 +144,8 @@ keyword in Python.
 --------
 
 This override can only be applied to individual attributes. Using the ``omit``
-override will simply skip the attribute completely when generating an
-unstructuring function.
+override will simply skip the attribute completely when generating a structuring
+or unstructuring function.
 
 
 .. doctest::
@@ -162,5 +162,3 @@ unstructuring function.
     >>> c.unstructure(ExampleClass(1))
     {}
 
-This override only affects unstructuring functions, and has no effect when
-generating structuring functions.

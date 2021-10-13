@@ -211,6 +211,8 @@ def make_dict_structure_fn(
     for a in attrs:
         an = a.name
         override = kwargs.pop(an, _neutral)
+        if override.omit:
+            continue
         t = a.type
         if isinstance(t, TypeVar):
             t = mapping.get(t.__name__, t)

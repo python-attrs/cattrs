@@ -7,6 +7,8 @@ History
 * Python 3.10 support, including support for the new union syntax (``A | B`` vs ``Union[A, B]``).
 * The ``GenConverter`` can now properly structure generic classes with generic collection fields.
   (`#149 <https://github.com/Tinche/cattrs/issues/149>`_)
+* ``omit=True`` now also affects generated structuring functions.
+  (`#166 <https://github.com/Tinche/cattrs/issues/166>`_)
 
 1.8.0 (2021-08-13)
 ------------------

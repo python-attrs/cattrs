@@ -229,3 +229,27 @@ def test_omitting():
     )
 
     assert converter.unstructure(A(1)) == {"a": 1}
+
+
+def test_omitting_structure():
+    """Omitting fields works with generated structuring functions."""
+    converter = Converter()
+
+    @define
+    class A:
+        a: int
+        b: int = field(init=False)
+        c: int = 1
+
+    converter.register_structure_hook(
+        A,
+        make_dict_structure_fn(
+            A, converter, b=override(omit=True), c=override(omit=True)
+        ),
+    )
+
+    # The 'c' parameter is ignored and the default is used instead.
+    structured = converter.structure({"a": 1, "b": 2, "c": 3}, A)
+    assert structured.a == 1
+    assert structured.c == 1
+    assert not hasattr(structured, "b")
