@@ -13,6 +13,7 @@ from typing import Tuple
 
 from attr import NOTHING, Attribute, Factory
 from attr import fields as attrs_fields
+from attr import resolve_types
 
 version_info = sys.version_info[0:3]
 is_py37 = version_info[:2] == (3, 7)
@@ -54,9 +55,9 @@ def fields(type):
             raise Exception("Not an attrs or dataclass class.")
 
 
-def adapted_fields(type) -> List[Attribute]:
+def adapted_fields(cl) -> List[Attribute]:
     """Return the attrs format of `fields()` for attrs and dataclasses."""
-    if is_dataclass(type):
+    if is_dataclass(cl):
         return [
             Attribute(
                 attr.name,
@@ -75,10 +76,15 @@ def adapted_fields(type) -> List[Attribute]:
                 True,
                 type=attr.type,
             )
-            for attr in dataclass_fields(type)
+            for attr in dataclass_fields(cl)
         ]
     else:
-        return attrs_fields(type)
+        attribs = attrs_fields(cl)
+        if any(isinstance(a.type, str) for a in attribs):
+            # PEP 563 annotations - need to be resolved.
+            resolve_types(cl)
+            attribs = attrs_fields(cl)
+        return attribs
 
 
 def is_hetero_tuple(type: Any) -> bool:

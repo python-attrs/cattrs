@@ -9,6 +9,8 @@ History
   (`#149 <https://github.com/Tinche/cattrs/issues/149>`_)
 * ``omit=True`` now also affects generated structuring functions.
   (`#166 <https://github.com/Tinche/cattrs/issues/166>`_)
+* `cattr.gen.{make_dict_structure_fn, make_dict_unstructure_fn}` now resolve type annotations automatically when PEP 563 is used.
+  (`#169 <https://github.com/Tinche/cattrs/issues/169>`_)
 
 1.8.0 (2021-08-13)
 ------------------
