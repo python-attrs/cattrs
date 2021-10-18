@@ -87,6 +87,9 @@ def is_optional(typ):
 def is_protocol(typ):
     return getattr(typ, "_is_protocol", False)
 
+def is_type_var(typ):
+    return isinstance(typ, TypeVar)
+
 class Converter(object):
     """Converts between structured and unstructured data."""
 
@@ -132,6 +135,7 @@ class Converter(object):
         self._unstructure_func.register_func_list(
             [
                 (is_protocol, self.unstructure),
+                (is_type_var, self.unstructure),
                 (is_mapping, self._unstructure_mapping),
                 (is_sequence, self._unstructure_seq),
                 (is_mutable_set, self._unstructure_seq),

@@ -188,3 +188,21 @@ def test_unstructure_deeply_nested_generics():
 
     raw = c.unstructure(initial)
     assert raw == {"inner": {"a": 1}}
+
+def test_unstructure_deeply_nested_generics_list():
+    c = GenConverter()
+
+    @attrs(auto_attribs=True)
+    class Inner:
+        a: int
+
+    @attrs(auto_attribs=True)
+    class Outer(Generic[T]):
+        inner: List[T]
+
+    initial = Outer[Inner]([Inner(1)])
+    raw = c.unstructure(initial, Outer[Inner])
+    assert raw == {"inner": [{"a": 1}]}
+
+    raw = c.unstructure(initial)
+    assert raw == {"inner": [{"a": 1}]}
