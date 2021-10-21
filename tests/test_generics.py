@@ -75,7 +75,9 @@ def test_39_structure_generics_with_cols(t, result):
     assert res == expected
 
 
-@pytest.mark.parametrize(("t", "result"), ((int, (1, [1, 2, 3])), (int, (1, None))))
+@pytest.mark.parametrize(
+    ("t", "result"), ((int, (1, [1, 2, 3])), (int, (1, None)))
+)
 def test_structure_nested_generics_with_cols(t, result):
     @define
     class GenericCols(Generic[T]):
@@ -117,7 +119,9 @@ def test_structure_unions_of_generics(converter):
         c: T
 
     data = TClass2(c="string")
-    res = converter.structure(asdict(data), Union[TClass[int, int], TClass2[str]])
+    res = converter.structure(
+        asdict(data), Union[TClass[int, int], TClass2[str]]
+    )
     assert res == data
 
 
@@ -127,7 +131,9 @@ def test_structure_list_of_generic_unions(converter):
         c: T
 
     data = [TClass2(c="string"), TClass(1, 2)]
-    res = converter.structure([asdict(x) for x in data], List[Union[TClass[int, int], TClass2[str]]])
+    res = converter.structure(
+        [asdict(x) for x in data], List[Union[TClass[int, int], TClass2[str]]]
+    )
     assert res == data
 
 
