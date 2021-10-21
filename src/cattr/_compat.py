@@ -22,6 +22,7 @@ is_py39_plus = version_info[:2] >= (3, 9)
 is_py310_plus = version_info[:2] >= (3, 10)
 
 if is_py37:
+    from typing_extensions import Protocol
 
     def get_args(cl):
         return cl.__args__
@@ -31,13 +32,11 @@ if is_py37:
 
 
 else:
-    from typing import get_args, get_origin  # NOQA
+    from typing import get_args, get_origin, Protocol  # NOQA
 
 
 def has(cls):
-    return hasattr(cls, "__attrs_attrs__") or hasattr(
-        cls, "__dataclass_fields__"
-    )
+    return hasattr(cls, "__attrs_attrs__") or hasattr(cls, "__dataclass_fields__")
 
 
 def has_with_generic(cls):
@@ -63,11 +62,7 @@ def adapted_fields(cl) -> List[Attribute]:
                 attr.name,
                 attr.default
                 if attr.default is not MISSING
-                else (
-                    Factory(attr.default_factory)
-                    if attr.default_factory is not MISSING
-                    else NOTHING
-                ),
+                else (Factory(attr.default_factory) if attr.default_factory is not MISSING else NOTHING),
                 None,
                 True,
                 None,
@@ -109,47 +104,27 @@ if is_py37 or is_py38:
         return False
 
     def is_tuple(type):
-        return type in (Tuple, tuple) or (
-            type.__class__ is _GenericAlias
-            and issubclass(type.__origin__, Tuple)
-        )
+        return type in (Tuple, tuple) or (type.__class__ is _GenericAlias and issubclass(type.__origin__, Tuple))
 
     def is_union_type(obj):
-        return (
-            obj is Union
-            or isinstance(obj, _GenericAlias)
-            and obj.__origin__ is Union
-        )
+        return obj is Union or isinstance(obj, _GenericAlias) and obj.__origin__ is Union
 
     def is_sequence(type: Any) -> bool:
         return type in (List, list, Tuple, tuple) or (
             type.__class__ is _GenericAlias
-            and (
-                type.__origin__ not in (Union, Tuple, tuple)
-                and issubclass(type.__origin__, TypingSequence)
-            )
-            or (
-                getattr(type, "__origin__", None) in (Tuple, tuple)
-                and type.__args__[1] is ...
-            )
+            and (type.__origin__ not in (Union, Tuple, tuple) and issubclass(type.__origin__, TypingSequence))
+            or (getattr(type, "__origin__", None) in (Tuple, tuple) and type.__args__[1] is ...)
         )
 
     def is_mutable_set(type):
-        return type is set or (
-            type.__class__ is _GenericAlias
-            and issubclass(type.__origin__, MutableSet)
-        )
+        return type is set or (type.__class__ is _GenericAlias and issubclass(type.__origin__, MutableSet))
 
     def is_frozenset(type):
-        return type is frozenset or (
-            type.__class__ is _GenericAlias
-            and issubclass(type.__origin__, FrozenSet)
-        )
+        return type is frozenset or (type.__class__ is _GenericAlias and issubclass(type.__origin__, FrozenSet))
 
     def is_mapping(type):
         return type in (TypingMapping, dict) or (
-            type.__class__ is _GenericAlias
-            and issubclass(type.__origin__, TypingMapping)
+            type.__class__ is _GenericAlias and issubclass(type.__origin__, TypingMapping)
         )
 
     bare_list_args = List.__args__
@@ -169,18 +144,13 @@ if is_py37 or is_py38:
         )
 
     def is_counter(type):
-        return (
-            type in (Counter, ColCounter)
-            or getattr(type, "__origin__", None) is ColCounter
-        )
+        return type in (Counter, ColCounter) or getattr(type, "__origin__", None) is ColCounter
 
     if is_py38:
         from typing import Literal
 
         def is_literal(type) -> bool:
-            return (
-                type.__class__ is _GenericAlias and type.__origin__ is Literal
-            )
+            return type.__class__ is _GenericAlias and type.__origin__ is Literal
 
     else:
         # No literals in 3.7.
@@ -241,10 +211,7 @@ else:
     def is_tuple(type):
         return (
             type in (Tuple, tuple)
-            or (
-                type.__class__ is _GenericAlias
-                and issubclass(type.__origin__, Tuple)
-            )
+            or (type.__class__ is _GenericAlias and issubclass(type.__origin__, Tuple))
             or (getattr(type, "__origin__", None) is tuple)
         )
 
@@ -255,21 +222,14 @@ else:
 
             return (
                 obj is Union
-                or (
-                    isinstance(obj, _UnionGenericAlias)
-                    and obj.__origin__ is Union
-                )
+                or (isinstance(obj, _UnionGenericAlias) and obj.__origin__ is Union)
                 or isinstance(obj, UnionType)
             )
 
     else:
 
         def is_union_type(obj):
-            return (
-                obj is Union
-                or isinstance(obj, _UnionGenericAlias)
-                and obj.__origin__ is Union
-            )
+            return obj is Union or isinstance(obj, _UnionGenericAlias) and obj.__origin__ is Union
 
     def is_sequence(type: Any) -> bool:
         origin = getattr(type, "__origin__", None)
@@ -299,23 +259,14 @@ else:
     def is_mutable_set(type):
         return (
             type in (TypingSet, TypingMutableSet, set)
-            or (
-                type.__class__ is _GenericAlias
-                and issubclass(type.__origin__, TypingMutableSet)
-            )
-            or (
-                getattr(type, "__origin__", None)
-                in (set, AbcMutableSet, AbcSet)
-            )
+            or (type.__class__ is _GenericAlias and issubclass(type.__origin__, TypingMutableSet))
+            or (getattr(type, "__origin__", None) in (set, AbcMutableSet, AbcSet))
         )
 
     def is_frozenset(type):
         return (
             type in (FrozenSet, frozenset)
-            or (
-                type.__class__ is _GenericAlias
-                and issubclass(type.__origin__, FrozenSet)
-            )
+            or (type.__class__ is _GenericAlias and issubclass(type.__origin__, FrozenSet))
             or (getattr(type, "__origin__", None) is frozenset)
         )
 
@@ -334,22 +285,13 @@ else:
                 dict,
                 AbcMutableMapping,
             )
-            or (
-                type.__class__ is _GenericAlias
-                and issubclass(type.__origin__, TypingMapping)
-            )
-            or (
-                getattr(type, "__origin__", None)
-                in (dict, AbcMutableMapping, AbcMapping)
-            )
+            or (type.__class__ is _GenericAlias and issubclass(type.__origin__, TypingMapping))
+            or (getattr(type, "__origin__", None) in (dict, AbcMutableMapping, AbcMapping))
             or issubclass(type, dict)
         )
 
     def is_counter(type):
-        return (
-            type in (Counter, TypingCounter)
-            or getattr(type, "__origin__", None) is Counter
-        )
+        return type in (Counter, TypingCounter) or getattr(type, "__origin__", None) is Counter
 
     def is_generic(obj):
         return isinstance(obj, _GenericAlias) or isinstance(obj, GenericAlias)

@@ -5,7 +5,7 @@ import pytest
 from attr import asdict, attrs, define
 
 from cattr import Converter, GenConverter
-from cattr._compat import is_py39_plus
+from cattr._compat import is_py39_plus, Protocol
 from cattr.errors import StructureHandlerNotFoundError
 
 T = TypeVar("T")
@@ -71,9 +71,7 @@ def test_39_structure_generics_with_cols(t, result):
     assert res == expected
 
 
-@pytest.mark.parametrize(
-    ("t", "result"), ((int, (1, [1, 2, 3])), (int, (1, None)))
-)
+@pytest.mark.parametrize(("t", "result"), ((int, (1, [1, 2, 3])), (int, (1, None))))
 def test_structure_nested_generics_with_cols(t, result):
     @define
     class GenericCols(Generic[T]):
@@ -115,9 +113,7 @@ def test_structure_unions_of_generics(converter):
         c: T
 
     data = TClass2(c="string")
-    res = converter.structure(
-        asdict(data), Union[TClass[int, int], TClass2[str]]
-    )
+    res = converter.structure(asdict(data), Union[TClass[int, int], TClass2[str]])
     assert res == data
 
 
@@ -127,9 +123,7 @@ def test_structure_list_of_generic_unions(converter):
         c: T
 
     data = [TClass2(c="string"), TClass(1, 2)]
-    res = converter.structure(
-        [asdict(x) for x in data], List[Union[TClass[int, int], TClass2[str]]]
-    )
+    res = converter.structure([asdict(x) for x in data], List[Union[TClass[int, int], TClass2[str]]])
     assert res == data
 
 
@@ -207,3 +201,25 @@ def test_unstructure_deeply_nested_generics_list():
 
     raw = c.unstructure(initial)
     assert raw == {"inner": [{"a": 1}]}
+
+
+def test_unstructure_protocol():
+    c = GenConverter()
+
+    class Proto(Protocol):
+        a: int
+
+    @attrs(auto_attribs=True)
+    class Inner:
+        a: int
+
+    @attrs(auto_attribs=True)
+    class Outer(Generic[T]):
+        inner: Proto
+
+    initial = Outer[Inner](Inner(1))
+    raw = c.unstructure(initial, Outer[Inner])
+    assert raw == {"inner": {"a": 1}}
+
+    raw = c.unstructure(initial)
+    assert raw == {"inner": {"a": 1}}
