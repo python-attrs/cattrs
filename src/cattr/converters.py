@@ -40,13 +40,13 @@ from .dispatch import MultiStrategyDispatch
 from .errors import StructureHandlerNotFoundError
 from .gen import (
     AttributeOverride,
+    _generate_mapping,
     make_dict_structure_fn,
     make_dict_unstructure_fn,
     make_hetero_tuple_unstructure_fn,
     make_iterable_unstructure_fn,
     make_mapping_structure_fn,
     make_mapping_unstructure_fn,
-    _generate_mapping,
 )
 
 NoneType = type(None)

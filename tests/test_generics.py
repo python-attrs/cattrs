@@ -1,10 +1,10 @@
-from typing import Dict, Generic, List, TypeVar, Union, Optional
+from typing import Dict, Generic, List, Optional, TypeVar, Union
 
 import pytest
 from attr import asdict, attrs, define
 
 from cattr import Converter, GenConverter
-from cattr._compat import is_py39_plus, is_py37
+from cattr._compat import is_py37, is_py39_plus
 from cattr.errors import StructureHandlerNotFoundError
 
 if is_py37:

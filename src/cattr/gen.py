@@ -2,6 +2,7 @@ import linecache
 import re
 import uuid
 from dataclasses import is_dataclass
+from inspect import signature
 from threading import local
 from typing import TYPE_CHECKING, Any, Dict, Optional, Type, TypeVar
 
@@ -17,9 +18,6 @@ from ._compat import (
     is_bare,
     is_generic,
 )
-
-from inspect import signature
-
 
 if TYPE_CHECKING:  # pragma: no cover
     from cattr.converters import Converter
