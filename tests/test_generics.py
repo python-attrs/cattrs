@@ -1,12 +1,16 @@
-from enum import Enum
 from typing import Dict, Generic, List, TypeVar, Union, Optional
 
 import pytest
 from attr import asdict, attrs, define
 
 from cattr import Converter, GenConverter
-from cattr._compat import is_py39_plus, Protocol
+from cattr._compat import is_py39_plus, is_py37
 from cattr.errors import StructureHandlerNotFoundError
+
+if is_py37:
+    from typing_extensions import Protocol
+else:
+    from typing import Protocol
 
 T = TypeVar("T")
 T2 = TypeVar("T2")

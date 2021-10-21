@@ -22,7 +22,6 @@ is_py39_plus = version_info[:2] >= (3, 9)
 is_py310_plus = version_info[:2] >= (3, 10)
 
 if is_py37:
-    from typing_extensions import Protocol
 
     def get_args(cl):
         return cl.__args__
@@ -32,7 +31,7 @@ if is_py37:
 
 
 else:
-    from typing import get_args, get_origin, Protocol  # NOQA
+    from typing import get_args, get_origin  # NOQA
 
 
 def has(cls):

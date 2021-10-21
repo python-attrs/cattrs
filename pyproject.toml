@@ -44,6 +44,7 @@ PyYAML = "^5.4.1"
 tomlkit = "^0.7.0"
 motor = "^2.5.0"
 furo = "^2021.7.31-beta.41"
+typing-extensions = "^3.7; python_version < '3.8'"
 
 [tool.poetry.urls]
 "Changelog" = "https://cattrs.readthedocs.io/en/latest/history.html"
