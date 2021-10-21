@@ -189,6 +189,7 @@ def test_unstructure_deeply_nested_generics():
     raw = c.unstructure(initial)
     assert raw == {"inner": {"a": 1}}
 
+
 def test_unstructure_deeply_nested_generics_list():
     c = GenConverter()
 

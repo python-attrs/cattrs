@@ -99,7 +99,9 @@ def make_dict_unstructure_fn(
             if not is_identity:
                 unstruct_handler_name = f"unstructure_{attr_name}"
                 globs[unstruct_handler_name] = handler
-                if len(signature(handler).parameters) == 1 or isinstance(typ, TypeVar):
+                if len(signature(handler).parameters) == 1 or isinstance(
+                    typ, TypeVar
+                ):
                     invoke = f"{unstruct_handler_name}(instance.{attr_name})"
                 else:
                     unstruct_type_name = f"unstructure_type_{attr_name}"
@@ -173,7 +175,7 @@ def _generate_mapping(
 def _get_type(cl: Type, mapping) -> Type:
     if not mapping or not cl:
         return cl
-    
+
     if isinstance(cl, TypeVar):
         return mapping.get(cl.__name__, cl)
 

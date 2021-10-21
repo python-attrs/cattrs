@@ -128,7 +128,10 @@ if is_py37 or is_py38:
                 type.__origin__ not in (Union, Tuple, tuple)
                 and issubclass(type.__origin__, TypingSequence)
             )
-            or (getattr(type, "__origin__", None) in (Tuple, tuple) and type.__args__[1] is ...)
+            or (
+                getattr(type, "__origin__", None) in (Tuple, tuple)
+                and type.__args__[1] is ...
+            )
         )
 
     def is_mutable_set(type):

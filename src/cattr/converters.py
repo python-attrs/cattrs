@@ -3,7 +3,7 @@ from collections.abc import MutableSet as AbcMutableSet
 from dataclasses import Field
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar, Union, Protocol
+from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar, Union
 
 from attr import Attribute
 from attr import has as attrs_has
@@ -45,7 +45,8 @@ from .gen import (
     make_hetero_tuple_unstructure_fn,
     make_iterable_unstructure_fn,
     make_mapping_structure_fn,
-    make_mapping_unstructure_fn, _generate_mapping,
+    make_mapping_unstructure_fn,
+    _generate_mapping,
 )
 
 NoneType = type(None)
@@ -84,11 +85,14 @@ def is_optional(typ):
         and len(typ.__args__) == 2
     )
 
+
 def is_protocol(typ):
     return getattr(typ, "_is_protocol", False)
 
+
 def is_type_var(typ):
     return isinstance(typ, TypeVar)
+
 
 class Converter(object):
     """Converts between structured and unstructured data."""
@@ -575,9 +579,7 @@ class Converter(object):
         if NoneType in union_types:  # type: ignore
             # We support unions of attrs classes and NoneType higher in the
             # logic.
-            union_types = tuple(
-                e for e in union_types if e is not NoneType  # type: ignore
-            )
+            union_types = tuple(e for e in union_types if e is not NoneType)  # type: ignore
 
         if not all(has(get_origin(e) or e) for e in union_types):
             raise StructureHandlerNotFoundError(
@@ -734,7 +736,11 @@ class GenConverter(Converter):
         }
 
         h = make_dict_unstructure_fn(
-            cl, self, omit_if_default=self.omit_if_default, mapping=mapping, **attrib_overrides
+            cl,
+            self,
+            omit_if_default=self.omit_if_default,
+            mapping=mapping,
+            **attrib_overrides,
         )
         return h
 
