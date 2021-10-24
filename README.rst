@@ -6,19 +6,19 @@ cattrs
 .. image:: https://img.shields.io/pypi/v/cattrs.svg
         :target: https://pypi.python.org/pypi/cattrs
 
-.. image:: https://github.com/Tinche/cattrs/workflows/CI/badge.svg
-        :target: https://github.com/Tinche/cattrs/actions?workflow=CI
+.. image:: https://github.com/python-attrs/cattrs/workflows/CI/badge.svg
+        :target: https://github.com/python-attrs/cattrs/actions?workflow=CI
 
 .. image:: https://readthedocs.org/projects/cattrs/badge/?version=latest
         :target: https://cattrs.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
 .. image:: https://img.shields.io/pypi/pyversions/cattrs.svg
-        :target: https://github.com/Tinche/cattrs
+        :target: https://github.com/python-attrs/cattrs
         :alt: Supported Python versions
 
-.. image:: https://codecov.io/gh/Tinche/cattrs/branch/master/graph/badge.svg
-        :target: https://codecov.io/gh/Tinche/cattrs
+.. image:: https://codecov.io/gh/python-attrs/cattrs/branch/master/graph/badge.svg
+        :target: https://codecov.io/gh/python-attrs/cattrs/
 
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/ambv/black
