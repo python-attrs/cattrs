@@ -202,6 +202,7 @@ else:
     from collections.abc import Sequence as AbcSequence
     from collections.abc import Set as AbcSet
     from types import GenericAlias
+    from typing import Annotated
     from typing import Counter as TypingCounter
     from typing import (
         Union,
@@ -353,6 +354,9 @@ else:
 
     def copy_with(type, args):
         """Replace a generic type's arguments."""
+        if is_annotated(type):
+            # typing.Annotated requires a special case.
+            return Annotated[args]  # type: ignore
         return type.__origin__[args]
 
 

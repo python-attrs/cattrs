@@ -1,14 +1,37 @@
-from typing import Dict, Generic, List, TypeVar, Union
+from typing import Dict, Generic, List, Optional, TypeVar, Union
 
 import pytest
 from attr import asdict, attrs, define
 
 from cattr import Converter, GenConverter
-from cattr._compat import is_py39_plus
+from cattr._compat import is_py37, is_py39_plus
 from cattr.errors import StructureHandlerNotFoundError
+from cattr.generics import deep_copy_with
+
+from ._compat import Dict_origin, List_origin
+
+if is_py37:
+    from typing_extensions import Protocol
+else:
+    from typing import Protocol
 
 T = TypeVar("T")
 T2 = TypeVar("T2")
+
+
+def test_deep_copy():
+    """Test the deep copying of generic parameters."""
+    mapping = {T.__name__: int}
+    assert deep_copy_with(Optional[T], mapping) == Optional[int]
+    assert (
+        deep_copy_with(List_origin[Optional[T]], mapping)
+        == List_origin[Optional[int]]
+    )
+    mapping = {T.__name__: int, T2.__name__: str}
+    assert (
+        deep_copy_with(Dict_origin[T2, List_origin[Optional[T]]], mapping)
+        == Dict_origin[str, List_origin[Optional[int]]]
+    )
 
 
 @define
@@ -62,6 +85,22 @@ def test_39_structure_generics_with_cols(t, result):
         a: T
         b: list[T]
         c: dict[str, T]
+
+    expected = GenericCols(*result)
+
+    res = GenConverter().structure(asdict(expected), GenericCols[t])
+
+    assert res == expected
+
+
+@pytest.mark.parametrize(
+    ("t", "result"), ((int, (1, [1, 2, 3])), (int, (1, None)))
+)
+def test_structure_nested_generics_with_cols(t, result):
+    @define
+    class GenericCols(Generic[T]):
+        a: T
+        b: Optional[List[T]]
 
     expected = GenericCols(*result)
 
@@ -152,3 +191,63 @@ def test_unstructure_generic_attrs():
         inner: Inner[str]
 
     assert c.structure(raw, OuterStr) == OuterStr(Inner("1"))
+
+
+def test_unstructure_deeply_nested_generics():
+    c = GenConverter()
+
+    @attrs(auto_attribs=True)
+    class Inner:
+        a: int
+
+    @attrs(auto_attribs=True)
+    class Outer(Generic[T]):
+        inner: T
+
+    initial = Outer[Inner](Inner(1))
+    raw = c.unstructure(initial, Outer[Inner])
+    assert raw == {"inner": {"a": 1}}
+
+    raw = c.unstructure(initial)
+    assert raw == {"inner": {"a": 1}}
+
+
+def test_unstructure_deeply_nested_generics_list():
+    c = GenConverter()
+
+    @attrs(auto_attribs=True)
+    class Inner:
+        a: int
+
+    @attrs(auto_attribs=True)
+    class Outer(Generic[T]):
+        inner: List[T]
+
+    initial = Outer[Inner]([Inner(1)])
+    raw = c.unstructure(initial, Outer[Inner])
+    assert raw == {"inner": [{"a": 1}]}
+
+    raw = c.unstructure(initial)
+    assert raw == {"inner": [{"a": 1}]}
+
+
+# def test_unstructure_protocol():
+#     c = GenConverter()
+
+#     class Proto(Protocol):
+#         a: int
+
+#     @attrs(auto_attribs=True)
+#     class Inner:
+#         a: int
+
+#     @attrs(auto_attribs=True)
+#     class Outer:
+#         inner: Proto
+
+#     initial = Outer(Inner(1))
+#     raw = c.unstructure(initial, Outer)
+#     assert raw == {"inner": {"a": 1}}
+
+#     raw = c.unstructure(initial)
+#     assert raw == {"inner": {"a": 1}}

@@ -25,7 +25,8 @@ readme = "README.rst"
 python = "^3.7"
 attrs = ">= 20"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
+pymongo = "^3.12.1"
 flake8 = "^3.9.0"
 tox = "^3.23.0"
 coverage = "^5.5"
@@ -42,7 +43,6 @@ orjson = "^3.5.2"
 msgpack = "^1.0.2"
 PyYAML = "^5.4.1"
 tomlkit = "^0.7.0"
-motor = "^2.5.0"
 furo = "^2021.7.31-beta.41"
 
 [tool.poetry.urls]

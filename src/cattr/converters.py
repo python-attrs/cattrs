@@ -704,9 +704,7 @@ class GenConverter(Converter):
 
     def gen_unstructure_attrs_fromdict(self, cl: Type[T]) -> Dict[str, Any]:
         origin = get_origin(cl)
-        if origin is not None:
-            cl = origin
-        attribs = fields(cl)
+        attribs = fields(origin or cl)
         if any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.
             resolve_types(cl)
