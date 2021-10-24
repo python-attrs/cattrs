@@ -10,13 +10,13 @@ from attr import NOTHING, resolve_types
 
 from ._compat import (
     adapted_fields,
-    copy_with,
     get_args,
     get_origin,
     is_annotated,
     is_bare,
     is_generic,
 )
+from .generics import deep_copy_with
 
 if TYPE_CHECKING:  # pragma: no cover
     from cattr.converters import Converter
@@ -47,13 +47,28 @@ def make_dict_unstructure_fn(
     **kwargs,
 ):
     """Generate a specialized dict unstructuring function for an attrs class."""
+    origin = get_origin(cl)
+    attrs = adapted_fields(origin or cl)  # type: ignore
+
+    if any(isinstance(a.type, str) for a in attrs):
+        # PEP 563 annotations - need to be resolved.
+        resolve_types(cl)
+
+    mapping = {}
+    if is_generic(cl):
+        mapping = _generate_mapping(cl, mapping)
+
+        for base in getattr(origin, "__orig_bases__", ()):
+            if is_generic(base) and not str(base).startswith("typing.Generic"):
+                mapping = _generate_mapping(base, mapping)
+                break
+        cl = origin
+
     cl_name = cl.__name__
     fn_name = "unstructure_" + cl_name
     globs = {}
     lines = []
     post_lines = []
-
-    attrs = adapted_fields(cl)  # type: ignore
 
     # We keep track of what we're generating to help with recursive
     # class graphs.
@@ -66,6 +81,7 @@ def make_dict_unstructure_fn(
         raise RecursionError()
     else:
         working_set.add(cl)
+
     try:
         lines.append(f"def {fn_name}(instance):")
         lines.append("    res = {")
@@ -80,12 +96,23 @@ def make_dict_unstructure_fn(
             # For each attribute, we try resolving the type here and now.
             # If a type is manually overwritten, this function should be
             # regenerated.
+            handler = None
             if a.type is not None:
-                try:
-                    handler = converter._unstructure_func.dispatch(a.type)
-                except RecursionError:
-                    # There's a circular reference somewhere down the line
-                    handler = converter.unstructure
+                t = a.type
+                if isinstance(t, TypeVar):
+                    if t.__name__ in mapping:
+                        t = mapping[t.__name__]
+                    else:
+                        handler = converter.unstructure
+                elif is_generic(t) and not is_bare(t) and not is_annotated(t):
+                    t = deep_copy_with(t, mapping)
+
+                if handler is None:
+                    try:
+                        handler = converter._unstructure_func.dispatch(t)
+                    except RecursionError:
+                        # There's a circular reference somewhere down the line
+                        handler = converter.unstructure
             else:
                 handler = converter.unstructure
 
@@ -217,14 +244,7 @@ def make_dict_structure_fn(
         if isinstance(t, TypeVar):
             t = mapping.get(t.__name__, t)
         elif is_generic(t) and not is_bare(t) and not is_annotated(t):
-            concrete_types = tuple(
-                mapping.get(t.__name__, t)
-                if isinstance(t, TypeVar)
-                or (getattr(t, "__name__", None) and is_generic(t))
-                else t
-                for t in get_args(t)
-            )
-            t = copy_with(t, concrete_types)
+            t = deep_copy_with(t, mapping)
 
         # For each attribute, we try resolving the type here and now.
         # If a type is manually overwritten, this function should be
@@ -300,8 +320,10 @@ def make_iterable_unstructure_fn(cl: Any, converter, unstructure_to=None):
     # Let's try fishing out the type args.
     if getattr(cl, "__args__", None) is not None:
         type_arg = get_args(cl)[0]
-        # We can do the dispatch here and now.
-        handler = converter._unstructure_func.dispatch(type_arg)
+        # We don't know how to handle the TypeVar on this level,
+        # so we skip doing the dispatch here.
+        if not isinstance(type_arg, TypeVar):
+            handler = converter._unstructure_func.dispatch(type_arg)
 
     globs = {"__cattr_seq_cl": unstructure_to or cl, "__cattr_u": handler}
     lines = []
