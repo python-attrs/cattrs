@@ -4,16 +4,16 @@ import pytest
 from attr import asdict, attrs, define
 
 from cattr import Converter, GenConverter
-from cattr._compat import is_py37, is_py39_plus
+from cattr._compat import is_py39_plus
 from cattr.errors import StructureHandlerNotFoundError
 from cattr.generics import deep_copy_with
 
 from ._compat import Dict_origin, List_origin
 
-if is_py37:
-    from typing_extensions import Protocol
-else:
-    from typing import Protocol
+# if is_py37:
+#     from typing_extensions import Protocol
+# else:
+#     from typing import Protocol
 
 T = TypeVar("T")
 T2 = TypeVar("T2")
