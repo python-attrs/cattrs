@@ -57,7 +57,7 @@ jobs:
           python-version: "3.9"
 
       - name: "Install poetry, check-wheel-content, and twine"
-        run: "python -m pip install poetry twine check-wheel-contents"
+        run: "python -m pip install poetry==1.2.0a2 twine check-wheel-contents"
       - name: "Build package"
         run: "poetry build"
       - name: "List result"
