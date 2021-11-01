@@ -11,7 +11,7 @@ converter customization (since there are many ways of handling unions).
 Unstructuring unions with extra metadata
 ****************************************
 
-Let's assume a simple scenario of two classes, ``ClassA`` and ``ClassB`, both
+Let's assume a simple scenario of two classes, ``ClassA`` and ``ClassB``, both
 of which have no distinct fields and so cannot be used automatically with
 ``cattrs``.
 
