@@ -400,8 +400,8 @@ class Converter(object):
 
     @staticmethod
     def _structure_literal(val, type):
-        if val != type.__args__[0]:
-            raise Exception(f"Literal {type} not equal to {val}")
+        if val not in type.__args__:
+            raise Exception(f"{val} not in literal {type}")
         return val
 
     # Attrs classes.
