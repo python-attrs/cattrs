@@ -3,7 +3,16 @@ import re
 import uuid
 from dataclasses import is_dataclass
 from threading import local
-from typing import TYPE_CHECKING, Any, Dict, Optional, Type, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Mapping,
+    Optional,
+    Type,
+    TypeVar,
+)
 
 import attr
 from attr import NOTHING, resolve_types
@@ -37,6 +46,7 @@ def override(omit_if_default=None, rename=None, omit: bool = False):
 
 _neutral = AttributeOverride()
 _already_generating = local()
+T = TypeVar("T")
 
 
 def make_dict_unstructure_fn(
@@ -161,13 +171,13 @@ def _generate_mapping(
 
 
 def make_dict_structure_fn(
-    cl: Type,
+    cl: Type[T],
     converter: "Converter",
     _cattrs_forbid_extra_keys: bool = False,
     _cattrs_use_linecache: bool = True,
     _cattrs_prefer_attrib_converters: bool = False,
     **kwargs,
-):
+) -> Callable[[Mapping[str, Any]], T]:
     """Generate a specialized dict structuring function for an attrs class."""
 
     mapping = {}
