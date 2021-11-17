@@ -13,7 +13,7 @@ version = "1.9.0"
 description = "Composable complex class support for attrs and dataclasses."
 authors = ["Tin Tvrtkovic <tinchester@gmail.com>"]
 license = "MIT"
-repository = "https://github.com/Tinche/cattrs"
+repository = "https://github.com/python-attrs/cattrs"
 documentation = "https://cattrs.readthedocs.io/en/latest/"
 keywords = ["attrs", "serialization", "dataclasses"]
 packages = [
@@ -47,7 +47,7 @@ furo = "^2021.7.31-beta.41"
 
 [tool.poetry.urls]
 "Changelog" = "https://cattrs.readthedocs.io/en/latest/history.html"
-"Bug Tracker" = "https://github.com/Tinche/cattrs/issues"
+"Bug Tracker" = "https://github.com/python-attrs/cattrs/issues"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
