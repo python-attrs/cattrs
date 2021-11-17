@@ -6,22 +6,22 @@ History
 ------------------
 * Python 3.10 support, including support for the new union syntax (``A | B`` vs ``Union[A, B]``).
 * The ``GenConverter`` can now properly structure generic classes with generic collection fields.
-  (`#149 <https://github.com/Tinche/cattrs/issues/149>`_)
+  (`#149 <https://github.com/python-attrs/cattrs/issues/149>`_)
 * ``omit=True`` now also affects generated structuring functions.
-  (`#166 <https://github.com/Tinche/cattrs/issues/166>`_)
+  (`#166 <https://github.com/python-attrs/cattrs/issues/166>`_)
 * `cattr.gen.{make_dict_structure_fn, make_dict_unstructure_fn}` now resolve type annotations automatically when PEP 563 is used.
-  (`#169 <https://github.com/Tinche/cattrs/issues/169>`_)
+  (`#169 <https://github.com/python-attrs/cattrs/issues/169>`_)
 
 1.8.0 (2021-08-13)
 ------------------
 * Fix ``GenConverter`` mapping structuring for unannotated dicts on Python 3.8.
-  (`#151 <https://github.com/Tinche/cattrs/issues/151>`_)
+  (`#151 <https://github.com/python-attrs/cattrs/issues/151>`_)
 * The source code for generated un/structuring functions is stored in the `linecache` cache, which enables more informative stack traces when un/structuring errors happen using the `GenConverter`. This behavior can optionally be disabled to save memory.
 * Support using the attr converter callback during structure.
   By default, this is a method of last resort, but it can be elevated to the default by setting `prefer_attrib_converters=True` on `Converter` or `GenConverter`.
-  (`#138 <https://github.com/Tinche/cattrs/issues/138>`_)
+  (`#138 <https://github.com/python-attrs/cattrs/issues/138>`_)
 * Fix structuring recursive classes.
-  (`#159 <https://github.com/Tinche/cattrs/issues/159>`_)
+  (`#159 <https://github.com/python-attrs/cattrs/issues/159>`_)
 * Converters now support un/structuring hook factories. This is the most powerful and complex venue for customizing un/structuring. This had previously been an internal feature.
 * The `Common Usage Examples <https://cattrs.readthedocs.io/en/latest/usage.html#using-factory-hooks>`_ documentation page now has a section on advanced hook factory usage.
 * ``cattr.override`` now supports the ``omit`` parameter, which makes ``cattrs`` skip the atribute entirely when unstructuring.
@@ -30,16 +30,16 @@ History
 1.7.1 (2021-05-28)
 ------------------
 * ``Literal`` s are not supported on Python 3.9.0 (supported on 3.9.1 and later), so we skip importing them there.
-  (`#150 <https://github.com/Tinche/cattrs/issues/150>`_)
+  (`#150 <https://github.com/python-attrs/cattrs/issues/150>`_)
 
 1.7.0 (2021-05-26)
 ------------------
 * ``cattr.global_converter`` (which provides ``cattr.unstructure``, ``cattr.structure`` etc.) is now an instance of ``cattr.GenConverter``.
 * ``Literal`` s are now supported and validated when structuring.
 * Fix dependency metadata information for ``attrs``.
-  (`#147 <https://github.com/Tinche/cattrs/issues/147>`_)
+  (`#147 <https://github.com/python-attrs/cattrs/issues/147>`_)
 * Fix ``GenConverter`` mapping structuring for unannotated dicts.
-  (`#148 <https://github.com/Tinche/cattrs/issues/148>`_)
+  (`#148 <https://github.com/python-attrs/cattrs/issues/148>`_)
 
 1.6.0 (2021-04-28)
 ------------------
@@ -50,33 +50,33 @@ History
 1.5.0 (2021-04-15)
 ------------------
 * Fix an issue with ``GenConverter`` unstructuring ``attrs`` classes and dataclasses with generic fields.
-  (`#65 <https://github.com/Tinche/cattrs/issues/65>`_)
+  (`#65 <https://github.com/python-attrs/cattrs/issues/65>`_)
 * ``GenConverter`` has support for easy overriding of collection unstructuring types (for example, unstructure all sets to lists) through its ``unstruct_collection_overrides`` argument.
-  (`#137 <https://github.com/Tinche/cattrs/pull/137>`_)
+  (`#137 <https://github.com/python-attrs/cattrs/pull/137>`_)
 * Unstructuring mappings with ``GenConverter`` is significantly faster.
 * ``GenConverter`` supports strict handling of unexpected dictionary keys through its ``forbid_extra_keys`` argument.
-  (`#142 <https://github.com/Tinche/cattrs/pull/142>`_)
+  (`#142 <https://github.com/python-attrs/cattrs/pull/142>`_)
 
 1.4.0 (2021-03-21)
 ------------------
 * Fix an issue with ``GenConverter`` un/structuring hooks when a function hook is registered after the converter has already been used.
 * Add support for ``collections.abc.{Sequence, MutableSequence, Set, MutableSet}``. These should be used on 3.9+ instead of their ``typing`` alternatives, which are deprecated.
-  (`#128 <https://github.com/Tinche/cattrs/issues/128>`_)
+  (`#128 <https://github.com/python-attrs/cattrs/issues/128>`_)
 * The ``GenConverter`` will unstructure iterables (``list[T]``, ``tuple[T, ...]``, ``set[T]``) using their type argument instead of the runtime class if its elements, if possible. These unstructuring operations are up to 40% faster.
-  (`#129 <https://github.com/Tinche/cattrs/issues/129>`_)
+  (`#129 <https://github.com/python-attrs/cattrs/issues/129>`_)
 * Flesh out ``Converter`` and ``GenConverter`` initializer type annotations.
-  (`#131 <https://github.com/Tinche/cattrs/issues/131>`_)
+  (`#131 <https://github.com/python-attrs/cattrs/issues/131>`_)
 * Add support for ``typing.Annotated`` on Python 3.9+. ``cattrs`` will use the first annotation present. ``cattrs`` specific annotations may be added in the future.
-  (`#127 <https://github.com/Tinche/cattrs/issues/127>`_)
+  (`#127 <https://github.com/python-attrs/cattrs/issues/127>`_)
 * Add support for dataclasses.
-  (`#43 <https://github.com/Tinche/cattrs/issues/43>`_)
+  (`#43 <https://github.com/python-attrs/cattrs/issues/43>`_)
 
 1.3.0 (2021-02-25)
 ------------------
 * ``cattrs`` now has a benchmark suite to help make and keep cattrs the fastest it can be. The instructions on using it can be found under the `Benchmarking <https://cattrs.readthedocs.io/en/latest/benchmarking.html>` section in the docs.
-  (`#123 <https://github.com/Tinche/cattrs/pull/123>`_)
+  (`#123 <https://github.com/python-attrs/cattrs/pull/123>`_)
 * Fix an issue unstructuring tuples of non-primitives.
-  (`#125 <https://github.com/Tinche/cattrs/issues/125>`_)
+  (`#125 <https://github.com/python-attrs/cattrs/issues/125>`_)
 * ``cattrs`` now calls ``attr.resolve_types`` on ``attrs`` classes when registering un/structuring hooks.
 * ``GenConverter`` structuring and unstructuring of ``attrs`` classes is significantly faster.
 
@@ -84,24 +84,24 @@ History
 ------------------
 * ``converter.unstructure`` now supports an optional parameter, `unstructure_as`, which can be used to unstructure something as a different type. Useful for unions.
 * Improve support for union un/structuring hooks. Flesh out docs for advanced union handling.
-  (`#115 <https://github.com/Tinche/cattrs/pull/115>`_)
+  (`#115 <https://github.com/python-attrs/cattrs/pull/115>`_)
 * Fix `GenConverter` behavior with inheritance hierarchies of `attrs` classes.
-  (`#117 <https://github.com/Tinche/cattrs/pull/117>`_) (`#116 <https://github.com/Tinche/cattrs/issues/116>`_)
+  (`#117 <https://github.com/python-attrs/cattrs/pull/117>`_) (`#116 <https://github.com/python-attrs/cattrs/issues/116>`_)
 * Refactor `GenConverter.un/structure_attrs_fromdict` into `GenConverter.gen_un/structure_attrs_fromdict` to allow calling back to `Converter.un/structure_attrs_fromdict` without sideeffects.
-  (`#118 <https://github.com/Tinche/cattrs/issues/118>`_)
+  (`#118 <https://github.com/python-attrs/cattrs/issues/118>`_)
 
 1.1.2 (2020-11-29)
 ------------------
 * The default disambiguator will not consider non-required fields any more.
-  (`#108 <https://github.com/Tinche/cattrs/pull/108>`_)
+  (`#108 <https://github.com/python-attrs/cattrs/pull/108>`_)
 * Fix a couple type annotations.
-  (`#107 <https://github.com/Tinche/cattrs/pull/107>`_) (`#105 <https://github.com/Tinche/cattrs/issues/105>`_)
+  (`#107 <https://github.com/python-attrs/cattrs/pull/107>`_) (`#105 <https://github.com/python-attrs/cattrs/issues/105>`_)
 * Fix a `GenConverter` unstructuring issue and tests.
 
 1.1.1 (2020-10-30)
 ------------------
 * Add metadata for supported Python versions.
-  (`#103 <https://github.com/Tinche/cattrs/pull/103>`_)
+  (`#103 <https://github.com/python-attrs/cattrs/pull/103>`_)
 
 1.1.0 (2020-10-29)
 ------------------
@@ -151,7 +151,7 @@ History
 0.6.0 (2017-12-25)
 ------------------
 * Packaging fixes.
-  (`#17 <https://github.com/Tinche/cattrs/pull/17>`_)
+  (`#17 <https://github.com/python-attrs/cattrs/pull/17>`_)
 
 0.5.0 (2017-12-11)
 ------------------
@@ -160,7 +160,7 @@ History
 * added `Converter.register_unstructure_hook_func`, to register a function instead of a class for determining handler func.
 * vendored typing is no longer needed, nor provided.
 * Attributes with default values can now be structured if they are missing in the input.
-  (`#15 <https://github.com/Tinche/cattrs/pull/15>`_)
+  (`#15 <https://github.com/python-attrs/cattrs/pull/15>`_)
 * | `Optional` attributes can no longer be structured if they are missing in the input.
   | In other words, this no longer works:
   |

@@ -32,13 +32,13 @@ You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/Tinche/cattrs
+    $ git clone git://github.com/python-attrs/cattrs
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl  -OL https://github.com/Tinche/cattrs/tarball/master
+    $ curl  -OL https://github.com/python-attrs/cattrs/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ pip install -e .
 
 
-.. _Github repo: https://github.com/Tinche/cattrs
-.. _tarball: https://github.com/Tinche/cattrs/tarball/master
+.. _Github repo: https://github.com/python-attrs/cattrs
+.. _tarball: https://github.com/python-attrs/cattrs/tarball/master
