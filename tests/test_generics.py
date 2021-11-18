@@ -1,4 +1,4 @@
-from typing import Dict, Generic, List, Optional, Protocol, TypeVar, Union
+from typing import Dict, Generic, List, Optional, TypeVar, Union
 
 import pytest
 from attr import asdict, attrs, define
@@ -9,11 +9,6 @@ from cattr.errors import StructureHandlerNotFoundError
 from cattr.generics import deep_copy_with
 
 from ._compat import Dict_origin, List_origin
-
-# if is_py37:
-#     from typing_extensions import Protocol
-# else:
-#     from typing import Protocol
 
 T = TypeVar("T")
 T2 = TypeVar("T2")
