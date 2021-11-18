@@ -4,7 +4,7 @@ import pytest
 from attr import asdict, attrs, define
 
 from cattr import Converter, GenConverter
-from cattr._compat import is_py39_plus
+from cattr._compat import Protocol, is_py39_plus
 from cattr.errors import StructureHandlerNotFoundError
 from cattr.generics import deep_copy_with
 
@@ -196,11 +196,11 @@ def test_unstructure_generic_attrs():
 def test_unstructure_deeply_nested_generics():
     c = GenConverter()
 
-    @attrs(auto_attribs=True)
+    @define
     class Inner:
         a: int
 
-    @attrs(auto_attribs=True)
+    @define
     class Outer(Generic[T]):
         inner: T
 
@@ -215,11 +215,11 @@ def test_unstructure_deeply_nested_generics():
 def test_unstructure_deeply_nested_generics_list():
     c = GenConverter()
 
-    @attrs(auto_attribs=True)
+    @define
     class Inner:
         a: int
 
-    @attrs(auto_attribs=True)
+    @define
     class Outer(Generic[T]):
         inner: List[T]
 
@@ -231,23 +231,23 @@ def test_unstructure_deeply_nested_generics_list():
     assert raw == {"inner": [{"a": 1}]}
 
 
-# def test_unstructure_protocol():
-#     c = GenConverter()
+def test_unstructure_protocol():
+    c = GenConverter()
 
-#     class Proto(Protocol):
-#         a: int
+    class Proto(Protocol):
+        a: int
 
-#     @attrs(auto_attribs=True)
-#     class Inner:
-#         a: int
+    @define
+    class Inner:
+        a: int
 
-#     @attrs(auto_attribs=True)
-#     class Outer:
-#         inner: Proto
+    @define
+    class Outer:
+        inner: Proto
 
-#     initial = Outer(Inner(1))
-#     raw = c.unstructure(initial, Outer)
-#     assert raw == {"inner": {"a": 1}}
+    initial = Outer(Inner(1))
+    raw = c.unstructure(initial, Outer)
+    assert raw == {"inner": {"a": 1}}
 
-#     raw = c.unstructure(initial)
-#     assert raw == {"inner": {"a": 1}}
+    raw = c.unstructure(initial)
+    assert raw == {"inner": {"a": 1}}

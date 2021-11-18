@@ -31,6 +31,7 @@ from ._compat import (
     is_literal,
     is_mapping,
     is_mutable_set,
+    is_protocol,
     is_sequence,
     is_tuple,
     is_union_type,
@@ -129,6 +130,10 @@ class Converter(object):
         )
         self._unstructure_func.register_func_list(
             [
+                (
+                    is_protocol,
+                    lambda v: self.unstructure(v, unstructure_as=v.__class__),
+                ),
                 (is_mapping, self._unstructure_mapping),
                 (is_sequence, self._unstructure_seq),
                 (is_mutable_set, self._unstructure_seq),
