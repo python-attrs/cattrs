@@ -13,6 +13,8 @@ History
   (`#169 <https://github.com/python-attrs/cattrs/issues/169>`_)
 * Protocols are now unstructured as their runtime types.
   (`#177 <https://github.com/python-attrs/cattrs/pull/177>`_)
+* Fix an issue generating structuring functions with renaming and `_cattrs_forbid_extra_keys=True`.
+  (`#190 <https://github.com/python-attrs/cattrs/issues/190>`_)
 
 1.8.0 (2021-08-13)
 ------------------

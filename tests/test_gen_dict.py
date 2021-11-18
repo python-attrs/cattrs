@@ -1,4 +1,5 @@
 """Tests for generated dict functions."""
+import pytest
 from attr import Factory, define, field
 from attr._make import NOTHING
 from hypothesis import assume, given
@@ -214,6 +215,28 @@ def test_renaming(cl_and_vals, data):
     new_inst = converter.structure(raw, cl)
 
     assert inst == new_inst
+
+
+def test_renaming_forbid_extra_keys():
+    converter = Converter()
+
+    @define
+    class A:
+        b: int
+        c: str
+
+    s_fn = make_dict_structure_fn(
+        A, converter, c=override(rename="d"), _cattrs_forbid_extra_keys=True
+    )
+
+    converter.register_structure_hook(A, s_fn)
+
+    new_inst = converter.structure({"b": 1, "d": "str"}, A)
+
+    assert new_inst == A(1, "str")
+
+    with pytest.raises(Exception):
+        converter.structure({"b": 1, "c": "str"}, A)
 
 
 def test_omitting():

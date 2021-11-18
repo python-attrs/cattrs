@@ -245,6 +245,7 @@ def make_dict_structure_fn(
 
     lines.append(f"def {fn_name}(o, *_):")
     lines.append("  res = {")
+    allowed_fields = set()
     for a in attrs:
         an = a.name
         override = kwargs.pop(an, _neutral)
@@ -279,6 +280,7 @@ def make_dict_structure_fn(
 
         ian = an if (is_dc or an[0] != "_") else an[1:]
         kn = an if override.rename is None else override.rename
+        allowed_fields.add(kn)
         globs[f"type_{an}"] = t
         if a.default is NOTHING:
             if handler:
@@ -298,7 +300,6 @@ def make_dict_structure_fn(
 
     lines.append("    }")
     if _cattrs_forbid_extra_keys:
-        allowed_fields = {a.name for a in attrs}
         globs["__c_a"] = allowed_fields
         post_lines += [
             "  unknown_fields = set(o.keys()) - __c_a",
