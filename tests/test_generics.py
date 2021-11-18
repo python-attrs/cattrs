@@ -1,4 +1,4 @@
-from typing import Dict, Generic, List, Optional, TypeVar, Union
+from typing import Dict, Generic, List, Optional, Protocol, TypeVar, Union
 
 import pytest
 from attr import asdict, attrs, define

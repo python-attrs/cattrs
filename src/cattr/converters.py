@@ -132,7 +132,7 @@ class Converter(object):
             [
                 (
                     is_protocol,
-                    lambda v: self.unstructure(v, unstructure_as=v.__class__),
+                    lambda o: self.unstructure(o, unstructure_as=o.__class__),
                 ),
                 (is_mapping, self._unstructure_mapping),
                 (is_sequence, self._unstructure_seq),
