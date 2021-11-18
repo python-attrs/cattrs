@@ -24,6 +24,7 @@ readme = "README.rst"
 [tool.poetry.dependencies]
 python = "^3.7"
 attrs = ">= 20"
+typing_extensions = { version = "*", python = "~3.7" }
 
 [tool.poetry.group.dev.dependencies]
 pymongo = "^3.12.1"
