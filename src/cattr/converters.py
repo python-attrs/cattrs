@@ -31,6 +31,7 @@ from ._compat import (
     is_literal,
     is_mapping,
     is_mutable_set,
+    is_protocol,
     is_sequence,
     is_tuple,
     is_union_type,
@@ -129,6 +130,10 @@ class Converter(object):
         )
         self._unstructure_func.register_func_list(
             [
+                (
+                    is_protocol,
+                    lambda o: self.unstructure(o, unstructure_as=o.__class__),
+                ),
                 (is_mapping, self._unstructure_mapping),
                 (is_sequence, self._unstructure_seq),
                 (is_mutable_set, self._unstructure_seq),
@@ -704,9 +709,7 @@ class GenConverter(Converter):
 
     def gen_unstructure_attrs_fromdict(self, cl: Type[T]) -> Dict[str, Any]:
         origin = get_origin(cl)
-        if origin is not None:
-            cl = origin
-        attribs = fields(cl)
+        attribs = fields(origin or cl)
         if any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.
             resolve_types(cl)

@@ -123,7 +123,9 @@ def test_forbid_extra_keys_nested_override():
     with pytest.raises(Exception):
         converter.structure(unstructured, A)
     # we can "fix" that by disabling forbid_extra_keys on the subclass
-    hook = make_dict_structure_fn(C, converter, _cattr_forbid_extra_keys=False)
+    hook = make_dict_structure_fn(
+        C, converter, _cattrs_forbid_extra_keys=False
+    )
     converter.register_structure_hook(C, hook)
     converter.structure(unstructured, A)
     # but we should still raise at the top level

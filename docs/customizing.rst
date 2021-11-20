@@ -106,7 +106,7 @@ creating structure hooks with ``make_dict_structure_fn``.
     Traceback (most recent call last):
     ...
     Exception: Extra fields in constructor for TestClass: nummber
-    >>> hook = make_dict_structure_fn(TestClass, c, _cattr_forbid_extra_keys=False)
+    >>> hook = make_dict_structure_fn(TestClass, c, _cattrs_forbid_extra_keys=False)
     >>> c.register_structure_hook(TestClass, hook)
     >>> c.structure({"nummber": 2}, TestClass)
     TestClass(number=1)

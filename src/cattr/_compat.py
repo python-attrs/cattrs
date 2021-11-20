@@ -29,9 +29,10 @@ if is_py37:
     def get_origin(cl):
         return getattr(cl, "__origin__", None)
 
+    from typing_extensions import Protocol
 
 else:
-    from typing import get_args, get_origin  # NOQA
+    from typing import Protocol, get_args, get_origin  # NOQA
 
 
 def has(cls):
@@ -90,6 +91,10 @@ def adapted_fields(cl) -> List[Attribute]:
 def is_hetero_tuple(type: Any) -> bool:
     origin = getattr(type, "__origin__", None)
     return origin is tuple and ... not in type.__args__
+
+
+def is_protocol(type: Any) -> bool:
+    return issubclass(type, Protocol) and getattr(type, "_is_protocol", False)
 
 
 if is_py37 or is_py38:
@@ -202,6 +207,7 @@ else:
     from collections.abc import Sequence as AbcSequence
     from collections.abc import Set as AbcSet
     from types import GenericAlias
+    from typing import Annotated
     from typing import Counter as TypingCounter
     from typing import (
         Union,
@@ -353,6 +359,9 @@ else:
 
     def copy_with(type, args):
         """Replace a generic type's arguments."""
+        if is_annotated(type):
+            # typing.Annotated requires a special case.
+            return Annotated[args]  # type: ignore
         return type.__origin__[args]
 
 
