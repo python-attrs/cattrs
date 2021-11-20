@@ -16,8 +16,8 @@ The following functions implicitly use this global converter:
 
 * ``cattr.structure``
 * ``cattr.unstructure``
-* ``cattr.structure_attr_fromtuple``
-* ``cattr.structure_attr_fromdict``
+* ``cattr.structure_attrs_fromtuple``
+* ``cattr.structure_attrs_fromdict``
 
 Changes made to the global converter will affect the behavior of these
 functions.
