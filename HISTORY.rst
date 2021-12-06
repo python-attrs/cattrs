@@ -2,7 +2,7 @@
 History
 =======
 
-1.9.0 (UNRELEASED)
+1.9.0 (2021-12-06)
 ------------------
 * Python 3.10 support, including support for the new union syntax (``A | B`` vs ``Union[A, B]``).
 * The ``GenConverter`` can now properly structure generic classes with generic collection fields.
