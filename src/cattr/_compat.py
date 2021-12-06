@@ -196,7 +196,6 @@ if is_py37 or is_py38:
         """Replace a generic type's arguments."""
         return type.copy_with(args)
 
-
 else:
     # 3.9+
     from collections import Counter
