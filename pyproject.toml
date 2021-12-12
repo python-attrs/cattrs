@@ -30,7 +30,6 @@ typing_extensions = { version = "*", python = "~3.7" }
 pymongo = "^3.12.1"
 flake8 = "^3.9.0"
 tox = "^3.23.0"
-coverage = "^5.5"
 Sphinx = "^4.1.2"
 pytest = "^6.2.3"
 pytest-benchmark = "^3.2.3"
@@ -45,10 +44,28 @@ msgpack = "^1.0.2"
 PyYAML = "^5.4.1"
 tomlkit = "^0.7.0"
 furo = "^2021.7.31-beta.41"
+coverage = {extras = ["toml"], version = "^6.2"}
 
 [tool.poetry.urls]
 "Changelog" = "https://cattrs.readthedocs.io/en/latest/history.html"
 "Bug Tracker" = "https://github.com/python-attrs/cattrs/issues"
+
+[tool.pytest.ini_options]
+addopts = "-l --benchmark-sort=fullname --benchmark-warmup=true --benchmark-warmup-iterations=5  --benchmark-group-by=fullname"
+
+[tool.coverage.run]
+omit = [
+    "cattr/_compat.py",
+    "cattr/vendor/typing.py",
+    "cattr/vendor/python3/typing.py",
+]
+
+[tool.coverage.paths]
+source = [
+   "src/cattr",
+   ".tox/*/lib/python*/site-packages/cattr",
+   ".tox/pypy*/site-packages/cattr",
+]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
