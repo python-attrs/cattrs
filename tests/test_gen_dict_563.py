@@ -1,6 +1,8 @@
 """`gen` tests under PEP 563."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from attr import define
 
 from cattr import GenConverter
@@ -28,6 +30,16 @@ class OuterB:
     inner: InnerB
 
 
+@dataclass
+class InnerDataclass:
+    a: int
+
+
+@dataclass
+class OuterDataclass:
+    inner: InnerDataclass
+
+
 def test_roundtrip():
     converter = GenConverter()
 
@@ -48,3 +60,24 @@ def test_roundtrip():
     assert converter.structure({"inner": {"a": 1}}, OuterB) == OuterB(
         InnerB(1)
     )
+
+
+def test_roundtrip_dc():
+    converter = GenConverter()
+
+    fn = make_dict_unstructure_fn(OuterDataclass, converter)
+    converter.register_unstructure_hook(OuterDataclass, fn)
+
+    inst = OuterDataclass(InnerDataclass(1))
+
+    res_actual = converter.unstructure(inst)
+
+    assert {"inner": {"a": 1}} == res_actual
+
+    converter.register_structure_hook(
+        OuterDataclass, make_dict_structure_fn(OuterDataclass, converter)
+    )
+
+    assert converter.structure(
+        {"inner": {"a": 1}}, OuterDataclass
+    ) == OuterDataclass(InnerDataclass(1))

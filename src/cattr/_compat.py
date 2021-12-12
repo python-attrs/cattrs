@@ -9,7 +9,7 @@ from typing import MutableSequence as TypingMutableSequence
 from typing import MutableSet as TypingMutableSet
 from typing import Sequence as TypingSequence
 from typing import Set as TypingSet
-from typing import Tuple
+from typing import Tuple, get_type_hints
 
 from attr import NOTHING, Attribute, Factory
 from attr import fields as attrs_fields
@@ -59,6 +59,13 @@ def fields(type):
 def adapted_fields(cl) -> List[Attribute]:
     """Return the attrs format of `fields()` for attrs and dataclasses."""
     if is_dataclass(cl):
+        attrs = dataclass_fields(cl)
+        if any(isinstance(a.type, str) for a in attrs):
+            # Do this conditionally in case `get_type_hints` fails, so
+            # users can resolve on their own first.
+            type_hints = get_type_hints(cl)
+        else:
+            type_hints = {}
         return [
             Attribute(
                 attr.name,
@@ -75,9 +82,9 @@ def adapted_fields(cl) -> List[Attribute]:
                 True,
                 attr.init,
                 True,
-                type=attr.type,
+                type=type_hints.get(attr.name, attr.type),
             )
-            for attr in dataclass_fields(cl)
+            for attr in attrs
         ]
     else:
         attribs = attrs_fields(cl)

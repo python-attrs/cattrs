@@ -56,7 +56,10 @@ def make_dict_unstructure_fn(
     _cattrs_use_linecache: bool = True,
     **kwargs,
 ):
-    """Generate a specialized dict unstructuring function for an attrs class."""
+    """
+    Generate a specialized dict unstructuring function for an attrs class or a
+    dataclass.
+    """
     origin = get_origin(cl)
     attrs = adapted_fields(origin or cl)  # type: ignore
 

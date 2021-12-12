@@ -710,7 +710,7 @@ class GenConverter(Converter):
     def gen_unstructure_attrs_fromdict(self, cl: Type[T]) -> Dict[str, Any]:
         origin = get_origin(cl)
         attribs = fields(origin or cl)
-        if any(isinstance(a.type, str) for a in attribs):
+        if attrs_has(cl) and any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.
             resolve_types(cl)
         attrib_overrides = {
@@ -726,7 +726,7 @@ class GenConverter(Converter):
 
     def gen_structure_attrs_fromdict(self, cl: Type[T]) -> T:
         attribs = fields(get_origin(cl) if is_generic(cl) else cl)
-        if any(isinstance(a.type, str) for a in attribs):
+        if attrs_has(cl) and any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.
             resolve_types(cl)
         attrib_overrides = {
