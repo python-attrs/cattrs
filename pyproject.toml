@@ -44,7 +44,7 @@ msgpack = "^1.0.2"
 PyYAML = "^5.4.1"
 tomlkit = "^0.7.0"
 furo = "^2021.7.31-beta.41"
-coverage = {extras = ["toml"], version = "^6.2"}
+coverage = "^6.2"
 
 [tool.poetry.urls]
 "Changelog" = "https://cattrs.readthedocs.io/en/latest/history.html"
