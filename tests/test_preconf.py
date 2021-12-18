@@ -211,7 +211,7 @@ def test_orjson(everything: Everything):
     from orjson import loads as orjson_loads
 
     converter = orjson_make_converter()
-    raw = orjson_dumps(r := converter.unstructure(everything))
+    raw = orjson_dumps(converter.unstructure(everything))
     assert converter.structure(orjson_loads(raw), Everything) == everything
 
 
