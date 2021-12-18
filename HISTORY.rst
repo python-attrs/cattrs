@@ -5,6 +5,7 @@ History
 -------------------
 * Add PEP 563 (string annotations) for dataclasses.
   (`#195 <https://github.com/python-attrs/cattrs/issues/195>`_)
+* Fix handling of dictionaries with string Enum keys for bson, orjson, and tomlkit.
 
 1.9.0 (2021-12-06)
 ------------------

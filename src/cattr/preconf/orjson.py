@@ -1,6 +1,7 @@
 """Preconfigured converters for orjson."""
 from base64 import b85decode, b85encode
 from datetime import datetime
+from enum import Enum
 from typing import Any
 
 from .._compat import Set, is_mapping
@@ -14,6 +15,7 @@ def configure_converter(converter: GenConverter):
     * bytes are serialized as base85 strings
     * datetimes are serialized as ISO 8601
     * sets are serialized as lists
+    * string enum mapping keys have special handling
     * mapping keys are coerced into strings when unstructuring
     """
     converter.register_unstructure_hook(
@@ -27,8 +29,18 @@ def configure_converter(converter: GenConverter):
     )
 
     def gen_unstructure_mapping(cl: Any, unstructure_to=None):
+        key_handler = str
+        if (
+            (args := getattr(cl, "__args__", None))
+            and issubclass(args[0], str)
+            and issubclass(args[0], Enum)
+        ):
+
+            def key_handler(v):
+                return v.value
+
         return converter.gen_unstructure_mapping(
-            cl, unstructure_to=unstructure_to, key_handler=str
+            cl, unstructure_to=unstructure_to, key_handler=key_handler
         )
 
     converter._unstructure_func.register_func_list(

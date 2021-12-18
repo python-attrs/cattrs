@@ -12,12 +12,17 @@ def configure_converter(converter: GenConverter):
     Configure the converter for use with the bson library.
 
     * sets are serialized as lists
-    * mapping keys are coerced into strings when unstructuring
+    * non-string mapping keys are coerced into strings when unstructuring
     """
 
     def gen_unstructure_mapping(cl: Any, unstructure_to=None):
+        key_handler = str
+        if (args := getattr(cl, "__args__", None)) and issubclass(
+            args[0], str
+        ):
+            key_handler = None
         return converter.gen_unstructure_mapping(
-            cl, unstructure_to=unstructure_to, key_handler=str
+            cl, unstructure_to=unstructure_to, key_handler=key_handler
         )
 
     converter._unstructure_func.register_func_list(

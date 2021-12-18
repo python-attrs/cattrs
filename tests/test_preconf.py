@@ -71,6 +71,7 @@ class Everything:
     an_int_enum: AnIntEnum
     a_str_enum: AStringEnum
     a_datetime: datetime
+    a_string_enum_dict: Dict[AStringEnum, int]
 
 
 @composite
@@ -161,6 +162,12 @@ def everythings(
         Everything.AnIntEnum.A,
         Everything.AStringEnum.A,
         draw(dts),
+        draw(
+            dictionaries(
+                just(Everything.AStringEnum.A),
+                integers(min_value=min_int, max_value=max_int),
+            )
+        ),
     )
 
 
@@ -204,7 +211,7 @@ def test_orjson(everything: Everything):
     from orjson import loads as orjson_loads
 
     converter = orjson_make_converter()
-    raw = orjson_dumps(converter.unstructure(everything))
+    raw = orjson_dumps(r := converter.unstructure(everything))
     assert converter.structure(orjson_loads(raw), Everything) == everything
 
 
