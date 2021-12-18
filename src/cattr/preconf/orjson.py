@@ -30,11 +30,8 @@ def configure_converter(converter: GenConverter):
 
     def gen_unstructure_mapping(cl: Any, unstructure_to=None):
         key_handler = str
-        if (
-            (args := getattr(cl, "__args__", None))
-            and issubclass(args[0], str)
-            and issubclass(args[0], Enum)
-        ):
+        args = getattr(cl, "__args__", None)
+        if args and issubclass(args[0], str) and issubclass(args[0], Enum):
 
             def key_handler(v):
                 return v.value
