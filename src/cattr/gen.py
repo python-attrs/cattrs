@@ -52,7 +52,7 @@ T = TypeVar("T")
 def make_dict_unstructure_fn(
     cl,
     converter,
-    omit_if_default: bool = False,
+    _cattrs_omit_if_default: bool = False,
     _cattrs_use_linecache: bool = True,
     **kwargs,
 ):
@@ -139,7 +139,10 @@ def make_dict_unstructure_fn(
                 invoke = f"instance.{attr_name}"
 
             if d is not attr.NOTHING and (
-                (omit_if_default and override.omit_if_default is not False)
+                (
+                    _cattrs_omit_if_default
+                    and override.omit_if_default is not False
+                )
                 or override.omit_if_default
             ):
                 def_name = f"__cattr_def_{attr_name}"

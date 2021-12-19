@@ -79,7 +79,8 @@ def test_nodefs_generated_unstructuring_cl(cl_and_vals):
         assume(False)
 
     converter.register_unstructure_hook(
-        cl, make_dict_unstructure_fn(cl, converter, omit_if_default=True)
+        cl,
+        make_dict_unstructure_fn(cl, converter, _cattrs_omit_if_default=True),
     )
 
     inst = cl(*vals)
@@ -129,7 +130,7 @@ def test_individual_overrides(cl_and_vals):
         make_dict_unstructure_fn(
             cl,
             converter,
-            omit_if_default=True,
+            _cattrs_omit_if_default=True,
             **{attr.name: override(omit_if_default=False)}
         ),
     )

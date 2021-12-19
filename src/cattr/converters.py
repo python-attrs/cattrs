@@ -720,7 +720,10 @@ class GenConverter(Converter):
         }
 
         h = make_dict_unstructure_fn(
-            cl, self, omit_if_default=self.omit_if_default, **attrib_overrides
+            cl,
+            self,
+            _cattrs_omit_if_default=self.omit_if_default,
+            **attrib_overrides,
         )
         return h
 
