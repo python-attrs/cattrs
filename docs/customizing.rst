@@ -2,13 +2,12 @@
 Customizing class un/structuring
 ================================
 
-This section deals with customizing the unstructuring and structuring processes
-in ``cattrs``.
+This section deals with customizing the unstructuring and structuring processes in `cattrs`.
 
-Using ``cattr.gen.GenConverter``
+Using ``cattr.GenConverter``
 ********************************
 
-The ``cattr.gen`` module contains a ``Converter`` subclass, the ``GenConverter``.
+The :mod:`cattr` module contains a :class:`~cattr.Converter` subclass, the :class:`~cattr.GenConverter`.
 The ``GenConverter``, upon first encountering an ``attrs`` class, will use
 the generation functions mentioned here to generate the specialized hooks for it,
 register the hooks and use them.
@@ -17,18 +16,18 @@ Manual un/structuring hooks
 ***************************
 
 You can write your own structuring and unstructuring functions and register
-them for types using :py:attr:`.Converter.register_structure_hook` and
-:py:attr:`.Converter.register_unstructure_hook`. This approach is the most
+them for types using :py:attr:`Converter.register_structure_hook <cattr.Converter.register_structure_hook>` and
+:py:attr:`Converter.register_unstructure_hook <cattr.Converter.register_unstructure_hook>`. This approach is the most
 flexible but also requires the most amount of boilerplate.
 
 Using ``cattr.gen`` generators
 ******************************
 
-``cattrs`` includes a module, ``cattr.gen``, which allows for generating and
+`cattrs` includes a module, :mod:`cattr.gen`, which allows for generating and
 compiling specialized functions for unstructuring ``attrs`` classes.
 
 One reason for generating these functions in advance is that they can bypass
-a lot of ``cattrs`` machinery and be significantly faster than normal ``cattrs``.
+a lot of `cattrs` machinery and be significantly faster than normal `cattrs`.
 
 Another reason is that it's possible to override behavior on a per-attribute basis.
 
@@ -47,10 +46,10 @@ default or factory values.
 
     >>> from cattr.gen import make_dict_unstructure_fn, override
     >>>
-    >>> @attr.s
+    >>> @define
     ... class WithDefault:
-    ...    a = attr.ib()
-    ...    b = attr.ib(factory=dict)
+    ...    a: int
+    ...    b: dict = Factory(dict)
     >>>
     >>> c = cattr.Converter()
     >>> c.register_unstructure_hook(WithDefault, make_dict_unstructure_fn(WithDefault, c, b=override(omit_if_default=True)))
@@ -64,18 +63,22 @@ skipping the unstructuring of the `DateTime` field would be inconsistent and
 based on the current time. So we apply the `omit_if_default` rule to the class,
 but not to the `DateTime` field.
 
+.. note::
+
+    The parameter to `make_dict_unstructure_function` is named ``_cattrs_omit_if_default`` instead of just ``omit_if_default`` to avoid potential collisions with an override for a field named ``omit_if_default``.
+
 .. doctest::
 
     >>> from pendulum import DateTime
     >>> from cattr.gen import make_dict_unstructure_fn, override
     >>>
-    >>> @attr.s
+    >>> @define
     ... class TestClass:
-    ...     a: Optional[int] = attr.ib(default=None)
-    ...     b: DateTime = attr.ib(factory=DateTime.utcnow)
+    ...     a: Optional[int] = None
+    ...     b: DateTime = Factory(DateTime.utcnow)
     >>>
     >>> c = cattr.Converter()
-    >>> hook = make_dict_unstructure_fn(TestClass, c, omit_if_default=True, b=override(omit_if_default=False))
+    >>> hook = make_dict_unstructure_fn(TestClass, c, _cattrs_omit_if_default=True, b=override(omit_if_default=False))
     >>> c.register_unstructure_hook(TestClass, hook)
     >>> c.unstructure(TestClass())
     {'b': ...}
@@ -97,9 +100,9 @@ creating structure hooks with ``make_dict_structure_fn``.
 
     >>> from cattr.gen import make_dict_structure_fn
     >>>
-    >>> @attr.s
+    >>> @define
     ... class TestClass:
-    ...    number: int = attr.ib(default=1)
+    ...    number: int = 1
     >>>
     >>> c = cattr.GenConverter(forbid_extra_keys=True)
     >>> c.structure({"nummber": 2}, TestClass)
@@ -126,9 +129,9 @@ keyword in Python.
     >>> from pendulum import DateTime
     >>> from cattr.gen import make_dict_unstructure_fn, make_dict_structure_fn, override
     >>>
-    >>> @attr.s
+    >>> @define
     ... class ExampleClass:
-    ...     klass: Optional[int] = attr.ib()
+    ...     klass: Optional[int]
     >>>
     >>> c = cattr.Converter()
     >>> unst_hook = make_dict_unstructure_fn(ExampleClass, c, klass=override(rename="class"))

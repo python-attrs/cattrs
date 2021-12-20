@@ -107,10 +107,10 @@ using the first type present in the annotated type.
 
 .. doctest::
 
-    >>> @attr.s
+    >>> @define
     ... class C:
-    ...     a = attr.ib()
-    ...     b = attr.ib()
+    ...     a = field()
+    ...     b = field()
     ...
     >>> inst = C(1, 'a')
     >>>
@@ -134,13 +134,13 @@ to do this.
 
 .. doctest::
 
-    >>> @attr.s
+    >>> @define
     ... class Inner:
-    ...     a: int = attr.ib()
+    ...     a: int
     ...
-    >>> @attr.s
+    >>> @define
     ... class Outer:
-    ...     i: Inner = attr.ib()
+    ...     i: Inner
     ...
     >>> inst = Outer(i=Inner(a=1))
     >>>
@@ -154,10 +154,10 @@ Of course, these methods can be used directly as well, without changing the conv
 
 .. doctest::
 
-    >>> @attr.s
+    >>> @define
     ... class C:
-    ...     a: int = attr.ib()
-    ...     b: str = attr.ib()
+    ...     a: int
+    ...     b: str
     ...
     >>> inst = C(1, 'a')
     >>>

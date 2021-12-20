@@ -63,12 +63,13 @@ gets converted into a tuple of three ints.
 
 .. code-block:: pycon
 
-    >>> import attr, cattr
+    >>> from attr import frozen
+    >>> import cattr
     >>>
-    >>> @attr.frozen  # It works with normal classes too.
+    >>> @frozen  # It works with normal classes too.
     ... class C:
-    ...     a = attr.ib()
-    ...     b = attr.ib()
+    ...     a: int
+    ...     b: str
     ...
     >>> instance = C(1, 'a')
     >>> cattr.unstructure(instance)
@@ -84,7 +85,7 @@ metadata.
     >>> from enum import unique, Enum
     >>> from typing import Optional, Sequence, Union
     >>> from cattr import structure, unstructure
-    >>> import attr
+    >>> from attr import define, field
     >>>
     >>> @unique
     ... class CatBreed(Enum):
@@ -92,17 +93,17 @@ metadata.
     ...     MAINE_COON = "maine_coon"
     ...     SACRED_BIRMAN = "birman"
     ...
-    >>> @attr.define
+    >>> @define
     ... class Cat:
     ...     breed: CatBreed
     ...     names: Sequence[str]
     ...
-    >>> @attr.define
+    >>> @define
     ... class DogMicrochip:
-    ...     chip_id = attr.ib()
-    ...     time_chipped: float = attr.ib()
+    ...     chip_id = field()  # Type annotations are optional, but recommended
+    ...     time_chipped: float = field()
     ...
-    >>> @attr.define
+    >>> @define
     ... class Dog:
     ...     cuteness: int
     ...     chip: Optional[DogMicrochip]

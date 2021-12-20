@@ -285,7 +285,8 @@ texinfo_documents = [
 
 doctest_global_setup = (
     "import attr, cattr;"
-    "from attr import define;"
+    "from attr import Factory, define, field;"
     "from typing import *;"
     "from enum import Enum, unique"
 )
+autodoc_typehints = "description"

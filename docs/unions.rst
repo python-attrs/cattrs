@@ -17,11 +17,11 @@ of which have no distinct fields and so cannot be used automatically with
 
 .. code-block:: python
 
-    @attr.define
+    @define
     class ClassA:
         a_string: str
 
-    @attr.define
+    @define
     class ClassB:
         a_string: str
 

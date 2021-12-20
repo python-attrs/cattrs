@@ -21,10 +21,10 @@ Define a class using Pendulum's DateTime:
     import pendulum
     from pendulum import DateTime
 
-    @attr.s
+    @define
     class MyRecord:
-        a_string: str = attr.ib()
-        a_datetime: DateTime = attr.ib()
+        a_string: str
+        a_datetime: DateTime
 
 Next, we register hooks for the ``DateTime`` class on a new :class:`.Converter` instance.
 
@@ -43,10 +43,10 @@ And we can proceed with unstructuring and structuring instances of ``MyRecord``.
     import pendulum
     from pendulum import DateTime
 
-    @attr.s
+    @define
     class MyRecord:
-        a_string: str = attr.ib()
-        a_datetime: DateTime = attr.ib()
+        a_string: str
+        a_datetime: DateTime
 
     converter = cattr.Converter()
     converter.register_unstructure_hook(DateTime, lambda dt: dt.timestamp())
@@ -73,10 +73,10 @@ We decide to switch to using the ISO 8601 format for our unstructured datetime i
     import pendulum
     from pendulum import DateTime
 
-    @attr.s
+    @define
     class MyRecord:
-        a_string: str = attr.ib()
-        a_datetime: DateTime = attr.ib()
+        a_string: str
+        a_datetime: DateTime
 
 .. doctest:: pendulum-iso8601
 

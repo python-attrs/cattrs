@@ -237,20 +237,20 @@ succeed only if each class has a unique field. Given the following classes:
 
 .. code-block:: python
 
-    >>> @attr.s
+    >>> @define
     ... class A:
-    ...     a = attr.ib()
-    ...     x = attr.ib()
+    ...     a = field()
+    ...     x = field()
     ...
-    >>> @attr.s
+    >>> @define
     ... class B:
-    ...     a = attr.ib()
-    ...     y = attr.ib()
+    ...     a = field()
+    ...     y = field()
     ...
-    >>> @attr.s
+    >>> @define
     ... class C:
-    ...     a = attr.ib()
-    ...     z = attr.ib()
+    ...     a = field()
+    ...     z = field()
     ...
 
 ``cattrs`` can deduce only instances of ``A`` will contain `x`, only instances
@@ -282,10 +282,10 @@ and their own converters work out of the box. Given a mapping ``d`` and class
 
 .. doctest::
 
-    >>> @attr.s
+    >>> @define
     ... class A:
-    ...     a: int = attr.ib()
-    ...     b: int = attr.ib()
+    ...     a: int
+    ...     b: int
     ...
     >>> cattr.structure({'a': 1, 'b': '2'}, A)
     A(a=1, b=2)
@@ -296,10 +296,10 @@ Classes like these deconstructed into tuples can be structured using
 
 .. doctest::
 
-    >>> @attr.s
+    >>> @define
     ... class A:
-    ...     a: str = attr.ib()
-    ...     b: int = attr.ib()
+    ...     a: str
+    ...     b: int
     ...
     >>> cattr.structure_attrs_fromtuple(['string', '2'], A)
     A(a='string', b=2)
@@ -310,10 +310,10 @@ Loading from tuples can be made the default by creating a new ``Converter`` with
 .. doctest::
 
     >>> converter = cattr.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
-    >>> @attr.s
+    >>> @define
     ... class A:
-    ...     a: str = attr.ib()
-    ...     b: int = attr.ib()
+    ...     a: str
+    ...     b: int
     ...
     >>> converter.structure(['string', '2'], A)
     A(a='string', b=2)
@@ -335,9 +335,9 @@ attributes with ``attrib``.
     >>> converter = cattr.Converter()
 
     # Note: register_structure_hook has not been called, so this will fallback to 'ip_address'
-    >>> @attr.s
+    >>> @define
     ... class A:
-    ...     a: IPv4Address = attr.ib(converter=ip_address)
+    ...     a: IPv4Address = field(converter=ip_address)
 
     >>> converter.structure({'a': '127.0.0.1'}, A)
     A(a=IPv4Address('127.0.0.1'))
@@ -351,9 +351,9 @@ can be inverted by setting ``prefer_attrib_converters`` to ``True``.
 
     >>> converter.register_structure_hook(int, lambda v, t: int(v))
 
-    >>> @attr.s
+    >>> @define
     ... class A:
-    ...     a: int = attr.ib(converter=lambda v: int(v) + 5)
+    ...     a: int = field(converter=lambda v: int(v) + 5)
 
     >>> converter.structure({'a': '10'}, A)
     A(a=15)
@@ -372,9 +372,9 @@ annotations when using Python 3.6+, or by passing the appropriate type to
 
 .. doctest::
 
-    >>> @attr.s
+    >>> @define
     ... class A:
-    ...     a: int = attr.ib()
+    ...     a: int
     ...
     >>> attr.fields(A).a
     Attribute(name='a', default=NOTHING, validator=None, repr=True, eq=True, eq_key=None, order=True, order_key=None, hash=None, init=True, metadata=mappingproxy({}), type=<class 'int'>, converter=None, kw_only=False, inherited=False, on_setattr=None)
@@ -384,13 +384,13 @@ attributes holding ``attrs`` classes and dataclasses.
 
 .. doctest::
 
-    >>> @attr.s
+    >>> @define
     ... class A:
-    ...     a: int = attr.ib(default=0)
+    ...     a: int = 0
     ...
-    >>> @attr.s
+    >>> @define
     ... class B:
-    ...     b: A = attr.ib()
+    ...     b: A
     ...
     >>> cattr.structure({'b': {'a': '1'}}, B)
     B(b=A(a=1))
