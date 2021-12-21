@@ -17,7 +17,8 @@ repository = "https://github.com/python-attrs/cattrs"
 documentation = "https://cattrs.readthedocs.io/en/latest/"
 keywords = ["attrs", "serialization", "dataclasses"]
 packages = [
-    { include = "cattr", from = "src" }
+    { include = "cattr", from = "src" },
+    { include = "cattrs", from = "src" },
 ]
 readme = "README.rst"
 

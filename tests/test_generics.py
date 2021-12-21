@@ -5,8 +5,8 @@ from attr import asdict, attrs, define
 
 from cattr import Converter, GenConverter
 from cattr._compat import Protocol, is_py39_plus
+from cattr._generics import deep_copy_with
 from cattr.errors import StructureHandlerNotFoundError
-from cattr.generics import deep_copy_with
 
 from ._compat import Dict_origin, List_origin
 

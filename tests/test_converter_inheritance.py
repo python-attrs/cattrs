@@ -3,7 +3,7 @@ from typing import Type
 import attr
 import pytest
 
-from cattr import Converter, GenConverter
+from cattrs import Converter, GenConverter
 
 
 @pytest.mark.parametrize("converter_cls", [GenConverter, Converter])
