@@ -2,8 +2,8 @@
 import pytest
 from attr import define, fields, has
 
-from cattr import Converter, GenConverter
-from cattr.gen import (
+from cattrs import Converter, GenConverter
+from cattrs.gen import (
     make_dict_structure_fn,
     make_dict_unstructure_fn,
     override,

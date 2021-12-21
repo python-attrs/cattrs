@@ -90,7 +90,9 @@ def adapted_fields(cl) -> List[Attribute]:
         attribs = attrs_fields(cl)
         if any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.
+            print(cl)
             resolve_types(cl)
+            print(attrs_fields(cl))
             attribs = attrs_fields(cl)
         return attribs
 

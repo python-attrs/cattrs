@@ -5,9 +5,9 @@ from attr._make import NOTHING
 from hypothesis import assume, given
 from hypothesis.strategies._internal.core import data, sampled_from
 
-from cattr import Converter
 from cattr._compat import adapted_fields, fields
-from cattr.gen import (
+from cattrs import Converter
+from cattrs.gen import (
     make_dict_structure_fn,
     make_dict_unstructure_fn,
     override,
