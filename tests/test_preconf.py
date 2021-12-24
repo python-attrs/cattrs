@@ -103,8 +103,8 @@ def everythings(
         )
     )
     dts = datetimes(
-        min_value=datetime(1900, 1, 1),
-        max_value=datetime(2200, 1, 1),
+        min_value=datetime(1904, 1, 1),
+        max_value=datetime(2038, 1, 1),
         timezones=just(timezone.utc),
     )
     if not allow_datetime_microseconds:
