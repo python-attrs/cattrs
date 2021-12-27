@@ -3,10 +3,10 @@ from typing import Dict, Generic, List, Optional, TypeVar, Union
 import pytest
 from attr import asdict, attrs, define
 
-from cattr import Converter, GenConverter
 from cattr._compat import Protocol, is_py39_plus
-from cattr.errors import StructureHandlerNotFoundError
-from cattr.generics import deep_copy_with
+from cattr._generics import deep_copy_with
+from cattrs import Converter, GenConverter
+from cattrs.errors import StructureHandlerNotFoundError
 
 from ._compat import Dict_origin, List_origin
 

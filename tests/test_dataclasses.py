@@ -4,7 +4,7 @@ from typing import List
 import attr
 import pytest
 
-from cattr import Converter, GenConverter
+from cattrs import Converter, GenConverter
 
 
 @dataclasses.dataclass

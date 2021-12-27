@@ -1,6 +1,7 @@
 import pytest
 
-from cattr.dispatch import FunctionDispatch, StructureHandlerNotFoundError
+from cattrs.dispatch import FunctionDispatch
+from cattrs.errors import StructureHandlerNotFoundError
 
 
 def test_function_dispatch():

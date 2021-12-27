@@ -33,13 +33,13 @@ from cattr._compat import (
     Set,
     TupleSubscriptable,
 )
-from cattr.preconf.bson import make_converter as bson_make_converter
-from cattr.preconf.json import make_converter as json_make_converter
-from cattr.preconf.msgpack import make_converter as msgpack_make_converter
-from cattr.preconf.orjson import make_converter as orjson_make_converter
-from cattr.preconf.pyyaml import make_converter as pyyaml_make_converter
-from cattr.preconf.tomlkit import make_converter as tomlkit_make_converter
-from cattr.preconf.ujson import make_converter as ujson_make_converter
+from cattrs.preconf.bson import make_converter as bson_make_converter
+from cattrs.preconf.json import make_converter as json_make_converter
+from cattrs.preconf.msgpack import make_converter as msgpack_make_converter
+from cattrs.preconf.orjson import make_converter as orjson_make_converter
+from cattrs.preconf.pyyaml import make_converter as pyyaml_make_converter
+from cattrs.preconf.tomlkit import make_converter as tomlkit_make_converter
+from cattrs.preconf.ujson import make_converter as ujson_make_converter
 
 
 @define

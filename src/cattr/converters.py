@@ -360,7 +360,7 @@ class Converter(object):
     def _structure_error(self, _, cl):
         """At the bottom of the condition stack, we explode if we can't handle it."""
         msg = (
-            "Unsupported type: {0}. Register a structure hook for "
+            "Unsupported type: {0!r}. Register a structure hook for "
             "it.".format(cl)
         )
         raise StructureHandlerNotFoundError(msg, type_=cl)

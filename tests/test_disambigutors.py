@@ -6,7 +6,7 @@ import pytest
 from attr import NOTHING
 from hypothesis import HealthCheck, assume, given, settings
 
-from cattr.disambiguators import create_uniq_field_dis_func
+from cattrs.disambiguators import create_uniq_field_dis_func
 
 from . import simple_classes
 

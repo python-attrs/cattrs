@@ -63,6 +63,6 @@ jobs:
       - name: "List result"
         run: "ls -l dist"
       - name: "Check wheel contents"
-        run: "check-wheel-contents dist/*.whl"
+        run: "check-wheel-contents --toplevel cattr,cattrs dist/*.whl"
       - name: "Check long_description"
         run: "python -m twine check dist/*"

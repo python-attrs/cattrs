@@ -5,8 +5,8 @@ from dataclasses import dataclass
 
 from attr import define
 
-from cattr import GenConverter
-from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn
+from cattrs import GenConverter
+from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn
 
 
 # These need to be at the top level for `attr.resolve_types` to work.
