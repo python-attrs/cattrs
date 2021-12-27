@@ -3,10 +3,11 @@ History
 =======
 1.10.0 (UNRELEASED)
 -------------------
-* Add PEP 563 (string annotations) for dataclasses.
+* Add PEP 563 (string annotations) support for dataclasses.
   (`#195 <https://github.com/python-attrs/cattrs/issues/195>`_)
 * Fix handling of dictionaries with string Enum keys for bson, orjson, and tomlkit.
 * Rename the ``cattr.gen.make_dict_unstructure_fn.omit_if_default`` parameter to ``_cattrs_omit_if_default``, for consistency. The ``omit_if_default`` parameters to ``GenConverter`` and ``override`` are unchanged.
+* Following the changes in ``attrs`` 21.3.0, add a ``cattrs`` package mirroring the existing ``cattr`` package. Both package names may be used as desired, and the ``cattr`` package isn't going away.
 
 1.9.0 (2021-12-06)
 ------------------
