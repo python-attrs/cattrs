@@ -1,7 +1,7 @@
 =======
 History
 =======
-1.10.0 (UNRELEASED)
+1.10.0 (2022-01-04)
 -------------------
 * Add PEP 563 (string annotations) support for dataclasses.
   (`#195 <https://github.com/python-attrs/cattrs/issues/195>`_)
