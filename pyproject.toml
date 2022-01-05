@@ -27,7 +27,7 @@ python = "^3.7"
 attrs = ">= 20"
 typing_extensions = { version = "*", python = "~3.7" }
 
-[tool.poetry.group.dev.dependencies]
+[tool.poetry.dev-dependencies]
 pymongo = "^3.12.1"
 flake8 = "^3.9.0"
 tox = "^3.23.0"
