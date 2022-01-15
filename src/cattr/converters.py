@@ -9,6 +9,11 @@ from attr import Attribute
 from attr import has as attrs_has
 from attr import resolve_types
 
+from cattrs.errors import (
+    IterableValidationError,
+    StructureHandlerNotFoundError,
+)
+
 from ._compat import (
     FrozenSetSubscriptable,
     Mapping,
@@ -38,7 +43,6 @@ from ._compat import (
 )
 from .disambiguators import create_uniq_field_dis_func
 from .dispatch import MultiStrategyDispatch
-from .errors import StructureHandlerNotFoundError
 from .gen import (
     AttributeOverride,
     make_dict_structure_fn,
@@ -86,7 +90,7 @@ def is_optional(typ):
     )
 
 
-class Converter(object):
+class Converter:
     """Converts between structured and unstructured data."""
 
     __slots__ = (
@@ -98,6 +102,7 @@ class Converter(object):
         "_union_struct_registry",
         "_structure_func",
         "_prefer_attrib_converters",
+        "extended_validation",
     )
 
     def __init__(
@@ -105,9 +110,12 @@ class Converter(object):
         dict_factory: Callable[[], Any] = dict,
         unstruct_strat: UnstructureStrategy = UnstructureStrategy.AS_DICT,
         prefer_attrib_converters: bool = False,
+        extended_validation: bool = True,
     ) -> None:
         unstruct_strat = UnstructureStrategy(unstruct_strat)
         self._prefer_attrib_converters = prefer_attrib_converters
+
+        self.extended_validation = extended_validation
 
         # Create a per-instance cache.
         if unstruct_strat is UnstructureStrategy.AS_DICT:
@@ -471,14 +479,32 @@ class Converter(object):
 
     def _structure_list(self, obj, cl):
         """Convert an iterable to a potentially generic list."""
-        if is_bare(cl) or cl.__args__[0] is Any:
-            return [e for e in obj]
+        if self.extended_validation:
+            errors = {}
+            if is_bare(cl) or cl.__args__[0] is Any:
+                res = [e for e in obj]
+            else:
+                elem_type = cl.__args__[0]
+                handler = self._structure_func.dispatch(elem_type)
+                res = []
+                ix = 0  # Avoid `enumerate` for performance.
+                for e in obj:
+                    try:
+                        res.append(handler(e, elem_type))
+                    except Exception as e:
+                        errors[ix] = e
+                    finally:
+                        ix += 1
+            if errors:
+                raise IterableValidationError(errors)
         else:
-            elem_type = cl.__args__[0]
-            return [
-                self._structure_func.dispatch(elem_type)(e, elem_type)
-                for e in obj
-            ]
+            if is_bare(cl) or cl.__args__[0] is Any:
+                res = [e for e in obj]
+            else:
+                elem_type = cl.__args__[0]
+                handler = self._structure_func.dispatch(elem_type)
+                res = [handler(e, elem_type) for e in obj]
+        return res
 
     def _structure_set(self, obj, cl):
         """Convert an iterable into a potentially generic set."""
@@ -597,11 +623,13 @@ class GenConverter(Converter):
         type_overrides: Mapping[Type, AttributeOverride] = {},
         unstruct_collection_overrides: Mapping[Type, Callable] = {},
         prefer_attrib_converters: bool = False,
+        extended_validation: bool = True,
     ):
         super().__init__(
             dict_factory=dict_factory,
             unstruct_strat=unstruct_strat,
             prefer_attrib_converters=prefer_attrib_converters,
+            extended_validation=extended_validation,
         )
         self.omit_if_default = omit_if_default
         self.forbid_extra_keys = forbid_extra_keys
@@ -742,6 +770,7 @@ class GenConverter(Converter):
             self,
             _cattrs_forbid_extra_keys=self.forbid_extra_keys,
             _cattrs_prefer_attrib_converters=self._prefer_attrib_converters,
+            _cattrs_extended_validation=self.extended_validation,
             **attrib_overrides,
         )
         # only direct dispatch so that subclasses get separately generated

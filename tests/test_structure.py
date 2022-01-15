@@ -30,10 +30,12 @@ from hypothesis.strategies import (
 )
 from pytest import raises
 
-from cattr import Converter
 from cattr._compat import copy_with, is_bare, is_union_type
-from cattr.converters import NoneType
-from cattr.errors import StructureHandlerNotFoundError
+from cattrs import Converter
+from cattrs.errors import (
+    IterableValidationError,
+    StructureHandlerNotFoundError,
+)
 
 from . import (
     dicts_of_primitives,
@@ -44,6 +46,7 @@ from . import (
 )
 from ._compat import change_type_param
 
+NoneType = type(None)
 ints_and_type = tuples(integers(), just(int))
 floats_and_type = tuples(floats(allow_nan=False), just(float))
 strs_and_type = tuples(text(), just(str))
@@ -222,10 +225,10 @@ def test_structuring_optional_primitives(primitive_and_type):
     assert converter.structure(None, Optional[type]) is None
 
 
-@given(lists_of_primitives().filter(lambda lp: not is_bare(lp[1])))
-def test_structuring_lists_of_opt(list_and_type):
+@given(lists_of_primitives().filter(lambda lp: not is_bare(lp[1])), booleans())
+def test_structuring_lists_of_opt(list_and_type, extended_validation: bool):
     """Test structuring lists of Optional primitive types."""
-    converter = Converter()
+    converter = Converter(extended_validation=extended_validation)
     l, t = list_and_type
 
     l.append(None)
@@ -238,7 +241,11 @@ def test_structuring_lists_of_opt(list_and_type):
     )
 
     if not is_bare(t) and (args[0] not in (Any, str) and not is_optional):
-        with raises((TypeError, ValueError)):
+        with raises(
+            (TypeError, ValueError)
+            if not extended_validation
+            else IterableValidationError
+        ):
             converter.structure(l, t)
 
     optional_t = Optional[args[0]]
