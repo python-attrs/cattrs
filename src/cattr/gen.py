@@ -210,7 +210,7 @@ def make_dict_structure_fn(
     _cattrs_use_linecache: bool = True,
     _cattrs_prefer_attrib_converters: bool = False,
     **kwargs,
-) -> Callable[[Mapping[str, Any]], T]:
+) -> Callable[[Mapping[str, Any], Any], T]:
     """Generate a specialized dict structuring function for an attrs class."""
 
     mapping = {}
