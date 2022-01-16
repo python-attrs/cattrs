@@ -17,6 +17,11 @@ class ValidationError(Exception):
 
 @define
 class IterableValidationError(ValidationError):
+    """Iterable validation errors.
+
+    A dictionary of indices to errors for the element at that index.
+    """
+
     errors_by_index: Dict[int, Exception]
 
 
@@ -25,3 +30,15 @@ class ClassValidationError(ValidationError):
     """Raised when validating a class if any attributes are invalid."""
 
     errors_by_attribute: Dict[str, Exception]
+
+
+@define
+class MappingValidationError(ValidationError):
+    """Mapping validation errors.
+
+    A dictionary of element indices to key validation errors, and
+    a dictionary of keys to value validation errors.
+    """
+
+    key_errors: Dict[int, Exception]
+    value_errors: Dict[str, Exception]
