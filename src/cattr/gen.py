@@ -22,7 +22,7 @@ __all__ = [
 import attr
 from attr import NOTHING, resolve_types
 
-from cattrs.errors import ClassValidationError
+from cattrs.errors import ClassValidationError, MappingValidationError
 
 from ._compat import (
     adapted_fields,
@@ -527,7 +527,12 @@ def make_mapping_unstructure_fn(
 
 
 def make_mapping_structure_fn(
-    cl: Any, converter, structure_to=dict, key_type=NOTHING, val_type=NOTHING
+    cl: Any,
+    converter,
+    structure_to=dict,
+    key_type=NOTHING,
+    val_type=NOTHING,
+    extended_validation: bool = True,
 ):
     """Generate a specialized unstructure function for a mapping."""
     fn_name = "structure_mapping"
@@ -586,13 +591,35 @@ def make_mapping_structure_fn(
 
     if is_bare_dict:
         # No args, it's a bare dict.
-        lines.append("    res = dict(mapping)")
+        lines.append("  res = dict(mapping)")
     else:
-        lines.append(f"    res = {{{k_s}: {v_s} for k, v in mapping.items()}}")
+        if extended_validation:
+            globs["enumerate"] = enumerate
+            globs["MappingValidationError"] = MappingValidationError
+            lines.append("  res = {}; key_errors = {}; value_errors = {}")
+            lines.append("  for ix, (k, v) in enumerate(mapping.items()):")
+            lines.append("    try:")
+            lines.append(f"      value = {v_s}")
+            lines.append("    except Exception as e:")
+            lines.append("      value_errors[key] = e")
+            lines.append("      continue")
+            lines.append("    try:")
+            lines.append(f"      key = {k_s}")
+            lines.append("      res[key] = value")
+            lines.append("    except Exception as e:")
+            lines.append("      key_errors[ix] = e")
+            lines.append("  if key_errors or value_errors:")
+            lines.append(
+                "    raise MappingValidationError(key_errors, value_errors)"
+            )
+        else:
+            lines.append(
+                f"  res = {{{k_s}: {v_s} for k, v in mapping.items()}}"
+            )
     if structure_to is not dict:
-        lines.append("    res = __cattr_mapping_cl(res)")
+        lines.append("  res = __cattr_mapping_cl(res)")
 
-    total_lines = lines + ["    return res"]
+    total_lines = lines + ["  return res"]
 
     eval(compile("\n".join(total_lines), "", "exec"), globs)
 
