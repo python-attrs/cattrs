@@ -3,6 +3,8 @@ History
 =======
 22.1.0 (UNRELEASED)
 -------------------
+* cattrs now uses the CalVer versioning convention.
+* ``attrs`` and dataclass structuring is now ~25% faster.
 * Fix an issue structuring bare ``typing.List`` s on Pythons lower than 3.9.
   (`#209 <https://github.com/python-attrs/cattrs/issues/209>`_)
 

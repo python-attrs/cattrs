@@ -238,9 +238,11 @@ def make_dict_structure_fn(
         name = re.sub(r"[\[\.\] ,]", "_", name)
         fn_name += f"_{name}"
 
-    globs = {"__c_s": converter.structure, "__cl": cl}
+    internal_arg_parts = {"__cl": cl}
+    globs = {}
     lines = []
     post_lines = []
+    invocation_lines = []
 
     attrs = adapted_fields(cl)
     is_dc = is_dataclass(cl)
@@ -249,13 +251,16 @@ def make_dict_structure_fn(
         # PEP 563 annotations - need to be resolved.
         resolve_types(cl)
 
-    lines.append(f"def {fn_name}(o, *_):")
-    lines.append("  res = {")
     allowed_fields = set()
+    non_required = []
+    # The first loop deals with required args.
     for a in attrs:
         an = a.name
-        override = kwargs.pop(an, _neutral)
+        override = kwargs.get(an, _neutral)
         if override.omit:
+            continue
+        if a.default is not NOTHING:
+            non_required.append(a)
             continue
         t = a.type
         if isinstance(t, TypeVar):
@@ -281,30 +286,79 @@ def make_dict_structure_fn(
         else:
             handler = converter.structure
 
-        struct_handler_name = f"structure_{an}"
-        globs[struct_handler_name] = handler
+        struct_handler_name = f"__c_structure_{an}"
+        internal_arg_parts[struct_handler_name] = handler
 
-        ian = an if (is_dc or an[0] != "_") else an[1:]
         kn = an if override.rename is None else override.rename
         allowed_fields.add(kn)
-        globs[f"type_{an}"] = t
-        if a.default is NOTHING:
-            if handler:
-                lines.append(
-                    f"    '{ian}': {struct_handler_name}(o['{kn}'], type_{an}),"
-                )
+
+        if handler:
+            if handler == converter._structure_call:
+                internal_arg_parts[struct_handler_name] = t
+                invocation_lines.append(f"{struct_handler_name}(o['{kn}']),")
             else:
-                lines.append(f"    '{ian}': o['{kn}'],")
+                type_name = f"__c_type_{an}"
+                internal_arg_parts[type_name] = t
+                invocation_lines.append(
+                    f"{struct_handler_name}(o['{kn}'], {type_name}),"
+                )
         else:
+            invocation_lines.append(f"o['{kn}'],")
+
+    # The second loop is for optional args.
+    if non_required:
+        invocation_lines.append("**res,")
+        lines.append("  res = {}")
+
+        for a in non_required:
+            an = a.name
+            override = kwargs.get(an, _neutral)
+            t = a.type
+            if isinstance(t, TypeVar):
+                t = mapping.get(t.__name__, t)
+            elif is_generic(t) and not is_bare(t) and not is_annotated(t):
+                t = deep_copy_with(t, mapping)
+
+            # For each attribute, we try resolving the type here and now.
+            # If a type is manually overwritten, this function should be
+            # regenerated.
+            if a.converter is not None and _cattrs_prefer_attrib_converters:
+                handler = None
+            elif (
+                a.converter is not None
+                and not _cattrs_prefer_attrib_converters
+                and t is not None
+            ):
+                handler = converter._structure_func.dispatch(t)
+                if handler == converter._structure_error:
+                    handler = None
+            elif t is not None:
+                handler = converter._structure_func.dispatch(t)
+            else:
+                handler = converter.structure
+
+            struct_handler_name = f"__c_structure_{an}"
+            internal_arg_parts[struct_handler_name] = handler
+
+            ian = an if (is_dc or an[0] != "_") else an[1:]
+            kn = an if override.rename is None else override.rename
+            allowed_fields.add(kn)
             post_lines.append(f"  if '{kn}' in o:")
             if handler:
-                post_lines.append(
-                    f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], type_{an})"
-                )
+                if handler == converter._structure_call:
+                    internal_arg_parts[struct_handler_name] = t
+                    post_lines.append(
+                        f"    res['{ian}'] = {struct_handler_name}(o['{kn}'])"
+                    )
+                else:
+                    type_name = f"__c_type_{an}"
+                    internal_arg_parts[type_name] = t
+                    post_lines.append(
+                        f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], {type_name})"
+                    )
             else:
                 post_lines.append(f"    res['{ian}'] = o['{kn}']")
 
-    lines.append("    }")
     if _cattrs_forbid_extra_keys:
         globs["__c_a"] = allowed_fields
         post_lines += [
@@ -315,7 +369,19 @@ def make_dict_structure_fn(
             "    )",
         ]
 
-    total_lines = lines + post_lines + ["  return __cl(**res)"]
+    # At the end, we create the function header.
+    internal_arg_line = ", ".join([f"{i}={i}" for i in internal_arg_parts])
+    for k, v in internal_arg_parts.items():
+        globs[k] = v
+    lines.insert(0, f"def {fn_name}(o, _, *, {internal_arg_line}):")
+
+    total_lines = (
+        lines
+        + post_lines
+        + ["  return __cl("]
+        + [f"    {line}" for line in invocation_lines]
+        + ["  )"]
+    )
 
     fname = _generate_unique_filename(
         cl, "structure", reserve=_cattrs_use_linecache
