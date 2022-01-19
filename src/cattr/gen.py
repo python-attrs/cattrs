@@ -373,10 +373,10 @@ def make_dict_structure_fn(
     internal_arg_line = ", ".join([f"{i}={i}" for i in internal_arg_parts])
     for k, v in internal_arg_parts.items():
         globs[k] = v
-    lines.insert(0, f"def {fn_name}(o, _, *, {internal_arg_line}):")
 
     total_lines = (
-        lines
+        [f"def {fn_name}(o, _, *, {internal_arg_line}):"]
+        + lines
         + post_lines
         + ["  return __cl("]
         + [f"    {line}" for line in invocation_lines]
