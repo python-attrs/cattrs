@@ -23,6 +23,7 @@ import attr
 from attr import NOTHING, Factory
 from attr._make import _CountingAttr
 from hypothesis.strategies import (
+    DrawFn,
     SearchStrategy,
     booleans,
     composite,
@@ -33,6 +34,7 @@ from hypothesis.strategies import (
     just,
     lists,
     recursive,
+    sampled_from,
     sets,
     text,
     tuples,
@@ -103,6 +105,9 @@ def simple_typed_attrs(
                 | dict_typed_attrs(defaults, allow_mutable_defaults)
                 | mutable_seq_typed_attrs(defaults, allow_mutable_defaults)
                 | seq_typed_attrs(defaults, allow_mutable_defaults)
+                | list_typed_attrs(
+                    defaults, allow_mutable_defaults, legacy_types_only=True
+                )
             )
     else:
         res = (
@@ -361,7 +366,12 @@ def frozenset_typed_attrs(draw, defaults=None):
 
 
 @composite
-def list_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
+def list_typed_attrs(
+    draw: DrawFn,
+    defaults=None,
+    allow_mutable_defaults=True,
+    legacy_types_only=False,
+):
     """
     Generate a tuple of an attribute and a strategy that yields lists
     for that attribute. The lists contain floats.
@@ -378,7 +388,13 @@ def list_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
         default = default_val
     return (
         attr.ib(
-            type=list[float] if draw(booleans()) else List[float],
+            type=draw(
+                sampled_from(
+                    [List, List[float]]
+                    if legacy_types_only
+                    else [list[float], List[float], List]
+                )
+            ),
             default=default,
         ),
         val_strat,

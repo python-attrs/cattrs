@@ -336,7 +336,7 @@ def make_iterable_unstructure_fn(cl: Any, converter, unstructure_to=None):
 
     # Let's try fishing out the type args.
     if getattr(cl, "__args__", None) is not None:
-        type_arg = get_args(cl)[0]
+        type_arg = cl.__args__[0]
         # We don't know how to handle the TypeVar on this level,
         # so we skip doing the dispatch here.
         if not isinstance(type_arg, TypeVar):

@@ -1,6 +1,11 @@
 =======
 History
 =======
+22.1.0 (UNRELEASED)
+-------------------
+* Fix an issue structuring bare ``typing.List`` s on Pythons lower than 3.9.
+  (`#209 <https://github.com/python-attrs/cattrs/issues/209>`_)
+
 1.10.0 (2022-01-04)
 -------------------
 * Add PEP 563 (string annotations) support for dataclasses.
