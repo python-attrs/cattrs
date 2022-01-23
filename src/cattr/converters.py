@@ -479,52 +479,55 @@ class Converter:
 
     def _structure_list(self, obj, cl):
         """Convert an iterable to a potentially generic list."""
-        if self.extended_validation:
-            errors = {}
-            if is_bare(cl) or cl.__args__[0] is Any:
-                res = [e for e in obj]
-            else:
-                elem_type = cl.__args__[0]
-                handler = self._structure_func.dispatch(elem_type)
+        if is_bare(cl) or cl.__args__[0] is Any:
+            res = [e for e in obj]
+        else:
+            elem_type = cl.__args__[0]
+            handler = self._structure_func.dispatch(elem_type)
+            if self.extended_validation:
+                errors = []
                 res = []
                 ix = 0  # Avoid `enumerate` for performance.
                 for e in obj:
                     try:
                         res.append(handler(e, elem_type))
                     except Exception as e:
-                        errors[ix] = e
+                        e.__note__ = f"Structuring iterable @ index {ix}"
+                        errors.append(e)
                     finally:
                         ix += 1
-            if errors:
-                raise IterableValidationError(errors)
-        else:
-            if is_bare(cl) or cl.__args__[0] is Any:
-                res = [e for e in obj]
+                if errors:
+                    raise IterableValidationError(f"While structuring {cl.__name__}", errors, cl)
             else:
-                elem_type = cl.__args__[0]
-                handler = self._structure_func.dispatch(elem_type)
                 res = [handler(e, elem_type) for e in obj]
         return res
 
-    def _structure_set(self, obj, cl):
+    def _structure_set(self, obj, cl, structure_to=set):
         """Convert an iterable into a potentially generic set."""
         if is_bare(cl) or cl.__args__[0] is Any:
-            return set(obj)
+            return structure_to(obj)
+        elem_type = cl.__args__[0]
+        handler = self._structure_func.dispatch(elem_type)
+        if self.extended_validation:
+            errors = []
+            res = set()
+            for e in obj:
+                try:
+                    res.add(handler(e, elem_type))
+                except Exception as exc:
+                    exc.__note__ = f"Structuring {structure_to.__name__} @ element {e!r}"
+                    errors.append(exc)
+            if errors:
+                raise IterableValidationError(f"While structuring {cl.__name__}", errors, cl)
+            return res if structure_to is set else structure_to(res)
+        elif structure_to is set:
+            return {handler(e, elem_type) for e in obj}
         else:
-            elem_type = cl.__args__[0]
-            return {
-                self._structure_func.dispatch(elem_type)(e, elem_type)
-                for e in obj
-            }
+            return structure_to([handler(e, elem_type) for e in obj])
 
     def _structure_frozenset(self, obj, cl):
         """Convert an iterable into a potentially generic frozenset."""
-        if is_bare(cl) or cl.__args__[0] is Any:
-            return frozenset(obj)
-        else:
-            elem_type = cl.__args__[0]
-            dispatch = self._structure_func.dispatch
-            return frozenset(dispatch(elem_type)(e, elem_type) for e in obj)
+        return self._structure_set(obj, cl, structure_to=frozenset)
 
     def _structure_dict(self, obj, cl):
         """Convert a mapping into a potentially generic dict."""
@@ -562,7 +565,7 @@ class Converter:
         return handler(obj, union)
 
     def _structure_tuple(self, obj, tup: Type[T]):
-        """Deal with converting to a tuple."""
+        """Deal with structuring into a tuple."""
         if tup in (Tuple, tuple):
             tup_params = None
         else:
@@ -575,7 +578,20 @@ class Converter:
             # We're dealing with a homogenous tuple, Tuple[int, ...]
             tup_type = tup_params[0]
             conv = self._structure_func.dispatch(tup_type)
-            return tuple(conv(e, tup_type) for e in obj)
+            if self.extended_validation:
+                errors = []
+                res = []
+                for ix, e in enumerate(obj):
+                    try:
+                        res.append(conv(e, tup_type))
+                    except Exception as exc:
+                        exc.__note__ = f"Structuring tuple @ index {ix}"
+                        errors.append(exc)
+                if errors:
+                    raise IterableValidationError(f"While structuring {tup.__name__}", errors, tup)
+                return tuple(res)
+            else:
+                return tuple(conv(e, tup_type) for e in obj)
         else:
             # We're dealing with a heterogenous tuple.
             return tuple(

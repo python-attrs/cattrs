@@ -26,6 +26,7 @@ from cattr._compat import (
     is_generic,
 )
 from cattr._generics import deep_copy_with
+from cattrs.errors import ClassValidationError, IterableValidationError
 
 if TYPE_CHECKING:  # pragma: no cover
     from cattr.converters import Converter
@@ -231,6 +232,7 @@ def make_dict_structure_fn(
     _cattrs_forbid_extra_keys: bool = False,
     _cattrs_use_linecache: bool = True,
     _cattrs_prefer_attrib_converters: bool = False,
+    _cattrs_extended_validation: bool = True,
     **kwargs,
 ) -> Callable[[Mapping[str, Any], Any], T]:
     """Generate a specialized dict structuring function for an attrs class."""
@@ -274,65 +276,12 @@ def make_dict_structure_fn(
         resolve_types(cl)
 
     allowed_fields = set()
-    non_required = []
-    # The first loop deals with required args.
-    for a in attrs:
-        an = a.name
-        override = kwargs.get(an, _neutral)
-        if override.omit:
-            continue
-        if a.default is not NOTHING:
-            non_required.append(a)
-            continue
-        t = a.type
-        if isinstance(t, TypeVar):
-            t = mapping.get(t.__name__, t)
-        elif is_generic(t) and not is_bare(t) and not is_annotated(t):
-            t = deep_copy_with(t, mapping)
-
-        # For each attribute, we try resolving the type here and now.
-        # If a type is manually overwritten, this function should be
-        # regenerated.
-        if a.converter is not None and _cattrs_prefer_attrib_converters:
-            handler = None
-        elif (
-            a.converter is not None
-            and not _cattrs_prefer_attrib_converters
-            and t is not None
-        ):
-            handler = converter._structure_func.dispatch(t)
-            if handler == converter._structure_error:
-                handler = None
-        elif t is not None:
-            handler = converter._structure_func.dispatch(t)
-        else:
-            handler = converter.structure
-
-        struct_handler_name = f"__c_structure_{an}"
-        internal_arg_parts[struct_handler_name] = handler
-
-        kn = an if override.rename is None else override.rename
-        allowed_fields.add(kn)
-
-        if handler:
-            if handler == converter._structure_call:
-                internal_arg_parts[struct_handler_name] = t
-                invocation_lines.append(f"{struct_handler_name}(o['{kn}']),")
-            else:
-                type_name = f"__c_type_{an}"
-                internal_arg_parts[type_name] = t
-                invocation_lines.append(
-                    f"{struct_handler_name}(o['{kn}'], {type_name}),"
-                )
-        else:
-            invocation_lines.append(f"o['{kn}'],")
-
-    # The second loop is for optional args.
-    if non_required:
-        invocation_lines.append("**res,")
+    if _cattrs_extended_validation:
         lines.append("  res = {}")
-
-        for a in non_required:
+        lines.append("  errors = []")
+        invocation_lines.append("**res,")
+        internal_arg_parts["__c_cve"] = ClassValidationError
+        for a in attrs:
             an = a.name
             override = kwargs.get(an, _neutral)
             t = a.type
@@ -365,21 +314,148 @@ def make_dict_structure_fn(
             ian = an if (is_dc or an[0] != "_") else an[1:]
             kn = an if override.rename is None else override.rename
             allowed_fields.add(kn)
-            post_lines.append(f"  if '{kn}' in o:")
+            i = "  "
+            if a.default is not NOTHING:
+                lines.append(f"{i}if '{kn}' in o:")
+                i = f"{i}  "
+                lines.append(f"{i}try:")
+            else:
+                lines.append(f"{i}try:")
+            i = f"{i}  "
             if handler:
                 if handler == converter._structure_call:
                     internal_arg_parts[struct_handler_name] = t
-                    post_lines.append(
-                        f"    res['{ian}'] = {struct_handler_name}(o['{kn}'])"
+                    lines.append(
+                        f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'])"
                     )
                 else:
                     type_name = f"__c_type_{an}"
                     internal_arg_parts[type_name] = t
-                    post_lines.append(
-                        f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], {type_name})"
+                    lines.append(
+                        f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'], {type_name})"
                     )
             else:
-                post_lines.append(f"    res['{ian}'] = o['{kn}']")
+                lines.append(f"{i}res['{ian}'] = o['{kn}']")
+            i = i[:-2]
+            lines.append(f"{i}except Exception as e:")
+            i = f"{i}  "
+            lines.append(
+                f"{i}e.__note__ = 'Structuring class @ attribute {an}'"
+            )
+            lines.append(f"{i}errors.append(e)")
+        post_lines.append(f"  if errors: raise __c_cve('While structuring {cl.__name__}', errors, __cl)")
+    else:
+        non_required = []
+        # The first loop deals with required args.
+        for a in attrs:
+            an = a.name
+            override = kwargs.get(an, _neutral)
+            if override.omit:
+                continue
+            if a.default is not NOTHING:
+                non_required.append(a)
+                continue
+            t = a.type
+            if isinstance(t, TypeVar):
+                t = mapping.get(t.__name__, t)
+            elif is_generic(t) and not is_bare(t) and not is_annotated(t):
+                t = deep_copy_with(t, mapping)
+
+            # For each attribute, we try resolving the type here and now.
+            # If a type is manually overwritten, this function should be
+            # regenerated.
+            if a.converter is not None and _cattrs_prefer_attrib_converters:
+                handler = None
+            elif (
+                a.converter is not None
+                and not _cattrs_prefer_attrib_converters
+                and t is not None
+            ):
+                handler = converter._structure_func.dispatch(t)
+                if handler == converter._structure_error:
+                    handler = None
+            elif t is not None:
+                handler = converter._structure_func.dispatch(t)
+            else:
+                handler = converter.structure
+
+            struct_handler_name = f"__c_structure_{an}"
+            internal_arg_parts[struct_handler_name] = handler
+
+            kn = an if override.rename is None else override.rename
+            allowed_fields.add(kn)
+
+            if handler:
+                if handler == converter._structure_call:
+                    internal_arg_parts[struct_handler_name] = t
+                    invocation_lines.append(
+                        f"{struct_handler_name}(o['{kn}']),"
+                    )
+                else:
+                    type_name = f"__c_type_{an}"
+                    internal_arg_parts[type_name] = t
+                    invocation_lines.append(
+                        f"{struct_handler_name}(o['{kn}'], {type_name}),"
+                    )
+            else:
+                invocation_lines.append(f"o['{kn}'],")
+
+        # The second loop is for optional args.
+        if non_required:
+            invocation_lines.append("**res,")
+            lines.append("  res = {}")
+
+            for a in non_required:
+                an = a.name
+                override = kwargs.get(an, _neutral)
+                t = a.type
+                if isinstance(t, TypeVar):
+                    t = mapping.get(t.__name__, t)
+                elif is_generic(t) and not is_bare(t) and not is_annotated(t):
+                    t = deep_copy_with(t, mapping)
+
+                # For each attribute, we try resolving the type here and now.
+                # If a type is manually overwritten, this function should be
+                # regenerated.
+                if (
+                    a.converter is not None
+                    and _cattrs_prefer_attrib_converters
+                ):
+                    handler = None
+                elif (
+                    a.converter is not None
+                    and not _cattrs_prefer_attrib_converters
+                    and t is not None
+                ):
+                    handler = converter._structure_func.dispatch(t)
+                    if handler == converter._structure_error:
+                        handler = None
+                elif t is not None:
+                    handler = converter._structure_func.dispatch(t)
+                else:
+                    handler = converter.structure
+
+                struct_handler_name = f"__c_structure_{an}"
+                internal_arg_parts[struct_handler_name] = handler
+
+                ian = an if (is_dc or an[0] != "_") else an[1:]
+                kn = an if override.rename is None else override.rename
+                allowed_fields.add(kn)
+                post_lines.append(f"  if '{kn}' in o:")
+                if handler:
+                    if handler == converter._structure_call:
+                        internal_arg_parts[struct_handler_name] = t
+                        post_lines.append(
+                            f"    res['{ian}'] = {struct_handler_name}(o['{kn}'])"
+                        )
+                    else:
+                        type_name = f"__c_type_{an}"
+                        internal_arg_parts[type_name] = t
+                        post_lines.append(
+                            f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], {type_name})"
+                        )
+                else:
+                    post_lines.append(f"    res['{ian}'] = o['{kn}']")
 
     if _cattrs_forbid_extra_keys:
         globs["__c_a"] = allowed_fields
@@ -541,7 +617,12 @@ def make_mapping_unstructure_fn(
 
 
 def make_mapping_structure_fn(
-    cl: Any, converter, structure_to=dict, key_type=NOTHING, val_type=NOTHING
+    cl: Any,
+    converter,
+    structure_to=dict,
+    key_type=NOTHING,
+    val_type=NOTHING,
+    extended_validation: bool = True,
 ):
     """Generate a specialized unstructure function for a mapping."""
     fn_name = "structure_mapping"
@@ -602,7 +683,31 @@ def make_mapping_structure_fn(
         # No args, it's a bare dict.
         lines.append("    res = dict(mapping)")
     else:
-        lines.append(f"    res = {{{k_s}: {v_s} for k, v in mapping.items()}}")
+        if extended_validation:
+            globs["enumerate"] = enumerate
+            globs["IterableValidationError"] = IterableValidationError
+            lines.append("  res = {}; errors = []")
+            lines.append("  for ix, (k, v) in enumerate(mapping.items()):")
+            lines.append("    try:")
+            lines.append(f"      value = {v_s}")
+            lines.append("    except Exception as e:")
+            lines.append("      e.__note__ = 'Structuring mapping value @ key ' + repr(k)")
+            lines.append("      errors.append(e)")
+            lines.append("      continue")
+            lines.append("    try:")
+            lines.append(f"      key = {k_s}")
+            lines.append("      res[key] = value")
+            lines.append("    except Exception as e:")
+            lines.append("      e.__note__ = 'Structuring mapping key @ key ' + repr(k)")
+            lines.append("      errors.append(e)")
+            lines.append("  if errors:")
+            lines.append(
+                f"    raise IterableValidationError('While structuring {structure_to.__name__}', errors, __cattr_mapping_cl)"
+            )
+        else:
+            lines.append(
+                f"  res = {{{k_s}: {v_s} for k, v in mapping.items()}}"
+            )
     if structure_to is not dict:
         lines.append("    res = __cattr_mapping_cl(res)")
 
