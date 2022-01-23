@@ -165,6 +165,7 @@ Additional documentation
 ------------------------
 * `On structured and unstructured data, or the case for cattrs <https://threeofwands.com/on-structured-and-unstructured-data-or-the-case-for-cattrs/>`_
 * `Why I use attrs instead of pydantic <https://threeofwands.com/why-i-use-attrs-instead-of-pydantic/>`_
+* `cattrs I: un/structuring speed <https://threeofwands.com/why-cattrs-is-so-fast/>`_
 
 Credits
 -------
@@ -185,4 +186,3 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 .. _pytest-benchmark: https://pytest-benchmark.readthedocs.io/en/latest/index.html
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
-
