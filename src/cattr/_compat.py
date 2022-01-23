@@ -34,6 +34,11 @@ if is_py37:
 else:
     from typing import Protocol, get_args, get_origin  # NOQA
 
+if "ExceptionGroup" not in __builtins__:
+    from exceptiongroup import ExceptionGroup
+else:
+    ExceptionGroup = ExceptionGroup
+
 
 def has(cls):
     return hasattr(cls, "__attrs_attrs__") or hasattr(
