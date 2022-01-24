@@ -379,13 +379,12 @@ def make_dict_structure_fn(
             else:
                 handler = converter.structure
 
-            struct_handler_name = f"__c_structure_{an}"
-            internal_arg_parts[struct_handler_name] = handler
-
             kn = an if override.rename is None else override.rename
             allowed_fields.add(kn)
 
             if handler:
+                struct_handler_name = f"__c_structure_{an}"
+                internal_arg_parts[struct_handler_name] = handler
                 if handler == converter._structure_call:
                     internal_arg_parts[struct_handler_name] = t
                     invocation_lines.append(
