@@ -284,6 +284,8 @@ def make_dict_structure_fn(
         for a in attrs:
             an = a.name
             override = kwargs.get(an, _neutral)
+            if override.omit:
+                continue
             t = a.type
             if isinstance(t, TypeVar):
                 t = mapping.get(t.__name__, t)
@@ -318,9 +320,7 @@ def make_dict_structure_fn(
             if a.default is not NOTHING:
                 lines.append(f"{i}if '{kn}' in o:")
                 i = f"{i}  "
-                lines.append(f"{i}try:")
-            else:
-                lines.append(f"{i}try:")
+            lines.append(f"{i}try:")
             i = f"{i}  "
             if handler:
                 if handler == converter._structure_call:
@@ -680,7 +680,7 @@ def make_mapping_structure_fn(
 
     if is_bare_dict:
         # No args, it's a bare dict.
-        lines.append("    res = dict(mapping)")
+        lines.append("  res = dict(mapping)")
     else:
         if extended_validation:
             globs["enumerate"] = enumerate
@@ -708,11 +708,12 @@ def make_mapping_structure_fn(
                 f"  res = {{{k_s}: {v_s} for k, v in mapping.items()}}"
             )
     if structure_to is not dict:
-        lines.append("    res = __cattr_mapping_cl(res)")
+        lines.append("  res = __cattr_mapping_cl(res)")
 
-    total_lines = lines + ["    return res"]
+    total_lines = lines + ["  return res"]
+    script = "\n".join(total_lines)
 
-    eval(compile("\n".join(total_lines), "", "exec"), globs)
+    eval(compile(script, "", "exec"), globs)
 
     fn = globs[fn_name]
 
