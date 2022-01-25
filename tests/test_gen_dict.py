@@ -255,7 +255,8 @@ def test_omitting():
     assert converter.unstructure(A(1)) == {"a": 1}
 
 
-def test_omitting_structure():
+@pytest.mark.parametrize("extended_validation", [True, False])
+def test_omitting_structure(extended_validation: bool):
     """Omitting fields works with generated structuring functions."""
     converter = Converter()
 
@@ -268,7 +269,7 @@ def test_omitting_structure():
     converter.register_structure_hook(
         A,
         make_dict_structure_fn(
-            A, converter, b=override(omit=True), c=override(omit=True)
+            A, converter, b=override(omit=True), c=override(omit=True), _cattrs_extended_validation=extended_validation
         ),
     )
 
