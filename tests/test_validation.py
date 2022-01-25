@@ -25,10 +25,10 @@ def test_class_validation():
     assert repr(exc.value.exceptions[0]) == repr(
         ValueError("invalid literal for int() with base 10: 'a'")
     )
-    assert exc.value.exceptions[0].__note__ == "Structuring class @ attribute a"
+    assert exc.value.exceptions[0].__note__ == "Structuring class Test @ attribute a"
 
     assert repr(exc.value.exceptions[1]) == repr(KeyError("c"))
-    assert exc.value.exceptions[1].__note__ == "Structuring class @ attribute c"
+    assert exc.value.exceptions[1].__note__ == "Structuring class Test @ attribute c"
 
 
 def test_list_validation():
@@ -103,4 +103,17 @@ def test_homo_tuple_validation():
     assert repr(exc.value.exceptions[0]) == repr(
         ValueError("invalid literal for int() with base 10: 'a'")
     )
-    assert exc.value.exceptions[0].__note__ == "Structuring tuple @ index 2"
+    assert exc.value.exceptions[0].__note__ == "Structuring typing.Tuple[int, ...] @ index 2"
+
+
+def test_hetero_tuple_validation():
+    """Proper validation errors are raised structuring heterogenous tuples."""
+    c = GenConverter(extended_validation=True)
+
+    with pytest.raises(IterableValidationError) as exc:
+        c.structure(["1", 2, "a"], Tuple[int, int, int])
+
+    assert repr(exc.value.exceptions[0]) == repr(
+        ValueError("invalid literal for int() with base 10: 'a'")
+    )
+    assert exc.value.exceptions[0].__note__ == "Structuring typing.Tuple[int, int, int] @ index 2"
