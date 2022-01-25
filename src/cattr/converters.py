@@ -585,7 +585,7 @@ class Converter:
                     try:
                         res.append(conv(e, tup_type))
                     except Exception as exc:
-                        exc.__note__ = f"Structuring tuple @ index {ix}"
+                        exc.__note__ = f"Structuring {tup} @ index {ix}"
                         errors.append(exc)
                 if errors:
                     raise IterableValidationError(f"While structuring {tup.__name__}", errors, tup)
@@ -594,10 +594,24 @@ class Converter:
                 return tuple(conv(e, tup_type) for e in obj)
         else:
             # We're dealing with a heterogenous tuple.
-            return tuple(
-                self._structure_func.dispatch(t)(e, t)
-                for t, e in zip(tup_params, obj)
-            )
+            if self.extended_validation:
+                errors = []
+                res = []
+                for ix, (t, e) in enumerate(zip(tup_params, obj)):
+                    try:
+                        conv = self._structure_func.dispatch(t)
+                        res.append(conv(e, t))
+                    except Exception as exc:
+                        exc.__note__ = f"Structuring {tup} @ index {ix}"
+                        errors.append(exc)
+                if errors:
+                    raise IterableValidationError(f"While structuring {tup.__name__}", errors, tup)
+                return tuple(res)
+            else:
+                return tuple(
+                    (e, t)
+                    for t, e in zip(tup_params, obj)
+                )
 
     @staticmethod
     def _get_dis_func(union):
