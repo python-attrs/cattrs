@@ -216,7 +216,14 @@ As the final step, we can combine all of this into two hook factories:
 .. code-block:: python
 
     from attr import has, fields
+    from cattr import Converter
     from cattr.gen import make_dict_unstructure_fn, make_dict_structure_fn, override
+
+    converter = Converter()
+
+    def to_camel_case(snake_str: str) -> str:
+        components = snake_str.split("_")
+        return components[0] + "".join(x.title() for x in components[1:])
 
     def to_camel_case_unstructure(cls):
         return make_dict_unstructure_fn(
