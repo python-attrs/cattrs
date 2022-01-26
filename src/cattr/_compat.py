@@ -1,8 +1,9 @@
 import sys
 from dataclasses import MISSING
 from dataclasses import fields as dataclass_fields
-from dataclasses import is_dataclass
-from typing import Any, Dict, FrozenSet, List
+from dataclasses import is_dataclass, make_dataclass
+from dataclasses import Field as DataclassField
+from typing import Any, Dict, FrozenSet, List, Optional
 from typing import Mapping as TypingMapping
 from typing import MutableMapping as TypingMutableMapping
 from typing import MutableSequence as TypingMutableSequence
@@ -13,7 +14,8 @@ from typing import Tuple, get_type_hints
 
 from attr import NOTHING, Attribute, Factory
 from attr import fields as attrs_fields
-from attr import resolve_types
+from attr import resolve_types as attrs_resolve_types
+from attr import has as attrs_has
 
 version_info = sys.version_info[0:3]
 is_py37 = version_info[:2] == (3, 7)
@@ -373,3 +375,81 @@ else:
 
 def is_generic_attrs(type):
     return is_generic(type) and has(type.__origin__)
+
+
+def resolve_types(
+    cls: Any,
+    globalns: Optional[Dict[str, Any]] = None,
+    localns: Optional[Dict[str, Any]] = None,
+):
+    """
+    More generic version of `attrs.resolve_types`.
+
+    While `attrs.resolve_types` resolves ForwardRefs
+    only for for the fields of a `attrs` classes (and
+    fails otherwise), this `resolve_types` also
+    supports dataclasses and type aliases.
+
+    Even though often ForwardRefs outside of classes as e.g.
+    in type aliases can generally not be resolved automatically
+    (i.e. without explicit `globalns`, and `localns` context),
+    this is indeed sometimes possible and supported by Python.
+    This is for instance the case if the (internal) `module`
+    parameter of `ForwardRef` is set or we are dealing with
+    ForwardRefs in `TypedDict` or `NewType` types.
+    There may also be additions to typing.py module that there
+    will be more non-class types where ForwardRefs can automatically
+    be resolved.
+
+    See
+        https://bugs.python.org/issue41249
+        https://bugs.python.org/issue46369
+        https://bugs.python.org/issue46373
+    """
+    allfields: List[Union[Attribute, DataclassField]] = []
+
+    if attrs_has(cls):
+        try:
+            attrs_resolve_types(cls, globalns, localns)
+        except NameError:
+            # ignore if ForwardRef cannot be resolved.
+            # We still want to allow manual registration of
+            # ForwardRefs (which will work with unevaluated ForwardRefs)
+            pass
+        allfields = fields(cls)
+    else:
+        if not is_dataclass(cls):
+            # we cannot call get_type_hints on type aliases
+            # directly, so put it in a field of a helper
+            # dataclass.
+            cls = make_dataclass("_resolve_helper", [("test", cls)])
+
+            # prevent resolving from cls.__module__ (which is what
+            # get_type_hints does if localns/globalns == None), as
+            # it would not be correct here.
+            # See: https://stackoverflow.com/questions/49457441
+            if globalns is None:
+                globalns = {}
+            if localns is None:
+                localns = {}
+        else:
+            allfields = dataclass_fields(cls)
+
+        try:
+            type_hints = get_type_hints(cls, globalns, localns)
+            for field in allfields:
+                field.type = type_hints.get(field.name, field.type)
+        except NameError:
+            pass
+    if not is_py39_plus:
+        # 3.8 and before did not recursively resolve ForwardRefs
+        # (likely a Python bug). Hence with PEP 563 (where all type
+        # annotations are initially treated as ForwardRefs) we
+        # need twice evaluation to properly resolve explicit ForwardRefs
+        fieldlist = [(field.name, field.type) for field in allfields]
+        cls2 = make_dataclass("_resolve_helper2", fieldlist)
+        cls2.__module__ = cls.__module__
+        try:
+            get_type_hints(cls2, globalns, localns)
+        except NameError:
+            pass

@@ -1,5 +1,6 @@
 from .converters import Converter, GenConverter, UnstructureStrategy
 from .gen import override
+from ._compat import resolve_types
 
 __all__ = (
     "global_converter",
@@ -11,6 +12,7 @@ __all__ = (
     "Converter",
     "GenConverter",
     "override",
+    "resolve_types",
 )
 
 
