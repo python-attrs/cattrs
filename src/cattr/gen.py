@@ -15,7 +15,7 @@ from typing import (
 )
 
 import attr
-from attr import NOTHING, resolve_types
+from attr import NOTHING
 
 from ._compat import (
     adapted_fields,
@@ -24,6 +24,7 @@ from ._compat import (
     is_annotated,
     is_bare,
     is_generic,
+    resolve_types,
 )
 from ._generics import deep_copy_with
 
@@ -63,9 +64,8 @@ def make_dict_unstructure_fn(
     origin = get_origin(cl)
     attrs = adapted_fields(origin or cl)  # type: ignore
 
-    if any(isinstance(a.type, str) for a in attrs):
-        # PEP 563 annotations - need to be resolved.
-        resolve_types(cl)
+    # PEP 563 annotations and ForwardRefs - need to be resolved.
+    resolve_types(cl)
 
     mapping = {}
     if is_generic(cl):
@@ -245,9 +245,8 @@ def make_dict_structure_fn(
     attrs = adapted_fields(cl)
     is_dc = is_dataclass(cl)
 
-    if any(isinstance(a.type, str) for a in attrs):
-        # PEP 563 annotations - need to be resolved.
-        resolve_types(cl)
+    # PEP 563 annotations and ForwardRefs - need to be resolved.
+    resolve_types(cl)
 
     lines.append(f"def {fn_name}(o, *_):")
     lines.append("  res = {")

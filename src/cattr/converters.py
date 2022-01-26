@@ -3,11 +3,11 @@ from collections.abc import MutableSet as AbcMutableSet
 from dataclasses import Field
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Callable, Dict, ForwardRef, Optional
+from typing import Tuple, Type, TypeVar, Union
 
 from attr import Attribute
 from attr import has as attrs_has
-from attr import resolve_types
 
 from ._compat import (
     FrozenSetSubscriptable,
@@ -35,6 +35,7 @@ from ._compat import (
     is_sequence,
     is_tuple,
     is_union_type,
+    resolve_types,
 )
 from .disambiguators import create_uniq_field_dis_func
 from .dispatch import MultiStrategyDispatch
@@ -141,6 +142,11 @@ class Converter(object):
                 (_subclass(Enum), self._unstructure_enum),
                 (has, self._unstructure_attrs),
                 (is_union_type, self._unstructure_union),
+                (
+                    lambda o: o.__class__ is ForwardRef,
+                    self._gen_unstructure_forwardref,
+                    True,
+                ),
             ]
         )
 
@@ -173,6 +179,11 @@ class Converter(object):
                 ),
                 (is_optional, self._structure_optional),
                 (has, self._structure_attrs),
+                (
+                    lambda o: o.__class__ is ForwardRef,
+                    self._gen_structure_forwardref,
+                    True,
+                ),
             ]
         )
         # Strings are sequences.
@@ -215,14 +226,16 @@ class Converter(object):
         The converter function should take an instance of the class and return
         its Python equivalent.
         """
-        if attrs_has(cls):
-            resolve_types(cls)
+        resolve_types(cls)
         if is_union_type(cls):
             self._unstructure_func.register_func_list(
                 [(lambda t: t == cls, func)]
             )
         else:
-            self._unstructure_func.register_cls_list([(cls, func)])
+            singledispatch_ok = isinstance(cls, type) and not is_generic(cls)
+            self._unstructure_func.register_cls_list(
+                [(cls, func)], direct=not singledispatch_ok
+            )
 
     def register_unstructure_hook_func(
         self, check_func: Callable[[Any], bool], func: Callable[[T], Any]
@@ -230,7 +243,14 @@ class Converter(object):
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
         """
-        self._unstructure_func.register_func_list([(check_func, func)])
+
+        def factory_func(cls: T) -> Callable[[T], Any]:
+            resolve_types(cls)
+            return func
+
+        self._unstructure_func.register_func_list(
+            [(check_func, factory_func, True)]
+        )
 
     def register_unstructure_hook_factory(
         self,
@@ -246,7 +266,14 @@ class Converter(object):
         A factory is a callable that, given a type, produces an unstructuring
         hook for that type. This unstructuring hook will be cached.
         """
-        self._unstructure_func.register_func_list([(predicate, factory, True)])
+
+        def factory_func(cls: T) -> Callable[[Any], Any]:
+            resolve_types(cls)
+            return factory(cls)
+
+        self._unstructure_func.register_func_list(
+            [(predicate, factory_func, True)]
+        )
 
     def register_structure_hook(
         self, cl: Any, func: Callable[[Any, Type[T]], T]
@@ -260,13 +287,15 @@ class Converter(object):
         and return the instance of the class. The type may seem redundant, but
         is sometimes needed (for example, when dealing with generic classes).
         """
-        if attrs_has(cl):
-            resolve_types(cl)
+        resolve_types(cl)
         if is_union_type(cl):
             self._union_struct_registry[cl] = func
             self._structure_func.clear_cache()
         else:
-            self._structure_func.register_cls_list([(cl, func)])
+            singledispatch_ok = isinstance(cl, type) and not is_generic(cl)
+            self._structure_func.register_cls_list(
+                [(cl, func)], direct=not singledispatch_ok
+            )
 
     def register_structure_hook_func(
         self,
@@ -276,12 +305,19 @@ class Converter(object):
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
         """
-        self._structure_func.register_func_list([(check_func, func)])
+
+        def factory_func(cls: T) -> Callable[[Any, Type[T]], T]:
+            resolve_types(cls)
+            return func
+
+        self._structure_func.register_func_list(
+            [(check_func, factory_func, True)]
+        )
 
     def register_structure_hook_factory(
         self,
         predicate: Callable[[Any], bool],
-        factory: Callable[[Any], Callable[[Any], Any]],
+        factory: Callable[[Any], Callable[[Any, Type[T]], T]],
     ) -> None:
         """
         Register a hook factory for a given predicate.
@@ -292,7 +328,14 @@ class Converter(object):
         A factory is a callable that, given a type, produces a structuring
         hook for that type. This structuring hook will be cached.
         """
-        self._structure_func.register_func_list([(predicate, factory, True)])
+
+        def factory_func(cls: T) -> Callable[[Any, Type[T]], T]:
+            resolve_types(cls)
+            return factory(cls)
+
+        self._structure_func.register_func_list(
+            [(predicate, factory_func, True)]
+        )
 
     def structure(self, obj: Any, cl: Type[T]) -> T:
         """Convert unstructured Python data structures to structured data."""
@@ -354,6 +397,17 @@ class Converter(object):
         By default, just unstructures the instance.
         """
         return self._unstructure_func.dispatch(obj.__class__)(obj)
+
+    def _gen_unstructure_forwardref(self, cl):
+        if not cl.__forward_evaluated__:
+            raise ValueError(
+                f"ForwardRef({cl.__forward_arg__!r}) is not resolved."
+                " Consider resolving the parent type alias"
+                " manually with `cattr.resolve_types`"
+                " in the defining module or by registering a hook."
+            )
+        cl = cl.__forward_value__
+        return lambda o: self._unstructure_func.dispatch(cl)(o)
 
     # Python primitives to classes.
 
@@ -556,6 +610,17 @@ class Converter(object):
                 self._structure_func.dispatch(t)(e, t)
                 for t, e in zip(tup_params, obj)
             )
+
+    def _gen_structure_forwardref(self, cl):
+        if not cl.__forward_evaluated__:
+            raise ValueError(
+                f"ForwardRef({cl.__forward_arg__!r}) is not resolved."
+                " Consider resolving the parent type alias"
+                " manually with `cattr.resolve_types`"
+                " in the defining module or by registering a hook."
+            )
+        cl = cl.__forward_value__
+        return lambda o, t: self._structure_func.dispatch(cl)(o, cl)
 
     @staticmethod
     def _get_dis_func(union):
