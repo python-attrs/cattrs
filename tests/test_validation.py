@@ -25,10 +25,10 @@ def test_class_validation():
     assert repr(exc.value.exceptions[0]) == repr(
         ValueError("invalid literal for int() with base 10: 'a'")
     )
-    assert exc.value.exceptions[0].__note__ == "Structuring class Test @ attribute a"
+    assert exc.value.exceptions[0].__note__ == "Structuring class test_class_validation.<locals>.Test @ attribute a"
 
     assert repr(exc.value.exceptions[1]) == repr(KeyError("c"))
-    assert exc.value.exceptions[1].__note__ == "Structuring class Test @ attribute c"
+    assert exc.value.exceptions[1].__note__ == "Structuring class test_class_validation.<locals>.Test @ attribute c"
 
 
 def test_list_validation():
@@ -41,12 +41,12 @@ def test_list_validation():
     assert repr(exc.value.exceptions[0]) == repr(
         ValueError("invalid literal for int() with base 10: 'a'")
     )
-    assert exc.value.exceptions[0].__note__ == "Structuring iterable @ index 2"
+    assert exc.value.exceptions[0].__note__ == "Structuring typing.List[int] @ index 2"
 
     assert repr(exc.value.exceptions[1]) == repr(
         ValueError("invalid literal for int() with base 10: 'c'")
     )
-    assert exc.value.exceptions[1].__note__ == "Structuring iterable @ index 4"
+    assert exc.value.exceptions[1].__note__ == "Structuring typing.List[int] @ index 4"
 
 
 def test_mapping_validation():
