@@ -492,7 +492,7 @@ class Converter:
                     try:
                         res.append(handler(e, elem_type))
                     except Exception as e:
-                        e.__note__ = f"Structuring iterable @ index {ix}"
+                        e.__note__ = f"Structuring {cl} @ index {ix}"
                         errors.append(e)
                     finally:
                         ix += 1

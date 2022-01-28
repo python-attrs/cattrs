@@ -340,7 +340,7 @@ def make_dict_structure_fn(
             lines.append(f"{i}except Exception as e:")
             i = f"{i}  "
             lines.append(
-                f"{i}e.__note__ = 'Structuring class {cl_name} @ attribute {an}'"
+                f"{i}e.__note__ = 'Structuring class {cl.__qualname__} @ attribute {an}'"
             )
             lines.append(f"{i}errors.append(e)")
         post_lines.append(f"  if errors: raise __c_cve('While structuring {cl.__name__}', errors, __cl)")
