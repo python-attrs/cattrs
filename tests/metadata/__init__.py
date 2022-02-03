@@ -14,7 +14,9 @@ from typing import (
     FrozenSet,
     List,
     MutableSequence,
+    MutableSet,
     Sequence,
+    Set,
     Tuple,
     Type,
     TypeVar,
@@ -100,13 +102,18 @@ def simple_typed_attrs(
             | str_typed_attrs(defaults)
             | float_typed_attrs(defaults)
             | frozenset_typed_attrs(defaults, legacy_types_only=True)
+            | homo_tuple_typed_attrs(defaults, legacy_types_only=True)
         )
         if not for_frozen:
             res = (
                 res
                 | dict_typed_attrs(defaults, allow_mutable_defaults)
-                | mutable_seq_typed_attrs(defaults, allow_mutable_defaults)
-                | seq_typed_attrs(defaults, allow_mutable_defaults)
+                | mutable_seq_typed_attrs(
+                    defaults, allow_mutable_defaults, legacy_types_only=True
+                )
+                | seq_typed_attrs(
+                    defaults, allow_mutable_defaults, legacy_types_only=True
+                )
                 | list_typed_attrs(
                     defaults, allow_mutable_defaults, legacy_types_only=True
                 )
@@ -349,7 +356,7 @@ def set_typed_attrs(
         sampled_from(
             [set, set[int], AbcSet[int], AbcMutableSet[int]]
             if not legacy_types_only
-            else [set, AbcSet[int], AbcMutableSet[int]]
+            else [set, Set[int], MutableSet[int]]
         )
     )
     return (attr.ib(type=type, default=default), val_strat)
@@ -402,9 +409,9 @@ def list_typed_attrs(
         attr.ib(
             type=draw(
                 sampled_from(
-                    [List, List[float], list]
-                    if legacy_types_only
-                    else [list[float], list, List[float], List]
+                    [list[float], list, List[float], List]
+                    if not legacy_types_only
+                    else [List, List[float], list]
                 )
             ),
             default=default,
@@ -414,10 +421,12 @@ def list_typed_attrs(
 
 
 @composite
-def seq_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
+def seq_typed_attrs(
+    draw, defaults=None, allow_mutable_defaults=True, legacy_types_only=False
+):
     """
     Generate a tuple of an attribute and a strategy that yields lists
-    for that attribute. The lists contain floats.
+    for that attribute. The lists contain integers.
     """
     default_val = attr.NOTHING
     val_strat = lists(integers())
@@ -432,9 +441,7 @@ def seq_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
 
     return (
         attr.ib(
-            type=Sequence[int]
-            if not is_39_or_later or draw(booleans())
-            else AbcSequence[int],
+            type=AbcSequence[int] if not legacy_types_only else Sequence[int],
             default=default,
         ),
         val_strat,
@@ -442,7 +449,9 @@ def seq_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
 
 
 @composite
-def mutable_seq_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
+def mutable_seq_typed_attrs(
+    draw, defaults=None, allow_mutable_defaults=True, legacy_types_only=False
+):
     """
     Generate a tuple of an attribute and a strategy that yields lists
     for that attribute. The lists contain floats.
@@ -460,9 +469,9 @@ def mutable_seq_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
 
     return (
         attr.ib(
-            type=MutableSequence[float]
-            if not is_39_or_later
-            else AbcMutableSequence[float],
+            type=AbcMutableSequence[float]
+            if not legacy_types_only
+            else MutableSequence[float],
             default=default,
         ),
         val_strat,
@@ -470,7 +479,7 @@ def mutable_seq_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
 
 
 @composite
-def homo_tuple_typed_attrs(draw, defaults=None):
+def homo_tuple_typed_attrs(draw, defaults=None, legacy_types_only=False):
     """
     Generate a tuple of an attribute and a strategy that yields homogenous
     tuples for that attribute. The tuples contain strings.
@@ -481,7 +490,13 @@ def homo_tuple_typed_attrs(draw, defaults=None):
         default = draw(val_strat)
     return (
         attr.ib(
-            type=tuple[str, ...] if draw(booleans()) else Tuple[str, ...],
+            type=draw(
+                sampled_from(
+                    [tuple[str, ...], tuple, Tuple, Tuple[str, ...]]
+                    if not legacy_types_only
+                    else [tuple, Tuple, Tuple[str, ...]]
+                )
+            ),
             default=default,
         ),
         val_strat,
