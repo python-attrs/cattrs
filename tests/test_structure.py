@@ -31,9 +31,9 @@ from hypothesis.strategies import (
 from pytest import raises
 
 from cattr import Converter
-from cattr._compat import is_bare, is_union_type
-from cattr.converters import NoneType
 from cattr.errors import StructureHandlerNotFoundError
+from cattrs._compat import is_bare, is_union_type
+from cattrs.converters import NoneType
 
 from . import (
     dicts_of_primitives,

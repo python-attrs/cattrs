@@ -1,7 +1,8 @@
 """Preconfigured converters for pyyaml."""
 from datetime import datetime
 
-from .._compat import FrozenSetSubscriptable
+from cattrs._compat import FrozenSetSubscriptable
+
 from ..converters import GenConverter
 from . import validate_datetime
 

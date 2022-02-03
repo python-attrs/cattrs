@@ -17,7 +17,7 @@ from typing import (
 import attr
 from attr import NOTHING, frozen, resolve_types
 
-from cattr._compat import (
+from ._compat import (
     adapted_fields,
     get_args,
     get_origin,
@@ -25,7 +25,7 @@ from cattr._compat import (
     is_bare,
     is_generic,
 )
-from cattr._generics import deep_copy_with
+from ._generics import deep_copy_with
 
 if TYPE_CHECKING:  # pragma: no cover
     from cattr.converters import Converter

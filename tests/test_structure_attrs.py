@@ -17,8 +17,8 @@ from attr import (
 from hypothesis import assume, given
 from hypothesis.strategies import data, lists, sampled_from
 
-from cattr._compat import is_py37
 from cattr.converters import Converter, GenConverter
+from cattrs._compat import is_py37
 
 from . import simple_classes
 

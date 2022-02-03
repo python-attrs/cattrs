@@ -8,7 +8,7 @@ from hypothesis import HealthCheck, assume, given, settings
 from hypothesis.strategies import sampled_from
 
 from cattr import Converter, UnstructureStrategy
-from cattr._compat import is_py310_plus
+from cattrs._compat import is_py310_plus
 
 from . import nested_typed_classes, simple_typed_attrs, simple_typed_classes
 

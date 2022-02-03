@@ -22,7 +22,7 @@ from hypothesis.strategies import (
     text,
 )
 
-from cattr._compat import (
+from cattrs._compat import (
     Counter,
     FrozenSet,
     Mapping,

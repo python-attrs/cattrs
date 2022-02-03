@@ -2,7 +2,8 @@
 from datetime import datetime
 from typing import Any
 
-from .._compat import Set, is_mapping
+from cattrs._compat import Set, is_mapping
+
 from ..converters import GenConverter
 from . import validate_datetime
 

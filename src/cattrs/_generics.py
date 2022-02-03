@@ -1,6 +1,6 @@
 from typing import Any, Mapping
 
-from ._compat import copy_with, get_args, is_annotated, is_generic
+from cattrs._compat import copy_with, get_args, is_annotated, is_generic
 
 
 def deep_copy_with(t, mapping: Mapping[str, Any]):

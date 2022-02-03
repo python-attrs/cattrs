@@ -7,6 +7,7 @@ History
 * ``attrs`` and dataclass structuring is now ~25% faster.
 * Fix an issue structuring bare ``typing.List`` s on Pythons lower than 3.9.
   (`#209 <https://github.com/python-attrs/cattrs/issues/209>`_)
+* Internal code reorganization for the new ``cattrs`` namespace. This should not affect users of public APIs.
 
 1.10.0 (2022-01-04)
 -------------------

@@ -1,20 +1,36 @@
-from .converters import Converter, GenConverter, UnstructureStrategy
-from .gen import override
+from cattrs import (
+    converters,
+    disambiguators,
+    dispatch,
+    errors,
+    gen,
+    global_converter,
+)
+from cattrs.converters import Converter, GenConverter, UnstructureStrategy
+from cattrs.gen import override
 
 __all__ = (
-    "global_converter",
-    "unstructure",
-    "structure",
-    "structure_attrs_fromtuple",
-    "structure_attrs_fromdict",
-    "UnstructureStrategy",
     "Converter",
+    "converters",
+    "disambiguators",
+    "dispatch",
+    "errors",
+    "gen",
     "GenConverter",
+    "global_converter",
     "override",
+    "preconf",
+    "register_structure_hook_func",
+    "register_structure_hook",
+    "register_unstructure_hook_func",
+    "register_unstructure_hook",
+    "structure_attrs_fromdict",
+    "structure_attrs_fromtuple",
+    "structure",
+    "unstructure",
+    "UnstructureStrategy",
 )
 
-
-global_converter = GenConverter()
 
 unstructure = global_converter.unstructure
 structure = global_converter.structure

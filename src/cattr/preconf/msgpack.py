@@ -1,7 +1,8 @@
 """Preconfigured converters for msgpack."""
 from datetime import datetime, timezone
 
-from .._compat import Set
+from cattrs._compat import Set
+
 from ..converters import GenConverter
 
 

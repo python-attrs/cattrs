@@ -2,7 +2,8 @@
 from base64 import b85decode, b85encode
 from datetime import datetime
 
-from .._compat import Counter, Set
+from cattrs._compat import Counter, Set
+
 from ..converters import Converter, GenConverter
 
 

@@ -3,9 +3,9 @@ from typing import Dict, Generic, List, Optional, TypeVar, Union
 import pytest
 from attr import asdict, attrs, define
 
-from cattr._compat import Protocol, is_py39_plus
-from cattr._generics import deep_copy_with
 from cattrs import Converter, GenConverter
+from cattrs._compat import Protocol, is_py39_plus
+from cattrs._generics import deep_copy_with
 from cattrs.errors import StructureHandlerNotFoundError
 
 from ._compat import Dict_origin, List_origin
