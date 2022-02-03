@@ -412,8 +412,10 @@ def make_iterable_unstructure_fn(cl: Any, converter, unstructure_to=None):
 
     fn_name = "unstructure_iterable"
 
-    # Let's try fishing out the type args.
-    if getattr(cl, "__args__", None) is not None:
+    # Let's try fishing out the type args
+    # Unspecified tuples have `__args__` as empty tuples, so guard
+    # against IndexError.
+    if getattr(cl, "__args__", None) not in (None, ()):
         type_arg = cl.__args__[0]
         # We don't know how to handle the TypeVar on this level,
         # so we skip doing the dispatch here.
