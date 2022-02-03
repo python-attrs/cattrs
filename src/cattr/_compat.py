@@ -168,13 +168,15 @@ if is_py37 or is_py38:
     bare_mutable_seq_args = TypingMutableSequence.__args__
 
     def is_bare(type):
-        args = type.__args__
+        # Lower-cased generics in 3.7-8 do not have `__args__` attribute.
+        args = getattr(type, "__args__", None)
         return (
             args == bare_list_args
             or args == bare_seq_args
             or args == bare_mapping_args
             or args == bare_dict_args
             or args == bare_mutable_seq_args
+            or args is None
         )
 
     def is_counter(type):
