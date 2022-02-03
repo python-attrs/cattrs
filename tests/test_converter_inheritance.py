@@ -1,3 +1,5 @@
+import collections
+import typing
 from typing import Type
 
 import attr
@@ -43,3 +45,62 @@ def test_gen_hook_priority(converter_cls: Type[Converter]):
 
     # This should still work, but using the new hook instead.
     assert converter.structure({"i": 1}, B) == B(2)
+
+
+@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
+@pytest.mark.parametrize(
+    "typing_cls", [typing.Hashable, typing.Iterable, typing.Reversible]
+)
+def test_inherit_typing(converter_cls: Type[Converter], typing_cls):
+    """Stuff from typing.* resolves to runtime to collections.abc.*.
+
+    Hence, typing.* are of a special alias type which we want to check if
+    cattrs handles them correctly.
+    """
+    converter = converter_cls()
+
+    @attr.define
+    class A(typing_cls):
+        i: int = 0
+
+        def __hash__(self):
+            return hash(self.i)
+
+        def __iter__(self):
+            return iter([self.i])
+
+        def __reversed__(self):
+            return iter([self.i])
+
+    assert converter.structure({"i": 1}, A) == A(i=1)
+
+
+@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
+@pytest.mark.parametrize(
+    "collections_abc_cls",
+    [
+        collections.abc.Hashable,
+        collections.abc.Iterable,
+        collections.abc.Reversible,
+    ],
+)
+def test_inherit_collections_abc(
+    converter_cls: Type[Converter], collections_abc_cls
+):
+    """As extension of test_inherit_typing, check if collections.abc.* work."""
+    converter = converter_cls()
+
+    @attr.define
+    class A(collections_abc_cls):
+        i: int = 0
+
+        def __hash__(self):
+            return hash(self.i)
+
+        def __iter__(self):
+            return iter([self.i])
+
+        def __reversed__(self):
+            return iter([self.i])
+
+    assert converter.structure({"i": 1}, A) == A(i=1)
