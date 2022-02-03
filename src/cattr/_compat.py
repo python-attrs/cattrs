@@ -166,6 +166,7 @@ if is_py37 or is_py38:
     bare_mapping_args = TypingMapping.__args__
     bare_dict_args = Dict.__args__
     bare_mutable_seq_args = TypingMutableSequence.__args__
+    bare_tuple_args = Tuple.__args__
 
     def is_bare(type):
         # Lower-cased generics in 3.7-8 do not have `__args__` attribute.
@@ -176,6 +177,7 @@ if is_py37 or is_py38:
             or args == bare_mapping_args
             or args == bare_dict_args
             or args == bare_mutable_seq_args
+            or args == bare_tuple_args
             or args is None
         )
 
