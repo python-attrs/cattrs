@@ -11,6 +11,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    FrozenSet,
     List,
     MutableSequence,
     Sequence,
@@ -98,6 +99,7 @@ def simple_typed_attrs(
             | int_typed_attrs(defaults)
             | str_typed_attrs(defaults)
             | float_typed_attrs(defaults)
+            | frozenset_typed_attrs(defaults, legacy_types_only=True)
         )
         if not for_frozen:
             res = (
@@ -106,6 +108,9 @@ def simple_typed_attrs(
                 | mutable_seq_typed_attrs(defaults, allow_mutable_defaults)
                 | seq_typed_attrs(defaults, allow_mutable_defaults)
                 | list_typed_attrs(
+                    defaults, allow_mutable_defaults, legacy_types_only=True
+                )
+                | set_typed_attrs(
                     defaults, allow_mutable_defaults, legacy_types_only=True
                 )
             )
@@ -282,6 +287,7 @@ def dict_typed_attrs(
     """
     Generate a tuple of an attribute and a strategy that yields dictionaries
     for that attribute. The dictionaries map strings to integers.
+    The generated dict types are what's expected to be used on pre-3.9 Pythons.
     """
     default = attr.NOTHING
     val_strat = dictionaries(keys=text(), values=integers())
@@ -291,12 +297,8 @@ def dict_typed_attrs(
             default = Factory(lambda: default_val)
         else:
             default = default_val
-    return (
-        attr.ib(
-            type=Dict[str, int] if draw(booleans()) else Dict, default=default
-        ),
-        val_strat,
-    )
+    type = draw(sampled_from([Dict[str, int], Dict, dict]))
+    return (attr.ib(type=type, default=default), val_strat)
 
 
 @composite
@@ -318,15 +320,16 @@ def new_dict_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
     else:
         default = default_val
 
-    type = (
-        dict[str, int] if draw(booleans()) else dict
-    )  # We also produce bare dicts.
-
-    return (attr.ib(type=type, default=default), val_strat)
+    return (attr.ib(type=dict[str, int], default=default), val_strat)
 
 
 @composite
-def set_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
+def set_typed_attrs(
+    draw: DrawFn,
+    defaults=None,
+    allow_mutable_defaults=True,
+    legacy_types_only=False,
+):
     """
     Generate a tuple of an attribute and a strategy that yields sets
     for that attribute. The sets contain integers.
@@ -341,19 +344,21 @@ def set_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
             default = default_val
     else:
         default = default_val
-    return (
-        attr.ib(
-            type=set[int]
-            if draw(booleans())
-            else (AbcSet[int] if draw(booleans()) else AbcMutableSet[int]),
-            default=default,
-        ),
-        val_strat,
+
+    type = draw(
+        sampled_from(
+            [set, set[int], AbcSet[int], AbcMutableSet[int]]
+            if not legacy_types_only
+            else [set, AbcSet[int], AbcMutableSet[int]]
+        )
     )
+    return (attr.ib(type=type, default=default), val_strat)
 
 
 @composite
-def frozenset_typed_attrs(draw, defaults=None):
+def frozenset_typed_attrs(
+    draw: DrawFn, defaults=None, legacy_types_only=False
+):
     """
     Generate a tuple of an attribute and a strategy that yields frozensets
     for that attribute. The frozensets contain integers.
@@ -362,7 +367,14 @@ def frozenset_typed_attrs(draw, defaults=None):
     val_strat = frozensets(integers())
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(val_strat)
-    return (attr.ib(type=frozenset[int], default=default), val_strat)
+    type = draw(
+        sampled_from(
+            [frozenset[int], frozenset, FrozenSet[int], FrozenSet]
+            if not legacy_types_only
+            else [frozenset, FrozenSet[int], FrozenSet]
+        )
+    )
+    return (attr.ib(type=type, default=default), val_strat)
 
 
 @composite
@@ -390,9 +402,9 @@ def list_typed_attrs(
         attr.ib(
             type=draw(
                 sampled_from(
-                    [List, List[float]]
+                    [List, List[float], list]
                     if legacy_types_only
-                    else [list[float], List[float], List]
+                    else [list[float], list, List[float], List]
                 )
             ),
             default=default,
