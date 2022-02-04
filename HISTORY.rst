@@ -7,8 +7,11 @@ History
 * ``attrs`` and dataclass structuring is now ~25% faster.
 * Fix an issue structuring bare ``typing.List`` s on Pythons lower than 3.9.
   (`#209 <https://github.com/python-attrs/cattrs/issues/209>`_)
-* Fix structuring bare generics on Pythons lower than 3.9.
+* Fix structuring of non-parametrized containers like ``list/dict/...`` on Pythons lower than 3.9.
   (`https://github.com/python-attrs/cattrs/issues/218`)
+* Fix structuring bare ``typing.Tuple`` on Pythons lower than 3.9.
+  (`https://github.com/python-attrs/cattrs/issues/218`)
+
 
 1.10.0 (2022-01-04)
 -------------------
