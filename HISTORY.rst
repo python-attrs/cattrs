@@ -12,6 +12,9 @@ History
 * Fix structuring bare ``typing.Tuple`` on Pythons lower than 3.9.
   (`#218 <https://github.com/python-attrs/cattrs/issues/218>`_)
 
+* Fix a wrong ``AttributeError`` of an missing ``__parameters__`` attribute. This could happen 
+  when inheriting certain generic classes – for example ``typing.*`` classes are affected. 
+  (`#217 <https://github.com/python-attrs/cattrs/issues/217>`_)
 
 1.10.0 (2022-01-04)
 -------------------
