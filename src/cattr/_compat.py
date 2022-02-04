@@ -161,25 +161,18 @@ if is_py37 or is_py38:
             and issubclass(type.__origin__, TypingMapping)
         )
 
-    bare_list_args = List.__args__
-    bare_seq_args = TypingSequence.__args__
-    bare_mapping_args = TypingMapping.__args__
-    bare_dict_args = Dict.__args__
-    bare_mutable_seq_args = TypingMutableSequence.__args__
-    bare_tuple_args = Tuple.__args__
+    bare_generic_args = {
+        List.__args__,
+        TypingSequence.__args__,
+        TypingMapping.__args__,
+        Dict.__args__,
+        TypingMutableSequence.__args__,
+        Tuple.__args__,
+        None,  # non-parametrized containers do not have `__args__ attribute in py3.7-8
+    }
 
     def is_bare(type):
-        # Lower-cased generics in 3.7-8 do not have `__args__` attribute.
-        args = getattr(type, "__args__", None)
-        return (
-            args == bare_list_args
-            or args == bare_seq_args
-            or args == bare_mapping_args
-            or args == bare_dict_args
-            or args == bare_mutable_seq_args
-            or args == bare_tuple_args
-            or args is None
-        )
+        return getattr(type, "__args__", None) in bare_generic_args
 
     def is_counter(type):
         return (
