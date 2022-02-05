@@ -51,6 +51,14 @@ PosArg = Any
 PosArgs = Tuple[Any]
 T = TypeVar("T")
 
+# These are cached here to avoid a Python bug in the typing LRU cache.
+if is_39_or_later:
+    INT_SETS = (set, set[int], AbcSet[int], AbcMutableSet[int])
+    INT_FROZENSETS = (frozenset[int], frozenset, FrozenSet[int], FrozenSet)
+else:
+    INT_SETS = (set, Set[int], MutableSet[int])
+    INT_FROZENSETS = (frozenset, FrozenSet[int], FrozenSet)
+
 
 def simple_typed_classes(defaults=None, min_attrs=0, frozen=False):
     """Yield tuples of (class, values)."""
@@ -102,7 +110,7 @@ def simple_typed_attrs(
             | int_typed_attrs(defaults)
             | str_typed_attrs(defaults)
             | float_typed_attrs(defaults)
-            | frozenset_typed_attrs(defaults, legacy_types_only=True)
+            | frozenset_typed_attrs(defaults)
             | homo_tuple_typed_attrs(defaults, legacy_types_only=True)
         )
         if not for_frozen:
@@ -118,9 +126,7 @@ def simple_typed_attrs(
                 | list_typed_attrs(
                     defaults, allow_mutable_defaults, legacy_types_only=True
                 )
-                | set_typed_attrs(
-                    defaults, allow_mutable_defaults, legacy_types_only=True
-                )
+                | set_typed_attrs(defaults, allow_mutable_defaults)
             )
     else:
         res = (
@@ -333,12 +339,7 @@ def new_dict_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
 
 
 @composite
-def set_typed_attrs(
-    draw: DrawFn,
-    defaults=None,
-    allow_mutable_defaults=True,
-    legacy_types_only=False,
-):
+def set_typed_attrs(draw: DrawFn, defaults=None, allow_mutable_defaults=True):
     """
     Generate a tuple of an attribute and a strategy that yields sets
     for that attribute. The sets contain integers.
@@ -354,20 +355,12 @@ def set_typed_attrs(
     else:
         default = default_val
 
-    type = draw(
-        sampled_from(
-            [set, set[int], AbcSet[int], AbcMutableSet[int]]
-            if not legacy_types_only
-            else [set, Set[int], MutableSet[int]]
-        )
-    )
+    type = draw(sampled_from(INT_SETS))
     return (attr.ib(type=type, default=default), val_strat)
 
 
 @composite
-def frozenset_typed_attrs(
-    draw: DrawFn, defaults=None, legacy_types_only=False
-):
+def frozenset_typed_attrs(draw: DrawFn, defaults=None):
     """
     Generate a tuple of an attribute and a strategy that yields frozensets
     for that attribute. The frozensets contain integers.
@@ -376,13 +369,7 @@ def frozenset_typed_attrs(
     val_strat = frozensets(integers())
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(val_strat)
-    type = draw(
-        sampled_from(
-            [frozenset[int], frozenset, FrozenSet[int], FrozenSet]
-            if not legacy_types_only
-            else [frozenset, FrozenSet[int], FrozenSet]
-        )
-    )
+    type = draw(sampled_from(INT_FROZENSETS))
     return (attr.ib(type=type, default=default), val_strat)
 
 
