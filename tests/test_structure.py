@@ -31,7 +31,7 @@ from hypothesis.strategies import (
 from pytest import raises
 
 from cattr import Converter
-from cattr._compat import is_bare, is_union_type
+from cattr._compat import copy_with, is_bare, is_union_type
 from cattr.converters import NoneType
 from cattr.errors import StructureHandlerNotFoundError
 
@@ -130,7 +130,7 @@ def test_stringifying_sets(set_and_type):
     if is_bare(input_set_type):
         input_set_type = input_set_type[str]
     else:
-        input_set_type = input_set_type.__origin__[str]
+        input_set_type = copy_with(input_set_type, str)
     converted = converter.structure(set_, input_set_type)
     assert len(converted) == len(set_)
     for e in set_:
