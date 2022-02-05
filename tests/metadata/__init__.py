@@ -25,6 +25,7 @@ from typing import (
 import attr
 from attr import NOTHING, Factory
 from attr._make import _CountingAttr
+from hypothesis import note
 from hypothesis.strategies import (
     DrawFn,
     SearchStrategy,
@@ -164,10 +165,11 @@ def _create_hyp_class(
     for i, a in enumerate(attrs):
         a.counter = i
     vals = tuple((a[1]) for a in attrs_and_strat)
+    note(f"Class fields: {attrs}")
     return tuples(
         just(
             make_class(
-                "HypClass",
+                "HypAttrsClass",
                 OrderedDict(zip(gen_attr_names(), attrs)),
                 frozen=frozen,
             )
