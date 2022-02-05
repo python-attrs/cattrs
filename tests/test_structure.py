@@ -130,7 +130,7 @@ def test_stringifying_sets(set_and_type):
     if is_bare(input_set_type):
         input_set_type = input_set_type[str]
     else:
-        input_set_type.__args__ = (str,)
+        input_set_type = input_set_type.__origin__[str]
     converted = converter.structure(set_, input_set_type)
     assert len(converted) == len(set_)
     for e in set_:
