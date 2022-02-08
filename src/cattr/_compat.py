@@ -277,6 +277,7 @@ else:
                 TypingSequence,
                 TypingMutableSequence,
                 AbcMutableSequence,
+                Tuple,
                 tuple,
             )
             or (
