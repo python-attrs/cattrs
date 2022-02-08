@@ -15,6 +15,8 @@ History
 * Fix a wrong ``AttributeError`` of an missing ``__parameters__`` attribute. This could happen 
   when inheriting certain generic classes – for example ``typing.*`` classes are affected. 
   (`#217 <https://github.com/python-attrs/cattrs/issues/217>`_)
+* Fix unstructuring all tuples - unannotated, variable-length, homogenous and heterogenous - to `list`.
+  (`#226 <https://github.com/python-attrs/cattrs/issues/226>`_)
 
 1.10.0 (2022-01-04)
 -------------------
