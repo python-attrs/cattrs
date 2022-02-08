@@ -760,7 +760,7 @@ class GenConverter(Converter):
 
     def gen_unstructure_hetero_tuple(self, cl: Any, unstructure_to=None):
         unstructure_to = self._unstruct_collection_overrides.get(
-            get_origin(cl) or cl, unstructure_to or tuple
+            get_origin(cl) or cl, unstructure_to or list
         )
         h = make_hetero_tuple_unstructure_fn(cl, self, unstructure_to=unstructure_to)
         self._unstructure_func.register_cls_list([(cl, h)], direct=True)
