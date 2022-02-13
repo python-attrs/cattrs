@@ -101,7 +101,7 @@ def everythings(
         )
     )
     dts = datetimes(
-        min_value=datetime(1904, 1, 1),
+        min_value=datetime(1970, 1, 1),
         max_value=datetime(2038, 1, 1),
         timezones=just(timezone.utc),
     )
