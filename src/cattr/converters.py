@@ -81,6 +81,12 @@ def is_optional(typ):
     return is_union_type(typ) and NoneType in typ.__args__ and len(typ.__args__) == 2
 
 
+def is_literal_containing_enums(typ):
+    return is_literal(typ) and any(
+        isinstance(val, Enum) for val in typ.__args__
+    )
+
+
 class Converter:
     """Converts between structured and unstructured data."""
 
@@ -146,7 +152,8 @@ class Converter:
             [
                 (lambda cl: cl is Any or cl is Optional or cl is None, lambda v, _: v),
                 (is_generic_attrs, self._gen_structure_generic, True),
-                (is_literal, self._structure_literal),
+                (is_literal, self._structure_simple_literal),
+                (is_literal_containing_enums, self._structure_enum_literal),
                 (is_sequence, self._structure_list),
                 (is_mutable_set, self._structure_set),
                 (is_frozenset, self._structure_frozenset),
@@ -375,10 +382,20 @@ class Converter:
         return cl(obj)
 
     @staticmethod
-    def _structure_literal(val, type):
+    def _structure_simple_literal(val, type):
         if val not in type.__args__:
             raise Exception(f"{val} not in literal {type}")
         return val
+
+    @staticmethod
+    def _structure_enum_literal(val, type):
+        vals = {
+            (x.value if isinstance(x, Enum) else x): x for x in type.__args__
+        }
+        try:
+            return vals[val]
+        except KeyError:
+            raise Exception(f"{val} not in literal {type}") from None
 
     # Attrs classes.
 
