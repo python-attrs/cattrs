@@ -11,10 +11,11 @@ History
   (`#218 <https://github.com/python-attrs/cattrs/issues/218>`_)
 * Fix structuring bare ``typing.Tuple`` on Pythons lower than 3.9.
   (`#218 <https://github.com/python-attrs/cattrs/issues/218>`_)
-
 * Fix a wrong ``AttributeError`` of an missing ``__parameters__`` attribute. This could happen 
   when inheriting certain generic classes – for example ``typing.*`` classes are affected. 
   (`#217 <https://github.com/python-attrs/cattrs/issues/217>`_)
+* Fix structuring of ``enum.Enum`` instances in ``typing.Literal`` types.
+  (`#231 <https://github.com/python-attrs/cattrs/pull/231>`_)
 
 1.10.0 (2022-01-04)
 -------------------
