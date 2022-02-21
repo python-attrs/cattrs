@@ -214,7 +214,7 @@ def make_dict_structure_fn(
     _cattrs_forbid_extra_keys: bool = False,
     _cattrs_use_linecache: bool = True,
     _cattrs_prefer_attrib_converters: bool = False,
-    _cattrs_extended_validation: bool = True,
+    _cattrs_detailed_validation: bool = True,
     **kwargs,
 ) -> Callable[[Mapping[str, Any], Any], T]:
     """Generate a specialized dict structuring function for an attrs class."""
@@ -258,7 +258,7 @@ def make_dict_structure_fn(
         resolve_types(cl)
 
     allowed_fields = set()
-    if _cattrs_extended_validation:
+    if _cattrs_detailed_validation:
         lines.append("  res = {}")
         lines.append("  errors = []")
         invocation_lines.append("**res,")
@@ -595,7 +595,7 @@ def make_mapping_structure_fn(
     structure_to=dict,
     key_type=NOTHING,
     val_type=NOTHING,
-    extended_validation: bool = True,
+    detailed_validation: bool = True,
 ):
     """Generate a specialized unstructure function for a mapping."""
     fn_name = "structure_mapping"
@@ -656,7 +656,7 @@ def make_mapping_structure_fn(
         # No args, it's a bare dict.
         lines.append("  res = dict(mapping)")
     else:
-        if extended_validation:
+        if detailed_validation:
             globs["enumerate"] = enumerate
             globs["IterableValidationError"] = IterableValidationError
             lines.append("  res = {}; errors = []")

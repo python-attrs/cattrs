@@ -34,11 +34,11 @@ unstructure_strats = sampled_from(list(UnstructureStrategy))
 @given(
     simple_typed_classes() | simple_typed_dataclasses(), unstructure_strats, booleans()
 )
-def test_simple_roundtrip(cls_and_vals, strat, extended_validation):
+def test_simple_roundtrip(cls_and_vals, strat, detailed_validation):
     """
     Simple classes with metadata can be unstructured and restructured.
     """
-    converter = Converter(unstruct_strat=strat, extended_validation=extended_validation)
+    converter = Converter(unstruct_strat=strat, detailed_validation=detailed_validation)
     cl, vals = cls_and_vals
     inst = cl(*vals)
     unstructured = converter.unstructure(inst)
