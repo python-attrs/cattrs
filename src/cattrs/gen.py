@@ -679,7 +679,7 @@ def make_mapping_structure_fn(
             lines.append("      errors.append(e)")
             lines.append("  if errors:")
             lines.append(
-                f"    raise IterableValidationError('While structuring {structure_to.__name__}', errors, __cattr_mapping_cl)"
+                f"    raise IterableValidationError('While structuring {cl!r}', errors, __cattr_mapping_cl)"
             )
         else:
             lines.append(f"  res = {{{k_s}: {v_s} for k, v in mapping.items()}}")
