@@ -3,11 +3,7 @@ import pytest
 from attr import define, fields, has
 
 from cattrs import Converter, GenConverter
-from cattrs.gen import (
-    make_dict_structure_fn,
-    make_dict_unstructure_fn,
-    override,
-)
+from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
 
 def to_camel_case(snake_str):
@@ -33,15 +29,10 @@ def test_snake_to_camel(converter_cls):
         return make_dict_unstructure_fn(
             type,
             converter,
-            **{
-                a.name: override(rename=to_camel_case(a.name))
-                for a in fields(type)
-            }
+            **{a.name: override(rename=to_camel_case(a.name)) for a in fields(type)}
         )
 
-    converter.register_unstructure_hook_factory(
-        has, unstructure_adapt_to_camel_case
-    )
+    converter.register_unstructure_hook_factory(has, unstructure_adapt_to_camel_case)
 
     original = Outer(Inner(0, 0.0, "str"))
     unstructured = converter.unstructure(original)
@@ -56,14 +47,11 @@ def test_snake_to_camel(converter_cls):
 
     def structure_adapt_to_camel_case(type):
         overrides = {
-            a.name: override(rename=to_camel_case(a.name))
-            for a in fields(type)
+            a.name: override(rename=to_camel_case(a.name)) for a in fields(type)
         }
         return make_dict_structure_fn(type, converter, **overrides)
 
-    converter.register_structure_hook_factory(
-        has, structure_adapt_to_camel_case
-    )
+    converter.register_structure_hook_factory(has, structure_adapt_to_camel_case)
 
     structured = converter.structure(unstructured, Outer)
     assert structured == original

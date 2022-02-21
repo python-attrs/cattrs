@@ -24,9 +24,7 @@ def configure_converter(converter: GenConverter):
     converter.register_structure_hook(bytes, lambda v, _: b85decode(v))
 
     converter.register_unstructure_hook(datetime, lambda v: v.isoformat())
-    converter.register_structure_hook(
-        datetime, lambda v, _: datetime.fromisoformat(v)
-    )
+    converter.register_structure_hook(datetime, lambda v, _: datetime.fromisoformat(v))
 
     def gen_unstructure_mapping(cl: Any, unstructure_to=None):
         key_handler = str

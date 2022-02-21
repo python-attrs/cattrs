@@ -25,10 +25,16 @@ def test_class_validation():
     assert repr(exc.value.exceptions[0]) == repr(
         ValueError("invalid literal for int() with base 10: 'a'")
     )
-    assert exc.value.exceptions[0].__note__ == "Structuring class test_class_validation.<locals>.Test @ attribute a"
+    assert (
+        exc.value.exceptions[0].__note__
+        == "Structuring class test_class_validation.<locals>.Test @ attribute a"
+    )
 
     assert repr(exc.value.exceptions[1]) == repr(KeyError("c"))
-    assert exc.value.exceptions[1].__note__ == "Structuring class test_class_validation.<locals>.Test @ attribute c"
+    assert (
+        exc.value.exceptions[1].__note__
+        == "Structuring class test_class_validation.<locals>.Test @ attribute c"
+    )
 
 
 def test_list_validation():
@@ -103,7 +109,10 @@ def test_homo_tuple_validation():
     assert repr(exc.value.exceptions[0]) == repr(
         ValueError("invalid literal for int() with base 10: 'a'")
     )
-    assert exc.value.exceptions[0].__note__ == "Structuring typing.Tuple[int, ...] @ index 2"
+    assert (
+        exc.value.exceptions[0].__note__
+        == "Structuring typing.Tuple[int, ...] @ index 2"
+    )
 
 
 def test_hetero_tuple_validation():
@@ -116,4 +125,7 @@ def test_hetero_tuple_validation():
     assert repr(exc.value.exceptions[0]) == repr(
         ValueError("invalid literal for int() with base 10: 'a'")
     )
-    assert exc.value.exceptions[0].__note__ == "Structuring typing.Tuple[int, int, int] @ index 2"
+    assert (
+        exc.value.exceptions[0].__note__
+        == "Structuring typing.Tuple[int, int, int] @ index 2"
+    )

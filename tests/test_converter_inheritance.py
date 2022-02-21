@@ -78,15 +78,9 @@ def test_inherit_typing(converter_cls: Type[Converter], typing_cls):
 @pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
 @pytest.mark.parametrize(
     "collections_abc_cls",
-    [
-        collections.abc.Hashable,
-        collections.abc.Iterable,
-        collections.abc.Reversible,
-    ],
+    [collections.abc.Hashable, collections.abc.Iterable, collections.abc.Reversible],
 )
-def test_inherit_collections_abc(
-    converter_cls: Type[Converter], collections_abc_cls
-):
+def test_inherit_collections_abc(converter_cls: Type[Converter], collections_abc_cls):
     """As extension of test_inherit_typing, check if collections.abc.* work."""
     converter = converter_cls()
 

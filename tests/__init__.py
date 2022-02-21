@@ -43,19 +43,14 @@ primitive_strategies = st.sampled_from(
 def enums_of_primitives(draw):
     """Generate enum classes with primitive values."""
     names = draw(
-        st.sets(
-            st.text(min_size=1).filter(lambda s: not s.endswith("_")),
-            min_size=1,
-        )
+        st.sets(st.text(min_size=1).filter(lambda s: not s.endswith("_")), min_size=1)
     )
     n = len(names)
     vals = draw(
         st.one_of(
             st.sets(
                 st.one_of(
-                    st.integers(),
-                    st.floats(allow_nan=False),
-                    st.text(min_size=1),
+                    st.integers(), st.floats(allow_nan=False), st.text(min_size=1)
                 ),
                 min_size=n,
                 max_size=n,
@@ -100,9 +95,7 @@ h_tuple_types = st.sampled_from([Tuple, Sequence])
 h_tuples_of_primitives = primitive_strategies.flatmap(
     lambda e: st.tuples(
         st.lists(e[0]),
-        st.one_of(
-            st.sampled_from([Tuple[e[1], ...], Sequence[e[1]]]), h_tuple_types
-        ),
+        st.one_of(st.sampled_from([Tuple[e[1], ...], Sequence[e[1]]]), h_tuple_types),
     )
 ).map(lambda e: (tuple(e[0]), e[1]))
 
@@ -110,9 +103,7 @@ dict_types = st.sampled_from([Dict, MutableMapping, Mapping])
 
 seqs_of_primitives = st.one_of(lists_of_primitives(), h_tuples_of_primitives)
 
-sets_of_primitives = st.one_of(
-    mut_sets_of_primitives(), frozen_sets_of_primitives()
-)
+sets_of_primitives = st.one_of(mut_sets_of_primitives(), frozen_sets_of_primitives())
 
 
 def create_generic_dict_type(type1, type2):
@@ -135,9 +126,9 @@ def create_dict_and_type(tuple_of_strats):
     )
 
 
-dicts_of_primitives = st.tuples(
-    primitive_strategies, primitive_strategies
-).flatmap(create_dict_and_type)
+dicts_of_primitives = st.tuples(primitive_strategies, primitive_strategies).flatmap(
+    create_dict_and_type
+)
 
 
 def gen_attr_names():
@@ -238,10 +229,7 @@ def list_of_class_with_type(tup):
     default = attr.Factory(lambda: [nested_cl()])
     combined_attrs = list(tup[0])
     combined_attrs.append(
-        (
-            attr.ib(default=default, type=List[nested_cl]),
-            st.just([nested_cl()]),
-        )
+        (attr.ib(default=default, type=List[nested_cl]), st.just([nested_cl()]))
     )
     return _create_hyp_class(combined_attrs)
 
@@ -250,9 +238,7 @@ def dict_of_class(tup):
     nested_cl = tup[1][0]
     default = attr.Factory(lambda: {"cls": nested_cl()})
     combined_attrs = list(tup[0])
-    combined_attrs.append(
-        (attr.ib(default=default), st.just({"cls": nested_cl()}))
-    )
+    combined_attrs.append((attr.ib(default=default), st.just({"cls": nested_cl()})))
     return _create_hyp_class(combined_attrs)
 
 
@@ -267,9 +253,7 @@ def _create_hyp_nested_strategy(simple_class_strategy):
     """
     # A strategy producing tuples of the form ([list of attributes], <given
     # class strategy>).
-    attrs_and_classes = st.tuples(
-        lists_of_attrs(defaults=True), simple_class_strategy
-    )
+    attrs_and_classes = st.tuples(lists_of_attrs(defaults=True), simple_class_strategy)
 
     return (
         attrs_and_classes.flatmap(just_class)
@@ -375,9 +359,9 @@ def simple_attrs(defaults=None):
 
 def lists_of_attrs(defaults=None, min_size=0):
     # Python functions support up to 255 arguments.
-    return st.lists(
-        simple_attrs(defaults), min_size=min_size, max_size=10
-    ).map(lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING))
+    return st.lists(simple_attrs(defaults), min_size=min_size, max_size=10).map(
+        lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING)
+    )
 
 
 def simple_classes(defaults=None, min_attrs=0, frozen=None):
@@ -386,9 +370,7 @@ def simple_classes(defaults=None, min_attrs=0, frozen=None):
     instantiate them.
     """
     return lists_of_attrs(defaults, min_size=min_attrs).flatmap(
-        lambda attrs_and_strategy: _create_hyp_class(
-            attrs_and_strategy, frozen=frozen
-        )
+        lambda attrs_and_strategy: _create_hyp_class(attrs_and_strategy, frozen=frozen)
     )
 
 

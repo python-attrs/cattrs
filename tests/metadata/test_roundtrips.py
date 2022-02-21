@@ -35,9 +35,9 @@ def test_simple_roundtrip_defaults(cls_and_vals, strat):
     cl = make_class("HypClass", {"a": a})
     converter = Converter(unstruct_strat=strat)
     inst = cl()
-    assert converter.unstructure(
-        converter.structure({}, cl)
-    ) == converter.unstructure(inst)
+    assert converter.unstructure(converter.structure({}, cl)) == converter.unstructure(
+        inst
+    )
     assert inst == converter.structure(converter.unstructure(inst), cl)
 
 
@@ -53,9 +53,7 @@ def test_nested_roundtrip(cls_and_vals, strat):
     assert inst == converter.structure(converter.unstructure(inst), cl)
 
 
-@settings(
-    suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow]
-)
+@settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
 @given(
     simple_typed_classes(defaults=False),
     simple_typed_classes(defaults=False),
@@ -97,9 +95,7 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
 
 
 @pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
-@settings(
-    suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow]
-)
+@settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
 @given(
     simple_typed_classes(defaults=False),
     simple_typed_classes(defaults=False),

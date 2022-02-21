@@ -77,9 +77,7 @@ def test_fallback(cl_and_vals):
         fn({"xyz": 1}) is A  # Uses the fallback.
 
 
-@settings(
-    suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow]
-)
+@settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
 @given(simple_classes(), simple_classes())
 def test_disambiguation(cl_and_vals_a, cl_and_vals_b):
     """Disambiguation should work when there are unique required fields."""

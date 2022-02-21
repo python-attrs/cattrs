@@ -19,8 +19,7 @@ def test_deep_copy():
     mapping = {T.__name__: int}
     assert deep_copy_with(Optional[T], mapping) == Optional[int]
     assert (
-        deep_copy_with(List_origin[Optional[T]], mapping)
-        == List_origin[Optional[int]]
+        deep_copy_with(List_origin[Optional[T]], mapping) == List_origin[Optional[int]]
     )
     mapping = {T.__name__: int, T2.__name__: str}
     assert (
@@ -58,10 +57,7 @@ def test_able_to_structure_generics(converter: Converter, t, t2, result):
 
 @pytest.mark.parametrize(
     ("t", "result"),
-    (
-        (int, GenericCols(1, [2], {"3": 3})),
-        (str, GenericCols("1", ["2"], {"3": "3"})),
-    ),
+    ((int, GenericCols(1, [2], {"3": 3})), (str, GenericCols("1", ["2"], {"3": "3"}))),
 )
 @pytest.mark.parametrize("extended_validation", [True, False])
 def test_structure_generics_with_cols(t, result, extended_validation):
@@ -75,8 +71,7 @@ def test_structure_generics_with_cols(t, result, extended_validation):
 
 @pytest.mark.skipif(not is_py39_plus, reason="3.9+ generics syntax")
 @pytest.mark.parametrize(
-    ("t", "result"),
-    ((int, (1, [2], {"3": 3})), (str, ("1", ["2"], {"3": "3"}))),
+    ("t", "result"), ((int, (1, [2], {"3": 3})), (str, ("1", ["2"], {"3": "3"})))
 )
 def test_39_structure_generics_with_cols(t, result):
     @define
@@ -92,9 +87,7 @@ def test_39_structure_generics_with_cols(t, result):
     assert res == expected
 
 
-@pytest.mark.parametrize(
-    ("t", "result"), ((int, (1, [1, 2, 3])), (int, (1, None)))
-)
+@pytest.mark.parametrize(("t", "result"), ((int, (1, [1, 2, 3])), (int, (1, None))))
 def test_structure_nested_generics_with_cols(t, result):
     @define
     class GenericCols(Generic[T]):
@@ -136,9 +129,7 @@ def test_structure_unions_of_generics(converter):
         c: T
 
     data = TClass2(c="string")
-    res = converter.structure(
-        asdict(data), Union[TClass[int, int], TClass2[str]]
-    )
+    res = converter.structure(asdict(data), Union[TClass[int, int], TClass2[str]])
     assert res == data
 
 

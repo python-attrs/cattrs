@@ -25,9 +25,11 @@ class BaseValidationError(ExceptionGroup):
 
 class IterableValidationError(BaseValidationError):
     """Raised when structuring an iterable."""
+
     pass
 
 
 class ClassValidationError(BaseValidationError):
     """Raised when validating a class if any attributes are invalid."""
+
     pass
