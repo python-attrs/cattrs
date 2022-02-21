@@ -53,13 +53,9 @@ def test_roundtrip():
 
     assert {"inner": {"a": 1}} == res_actual
 
-    converter.register_structure_hook(
-        OuterB, make_dict_structure_fn(OuterB, converter)
-    )
+    converter.register_structure_hook(OuterB, make_dict_structure_fn(OuterB, converter))
 
-    assert converter.structure({"inner": {"a": 1}}, OuterB) == OuterB(
-        InnerB(1)
-    )
+    assert converter.structure({"inner": {"a": 1}}, OuterB) == OuterB(InnerB(1))
 
 
 def test_roundtrip_dc():
@@ -78,6 +74,6 @@ def test_roundtrip_dc():
         OuterDataclass, make_dict_structure_fn(OuterDataclass, converter)
     )
 
-    assert converter.structure(
-        {"inner": {"a": 1}}, OuterDataclass
-    ) == OuterDataclass(InnerDataclass(1))
+    assert converter.structure({"inner": {"a": 1}}, OuterDataclass) == OuterDataclass(
+        InnerDataclass(1)
+    )

@@ -41,33 +41,21 @@ def test_collection_unstructure_override_set():
     c = GenConverter(unstruct_collection_overrides={set: list})
 
     assert c.unstructure({1, 2, 3}, unstructure_as=Set[int]) == {1, 2, 3}
-    assert c.unstructure({1, 2, 3}, unstructure_as=MutableSet[int]) == {
-        1,
-        2,
-        3,
-    }
+    assert c.unstructure({1, 2, 3}, unstructure_as=MutableSet[int]) == {1, 2, 3}
     assert c.unstructure({1, 2, 3}) == [1, 2, 3]
 
     # Second approach, using abc.MutableSet
     c = GenConverter(unstruct_collection_overrides={MutableSet: list})
 
     assert c.unstructure({1, 2, 3}, unstructure_as=Set[int]) == {1, 2, 3}
-    assert c.unstructure({1, 2, 3}, unstructure_as=MutableSet[int]) == [
-        1,
-        2,
-        3,
-    ]
+    assert c.unstructure({1, 2, 3}, unstructure_as=MutableSet[int]) == [1, 2, 3]
     assert c.unstructure({1, 2, 3}) == [1, 2, 3]
 
     # Second approach, using abc.Set
     c = GenConverter(unstruct_collection_overrides={Set: list})
 
     assert c.unstructure({1, 2, 3}, unstructure_as=Set[int]) == [1, 2, 3]
-    assert c.unstructure({1, 2, 3}, unstructure_as=MutableSet[int]) == [
-        1,
-        2,
-        3,
-    ]
+    assert c.unstructure({1, 2, 3}, unstructure_as=MutableSet[int]) == [1, 2, 3]
     assert c.unstructure({1, 2, 3}) == [1, 2, 3]
 
 
@@ -79,13 +67,7 @@ def test_collection_unstructure_override_seq():
     c = GenConverter()
 
     c._unstructure_func.register_func_list(
-        [
-            (
-                is_sequence,
-                partial(c.gen_unstructure_iterable, unstructure_to=tuple),
-                True,
-            )
-        ]
+        [(is_sequence, partial(c.gen_unstructure_iterable, unstructure_to=tuple), True)]
     )
 
     assert c.unstructure([1, 2, 3], unstructure_as=Sequence[int]) == (1, 2, 3)
@@ -98,37 +80,29 @@ def test_collection_unstructure_override_seq():
     c = GenConverter(unstruct_collection_overrides={MutableSequence: MyList})
 
     assert c.unstructure([1, 2, 3], unstructure_as=Sequence[int]) == [1, 2, 3]
-    assert c.unstructure(
-        [1, 2, 3], unstructure_as=MutableSequence[int]
-    ) == MyList([1, 2, 3])
+    assert c.unstructure([1, 2, 3], unstructure_as=MutableSequence[int]) == MyList(
+        [1, 2, 3]
+    )
     assert c.unstructure([1, 2, 3]) == MyList([1, 2, 3])
     assert c.unstructure((1, 2, 3)) == [1, 2, 3]
 
     # Second approach, using abc.Sequence
     c = GenConverter(unstruct_collection_overrides={Sequence: MyList})
 
-    assert c.unstructure([1, 2, 3], unstructure_as=Sequence[int]) == MyList(
+    assert c.unstructure([1, 2, 3], unstructure_as=Sequence[int]) == MyList([1, 2, 3])
+    assert c.unstructure([1, 2, 3], unstructure_as=MutableSequence[int]) == MyList(
         [1, 2, 3]
     )
-    assert c.unstructure(
-        [1, 2, 3], unstructure_as=MutableSequence[int]
-    ) == MyList([1, 2, 3])
 
     assert c.unstructure([1, 2, 3]) == MyList([1, 2, 3])
 
-    assert c.unstructure((1, 2, 3), unstructure_as=tuple[int, ...]) == MyList(
-        [1, 2, 3]
-    )
+    assert c.unstructure((1, 2, 3), unstructure_as=tuple[int, ...]) == MyList([1, 2, 3])
 
     # Second approach, using __builtins__.list
     c = GenConverter(unstruct_collection_overrides={list: MyList})
 
     assert c.unstructure([1, 2, 3], unstructure_as=Sequence[int]) == [1, 2, 3]
-    assert c.unstructure([1, 2, 3], unstructure_as=MutableSequence[int]) == [
-        1,
-        2,
-        3,
-    ]
+    assert c.unstructure([1, 2, 3], unstructure_as=MutableSequence[int]) == [1, 2, 3]
     assert c.unstructure([1, 2, 3]) == MyList([1, 2, 3])
     assert c.unstructure((1, 2, 3)) == [1, 2, 3]
 
@@ -136,11 +110,7 @@ def test_collection_unstructure_override_seq():
     c = GenConverter(unstruct_collection_overrides={tuple: MyList})
 
     assert c.unstructure([1, 2, 3], unstructure_as=Sequence[int]) == [1, 2, 3]
-    assert c.unstructure([1, 2, 3], unstructure_as=MutableSequence[int]) == [
-        1,
-        2,
-        3,
-    ]
+    assert c.unstructure([1, 2, 3], unstructure_as=MutableSequence[int]) == [1, 2, 3]
     assert c.unstructure([1, 2, 3]) == [1, 2, 3]
     assert c.unstructure((1, 2, 3)) == MyList([1, 2, 3])
 
@@ -152,52 +122,34 @@ def test_collection_unstructure_override_mapping():
     # Using Counter
     c = GenConverter(unstruct_collection_overrides={Counter: Map})
     assert c.unstructure(Counter({1: 2})) == Map({1: 2})
-    assert c.unstructure(Counter({1: 2}), unstructure_as=Counter[int]) == Map(
-        {1: 2}
-    )
+    assert c.unstructure(Counter({1: 2}), unstructure_as=Counter[int]) == Map({1: 2})
     assert c.unstructure({1: 2}) == {1: 2}
-    assert c.unstructure({1: 2}, unstructure_as=MutableMapping[int, int]) == {
-        1: 2
-    }
+    assert c.unstructure({1: 2}, unstructure_as=MutableMapping[int, int]) == {1: 2}
     assert c.unstructure({1: 2}, unstructure_as=Mapping[int, int]) == {1: 2}
 
     # Using __builtins__.dict
     c = GenConverter(unstruct_collection_overrides={dict: Map})
 
     assert c.unstructure(Counter({1: 2})) == Map({1: 2})
-    assert c.unstructure(Counter({1: 2}), unstructure_as=Counter[int]) == Map(
-        {1: 2}
-    )
+    assert c.unstructure(Counter({1: 2}), unstructure_as=Counter[int]) == Map({1: 2})
     assert c.unstructure({1: 2}) == Map({1: 2})
-    assert c.unstructure({1: 2}, unstructure_as=MutableMapping[int, int]) == {
-        1: 2
-    }
+    assert c.unstructure({1: 2}, unstructure_as=MutableMapping[int, int]) == {1: 2}
     assert c.unstructure({1: 2}, unstructure_as=Mapping[int, int]) == {1: 2}
 
     # Using MutableMapping
     c = GenConverter(unstruct_collection_overrides={MutableMapping: Map})
 
     assert c.unstructure(Counter({1: 2})) == Map({1: 2})
-    assert c.unstructure(Counter({1: 2}), unstructure_as=Counter[int]) == Map(
-        {1: 2}
-    )
+    assert c.unstructure(Counter({1: 2}), unstructure_as=Counter[int]) == Map({1: 2})
     assert c.unstructure({1: 2}) == Map({1: 2})
-    assert c.unstructure(
-        {1: 2}, unstructure_as=MutableMapping[int, int]
-    ) == Map({1: 2})
+    assert c.unstructure({1: 2}, unstructure_as=MutableMapping[int, int]) == Map({1: 2})
     assert c.unstructure({1: 2}, unstructure_as=Mapping[int, int]) == {1: 2}
 
     # Using Mapping
     c = GenConverter(unstruct_collection_overrides={Mapping: Map})
 
     assert c.unstructure(Counter({1: 2})) == Map({1: 2})
-    assert c.unstructure(Counter({1: 2}), unstructure_as=Counter[int]) == Map(
-        {1: 2}
-    )
+    assert c.unstructure(Counter({1: 2}), unstructure_as=Counter[int]) == Map({1: 2})
     assert c.unstructure({1: 2}) == Map({1: 2})
-    assert c.unstructure(
-        {1: 2}, unstructure_as=MutableMapping[int, int]
-    ) == Map({1: 2})
-    assert c.unstructure({1: 2}, unstructure_as=Mapping[int, int]) == Map(
-        {1: 2}
-    )
+    assert c.unstructure({1: 2}, unstructure_as=MutableMapping[int, int]) == Map({1: 2})
+    assert c.unstructure({1: 2}, unstructure_as=Mapping[int, int]) == Map({1: 2})

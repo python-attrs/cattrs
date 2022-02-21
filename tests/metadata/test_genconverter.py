@@ -31,7 +31,9 @@ from . import (
 unstructure_strats = sampled_from(list(UnstructureStrategy))
 
 
-@given(simple_typed_classes() | simple_typed_dataclasses(), unstructure_strats, booleans())
+@given(
+    simple_typed_classes() | simple_typed_dataclasses(), unstructure_strats, booleans()
+)
 def test_simple_roundtrip(cls_and_vals, strat, extended_validation):
     """
     Simple classes with metadata can be unstructured and restructured.
@@ -53,9 +55,9 @@ def test_simple_roundtrip_defaults(attr_and_vals, strat):
     cl = make_class("HypClass", {"a": a})
     converter = Converter(unstruct_strat=strat)
     inst = cl()
-    assert converter.unstructure(
-        converter.structure({}, cl)
-    ) == converter.unstructure(inst)
+    assert converter.unstructure(converter.structure({}, cl)) == converter.unstructure(
+        inst
+    )
     assert inst == converter.structure(converter.unstructure(inst), cl)
 
 
@@ -123,9 +125,7 @@ def test_forbid_extra_keys_nested_override():
     with pytest.raises(Exception):
         converter.structure(unstructured, A)
     # we can "fix" that by disabling forbid_extra_keys on the subclass
-    hook = make_dict_structure_fn(
-        C, converter, _cattrs_forbid_extra_keys=False
-    )
+    hook = make_dict_structure_fn(C, converter, _cattrs_forbid_extra_keys=False)
     converter.register_structure_hook(C, hook)
     converter.structure(unstructured, A)
     # but we should still raise at the top level
@@ -134,18 +134,12 @@ def test_forbid_extra_keys_nested_override():
         converter.structure(unstructured, A)
 
 
-@given(
-    nested_typed_classes(defaults=True, min_attrs=1),
-    unstructure_strats,
-    booleans(),
-)
+@given(nested_typed_classes(defaults=True, min_attrs=1), unstructure_strats, booleans())
 def test_nested_roundtrip(cls_and_vals, strat, omit_if_default):
     """
     Nested classes with metadata can be unstructured and restructured.
     """
-    converter = Converter(
-        unstruct_strat=strat, omit_if_default=omit_if_default
-    )
+    converter = Converter(unstruct_strat=strat, omit_if_default=omit_if_default)
     cl, vals = cls_and_vals
     # Vals are a tuple, convert into a dictionary.
     inst = cl(*vals)
@@ -153,9 +147,7 @@ def test_nested_roundtrip(cls_and_vals, strat, omit_if_default):
     assert inst == converter.structure(unstructured, cl)
 
 
-@settings(
-    suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow]
-)
+@settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
 @given(
     simple_typed_classes(defaults=False),
     simple_typed_classes(defaults=False),
@@ -184,9 +176,7 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
 
     if strat is UnstructureStrategy.AS_DICT:
         unstructured = converter.unstructure(inst)
-        assert inst == converter.structure(
-            converter.unstructure(unstructured), C
-        )
+        assert inst == converter.structure(converter.unstructure(unstructured), C)
     else:
         # Our disambiguation functions only support dictionaries for now.
         with pytest.raises(ValueError):
@@ -201,9 +191,7 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
 
 
 @pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
-@settings(
-    suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow]
-)
+@settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
 @given(
     simple_typed_classes(defaults=False),
     simple_typed_classes(defaults=False),
@@ -232,9 +220,7 @@ def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
 
     if strat is UnstructureStrategy.AS_DICT:
         unstructured = converter.unstructure(inst)
-        assert inst == converter.structure(
-            converter.unstructure(unstructured), C
-        )
+        assert inst == converter.structure(converter.unstructure(unstructured), C)
     else:
         # Our disambiguation functions only support dictionaries for now.
         with pytest.raises(ValueError):
@@ -399,9 +385,7 @@ def test_overriding_generated_unstructure_hook_func():
     inst = Outer(Inner(1))
     converter.unstructure(inst)
 
-    converter.register_unstructure_hook_func(
-        lambda t: t is Inner, lambda _: {"a": 2}
-    )
+    converter.register_unstructure_hook_func(lambda t: t is Inner, lambda _: {"a": 2})
 
     r = converter.structure(converter.unstructure(inst), Outer)
     assert r.i.a == 2
@@ -479,9 +463,7 @@ def test_overriding_generated_structure_hook_func():
         ]
     ),
 )
-def test_seq_of_simple_classes_unstructure(
-    cls_and_vals, seq_type_and_annotation
-):
+def test_seq_of_simple_classes_unstructure(cls_and_vals, seq_type_and_annotation):
     """Dumping a sequence of primitives is a simple copy operation."""
     converter = Converter()
 

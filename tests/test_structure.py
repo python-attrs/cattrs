@@ -1,15 +1,5 @@
 """Test structuring of collections and primitives."""
-from typing import (
-    Any,
-    Dict,
-    FrozenSet,
-    List,
-    MutableSet,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import Any, Dict, FrozenSet, List, MutableSet, Optional, Set, Tuple, Union
 
 import attr
 from hypothesis import assume, given
@@ -32,10 +22,7 @@ from pytest import raises
 
 from cattr._compat import copy_with, is_bare, is_union_type
 from cattrs import Converter
-from cattrs.errors import (
-    IterableValidationError,
-    StructureHandlerNotFoundError,
-)
+from cattrs.errors import IterableValidationError, StructureHandlerNotFoundError
 
 from . import (
     dicts_of_primitives,
@@ -74,9 +61,7 @@ mut_sets_of_primitives = primitive_strategies.flatmap(
 )
 
 frozen_sets_of_primitives = primitive_strategies.flatmap(
-    lambda e: tuples(
-        frozensets(e[0]), create_generic_type(just(FrozenSet), e[1])
-    )
+    lambda e: tuples(frozensets(e[0]), create_generic_type(just(FrozenSet), e[1]))
 )
 
 sets_of_primitives = one_of(mut_sets_of_primitives, frozen_sets_of_primitives)
@@ -114,9 +99,7 @@ def test_structuring_sets(set_and_type, set_type):
     assert converted == set_
 
     # Set[int] can't be used with isinstance any more.
-    non_generic = (
-        set_type.__origin__ if set_type.__origin__ is not None else set_type
-    )
+    non_generic = set_type.__origin__ if set_type.__origin__ is not None else set_type
     assert isinstance(converted, non_generic)
 
     converted = converter.structure(set_, Any)
@@ -381,6 +364,7 @@ def test_structure_union_edge_case():
         b1: Any
         b2: Optional[Any] = None
 
-    assert converter.structure(
-        [{"a1": "foo"}, {"b1": "bar"}], List[Union[A, B]]
-    ) == [A("foo"), B("bar")]
+    assert converter.structure([{"a1": "foo"}, {"b1": "bar"}], List[Union[A, B]]) == [
+        A("foo"),
+        B("bar"),
+    ]

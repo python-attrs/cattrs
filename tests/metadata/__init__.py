@@ -62,10 +62,7 @@ def simple_typed_classes(defaults=None, min_attrs=0, frozen=False):
 def simple_typed_dataclasses(defaults=None, min_attrs=0, frozen=False):
     """Yield tuples of (class, values)."""
     return lists_of_typed_attrs(
-        defaults,
-        min_size=min_attrs,
-        for_frozen=frozen,
-        allow_mutable_defaults=False,
+        defaults, min_size=min_attrs, for_frozen=frozen, allow_mutable_defaults=False
     ).flatmap(partial(_create_dataclass, frozen=frozen))
 
 
@@ -207,11 +204,7 @@ def _create_dataclass(
                     else (
                         (n, a.type, field(default=a._default))
                         if not isinstance(a._default, Factory)
-                        else (
-                            n,
-                            a.type,
-                            field(default_factory=a._default.factory),
-                        )
+                        else (n, a.type, field(default_factory=a._default.factory))
                     )
                     for n, a in zip(gen_attr_names(), attrs)
                 ],
@@ -234,9 +227,7 @@ def _create_hyp_class_and_strat(
         a.counter = i
     vals = tuple((a[1]) for a in attrs_and_strat)
     return tuples(
-        just(
-            make_class("HypClass", OrderedDict(zip(gen_attr_names(), attrs)))
-        ),
+        just(make_class("HypClass", OrderedDict(zip(gen_attr_names(), attrs)))),
         just(tuples(*vals)),
     )
 
@@ -334,10 +325,7 @@ def new_dict_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
 
 @composite
 def set_typed_attrs(
-    draw: DrawFn,
-    defaults=None,
-    allow_mutable_defaults=True,
-    legacy_types_only=False,
+    draw: DrawFn, defaults=None, allow_mutable_defaults=True, legacy_types_only=False
 ):
     """
     Generate a tuple of an attribute and a strategy that yields sets
@@ -365,9 +353,7 @@ def set_typed_attrs(
 
 
 @composite
-def frozenset_typed_attrs(
-    draw: DrawFn, defaults=None, legacy_types_only=False
-):
+def frozenset_typed_attrs(draw: DrawFn, defaults=None, legacy_types_only=False):
     """
     Generate a tuple of an attribute and a strategy that yields frozensets
     for that attribute. The frozensets contain integers.
@@ -388,10 +374,7 @@ def frozenset_typed_attrs(
 
 @composite
 def list_typed_attrs(
-    draw: DrawFn,
-    defaults=None,
-    allow_mutable_defaults=True,
-    legacy_types_only=False,
+    draw: DrawFn, defaults=None, allow_mutable_defaults=True, legacy_types_only=False
 ):
     """
     Generate a tuple of an attribute and a strategy that yields lists
@@ -506,9 +489,7 @@ def homo_tuple_typed_attrs(draw, defaults=None, legacy_types_only=False):
 
 
 def just_class(
-    tup: Tuple[
-        List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs]
-    ],
+    tup: Tuple[List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs]],
     defaults: PosArgs,
 ):
     nested_cl = tup[1][0]
@@ -516,18 +497,13 @@ def just_class(
     default = attr.Factory(lambda: nested_cl(*defaults))
     combined_attrs = list(tup[0])
     combined_attrs.append(
-        (
-            attr.ib(type=nested_cl, default=default),
-            just(nested_cl(*nested_cl_args)),
-        )
+        (attr.ib(type=nested_cl, default=default), just(nested_cl(*nested_cl_args)))
     )
     return _create_hyp_class_and_strat(combined_attrs)
 
 
 def list_of_class(
-    tup: Tuple[
-        List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs]
-    ],
+    tup: Tuple[List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs]],
     defaults: PosArgs,
 ) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
     nested_cl = tup[1][0]
@@ -544,9 +520,7 @@ def list_of_class(
 
 
 def new_list_of_class(
-    tup: Tuple[
-        List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs]
-    ],
+    tup: Tuple[List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs]],
     defaults: PosArgs,
 ):
     """Uses the new 3.9 list type annotation."""
@@ -564,9 +538,7 @@ def new_list_of_class(
 
 
 def dict_of_class(
-    tup: Tuple[
-        List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs]
-    ],
+    tup: Tuple[List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs]],
     defaults: PosArgs,
 ):
     nested_cl = tup[1][0]
@@ -597,8 +569,7 @@ def _create_hyp_nested_strategy(
     # class strategy>).
     attrs_and_classes: SearchStrategy[
         Tuple[
-            List[Tuple[_CountingAttr, PosArgs]],
-            Tuple[Type, SearchStrategy[PosArgs]],
+            List[Tuple[_CountingAttr, PosArgs]], Tuple[Type, SearchStrategy[PosArgs]],
         ]
     ] = tuples(lists_of_typed_attrs(), simple_class_strategy)
 
@@ -638,9 +609,7 @@ def nested_typed_classes_and_strat(
     defaults=None, min_attrs=0
 ) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
     return recursive(
-        simple_typed_classes_and_strats(
-            defaults=defaults, min_attrs=min_attrs
-        ),
+        simple_typed_classes_and_strats(defaults=defaults, min_attrs=min_attrs),
         _create_hyp_nested_strategy,
     )
 

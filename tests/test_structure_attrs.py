@@ -4,16 +4,7 @@ from typing import Union
 from unittest.mock import Mock
 
 import pytest
-from attr import (
-    NOTHING,
-    Factory,
-    asdict,
-    astuple,
-    attrib,
-    define,
-    fields,
-    make_class,
-)
+from attr import NOTHING, Factory, asdict, astuple, attrib, define, fields, make_class
 from hypothesis import assume, given
 from hypothesis.strategies import data, lists, sampled_from
 
@@ -142,9 +133,7 @@ def test_structure_union_explicit(cl_and_vals_a, cl_and_vals_b):
 
     inst = cl_a(*vals_a)
 
-    assert inst == converter.structure(
-        converter.unstructure(inst), Union[cl_a, cl_b]
-    )
+    assert inst == converter.structure(converter.unstructure(inst), Union[cl_a, cl_b])
 
 
 @pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
@@ -233,9 +222,7 @@ def test_structure_fallback_to_attrib_converters(converter_type):
         "HasConverter",
         {
             # non-built-in type with custom converter
-            "ip": attrib(
-                type=Union[IPv4Address, IPv6Address], converter=ip_address
-            ),
+            "ip": attrib(type=Union[IPv4Address, IPv6Address], converter=ip_address),
             # attribute without type
             "x": attrib(converter=attrib_converter),
             # built-in types converters
@@ -261,9 +248,7 @@ def test_structure_prefers_attrib_converters(converter_type):
         "HasConverter",
         {
             # non-built-in type with custom converter
-            "ip": attrib(
-                type=Union[IPv4Address, IPv6Address], converter=ip_address
-            ),
+            "ip": attrib(type=Union[IPv4Address, IPv6Address], converter=ip_address),
             # attribute without type
             "x": attrib(converter=attrib_converter),
             # built-in types converters

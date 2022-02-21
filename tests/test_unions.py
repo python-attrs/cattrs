@@ -26,8 +26,7 @@ def test_custom_union_toplevel_roundtrip(cls: Type[Converter]):
         a: int
 
     c.register_unstructure_hook(
-        Union[A, B],
-        lambda o: {"_type": o.__class__.__name__, **c.unstructure(o)},
+        Union[A, B], lambda o: {"_type": o.__class__.__name__, **c.unstructure(o)}
     )
     c.register_structure_hook(
         Union[A, B], lambda o, t: c.structure(o, A if o["_type"] == "A" else B)
@@ -96,8 +95,7 @@ def test_custom_union_clsfield_roundtrip(cls: Type[Converter]):
         f: Union[A, B]
 
     c.register_unstructure_hook(
-        Union[A, B],
-        lambda o: {"_type": o.__class__.__name__, **c.unstructure(o)},
+        Union[A, B], lambda o: {"_type": o.__class__.__name__, **c.unstructure(o)}
     )
     c.register_structure_hook(
         Union[A, B], lambda o, t: c.structure(o, A if o["_type"] == "A" else B)
