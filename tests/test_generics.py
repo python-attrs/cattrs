@@ -59,10 +59,10 @@ def test_able_to_structure_generics(converter: Converter, t, t2, result):
     ("t", "result"),
     ((int, GenericCols(1, [2], {"3": 3})), (str, GenericCols("1", ["2"], {"3": "3"}))),
 )
-@pytest.mark.parametrize("extended_validation", [True, False])
-def test_structure_generics_with_cols(t, result, extended_validation):
+@pytest.mark.parametrize("detailed_validation", [True, False])
+def test_structure_generics_with_cols(t, result, detailed_validation):
     raw = asdict(result)
-    res = GenConverter(extended_validation=extended_validation).structure(
+    res = GenConverter(detailed_validation=detailed_validation).structure(
         raw, GenericCols[t]
     )
 

@@ -93,7 +93,7 @@ class Converter:
         "_union_struct_registry",
         "_structure_func",
         "_prefer_attrib_converters",
-        "extended_validation",
+        "detailed_validation",
     )
 
     def __init__(
@@ -101,12 +101,12 @@ class Converter:
         dict_factory: Callable[[], Any] = dict,
         unstruct_strat: UnstructureStrategy = UnstructureStrategy.AS_DICT,
         prefer_attrib_converters: bool = False,
-        extended_validation: bool = True,
+        detailed_validation: bool = True,
     ) -> None:
         unstruct_strat = UnstructureStrategy(unstruct_strat)
         self._prefer_attrib_converters = prefer_attrib_converters
 
-        self.extended_validation = extended_validation
+        self.detailed_validation = detailed_validation
 
         # Create a per-instance cache.
         if unstruct_strat is UnstructureStrategy.AS_DICT:
@@ -441,7 +441,7 @@ class Converter:
         else:
             elem_type = cl.__args__[0]
             handler = self._structure_func.dispatch(elem_type)
-            if self.extended_validation:
+            if self.detailed_validation:
                 errors = []
                 res = []
                 ix = 0  # Avoid `enumerate` for performance.
@@ -455,7 +455,7 @@ class Converter:
                         ix += 1
                 if errors:
                     raise IterableValidationError(
-                        f"While structuring {cl.__name__}", errors, cl
+                        f"While structuring {cl!r}", errors, cl
                     )
             else:
                 res = [handler(e, elem_type) for e in obj]
@@ -467,7 +467,7 @@ class Converter:
             return structure_to(obj)
         elem_type = cl.__args__[0]
         handler = self._structure_func.dispatch(elem_type)
-        if self.extended_validation:
+        if self.detailed_validation:
             errors = []
             res = set()
             for e in obj:
@@ -479,9 +479,7 @@ class Converter:
                     )
                     errors.append(exc)
             if errors:
-                raise IterableValidationError(
-                    f"While structuring {cl.__name__}", errors, cl
-                )
+                raise IterableValidationError(f"While structuring {cl!r}", errors, cl)
             return res if structure_to is set else structure_to(res)
         elif structure_to is set:
             return {handler(e, elem_type) for e in obj}
@@ -538,7 +536,7 @@ class Converter:
             # We're dealing with a homogenous tuple, Tuple[int, ...]
             tup_type = tup_params[0]
             conv = self._structure_func.dispatch(tup_type)
-            if self.extended_validation:
+            if self.detailed_validation:
                 errors = []
                 res = []
                 for ix, e in enumerate(obj):
@@ -549,14 +547,14 @@ class Converter:
                         errors.append(exc)
                 if errors:
                     raise IterableValidationError(
-                        f"While structuring {tup.__name__}", errors, tup
+                        f"While structuring {tup!r}", errors, tup
                     )
                 return tuple(res)
             else:
                 return tuple(conv(e, tup_type) for e in obj)
         else:
             # We're dealing with a heterogenous tuple.
-            if self.extended_validation:
+            if self.detailed_validation:
                 errors = []
                 res = []
                 for ix, (t, e) in enumerate(zip(tup_params, obj)):
@@ -568,7 +566,7 @@ class Converter:
                         errors.append(exc)
                 if errors:
                     raise IterableValidationError(
-                        f"While structuring {tup.__name__}", errors, tup
+                        f"While structuring {tup!r}", errors, tup
                     )
                 return tuple(res)
             else:
@@ -614,13 +612,13 @@ class GenConverter(Converter):
         type_overrides: Mapping[Type, AttributeOverride] = {},
         unstruct_collection_overrides: Mapping[Type, Callable] = {},
         prefer_attrib_converters: bool = False,
-        extended_validation: bool = True,
+        detailed_validation: bool = True,
     ):
         super().__init__(
             dict_factory=dict_factory,
             unstruct_strat=unstruct_strat,
             prefer_attrib_converters=prefer_attrib_converters,
-            extended_validation=extended_validation,
+            detailed_validation=detailed_validation,
         )
         self.omit_if_default = omit_if_default
         self.forbid_extra_keys = forbid_extra_keys
@@ -746,7 +744,7 @@ class GenConverter(Converter):
             self,
             _cattrs_forbid_extra_keys=self.forbid_extra_keys,
             _cattrs_prefer_attrib_converters=self._prefer_attrib_converters,
-            _cattrs_extended_validation=self.extended_validation,
+            _cattrs_detailed_validation=self.detailed_validation,
             **attrib_overrides,
         )
         # only direct dispatch so that subclasses get separately generated

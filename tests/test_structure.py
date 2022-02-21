@@ -209,9 +209,9 @@ def test_structuring_optional_primitives(primitive_and_type):
 
 
 @given(lists_of_primitives().filter(lambda lp: not is_bare(lp[1])), booleans())
-def test_structuring_lists_of_opt(list_and_type, extended_validation: bool):
+def test_structuring_lists_of_opt(list_and_type, detailed_validation: bool):
     """Test structuring lists of Optional primitive types."""
-    converter = Converter(extended_validation=extended_validation)
+    converter = Converter(detailed_validation=detailed_validation)
     l, t = list_and_type
 
     l.append(None)
@@ -226,7 +226,7 @@ def test_structuring_lists_of_opt(list_and_type, extended_validation: bool):
     if not is_bare(t) and (args[0] not in (Any, str) and not is_optional):
         with raises(
             (TypeError, ValueError)
-            if not extended_validation
+            if not detailed_validation
             else IterableValidationError
         ):
             converter.structure(l, t)

@@ -15,7 +15,7 @@ def test_structure_linecache():
     class A:
         a: int
 
-    c = GenConverter(extended_validation=False)
+    c = GenConverter(detailed_validation=False)
     try:
         c.structure({"a": "test"}, A)
     except ValueError:
