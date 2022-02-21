@@ -17,6 +17,7 @@ Contents:
    converters
    structuring
    unstructuring
+   validation
    preconf
    customizing
    unions
