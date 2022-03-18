@@ -82,9 +82,7 @@ def is_optional(typ):
 
 
 def is_literal_containing_enums(typ):
-    return is_literal(typ) and any(
-        isinstance(val, Enum) for val in typ.__args__
-    )
+    return is_literal(typ) and any(isinstance(val, Enum) for val in typ.__args__)
 
 
 class Converter:
@@ -389,9 +387,7 @@ class Converter:
 
     @staticmethod
     def _structure_enum_literal(val, type):
-        vals = {
-            (x.value if isinstance(x, Enum) else x): x for x in type.__args__
-        }
+        vals = {(x.value if isinstance(x, Enum) else x): x for x in type.__args__}
         try:
             return vals[val]
         except KeyError:
