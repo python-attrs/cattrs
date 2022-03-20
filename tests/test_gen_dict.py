@@ -7,11 +7,7 @@ from hypothesis.strategies._internal.core import data, sampled_from
 
 from cattr._compat import adapted_fields, fields
 from cattrs import Converter
-from cattrs.gen import (
-    make_dict_structure_fn,
-    make_dict_unstructure_fn,
-    override,
-)
+from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
 from . import nested_classes, simple_classes
 from .metadata import (
@@ -79,8 +75,7 @@ def test_nodefs_generated_unstructuring_cl(cl_and_vals):
         assume(False)
 
     converter.register_unstructure_hook(
-        cl,
-        make_dict_unstructure_fn(cl, converter, _cattrs_omit_if_default=True),
+        cl, make_dict_unstructure_fn(cl, converter, _cattrs_omit_if_default=True)
     )
 
     inst = cl(*vals)
@@ -163,11 +158,7 @@ def test_individual_overrides(cl_and_vals):
                         assert attr.name in res
 
 
-@given(
-    nested_typed_classes()
-    | simple_typed_classes()
-    | simple_typed_dataclasses()
-)
+@given(nested_typed_classes() | simple_typed_classes() | simple_typed_dataclasses())
 def test_unmodified_generated_structuring(cl_and_vals):
     converter = Converter()
     cl, vals = cl_and_vals
@@ -187,8 +178,7 @@ def test_unmodified_generated_structuring(cl_and_vals):
 
 
 @given(
-    simple_typed_classes(min_attrs=1) | simple_typed_dataclasses(min_attrs=1),
-    data(),
+    simple_typed_classes(min_attrs=1) | simple_typed_dataclasses(min_attrs=1), data()
 )
 def test_renaming(cl_and_vals, data):
     converter = Converter()
@@ -255,7 +245,8 @@ def test_omitting():
     assert converter.unstructure(A(1)) == {"a": 1}
 
 
-def test_omitting_structure():
+@pytest.mark.parametrize("extended_validation", [True, False])
+def test_omitting_structure(extended_validation: bool):
     """Omitting fields works with generated structuring functions."""
     converter = Converter()
 
@@ -268,7 +259,11 @@ def test_omitting_structure():
     converter.register_structure_hook(
         A,
         make_dict_structure_fn(
-            A, converter, b=override(omit=True), c=override(omit=True)
+            A,
+            converter,
+            b=override(omit=True),
+            c=override(omit=True),
+            _cattrs_extended_validation=extended_validation,
         ),
     )
 

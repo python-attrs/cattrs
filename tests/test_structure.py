@@ -1,15 +1,5 @@
 """Test structuring of collections and primitives."""
-from typing import (
-    Any,
-    Dict,
-    FrozenSet,
-    List,
-    MutableSet,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import Any, Dict, FrozenSet, List, MutableSet, Optional, Set, Tuple, Union
 
 import attr
 from hypothesis import assume, given
@@ -30,10 +20,9 @@ from hypothesis.strategies import (
 )
 from pytest import raises
 
-from cattr import Converter
 from cattr._compat import copy_with, is_bare, is_union_type
-from cattr.converters import NoneType
-from cattr.errors import StructureHandlerNotFoundError
+from cattrs import Converter
+from cattrs.errors import IterableValidationError, StructureHandlerNotFoundError
 
 from . import (
     dicts_of_primitives,
@@ -44,6 +33,7 @@ from . import (
 )
 from ._compat import change_type_param
 
+NoneType = type(None)
 ints_and_type = tuples(integers(), just(int))
 floats_and_type = tuples(floats(allow_nan=False), just(float))
 strs_and_type = tuples(text(), just(str))
@@ -71,9 +61,7 @@ mut_sets_of_primitives = primitive_strategies.flatmap(
 )
 
 frozen_sets_of_primitives = primitive_strategies.flatmap(
-    lambda e: tuples(
-        frozensets(e[0]), create_generic_type(just(FrozenSet), e[1])
-    )
+    lambda e: tuples(frozensets(e[0]), create_generic_type(just(FrozenSet), e[1]))
 )
 
 sets_of_primitives = one_of(mut_sets_of_primitives, frozen_sets_of_primitives)
@@ -111,9 +99,7 @@ def test_structuring_sets(set_and_type, set_type):
     assert converted == set_
 
     # Set[int] can't be used with isinstance any more.
-    non_generic = (
-        set_type.__origin__ if set_type.__origin__ is not None else set_type
-    )
+    non_generic = set_type.__origin__ if set_type.__origin__ is not None else set_type
     assert isinstance(converted, non_generic)
 
     converted = converter.structure(set_, Any)
@@ -222,10 +208,10 @@ def test_structuring_optional_primitives(primitive_and_type):
     assert converter.structure(None, Optional[type]) is None
 
 
-@given(lists_of_primitives().filter(lambda lp: not is_bare(lp[1])))
-def test_structuring_lists_of_opt(list_and_type):
+@given(lists_of_primitives().filter(lambda lp: not is_bare(lp[1])), booleans())
+def test_structuring_lists_of_opt(list_and_type, detailed_validation: bool):
     """Test structuring lists of Optional primitive types."""
-    converter = Converter()
+    converter = Converter(detailed_validation=detailed_validation)
     l, t = list_and_type
 
     l.append(None)
@@ -238,7 +224,11 @@ def test_structuring_lists_of_opt(list_and_type):
     )
 
     if not is_bare(t) and (args[0] not in (Any, str) and not is_optional):
-        with raises((TypeError, ValueError)):
+        with raises(
+            (TypeError, ValueError)
+            if not detailed_validation
+            else IterableValidationError
+        ):
             converter.structure(l, t)
 
     optional_t = Optional[args[0]]
@@ -374,6 +364,7 @@ def test_structure_union_edge_case():
         b1: Any
         b2: Optional[Any] = None
 
-    assert converter.structure(
-        [{"a1": "foo"}, {"b1": "bar"}], List[Union[A, B]]
-    ) == [A("foo"), B("bar")]
+    assert converter.structure([{"a1": "foo"}, {"b1": "bar"}], List[Union[A, B]]) == [
+        A("foo"),
+        B("bar"),
+    ]

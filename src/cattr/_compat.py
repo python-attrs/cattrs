@@ -34,11 +34,14 @@ if is_py37:
 else:
     from typing import Protocol, get_args, get_origin  # NOQA
 
+if "ExceptionGroup" not in __builtins__:
+    from exceptiongroup import ExceptionGroup
+else:
+    ExceptionGroup = ExceptionGroup
+
 
 def has(cls):
-    return hasattr(cls, "__attrs_attrs__") or hasattr(
-        cls, "__dataclass_fields__"
-    )
+    return hasattr(cls, "__attrs_attrs__") or hasattr(cls, "__dataclass_fields__")
 
 
 def has_with_generic(cls):
@@ -122,15 +125,12 @@ if is_py37 or is_py38:
 
     def is_tuple(type):
         return type in (Tuple, tuple) or (
-            type.__class__ is _GenericAlias
-            and issubclass(type.__origin__, Tuple)
+            type.__class__ is _GenericAlias and issubclass(type.__origin__, Tuple)
         )
 
     def is_union_type(obj):
         return (
-            obj is Union
-            or isinstance(obj, _GenericAlias)
-            and obj.__origin__ is Union
+            obj is Union or isinstance(obj, _GenericAlias) and obj.__origin__ is Union
         )
 
     def is_sequence(type: Any) -> bool:
@@ -145,14 +145,12 @@ if is_py37 or is_py38:
 
     def is_mutable_set(type):
         return type is set or (
-            type.__class__ is _GenericAlias
-            and issubclass(type.__origin__, MutableSet)
+            type.__class__ is _GenericAlias and issubclass(type.__origin__, MutableSet)
         )
 
     def is_frozenset(type):
         return type is frozenset or (
-            type.__class__ is _GenericAlias
-            and issubclass(type.__origin__, FrozenSet)
+            type.__class__ is _GenericAlias and issubclass(type.__origin__, FrozenSet)
         )
 
     def is_mapping(type):
@@ -184,9 +182,7 @@ if is_py37 or is_py38:
         from typing import Literal
 
         def is_literal(type) -> bool:
-            return (
-                type.__class__ is _GenericAlias and type.__origin__ is Literal
-            )
+            return type.__class__ is _GenericAlias and type.__origin__ is Literal
 
     else:
         # No literals in 3.7.
@@ -247,10 +243,7 @@ else:
     def is_tuple(type):
         return (
             type in (Tuple, tuple)
-            or (
-                type.__class__ is _GenericAlias
-                and issubclass(type.__origin__, Tuple)
-            )
+            or (type.__class__ is _GenericAlias and issubclass(type.__origin__, Tuple))
             or (getattr(type, "__origin__", None) is tuple)
         )
 
@@ -261,10 +254,7 @@ else:
 
             return (
                 obj is Union
-                or (
-                    isinstance(obj, _UnionGenericAlias)
-                    and obj.__origin__ is Union
-                )
+                or (isinstance(obj, _UnionGenericAlias) and obj.__origin__ is Union)
                 or isinstance(obj, UnionType)
             )
 
@@ -287,6 +277,7 @@ else:
                 TypingSequence,
                 TypingMutableSequence,
                 AbcMutableSequence,
+                Tuple,
                 tuple,
             )
             or (
@@ -309,10 +300,7 @@ else:
                 type.__class__ is _GenericAlias
                 and issubclass(type.__origin__, TypingMutableSet)
             )
-            or (
-                getattr(type, "__origin__", None)
-                in (set, AbcMutableSet, AbcSet)
-            )
+            or (getattr(type, "__origin__", None) in (set, AbcMutableSet, AbcSet))
         )
 
     def is_frozenset(type):
@@ -332,14 +320,7 @@ else:
 
     def is_mapping(type):
         return (
-            type
-            in (
-                TypingMapping,
-                Dict,
-                TypingMutableMapping,
-                dict,
-                AbcMutableMapping,
-            )
+            type in (TypingMapping, Dict, TypingMutableMapping, dict, AbcMutableMapping)
             or (
                 type.__class__ is _GenericAlias
                 and issubclass(type.__origin__, TypingMapping)

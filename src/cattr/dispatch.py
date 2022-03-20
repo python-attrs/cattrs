@@ -49,7 +49,7 @@ class MultiStrategyDispatch:
         return self._function_dispatch.dispatch(cl)
 
     def register_cls_list(self, cls_and_handler, direct: bool = False):
-        """register a class to direct or singledispatch"""
+        """Register a class to direct or singledispatch."""
         for cls, handler in cls_and_handler:
             if direct:
                 self._direct_dispatch[cls] = handler
@@ -76,9 +76,7 @@ class MultiStrategyDispatch:
                 self._function_dispatch.register(func, handler)
             else:
                 func, handler, is_gen = tup
-                self._function_dispatch.register(
-                    func, handler, is_generator=is_gen
-                )
+                self._function_dispatch.register(func, handler, is_generator=is_gen)
         self.clear_direct()
         self.dispatch.cache_clear()
 
@@ -104,9 +102,7 @@ class FunctionDispatch:
 
     _handler_pairs: list = attr.ib(factory=list)
 
-    def register(
-        self, can_handle: Callable[[Any], bool], func, is_generator=False
-    ):
+    def register(self, can_handle: Callable[[Any], bool], func, is_generator=False):
         self._handler_pairs.insert(0, (can_handle, func, is_generator))
 
     def dispatch(self, typ):

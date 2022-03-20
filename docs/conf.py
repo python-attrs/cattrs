@@ -212,13 +212,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass
 # [howto/manual]).
 latex_documents = [
-    (
-        "index",
-        "cattrs.tex",
-        u"cattrs Documentation",
-        u"Tin Tvrtković",
-        "manual",
-    )
+    ("index", "cattrs.tex", u"cattrs Documentation", u"Tin Tvrtković", "manual")
 ]
 
 # The name of an image file (relative to this directory) to place at
@@ -246,9 +240,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    ("index", "cattrs", u"cattrs Documentation", [u"Tin Tvrtković"], 1)
-]
+man_pages = [("index", "cattrs", u"cattrs Documentation", [u"Tin Tvrtković"], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False

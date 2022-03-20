@@ -20,9 +20,7 @@ def configure_converter(converter: Converter):
     converter.register_structure_hook(bytes, lambda v, _: b85decode(v))
 
     converter.register_unstructure_hook(datetime, lambda v: v.isoformat())
-    converter.register_structure_hook(
-        datetime, lambda v, _: datetime.fromisoformat(v)
-    )
+    converter.register_structure_hook(datetime, lambda v, _: datetime.fromisoformat(v))
 
 
 def make_converter(*args, **kwargs) -> GenConverter:

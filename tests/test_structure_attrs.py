@@ -1,19 +1,11 @@
 """Loading of attrs classes."""
+from enum import Enum
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import Union
 from unittest.mock import Mock
 
 import pytest
-from attr import (
-    NOTHING,
-    Factory,
-    asdict,
-    astuple,
-    attrib,
-    define,
-    fields,
-    make_class,
-)
+from attr import NOTHING, Factory, asdict, astuple, attrib, define, fields, make_class
 from hypothesis import assume, given
 from hypothesis.strategies import data, lists, sampled_from
 
@@ -142,9 +134,7 @@ def test_structure_union_explicit(cl_and_vals_a, cl_and_vals_b):
 
     inst = cl_a(*vals_a)
 
-    assert inst == converter.structure(
-        converter.unstructure(inst), Union[cl_a, cl_b]
-    )
+    assert inst == converter.structure(converter.unstructure(inst), Union[cl_a, cl_b])
 
 
 @pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
@@ -166,15 +156,44 @@ def test_structure_literal(converter_cls):
 
 @pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
 @pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
+def test_structure_literal_enum(converter_cls):
+    """Structuring a class with a literal field works."""
+    from typing import Literal
+
+    converter = converter_cls()
+
+    class Foo(Enum):
+        FOO = 1
+        BAR = 2
+
+    @define
+    class ClassWithLiteral:
+        literal_field: Literal[Foo.FOO] = Foo.FOO
+
+    assert converter.structure(
+        {"literal_field": 1}, ClassWithLiteral
+    ) == ClassWithLiteral(Foo.FOO)
+
+
+@pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
+@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
 def test_structure_literal_multiple(converter_cls):
     """Structuring a class with a literal field works."""
     from typing import Literal
 
     converter = converter_cls()
 
+    class Foo(Enum):
+        FOO = 7
+        FOOFOO = 77
+
+    class Bar(int, Enum):
+        BAR = 8
+        BARBAR = 88
+
     @define
     class ClassWithLiteral:
-        literal_field: Literal[4, 5] = 4
+        literal_field: Literal[4, 5, Foo.FOO, Bar.BARBAR] = 4
 
     assert converter.structure(
         {"literal_field": 4}, ClassWithLiteral
@@ -182,6 +201,14 @@ def test_structure_literal_multiple(converter_cls):
     assert converter.structure(
         {"literal_field": 5}, ClassWithLiteral
     ) == ClassWithLiteral(5)
+
+    assert converter.structure(
+        {"literal_field": 7}, ClassWithLiteral
+    ) == ClassWithLiteral(Foo.FOO)
+
+    cwl = converter.structure({"literal_field": 88}, ClassWithLiteral)
+    assert cwl == ClassWithLiteral(Bar.BARBAR)
+    assert isinstance(cwl.literal_field, Bar)
 
 
 @pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
@@ -233,9 +260,7 @@ def test_structure_fallback_to_attrib_converters(converter_type):
         "HasConverter",
         {
             # non-built-in type with custom converter
-            "ip": attrib(
-                type=Union[IPv4Address, IPv6Address], converter=ip_address
-            ),
+            "ip": attrib(type=Union[IPv4Address, IPv6Address], converter=ip_address),
             # attribute without type
             "x": attrib(converter=attrib_converter),
             # built-in types converters
@@ -261,9 +286,7 @@ def test_structure_prefers_attrib_converters(converter_type):
         "HasConverter",
         {
             # non-built-in type with custom converter
-            "ip": attrib(
-                type=Union[IPv4Address, IPv6Address], converter=ip_address
-            ),
+            "ip": attrib(type=Union[IPv4Address, IPv6Address], converter=ip_address),
             # attribute without type
             "x": attrib(converter=attrib_converter),
             # built-in types converters

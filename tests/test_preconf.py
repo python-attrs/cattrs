@@ -88,9 +88,7 @@ def everythings(
 ):
     key_text = text(
         characters(
-            blacklist_categories=("Cs",)
-            if allow_null_bytes_in_keys
-            else ("Cs", "Cc"),
+            blacklist_categories=("Cs",) if allow_null_bytes_in_keys else ("Cs", "Cc"),
             blacklist_characters='"' if not allow_quotes_in_keys else None,
         ),
         min_size=min_key_length,
@@ -103,20 +101,14 @@ def everythings(
         )
     )
     dts = datetimes(
-        min_value=datetime(1904, 1, 1),
+        min_value=datetime(1970, 1, 1),
         max_value=datetime(2038, 1, 1),
         timezones=just(timezone.utc),
     )
     if not allow_datetime_microseconds:
         dts = dts.map(
             lambda d: datetime(
-                d.year,
-                d.month,
-                d.day,
-                d.hour,
-                d.minute,
-                d.second,
-                tzinfo=d.tzinfo,
+                d.year, d.month, d.day, d.hour, d.minute, d.second, tzinfo=d.tzinfo
             )
         )
     return Everything(
@@ -124,11 +116,7 @@ def everythings(
         draw(binary()),
         draw(integers(min_value=min_int, max_value=max_int)),
         draw(floats(allow_nan=False, allow_infinity=allow_inf)),
-        draw(
-            dictionaries(
-                key_text, integers(min_value=min_int, max_value=max_int)
-            )
-        ),
+        draw(dictionaries(key_text, integers(min_value=min_int, max_value=max_int))),
         draw(lists(integers(min_value=min_int, max_value=max_int))),
         tuple(draw(lists(integers(min_value=min_int, max_value=max_int)))),
         (
@@ -137,11 +125,7 @@ def everythings(
             draw(floats(allow_nan=False, allow_infinity=allow_inf)),
         ),
         Counter(
-            draw(
-                dictionaries(
-                    key_text, integers(min_value=min_int, max_value=max_int)
-                )
-            )
+            draw(dictionaries(key_text, integers(min_value=min_int, max_value=max_int)))
         ),
         draw(
             dictionaries(
@@ -149,11 +133,7 @@ def everythings(
                 floats(allow_nan=False, allow_infinity=allow_inf),
             )
         ),
-        draw(
-            dictionaries(
-                floats(allow_nan=False, allow_infinity=allow_inf), strings
-            )
-        ),
+        draw(dictionaries(floats(allow_nan=False, allow_infinity=allow_inf), strings)),
         draw(lists(floats(allow_nan=False, allow_infinity=allow_inf))),
         draw(lists(strings)),
         draw(sets(floats(allow_nan=False, allow_infinity=allow_inf))),
@@ -176,8 +156,7 @@ def test_stdlib_json(everything: Everything):
     converter = json_make_converter()
     assert (
         converter.structure(
-            json_loads(json_dumps(converter.unstructure(everything))),
-            Everything,
+            json_loads(json_dumps(converter.unstructure(everything))), Everything
         )
         == everything
     )
@@ -185,9 +164,7 @@ def test_stdlib_json(everything: Everything):
 
 @given(
     everythings(
-        min_int=-9223372036854775808,
-        max_int=9223372036854775807,
-        allow_inf=False,
+        min_int=-9223372036854775808, max_int=9223372036854775807, allow_inf=False
     )
 )
 def test_ujson(everything: Everything):
@@ -201,9 +178,7 @@ def test_ujson(everything: Everything):
 
 @given(
     everythings(
-        min_int=-9223372036854775808,
-        max_int=9223372036854775807,
-        allow_inf=False,
+        min_int=-9223372036854775808, max_int=9223372036854775807, allow_inf=False
     )
 )
 def test_orjson(everything: Everything):
@@ -223,9 +198,7 @@ def test_msgpack(everything: Everything):
     converter = msgpack_make_converter()
     raw = msgpack_dumps(converter.unstructure(everything))
     assert (
-        converter.structure(
-            msgpack_loads(raw, strict_map_key=False), Everything
-        )
+        converter.structure(msgpack_loads(raw, strict_map_key=False), Everything)
         == everything
     )
 
@@ -244,13 +217,11 @@ def test_bson(everything: Everything):
 
     converter = bson_make_converter()
     raw = bson_dumps(
-        converter.unstructure(everything),
-        codec_options=CodecOptions(tz_aware=True),
+        converter.unstructure(everything), codec_options=CodecOptions(tz_aware=True)
     )
     assert (
         converter.structure(
-            bson_loads(raw, codec_options=CodecOptions(tz_aware=True)),
-            Everything,
+            bson_loads(raw, codec_options=CodecOptions(tz_aware=True)), Everything
         )
         == everything
     )
