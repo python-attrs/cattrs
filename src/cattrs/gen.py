@@ -215,7 +215,7 @@ def make_dict_structure_fn(
     _cattrs_use_linecache: bool = True,
     _cattrs_prefer_attrib_converters: bool = False,
     _cattrs_detailed_validation: bool = True,
-    **kwargs,
+    **kwargs: AttributeOverride,
 ) -> Callable[[Mapping[str, Any], Any], T]:
     """Generate a specialized dict structuring function for an attrs class."""
 
@@ -326,6 +326,15 @@ def make_dict_structure_fn(
         post_lines.append(
             f"  if errors: raise __c_cve('While structuring {cl.__name__}', errors, __cl)"
         )
+        instantiation_lines = (
+            ["  try:"]
+            + ["    return __cl("]
+            + [f"      {line}" for line in invocation_lines]
+            + ["    )"]
+            + [
+                f"  except Exception as exc: raise __c_cve('While structuring {cl.__name__}', [exc], __cl)"
+            ]
+        )
     else:
         non_required = []
         # The first loop deals with required args.
@@ -432,6 +441,9 @@ def make_dict_structure_fn(
                         )
                 else:
                     post_lines.append(f"    res['{ian}'] = o['{kn}']")
+        instantiation_lines = (
+            ["  return __cl("] + [f"    {line}" for line in invocation_lines] + ["  )"]
+        )
 
     if _cattrs_forbid_extra_keys:
         globs["__c_a"] = allowed_fields
@@ -452,9 +464,7 @@ def make_dict_structure_fn(
         [f"def {fn_name}(o, _, *, {internal_arg_line}):"]
         + lines
         + post_lines
-        + ["  return __cl("]
-        + [f"    {line}" for line in invocation_lines]
-        + ["  )"]
+        + instantiation_lines
     )
 
     fname = _generate_unique_filename(cl, "structure", reserve=_cattrs_use_linecache)

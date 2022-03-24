@@ -37,6 +37,24 @@ def test_class_validation():
     )
 
 
+def test_external_class_validation():
+    """Proper class validation errors are raised when a classes __init__ raises."""
+    c = GenConverter(detailed_validation=True)
+
+    @define
+    class Test:
+        a: int
+        b: str = field(validator=in_(["a", "b"]))
+        c: str
+
+    with pytest.raises(ClassValidationError) as exc:
+        c.structure({"a": 1, "b": "c", "c": "1"}, Test)
+
+    assert repr(exc.value.exceptions[0]) == repr(
+        ValueError("'b' must be in ['a', 'b'] (got 'c')")
+    )
+
+
 def test_list_validation():
     """Proper validation errors are raised structuring lists."""
     c = GenConverter(detailed_validation=True)
