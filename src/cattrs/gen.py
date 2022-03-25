@@ -452,7 +452,7 @@ def make_dict_structure_fn(
     if _cattrs_forbid_extra_keys:
         globs["__c_a"] = allowed_fields
         globs["__c_feke"] = ForbiddenExtraKeysError
-        post_lines += [
+        lines += [
             "  unknown_fields = set(o.keys()) - __c_a",
             "  if unknown_fields:",
             "    raise __c_feke('', __cl, unknown_fields)",
