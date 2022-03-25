@@ -2,13 +2,13 @@
 Preconfigured converters
 ========================
 
-The :py:mod:`cattr.preconf` package contains factories for preconfigured converters, specifically adjusted for particular serialization libraries.
+The :py:mod:`cattrs.preconf` package contains factories for preconfigured converters, specifically adjusted for particular serialization libraries.
 
 For example, to get a converter configured for BSON:
 
 .. doctest::
 
-  >>> from cattr.preconf.bson import make_converter
+  >>> from cattrs.preconf.bson import make_converter
   >>> converter = make_converter()   # Takes the same parameters as the ``GenConverter``
 
 Converters obtained this way can be customized further, just like any other converter.
@@ -27,7 +27,7 @@ These converters support the following classes and type annotations, both for st
 
 .. doctest::
 
-  >>> from cattr.preconf.json import make_converter
+  >>> from cattrs.preconf.json import make_converter
   >>> converter = make_converter()
 
   >>> @define
