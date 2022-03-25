@@ -16,11 +16,11 @@ from attr import Factory, define, fields, make_class
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis.strategies import booleans, lists, sampled_from
 
-from cattr import GenConverter as Converter
-from cattr import UnstructureStrategy
-from cattr._compat import is_py39_plus, is_py310_plus
-from cattr.gen import make_dict_structure_fn, override
+from cattrs import GenConverter as Converter
+from cattrs import UnstructureStrategy
+from cattrs._compat import is_py39_plus, is_py310_plus
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
+from cattrs.gen import make_dict_structure_fn, override
 
 from . import (
     nested_typed_classes,

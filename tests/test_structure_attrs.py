@@ -9,8 +9,8 @@ from attr import NOTHING, Factory, asdict, astuple, attrib, define, fields, make
 from hypothesis import assume, given
 from hypothesis.strategies import data, lists, sampled_from
 
-from cattr._compat import is_py37
-from cattr.converters import Converter, GenConverter
+from cattrs._compat import is_py37
+from cattrs.converters import Converter, GenConverter
 
 from . import simple_classes
 

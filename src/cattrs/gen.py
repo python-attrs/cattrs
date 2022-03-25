@@ -8,7 +8,13 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Mapping, Optional, Type, 
 import attr
 from attr import NOTHING, frozen, resolve_types
 
-from cattr._compat import (
+from cattrs.errors import (
+    ClassValidationError,
+    ForbiddenExtraKeysError,
+    IterableValidationError,
+)
+
+from ._compat import (
     adapted_fields,
     get_args,
     get_origin,
@@ -16,12 +22,7 @@ from cattr._compat import (
     is_bare,
     is_generic,
 )
-from cattr._generics import deep_copy_with
-from cattrs.errors import (
-    ClassValidationError,
-    ForbiddenExtraKeysError,
-    IterableValidationError,
-)
+from ._generics import deep_copy_with
 
 if TYPE_CHECKING:  # pragma: no cover
     from cattr.converters import Converter

@@ -20,8 +20,8 @@ from hypothesis.strategies import (
 )
 from pytest import raises
 
-from cattr._compat import copy_with, is_bare, is_union_type
 from cattrs import Converter
+from cattrs._compat import copy_with, is_bare, is_union_type
 from cattrs.errors import IterableValidationError, StructureHandlerNotFoundError
 
 from . import (

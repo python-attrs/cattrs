@@ -1,6 +1,6 @@
 from typing import Optional, Set, Type
 
-from cattr._compat import ExceptionGroup
+from cattrs._compat import ExceptionGroup
 
 
 class StructureHandlerNotFoundError(Exception):

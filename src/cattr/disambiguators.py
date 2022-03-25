@@ -12,7 +12,7 @@ from typing import (  # noqa: F401, imported for Mypy.
 
 from attr import NOTHING, fields
 
-from cattr._compat import get_origin
+from cattrs._compat import get_origin
 
 
 def create_uniq_field_dis_func(*classes: Type) -> Callable:

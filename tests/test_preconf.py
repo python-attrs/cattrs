@@ -5,7 +5,7 @@ from json import loads as json_loads
 from typing import Dict, List
 
 from attr import define
-from bson import CodecOptions
+from bson import CodecOptions, ObjectId
 from hypothesis import given
 from hypothesis.strategies import (
     binary,
@@ -22,7 +22,7 @@ from hypothesis.strategies import (
     text,
 )
 
-from cattr._compat import (
+from cattrs._compat import (
     Counter,
     FrozenSet,
     Mapping,
@@ -253,3 +253,11 @@ def test_tomlkit(everything: Everything):
     unstructured = converter.unstructure(everything)
     raw = tomlkit_dumps(unstructured)
     assert converter.structure(tomlkit_loads(raw), Everything) == everything
+
+
+def test_bson_objectid():
+    """BSON ObjectIds are supported by default."""
+    converter = bson_make_converter()
+    o = ObjectId()
+    assert o == converter.structure(str(o), ObjectId)
+    assert o == converter.structure(o, ObjectId)

@@ -13,9 +13,9 @@ import attr
 import pytest
 from immutables import Map
 
-from cattr import GenConverter
-from cattr._compat import is_py39_plus
-from cattr.converters import is_mutable_set, is_sequence
+from cattrs import GenConverter
+from cattrs._compat import is_py39_plus
+from cattrs.converters import is_mutable_set, is_sequence
 
 
 @pytest.mark.skipif(not is_py39_plus, reason="Requires Python 3.9+")
