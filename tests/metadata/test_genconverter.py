@@ -19,8 +19,8 @@ from hypothesis.strategies import booleans, lists, sampled_from
 from cattr import GenConverter as Converter
 from cattr import UnstructureStrategy
 from cattr._compat import is_py39_plus, is_py310_plus
-from cattrs.errors import ForbiddenExtraKeyError
 from cattr.gen import make_dict_structure_fn, override
+from cattrs.errors import ForbiddenExtraKeysError
 
 from . import (
     nested_typed_classes,
@@ -88,8 +88,11 @@ def test_forbid_extra_keys(cls_and_vals):
     while bad_key in unstructured:
         bad_key += "A"
     unstructured[bad_key] = 1
-    with pytest.raises(ForbiddenExtraKeyError):
+    with pytest.raises(ForbiddenExtraKeysError) as feke:
         converter.structure(unstructured, cl)
+
+    assert feke.value.cl is cl
+    assert feke.value.extra_fields == {bad_key}
 
 
 @given(simple_typed_attrs(defaults=True))
@@ -103,8 +106,11 @@ def test_forbid_extra_keys_defaults(attr_and_vals):
     inst = cl()
     unstructured = converter.unstructure(inst)
     unstructured["aa"] = unstructured.pop("a")
-    with pytest.raises(ForbiddenExtraKeyError):
+    with pytest.raises(ForbiddenExtraKeysError) as feke:
         converter.structure(unstructured, cl)
+
+    assert feke.value.cl is cl
+    assert feke.value.extra_fields == {"aa"}
 
 
 def test_forbid_extra_keys_nested_override():
@@ -123,7 +129,7 @@ def test_forbid_extra_keys_nested_override():
     converter.structure(unstructured, A)
     # if we break it in the subclass, we need it to raise
     unstructured["c"]["aa"] = 5
-    with pytest.raises(ForbiddenExtraKeyError):
+    with pytest.raises(ForbiddenExtraKeysError):
         converter.structure(unstructured, A)
     # we can "fix" that by disabling forbid_extra_keys on the subclass
     hook = make_dict_structure_fn(C, converter, _cattrs_forbid_extra_keys=False)
@@ -131,7 +137,7 @@ def test_forbid_extra_keys_nested_override():
     converter.structure(unstructured, A)
     # but we should still raise at the top level
     unstructured["b"] = 6
-    with pytest.raises(ForbiddenExtraKeyError):
+    with pytest.raises(ForbiddenExtraKeysError):
         converter.structure(unstructured, A)
 
 

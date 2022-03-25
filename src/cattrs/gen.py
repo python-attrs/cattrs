@@ -17,7 +17,11 @@ from cattr._compat import (
     is_generic,
 )
 from cattr._generics import deep_copy_with
-from cattrs.errors import ClassValidationError, IterableValidationError
+from cattrs.errors import (
+    ClassValidationError,
+    ForbiddenExtraKeysError,
+    IterableValidationError,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from cattr.converters import Converter
@@ -447,13 +451,11 @@ def make_dict_structure_fn(
 
     if _cattrs_forbid_extra_keys:
         globs["__c_a"] = allowed_fields
-        globs["ForbiddenExtraKeyError"] = ForbiddenExtraKeyError
+        globs["__c_feke"] = ForbiddenExtraKeysError
         post_lines += [
             "  unknown_fields = set(o.keys()) - __c_a",
             "  if unknown_fields:",
-            "    raise ForbiddenExtraKeyError(",
-            f"      'Extra fields in constructor for {cl_name}: ' + ', '.join(unknown_fields)"
-            "    )",
+            "    raise __c_feke('', __cl, unknown_fields)",
         ]
 
     # At the end, we create the function header.
