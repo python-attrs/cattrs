@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Optional, Set, Type
 
 from cattr._compat import ExceptionGroup
 
@@ -35,5 +35,23 @@ class ClassValidationError(BaseValidationError):
     pass
 
 
-class ForbiddenExtraKeyError(Exception):
-    """Raised when `forbid_extra_keys` is activated and such an extra key is detected during structuring."""
+class ForbiddenExtraKeysError(Exception):
+    """Raised when `forbid_extra_keys` is activated and such extra keys are detected during structuring.
+
+    The attribute `extra_fields` is a sequence of those extra keys, which were the cause of this error,
+    and `cl` is the class which was structured with those extra keys.
+    """
+
+    def __init__(
+        self, message: Optional[str], cl: Type, extra_fields: Set[str]
+    ) -> None:
+        self.cl = cl
+        self.extra_fields = extra_fields
+
+        msg = (
+            message
+            if message
+            else f"Extra fields in constructor for {cl.__name__}: {', '.join(extra_fields)}"
+        )
+
+        super().__init__(msg)

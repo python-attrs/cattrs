@@ -7,6 +7,7 @@ from hypothesis.strategies._internal.core import data, sampled_from
 
 from cattr._compat import adapted_fields, fields
 from cattrs import Converter
+from cattrs.errors import ForbiddenExtraKeysError
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
 from . import nested_classes, simple_classes
@@ -226,7 +227,7 @@ def test_renaming_forbid_extra_keys():
 
     assert new_inst == A(1, "str")
 
-    with pytest.raises(Exception):
+    with pytest.raises(ForbiddenExtraKeysError):
         converter.structure({"b": 1, "c": "str"}, A)
 
 
