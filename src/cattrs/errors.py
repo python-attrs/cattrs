@@ -33,3 +33,7 @@ class ClassValidationError(BaseValidationError):
     """Raised when validating a class if any attributes are invalid."""
 
     pass
+
+
+class ForbiddenExtraKeyError(Exception):
+    """Raised when `forbid_extra_keys` is activated and such an extra key is detected during structuring."""

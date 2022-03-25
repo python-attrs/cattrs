@@ -447,10 +447,11 @@ def make_dict_structure_fn(
 
     if _cattrs_forbid_extra_keys:
         globs["__c_a"] = allowed_fields
+        globs["ForbiddenExtraKeyError"] = ForbiddenExtraKeyError
         post_lines += [
             "  unknown_fields = set(o.keys()) - __c_a",
             "  if unknown_fields:",
-            "    raise Exception(",
+            "    raise ForbiddenExtraKeyError(",
             f"      'Extra fields in constructor for {cl_name}: ' + ', '.join(unknown_fields)"
             "    )",
         ]
