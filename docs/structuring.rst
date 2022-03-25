@@ -473,7 +473,7 @@ Here's a small example showing how to use factory hooks to apply the `forbid_ext
     >>> c.structure({"an_int": 1, "else": 2}, E)
     Traceback (most recent call last):
     ...
-    Exception: Extra fields in constructor for E: else
+    ForbiddenExtraKeyError: Extra fields in constructor for E: else
 
 
 A complex use case for hook factories is described over at :ref:`Using factory hooks`.
