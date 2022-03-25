@@ -262,6 +262,10 @@ def make_dict_structure_fn(
         resolve_types(cl)
 
     allowed_fields = set()
+    if _cattrs_forbid_extra_keys:
+        globs["__c_a"] = allowed_fields
+        globs["__c_feke"] = ForbiddenExtraKeysError
+
     if _cattrs_detailed_validation:
         lines.append("  res = {}")
         lines.append("  errors = []")
@@ -327,6 +331,14 @@ def make_dict_structure_fn(
                 f"{i}e.__note__ = 'Structuring class {cl.__qualname__} @ attribute {an}'"
             )
             lines.append(f"{i}errors.append(e)")
+
+        if _cattrs_forbid_extra_keys:
+            post_lines += [
+                "  unknown_fields = set(o.keys()) - __c_a",
+                "  if unknown_fields:",
+                "    errors.append(__c_feke('', __cl, unknown_fields))",
+            ]
+
         post_lines.append(
             f"  if errors: raise __c_cve('While structuring {cl.__name__}', errors, __cl)"
         )
@@ -449,14 +461,12 @@ def make_dict_structure_fn(
             ["  return __cl("] + [f"    {line}" for line in invocation_lines] + ["  )"]
         )
 
-    if _cattrs_forbid_extra_keys:
-        globs["__c_a"] = allowed_fields
-        globs["__c_feke"] = ForbiddenExtraKeysError
-        lines += [
-            "  unknown_fields = set(o.keys()) - __c_a",
-            "  if unknown_fields:",
-            "    raise __c_feke('', __cl, unknown_fields)",
-        ]
+        if _cattrs_forbid_extra_keys:
+            post_lines += [
+                "  unknown_fields = set(o.keys()) - __c_a",
+                "  if unknown_fields:",
+                "    raise __c_feke('', __cl, unknown_fields)",
+            ]
 
     # At the end, we create the function header.
     internal_arg_line = ", ".join([f"{i}={i}" for i in internal_arg_parts])

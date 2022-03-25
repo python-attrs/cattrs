@@ -7,7 +7,7 @@ from hypothesis.strategies._internal.core import data, sampled_from
 
 from cattr._compat import adapted_fields, fields
 from cattrs import Converter
-from cattrs.errors import ForbiddenExtraKeysError
+from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
 from . import nested_classes, simple_classes
@@ -227,8 +227,14 @@ def test_renaming_forbid_extra_keys():
 
     assert new_inst == A(1, "str")
 
-    with pytest.raises(ForbiddenExtraKeysError):
+    with pytest.raises(ClassValidationError) as cve:
         converter.structure({"b": 1, "c": "str"}, A)
+
+    assert len(cve.value.exceptions) == 2
+    assert isinstance(cve.value.exceptions[0], KeyError)
+    assert isinstance(cve.value.exceptions[1], ForbiddenExtraKeysError)
+    assert cve.value.exceptions[1].cl is A
+    assert cve.value.exceptions[1].extra_fields == {"c"}
 
 
 def test_omitting():
