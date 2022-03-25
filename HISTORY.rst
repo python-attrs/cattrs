@@ -11,8 +11,8 @@ History
   (`#218 <https://github.com/python-attrs/cattrs/issues/218>`_)
 * Fix structuring bare ``typing.Tuple`` on Pythons lower than 3.9.
   (`#218 <https://github.com/python-attrs/cattrs/issues/218>`_)
-* Fix a wrong ``AttributeError`` of an missing ``__parameters__`` attribute. This could happen 
-  when inheriting certain generic classes – for example ``typing.*`` classes are affected. 
+* Fix a wrong ``AttributeError`` of an missing ``__parameters__`` attribute. This could happen
+  when inheriting certain generic classes – for example ``typing.*`` classes are affected.
   (`#217 <https://github.com/python-attrs/cattrs/issues/217>`_)
 * Fix structuring of ``enum.Enum`` instances in ``typing.Literal`` types.
   (`#231 <https://github.com/python-attrs/cattrs/pull/231>`_)
@@ -20,6 +20,7 @@ History
   (`#226 <https://github.com/python-attrs/cattrs/issues/226>`_)
 * For ``forbid_extra_keys`` raise custom ``ForbiddenExtraKeyError`` instead of generic ``Exception``.
   (`#255 <https://github.com/python-attrs/cattrs/pull/225>`_)
+* All preconf converters now support ``loads`` and ``dumps`` directly.
 
 1.10.0 (2022-01-04)
 -------------------

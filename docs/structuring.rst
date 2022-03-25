@@ -461,19 +461,19 @@ Here's a small example showing how to use factory hooks to apply the `forbid_ext
 .. doctest::
 
     >>> from attr import define, has
-    >>> from cattr.gen import make_dict_structure_fn
-    
-    >>> c = cattr.GenConverter()
-    >>> c.register_structure_hook_factory(has, lambda cl: make_dict_structure_fn(cl, c, _cattrs_forbid_extra_keys=True))
+    >>> from cattrs.gen import make_dict_structure_fn
+
+    >>> c = cattrs.GenConverter()
+    >>> c.register_structure_hook_factory(has, lambda cl: make_dict_structure_fn(cl, c, _cattrs_forbid_extra_keys=True, _cattrs_detailed_validation=False))
 
     >>> @define
     ... class E:
     ...    an_int: int
-    
+
     >>> c.structure({"an_int": 1, "else": 2}, E)
     Traceback (most recent call last):
     ...
-    ForbiddenExtraKeyError: Extra fields in constructor for E: else
+    cattrs.errors.ForbiddenExtraKeysError: Extra fields in constructor for E: else
 
 
 A complex use case for hook factories is described over at :ref:`Using factory hooks`.

@@ -1,9 +1,23 @@
 """Preconfigured converters for ujson."""
 from base64 import b85decode, b85encode
 from datetime import datetime
+from typing import Any, AnyStr, Type, TypeVar
 
-from .._compat import Set
+from ujson import dumps, loads
+
+from cattrs._compat import Set
+
 from ..converters import Converter, GenConverter
+
+T = TypeVar("T")
+
+
+class UjsonConverter(GenConverter):
+    def dumps(self, obj: Any, unstructure_as=None, **kwargs) -> str:
+        return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
+
+    def loads(self, data: AnyStr, cl: Type[T], **kwargs) -> T:
+        return self.structure(loads(data, **kwargs), cl)
 
 
 def configure_converter(converter: Converter):
@@ -23,12 +37,12 @@ def configure_converter(converter: Converter):
     converter.register_structure_hook(datetime, lambda v, _: datetime.fromisoformat(v))
 
 
-def make_converter(*args, **kwargs) -> GenConverter:
+def make_converter(*args, **kwargs) -> UjsonConverter:
     kwargs["unstruct_collection_overrides"] = {
         **kwargs.get("unstruct_collection_overrides", {}),
         Set: list,
     }
-    res = GenConverter(*args, **kwargs)
+    res = UjsonConverter(*args, **kwargs)
     configure_converter(res)
 
     return res

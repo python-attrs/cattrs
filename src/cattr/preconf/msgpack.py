@@ -1,8 +1,22 @@
 """Preconfigured converters for msgpack."""
 from datetime import datetime, timezone
+from typing import Any, Type, TypeVar
 
-from .._compat import Set
+from msgpack import dumps, loads
+
+from cattrs._compat import Set
+
 from ..converters import GenConverter
+
+T = TypeVar("T")
+
+
+class MsgpackConverter(GenConverter):
+    def dumps(self, obj: Any, unstructure_as=None, **kwargs) -> bytes:
+        return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
+
+    def loads(self, data: bytes, cl: Type[T], **kwargs) -> T:
+        return self.structure(loads(data, **kwargs), cl)
 
 
 def configure_converter(converter: GenConverter):
@@ -18,12 +32,12 @@ def configure_converter(converter: GenConverter):
     )
 
 
-def make_converter(*args, **kwargs) -> GenConverter:
+def make_converter(*args, **kwargs) -> MsgpackConverter:
     kwargs["unstruct_collection_overrides"] = {
         **kwargs.get("unstruct_collection_overrides", {}),
         Set: list,
     }
-    res = GenConverter(*args, **kwargs)
+    res = MsgpackConverter(*args, **kwargs)
     configure_converter(res)
 
     return res

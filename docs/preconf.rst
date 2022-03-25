@@ -22,6 +22,22 @@ These converters support the following classes and type annotations, both for st
 * sequences, mutable sequences, mappings, mutable mappings, sets, mutable sets
 * ``datetime.datetime``
 
+.. versionadded:: 22.1.0
+  All preconf converters now have ``loads`` and ``dumps`` methods, which combine un/structuring and the de/serialization logic from their underlying libraries.
+
+.. doctest::
+
+  >>> from cattr.preconf.json import make_converter
+  >>> converter = make_converter()
+
+  >>> @define
+  ... class Test:
+  ...     a: int
+  >>>
+
+  >>> converter.dumps(Test(1))
+  '{"a": 1}'
+
 Particular libraries may have additional constraints documented below.
 
 Standard library ``json``

@@ -1,9 +1,23 @@
 """Preconfigured converters for pyyaml."""
 from datetime import datetime
+from typing import Any, Type, TypeVar
 
-from .._compat import FrozenSetSubscriptable
+from yaml import safe_dump, safe_load
+
+from cattrs._compat import FrozenSetSubscriptable
+
 from ..converters import GenConverter
 from . import validate_datetime
+
+T = TypeVar("T")
+
+
+class PyyamlConverter(GenConverter):
+    def dumps(self, obj: Any, unstructure_as=None, **kwargs) -> str:
+        return safe_dump(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
+
+    def loads(self, data: str, cl: Type[T]) -> T:
+        return self.structure(safe_load(data), cl)
 
 
 def configure_converter(converter: GenConverter):
@@ -19,12 +33,12 @@ def configure_converter(converter: GenConverter):
     converter.register_structure_hook(datetime, validate_datetime)
 
 
-def make_converter(*args, **kwargs) -> GenConverter:
+def make_converter(*args, **kwargs) -> PyyamlConverter:
     kwargs["unstruct_collection_overrides"] = {
         **kwargs.get("unstruct_collection_overrides", {}),
         FrozenSetSubscriptable: list,
     }
-    res = GenConverter(*args, **kwargs)
+    res = PyyamlConverter(*args, **kwargs)
     configure_converter(res)
 
     return res

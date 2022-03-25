@@ -71,4 +71,4 @@ Non-detailed validation
 -----------------------
 
 Non-detailed validation can be enabled by initializing any of the converters with ``detailed_validation=False``.
-In this mode, any errors during un/structuring will bubble up directly as soon as they happen
+In this mode, any errors during un/structuring will bubble up directly as soon as they happen.

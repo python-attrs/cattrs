@@ -162,6 +162,12 @@ def test_stdlib_json(everything: Everything):
     )
 
 
+@given(everythings())
+def test_stdlib_json_converter(everything: Everything):
+    converter = json_make_converter()
+    assert converter.loads(converter.dumps(everything), Everything) == everything
+
+
 @given(
     everythings(
         min_int=-9223372036854775808, max_int=9223372036854775807, allow_inf=False
@@ -181,6 +187,17 @@ def test_ujson(everything: Everything):
         min_int=-9223372036854775808, max_int=9223372036854775807, allow_inf=False
     )
 )
+def test_ujson_converter(everything: Everything):
+    converter = ujson_make_converter()
+    raw = converter.dumps(everything)
+    assert converter.loads(raw, Everything) == everything
+
+
+@given(
+    everythings(
+        min_int=-9223372036854775808, max_int=9223372036854775807, allow_inf=False
+    )
+)
 def test_orjson(everything: Everything):
     from orjson import dumps as orjson_dumps
     from orjson import loads as orjson_loads
@@ -188,6 +205,17 @@ def test_orjson(everything: Everything):
     converter = orjson_make_converter()
     raw = orjson_dumps(converter.unstructure(everything))
     assert converter.structure(orjson_loads(raw), Everything) == everything
+
+
+@given(
+    everythings(
+        min_int=-9223372036854775808, max_int=9223372036854775807, allow_inf=False
+    )
+)
+def test_orjson_converter(everything: Everything):
+    converter = orjson_make_converter()
+    raw = converter.dumps(everything)
+    assert converter.loads(raw, Everything) == everything
 
 
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
@@ -201,6 +229,13 @@ def test_msgpack(everything: Everything):
         converter.structure(msgpack_loads(raw, strict_map_key=False), Everything)
         == everything
     )
+
+
+@given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
+def test_msgpack_converter(everything: Everything):
+    converter = msgpack_make_converter()
+    raw = converter.dumps(everything)
+    assert converter.loads(raw, Everything, strict_map_key=False) == everything
 
 
 @given(
@@ -227,6 +262,23 @@ def test_bson(everything: Everything):
     )
 
 
+@given(
+    everythings(
+        min_int=-9223372036854775808,
+        max_int=9223372036854775807,
+        allow_null_bytes_in_keys=False,
+        allow_datetime_microseconds=False,
+    )
+)
+def test_bson_converter(everything: Everything):
+    converter = bson_make_converter()
+    raw = converter.dumps(everything, codec_options=CodecOptions(tz_aware=True))
+    assert (
+        converter.loads(raw, Everything, codec_options=CodecOptions(tz_aware=True))
+        == everything
+    )
+
+
 @given(everythings())
 def test_pyyaml(everything: Everything):
     from yaml import safe_dump, safe_load
@@ -235,6 +287,13 @@ def test_pyyaml(everything: Everything):
     unstructured = converter.unstructure(everything)
     raw = safe_dump(unstructured)
     assert converter.structure(safe_load(raw), Everything) == everything
+
+
+@given(everythings())
+def test_pyyaml_converter(everything: Everything):
+    converter = pyyaml_make_converter()
+    raw = converter.dumps(everything)
+    assert converter.loads(raw, Everything) == everything
 
 
 @given(
@@ -253,6 +312,20 @@ def test_tomlkit(everything: Everything):
     unstructured = converter.unstructure(everything)
     raw = tomlkit_dumps(unstructured)
     assert converter.structure(tomlkit_loads(raw), Everything) == everything
+
+
+@given(
+    everythings(
+        min_key_length=1,
+        allow_null_bytes_in_keys=False,
+        allow_quotes_in_keys=False,
+        allow_control_characters_in_values=False,
+    )
+)
+def test_tomlkit_converter(everything: Everything):
+    converter = tomlkit_make_converter()
+    raw = converter.dumps(everything)
+    assert converter.loads(raw, Everything) == everything
 
 
 def test_bson_objectid():

@@ -2,10 +2,23 @@
 from base64 import b85decode, b85encode
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Type, TypeVar
 
-from .._compat import Set, is_mapping
+from orjson import dumps, loads
+
+from cattrs._compat import Set, is_mapping
+
 from ..converters import GenConverter
+
+T = TypeVar("T")
+
+
+class OrjsonConverter(GenConverter):
+    def dumps(self, obj: Any, unstructure_as=None, **kwargs) -> bytes:
+        return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
+
+    def loads(self, data: bytes, cl: Type[T]) -> T:
+        return self.structure(loads(data), cl)
 
 
 def configure_converter(converter: GenConverter):
@@ -43,12 +56,12 @@ def configure_converter(converter: GenConverter):
     )
 
 
-def make_converter(*args, **kwargs) -> GenConverter:
+def make_converter(*args, **kwargs) -> OrjsonConverter:
     kwargs["unstruct_collection_overrides"] = {
         **kwargs.get("unstruct_collection_overrides", {}),
         Set: list,
     }
-    res = GenConverter(*args, **kwargs)
+    res = OrjsonConverter(*args, **kwargs)
     configure_converter(res)
 
     return res

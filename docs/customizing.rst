@@ -97,6 +97,7 @@ when fields have default values this may help with catching typos.
 creating structure hooks with ``make_dict_structure_fn``.
 
 .. doctest::
+    :options: +SKIP
 
     >>> from cattr.gen import make_dict_structure_fn
     >>>
@@ -164,4 +165,3 @@ or unstructuring function.
     >>> c.register_unstructure_hook(ExampleClass, unst_hook)
     >>> c.unstructure(ExampleClass(1))
     {}
-
