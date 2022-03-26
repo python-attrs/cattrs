@@ -4,6 +4,8 @@ History
 22.1.0 (UNRELEASED)
 -------------------
 * cattrs now uses the CalVer versioning convention.
+* cattrs now has a detailed validation mode, which is enabled by default. Learn more `here <https://cattrs.readthedocs.io/en/latest/validation.html>`_.
+  The old behavior can be restored by creating the converter with ``detailed_validation=False``.
 * ``attrs`` and dataclass structuring is now ~25% faster.
 * Fix an issue structuring bare ``typing.List`` s on Pythons lower than 3.9.
   (`#209 <https://github.com/python-attrs/cattrs/issues/209>`_)
