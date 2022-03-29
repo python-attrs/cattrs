@@ -535,7 +535,7 @@ class Converter:
         handler = self._union_struct_registry[union]
         return handler(obj, union)
 
-    def _structure_tuple(self, obj, tup: Type[T]):
+    def _structure_tuple(self, obj, tup: Type[T]) -> T:
         """Deal with structuring into a tuple."""
         if tup in (Tuple, tuple):
             tup_params = None
@@ -583,11 +583,15 @@ class Converter:
                     )
                 return tuple(res)
             else:
-                return tuple((e, t) for t, e in zip(tup_params, obj))
+                return tuple(
+                    [
+                        self._structure_func.dispatch(t)(e, t)
+                        for t, e in zip(tup_params, obj)
+                    ]
+                )
 
     @staticmethod
-    def _get_dis_func(union):
-        # type: (Type) -> Callable[..., Type]
+    def _get_dis_func(union) -> Callable[..., Type]:
         """Fetch or try creating a disambiguation function for a union."""
         union_types = union.__args__
         if NoneType in union_types:  # type: ignore
