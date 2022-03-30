@@ -38,8 +38,14 @@ def configure_converter(converter: GenConverter):
     def gen_unstructure_mapping(cl: Any, unstructure_to=None):
         key_handler = str
         args = getattr(cl, "__args__", None)
-        if args and issubclass(args[0], str):
-            key_handler = None
+        if args:
+            if issubclass(args[0], str):
+                key_handler = None
+            elif issubclass(args[0], bytes):
+
+                def key_handler(k: bytes):
+                    return b85encode(k).decode("utf8")
+
         return converter.gen_unstructure_mapping(
             cl, unstructure_to=unstructure_to, key_handler=key_handler
         )

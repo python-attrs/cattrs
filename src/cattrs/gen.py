@@ -614,13 +614,13 @@ def make_mapping_unstructure_fn(
 
 
 def make_mapping_structure_fn(
-    cl: Any,
-    converter,
+    cl: Type[T],
+    converter: "Converter",
     structure_to=dict,
     key_type=NOTHING,
     val_type=NOTHING,
     detailed_validation: bool = True,
-):
+) -> Callable[[Mapping, Any], T]:
     """Generate a specialized unstructure function for a mapping."""
     fn_name = "structure_mapping"
 

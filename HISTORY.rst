@@ -21,8 +21,10 @@ History
 * Fix unstructuring all tuples - unannotated, variable-length, homogenous and heterogenous - to `list`.
   (`#226 <https://github.com/python-attrs/cattrs/issues/226>`_)
 * For ``forbid_extra_keys`` raise custom ``ForbiddenExtraKeyError`` instead of generic ``Exception``.
-  (`#255 <https://github.com/python-attrs/cattrs/pull/225>`_)
+  (`#225 <https://github.com/python-attrs/cattrs/pull/225>`_)
 * All preconf converters now support ``loads`` and ``dumps`` directly. See an example `here <https://cattrs.readthedocs.io/en/latest/preconf.html>`_.
+* Fix mappings with byte keys for the orjson, bson and tomlkit converters.
+  (`#241 <https://github.com/python-attrs/cattrs/issues/241>`_)
 
 1.10.0 (2022-01-04)
 -------------------

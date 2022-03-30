@@ -123,10 +123,10 @@ def test_stringifying_sets(set_and_type):
         assert str(e) in converted
 
 
-@given(lists(primitives_and_type, min_size=1))
-def test_structuring_hetero_tuples(list_of_vals_and_types):
+@given(lists(primitives_and_type, min_size=1), booleans())
+def test_structuring_hetero_tuples(list_of_vals_and_types, detailed_validation):
     """Test structuring heterogenous tuples."""
-    converter = Converter()
+    converter = Converter(detailed_validation=detailed_validation)
     types = tuple(e[1] for e in list_of_vals_and_types)
     vals = [e[0] for e in list_of_vals_and_types]
     t = Tuple[types]

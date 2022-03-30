@@ -42,10 +42,20 @@ def configure_converter(converter: GenConverter):
     def gen_unstructure_mapping(cl: Any, unstructure_to=None):
         key_handler = str
         args = getattr(cl, "__args__", None)
-        if args and issubclass(args[0], str) and issubclass(args[0], Enum):
+        if args:
+            if issubclass(args[0], str) and issubclass(args[0], Enum):
 
-            def key_handler(v):
-                return v.value
+                def key_handler(v):
+                    return v.value
+
+            else:
+                # It's possible the handler for the key type has been overridden.
+                # (For example base85 encoding for bytes.)
+                # In that case, we want to use the override.
+
+                kh = converter._unstructure_func.dispatch(args[0])
+                if kh != converter._unstructure_identity:
+                    key_handler = kh
 
         return converter.gen_unstructure_mapping(
             cl, unstructure_to=unstructure_to, key_handler=key_handler

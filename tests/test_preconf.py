@@ -9,6 +9,7 @@ from bson import CodecOptions, ObjectId
 from hypothesis import given
 from hypothesis.strategies import (
     binary,
+    booleans,
     characters,
     composite,
     datetimes,
@@ -72,6 +73,7 @@ class Everything:
     a_str_enum: AStringEnum
     a_datetime: datetime
     a_string_enum_dict: Dict[AStringEnum, int]
+    a_bytes_dict: Dict[bytes, bytes]
 
 
 @composite
@@ -148,6 +150,7 @@ def everythings(
                 integers(min_value=min_int, max_value=max_int),
             )
         ),
+        draw(dictionaries(binary(min_size=min_key_length), binary())),
     )
 
 
@@ -196,13 +199,14 @@ def test_ujson_converter(everything: Everything):
 @given(
     everythings(
         min_int=-9223372036854775808, max_int=9223372036854775807, allow_inf=False
-    )
+    ),
+    booleans(),
 )
-def test_orjson(everything: Everything):
+def test_orjson(everything: Everything, detailed_validation: bool):
     from orjson import dumps as orjson_dumps
     from orjson import loads as orjson_loads
 
-    converter = orjson_make_converter()
+    converter = orjson_make_converter(detailed_validation=detailed_validation)
     raw = orjson_dumps(converter.unstructure(everything))
     assert converter.structure(orjson_loads(raw), Everything) == everything
 
@@ -210,10 +214,11 @@ def test_orjson(everything: Everything):
 @given(
     everythings(
         min_int=-9223372036854775808, max_int=9223372036854775807, allow_inf=False
-    )
+    ),
+    booleans(),
 )
-def test_orjson_converter(everything: Everything):
-    converter = orjson_make_converter()
+def test_orjson_converter(everything: Everything, detailed_validation: bool):
+    converter = orjson_make_converter(detailed_validation=detailed_validation)
     raw = converter.dumps(everything)
     assert converter.loads(raw, Everything) == everything
 
@@ -244,13 +249,14 @@ def test_msgpack_converter(everything: Everything):
         max_int=9223372036854775807,
         allow_null_bytes_in_keys=False,
         allow_datetime_microseconds=False,
-    )
+    ),
+    booleans(),
 )
-def test_bson(everything: Everything):
+def test_bson(everything: Everything, detailed_validation: bool):
     from bson import decode as bson_loads
     from bson import encode as bson_dumps
 
-    converter = bson_make_converter()
+    converter = bson_make_converter(detailed_validation=detailed_validation)
     raw = bson_dumps(
         converter.unstructure(everything), codec_options=CodecOptions(tz_aware=True)
     )
@@ -268,10 +274,11 @@ def test_bson(everything: Everything):
         max_int=9223372036854775807,
         allow_null_bytes_in_keys=False,
         allow_datetime_microseconds=False,
-    )
+    ),
+    booleans(),
 )
-def test_bson_converter(everything: Everything):
-    converter = bson_make_converter()
+def test_bson_converter(everything: Everything, detailed_validation: bool):
+    converter = bson_make_converter(detailed_validation=detailed_validation)
     raw = converter.dumps(everything, codec_options=CodecOptions(tz_aware=True))
     assert (
         converter.loads(raw, Everything, codec_options=CodecOptions(tz_aware=True))
@@ -302,13 +309,14 @@ def test_pyyaml_converter(everything: Everything):
         allow_null_bytes_in_keys=False,
         allow_quotes_in_keys=False,
         allow_control_characters_in_values=False,
-    )
+    ),
+    booleans(),
 )
-def test_tomlkit(everything: Everything):
+def test_tomlkit(everything: Everything, detailed_validation: bool):
     from tomlkit import dumps as tomlkit_dumps
     from tomlkit import loads as tomlkit_loads
 
-    converter = tomlkit_make_converter()
+    converter = tomlkit_make_converter(detailed_validation=detailed_validation)
     unstructured = converter.unstructure(everything)
     raw = tomlkit_dumps(unstructured)
     assert converter.structure(tomlkit_loads(raw), Everything) == everything
@@ -320,10 +328,11 @@ def test_tomlkit(everything: Everything):
         allow_null_bytes_in_keys=False,
         allow_quotes_in_keys=False,
         allow_control_characters_in_values=False,
-    )
+    ),
+    booleans(),
 )
-def test_tomlkit_converter(everything: Everything):
-    converter = tomlkit_make_converter()
+def test_tomlkit_converter(everything: Everything, detailed_validation: bool):
+    converter = tomlkit_make_converter(detailed_validation=detailed_validation)
     raw = converter.dumps(everything)
     assert converter.loads(raw, Everything) == everything
 
