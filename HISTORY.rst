@@ -1,6 +1,10 @@
 =======
 History
 =======
+22.2.0 (UNRELEASED)
+-------------------
+
+
 22.1.0 (2022-04-03)
 -------------------
 * cattrs now uses the CalVer versioning convention.
