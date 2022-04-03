@@ -1,7 +1,7 @@
 =======
 History
 =======
-22.1.0 (UNRELEASED)
+22.1.0 (2022-04-03)
 -------------------
 * cattrs now uses the CalVer versioning convention.
 * cattrs now has a detailed validation mode, which is enabled by default. Learn more `here <https://cattrs.readthedocs.io/en/latest/validation.html>`_.
