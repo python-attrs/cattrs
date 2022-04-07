@@ -395,15 +395,18 @@ def make_dict_structure_fn(
                 internal_arg_parts[struct_handler_name] = handler
                 if handler == converter._structure_call:
                     internal_arg_parts[struct_handler_name] = t
-                    invocation_lines.append(f"{struct_handler_name}(o['{kn}']),")
+                    invocation_line = f"{struct_handler_name}(o['{kn}']),"
                 else:
                     type_name = f"__c_type_{an}"
                     internal_arg_parts[type_name] = t
-                    invocation_lines.append(
-                        f"{struct_handler_name}(o['{kn}'], {type_name}),"
-                    )
+                    invocation_line = f"{struct_handler_name}(o['{kn}'], {type_name}),"
             else:
-                invocation_lines.append(f"o['{kn}'],")
+                invocation_line = f"o['{kn}'],"
+
+            if a.kw_only:
+                ian = an if (is_dc or an[0] != "_") else an[1:]
+                invocation_line = f"{ian}={invocation_line}"
+            invocation_lines.append(invocation_line)
 
         # The second loop is for optional args.
         if non_required:

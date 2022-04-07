@@ -18,6 +18,7 @@ from typing import (
 
 import attr
 from attr import NOTHING, make_class
+from attr._make import _CountingAttr
 from hypothesis import HealthCheck, settings
 from hypothesis import strategies as st
 
@@ -28,6 +29,9 @@ settings.register_profile(
 if "CI" in os.environ:
     settings.load_profile("CI")
 
+PosArg = Any
+PosArgs = Tuple[Any]
+KwArgs = Dict[str, Any]
 
 primitive_strategies = st.sampled_from(
     [
@@ -152,22 +156,31 @@ def gen_attr_names():
             yield outer + inner
 
 
-def _create_hyp_class(attrs_and_strategy, frozen=None):
+def _create_hyp_class(
+    attrs_and_strategy: List[Tuple[_CountingAttr, st.SearchStrategy[PosArgs]]],
+    frozen=None,
+):
     """
     A helper function for Hypothesis to generate attrs classes.
 
-    The result is a tuple: an attrs class, and a tuple of values to
-    instantiate it.
+    The result is a tuple: an attrs class, a tuple of values to
+    instantiate it, and a kwargs dict for kw-only attributes.
     """
 
     def key(t):
-        return t[0].default is not NOTHING
+        return (t[0].default is not NOTHING, t[0].kw_only)
 
     attrs_and_strat = sorted(attrs_and_strategy, key=key)
     attrs = [a[0] for a in attrs_and_strat]
     for i, a in enumerate(attrs):
         a.counter = i
-    vals = tuple((a[1]) for a in attrs_and_strat)
+    vals = tuple((a[1]) for a in attrs_and_strat if not a[0].kw_only)
+    kwargs = {}
+    for attr_name, attr_and_strat in zip(gen_attr_names(), attrs_and_strat):
+        if attr_and_strat[0].kw_only:
+            if attr_name.startswith("_"):
+                attr_name = attr_name[1:]
+            kwargs[attr_name] = attr_and_strat[1]
     return st.tuples(
         st.builds(
             lambda f: make_class(
@@ -176,6 +189,7 @@ def _create_hyp_class(attrs_and_strategy, frozen=None):
             st.booleans() if frozen is None else st.just(frozen),
         ),
         st.tuples(*vals),
+        st.fixed_dictionaries(kwargs),
     )
 
 
@@ -267,7 +281,7 @@ def _create_hyp_nested_strategy(simple_class_strategy):
 
 
 @st.composite
-def bare_attrs(draw, defaults=None):
+def bare_attrs(draw, defaults=None, kw_only=None):
     """
     Generate a tuple of an attribute and a strategy that yields values
     appropriate for that attribute.
@@ -275,11 +289,16 @@ def bare_attrs(draw, defaults=None):
     default = NOTHING
     if defaults is True or (defaults is None and draw(st.booleans())):
         default = None
-    return (attr.ib(default=default), st.just(None))
+    return (
+        attr.ib(
+            default=default, kw_only=draw(st.booleans()) if kw_only is None else kw_only
+        ),
+        st.just(None),
+    )
 
 
 @st.composite
-def int_attrs(draw, defaults=None):
+def int_attrs(draw, defaults=None, kw_only=None):
     """
     Generate a tuple of an attribute and a strategy that yields ints for that
     attribute.
@@ -287,11 +306,16 @@ def int_attrs(draw, defaults=None):
     default = NOTHING
     if defaults is True or (defaults is None and draw(st.booleans())):
         default = draw(st.integers())
-    return (attr.ib(default=default), st.integers())
+    return (
+        attr.ib(
+            default=default, kw_only=draw(st.booleans()) if kw_only is None else kw_only
+        ),
+        st.integers(),
+    )
 
 
 @st.composite
-def str_attrs(draw, defaults=None, type_annotations=None):
+def str_attrs(draw, defaults=None, type_annotations=None, kw_only=None):
     """
     Generate a tuple of an attribute and a strategy that yields strs for that
     attribute.
@@ -303,11 +327,18 @@ def str_attrs(draw, defaults=None, type_annotations=None):
         type = str
     else:
         type = None
-    return (attr.ib(default=default, type=type), st.text())
+    return (
+        attr.ib(
+            default=default,
+            type=type,
+            kw_only=draw(st.booleans()) if kw_only is None else kw_only,
+        ),
+        st.text(),
+    )
 
 
 @st.composite
-def float_attrs(draw, defaults=None):
+def float_attrs(draw, defaults=None, kw_only=None):
     """
     Generate a tuple of an attribute and a strategy that yields floats for that
     attribute.
@@ -315,11 +346,16 @@ def float_attrs(draw, defaults=None):
     default = NOTHING
     if defaults is True or (defaults is None and draw(st.booleans())):
         default = draw(st.floats())
-    return (attr.ib(default=default), st.floats(allow_nan=False))
+    return (
+        attr.ib(
+            default=default, kw_only=draw(st.booleans()) if kw_only is None else kw_only
+        ),
+        st.floats(allow_nan=False),
+    )
 
 
 @st.composite
-def dict_attrs(draw, defaults=None):
+def dict_attrs(draw, defaults=None, kw_only=None):
     """
     Generate a tuple of an attribute and a strategy that yields dictionaries
     for that attribute. The dictionaries map strings to integers.
@@ -329,11 +365,16 @@ def dict_attrs(draw, defaults=None):
     if defaults is True or (defaults is None and draw(st.booleans())):
         default_val = draw(val_strat)
         default = attr.Factory(lambda: default_val)
-    return (attr.ib(default=default), val_strat)
+    return (
+        attr.ib(
+            default=default, kw_only=draw(st.booleans()) if kw_only is None else kw_only
+        ),
+        val_strat,
+    )
 
 
 @st.composite
-def optional_attrs(draw, defaults=None):
+def optional_attrs(draw, defaults=None, kw_only=None):
     """
     Generate a tuple of an attribute and a strategy that yields values
     for that attribute. The strategy generates optional integers.
@@ -343,33 +384,38 @@ def optional_attrs(draw, defaults=None):
     if defaults is True or (defaults is None and draw(st.booleans())):
         default = draw(val_strat)
 
-    return (attr.ib(default=default), val_strat)
-
-
-def simple_attrs(defaults=None):
     return (
-        bare_attrs(defaults)
-        | int_attrs(defaults)
-        | str_attrs(defaults)
-        | float_attrs(defaults)
-        | dict_attrs(defaults)
-        | optional_attrs(defaults)
+        attr.ib(
+            default=default, kw_only=draw(st.booleans()) if kw_only is None else kw_only
+        ),
+        val_strat,
     )
 
 
-def lists_of_attrs(defaults=None, min_size=0):
+def simple_attrs(defaults=None, kw_only=None):
+    return (
+        bare_attrs(defaults, kw_only=kw_only)
+        | int_attrs(defaults, kw_only=kw_only)
+        | str_attrs(defaults, kw_only=kw_only)
+        | float_attrs(defaults, kw_only=kw_only)
+        | dict_attrs(defaults, kw_only=kw_only)
+        | optional_attrs(defaults, kw_only=kw_only)
+    )
+
+
+def lists_of_attrs(defaults=None, min_size=0, kw_only=None):
     # Python functions support up to 255 arguments.
-    return st.lists(simple_attrs(defaults), min_size=min_size, max_size=10).map(
-        lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING)
-    )
+    return st.lists(
+        simple_attrs(defaults, kw_only), min_size=min_size, max_size=10
+    ).map(lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING))
 
 
-def simple_classes(defaults=None, min_attrs=0, frozen=None):
+def simple_classes(defaults=None, min_attrs=0, frozen=None, kw_only=None):
     """
     Return a strategy that yields tuples of simple classes and values to
     instantiate them.
     """
-    return lists_of_attrs(defaults, min_size=min_attrs).flatmap(
+    return lists_of_attrs(defaults, min_size=min_attrs, kw_only=kw_only).flatmap(
         lambda attrs_and_strategy: _create_hyp_class(attrs_and_strategy, frozen=frozen)
     )
 

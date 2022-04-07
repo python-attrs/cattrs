@@ -58,7 +58,7 @@ def test_edge_errors():
 @given(simple_classes(defaults=False))
 def test_fallback(cl_and_vals):
     """The fallback case works."""
-    cl, vals = cl_and_vals
+    cl, vals, kwargs = cl_and_vals
 
     assume(attr.fields(cl))  # At least one field.
 
@@ -69,7 +69,7 @@ def test_fallback(cl_and_vals):
     fn = create_uniq_field_dis_func(A, cl)
 
     assert fn({}) is A
-    assert fn(attr.asdict(cl(*vals))) is cl
+    assert fn(attr.asdict(cl(*vals, **kwargs))) is cl
 
     attr_names = {a.name for a in attr.fields(cl)}
 
@@ -81,8 +81,8 @@ def test_fallback(cl_and_vals):
 @given(simple_classes(), simple_classes())
 def test_disambiguation(cl_and_vals_a, cl_and_vals_b):
     """Disambiguation should work when there are unique required fields."""
-    cl_a, vals_a = cl_and_vals_a
-    cl_b, vals_b = cl_and_vals_b
+    cl_a, vals_a, kwargs_a = cl_and_vals_a
+    cl_b, vals_b, kwargs_b = cl_and_vals_b
 
     req_a = {a.name for a in attr.fields(cl_a)}
     req_b = {a.name for a in attr.fields(cl_b)}
@@ -98,4 +98,4 @@ def test_disambiguation(cl_and_vals_a, cl_and_vals_b):
 
     fn = create_uniq_field_dis_func(cl_a, cl_b)
 
-    assert fn(attr.asdict(cl_a(*vals_a))) is cl_a
+    assert fn(attr.asdict(cl_a(*vals_a, **kwargs_a))) is cl_a

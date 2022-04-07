@@ -5,14 +5,14 @@ import attr
 import pytest
 from attr import define, fields, make_class
 from hypothesis import HealthCheck, assume, given, settings
-from hypothesis.strategies import sampled_from
+from hypothesis.strategies import just, one_of
 
 from cattrs import Converter, UnstructureStrategy
 from cattrs._compat import is_py310_plus
 
 from . import nested_typed_classes, simple_typed_attrs, simple_typed_classes
 
-unstructure_strats = sampled_from(list(UnstructureStrategy))
+unstructure_strats = one_of(just(s) for s in UnstructureStrategy)
 
 
 @given(simple_typed_classes(), unstructure_strats)
@@ -21,17 +21,19 @@ def test_simple_roundtrip(cls_and_vals, strat):
     Simple classes with metadata can be unstructured and restructured.
     """
     converter = Converter(unstruct_strat=strat)
-    cl, vals = cls_and_vals
-    inst = cl(*vals)
+    cl, vals, kwargs = cls_and_vals
+    assume(strat is UnstructureStrategy.AS_DICT or not kwargs)
+    inst = cl(*vals, **kwargs)
     assert inst == converter.structure(converter.unstructure(inst), cl)
 
 
 @given(simple_typed_attrs(defaults=True), unstructure_strats)
-def test_simple_roundtrip_defaults(cls_and_vals, strat):
+def test_simple_roundtrip_defaults(attr_and_strat, strat):
     """
     Simple classes with metadata can be unstructured and restructured.
     """
-    a, _ = cls_and_vals
+    a, _ = attr_and_strat
+    assume(strat is UnstructureStrategy.AS_DICT or not a.kw_only)
     cl = make_class("HypClass", {"a": a})
     converter = Converter(unstruct_strat=strat)
     inst = cl()
@@ -41,13 +43,26 @@ def test_simple_roundtrip_defaults(cls_and_vals, strat):
     assert inst == converter.structure(converter.unstructure(inst), cl)
 
 
-@given(nested_typed_classes(), unstructure_strats)
-def test_nested_roundtrip(cls_and_vals, strat):
+@given(nested_typed_classes())
+def test_nested_roundtrip(cls_and_vals):
     """
     Nested classes with metadata can be unstructured and restructured.
     """
-    converter = Converter(unstruct_strat=strat)
-    cl, vals = cls_and_vals
+    converter = Converter()
+    cl, vals, kwargs = cls_and_vals
+    # Vals are a tuple, convert into a dictionary.
+    inst = cl(*vals, **kwargs)
+    assert inst == converter.structure(converter.unstructure(inst), cl)
+
+
+@given(nested_typed_classes(kw_only=False))
+def test_nested_roundtrip_tuple(cls_and_vals):
+    """
+    Nested classes with metadata can be unstructured and restructured.
+    """
+    converter = Converter(unstruct_strat=UnstructureStrategy.AS_TUPLE)
+    cl, vals, kwargs = cls_and_vals
+    assert not kwargs
     # Vals are a tuple, convert into a dictionary.
     inst = cl(*vals)
     assert inst == converter.structure(converter.unstructure(inst), cl)
@@ -64,8 +79,9 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     Classes with union fields can be unstructured and structured.
     """
     converter = Converter(unstruct_strat=strat)
-    cl_a, vals_a = cl_and_vals_a
-    cl_b, vals_b = cl_and_vals_b
+    cl_a, vals_a, kwargs_a = cl_and_vals_a
+    assume(strat is UnstructureStrategy.AS_DICT or not kwargs_a)
+    cl_b, vals_b, _ = cl_and_vals_b
     a_field_names = {a.name for a in fields(cl_a)}
     b_field_names = {a.name for a in fields(cl_b)}
     assume(a_field_names)
@@ -78,7 +94,7 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     class C(object):
         a = attr.ib(type=Union[cl_a, cl_b])
 
-    inst = C(a=cl_a(*vals_a))
+    inst = C(a=cl_a(*vals_a, **kwargs_a))
 
     if strat is UnstructureStrategy.AS_DICT:
         assert inst == converter.structure(converter.unstructure(inst), C)
@@ -142,13 +158,13 @@ def test_optional_field_roundtrip(cl_and_vals):
     Classes with optional fields can be unstructured and structured.
     """
     converter = Converter()
-    cl, vals = cl_and_vals
+    cl, vals, kwargs = cl_and_vals
 
     @attr.s
     class C(object):
         a = attr.ib(type=Optional[cl])
 
-    inst = C(a=cl(*vals))
+    inst = C(a=cl(*vals, **kwargs))
     assert inst == converter.structure(converter.unstructure(inst), C)
 
     inst = C(a=None)

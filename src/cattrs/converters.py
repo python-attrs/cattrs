@@ -398,7 +398,7 @@ class Converter:
     def structure_attrs_fromtuple(self, obj: Tuple[Any, ...], cl: Type[T]) -> T:
         """Load an attrs class from a sequence (tuple)."""
         conv_obj = []  # A list of converter parameters.
-        for a, value in zip(fields(cl), obj):  # type: ignore
+        for a, value in zip(fields(cl), obj):
             # We detect the type by the metadata.
             converted = self._structure_attribute(a, value)
             conv_obj.append(converted)
