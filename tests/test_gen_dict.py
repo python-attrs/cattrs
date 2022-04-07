@@ -1,11 +1,13 @@
 """Tests for generated dict functions."""
+from typing import Type
+
 import pytest
 from attr import Factory, define, field
 from attr._make import NOTHING
 from hypothesis import assume, given
-from hypothesis.strategies._internal.core import data, sampled_from
+from hypothesis.strategies import data, just, one_of, sampled_from
 
-from cattrs import Converter
+from cattrs import Converter, GenConverter
 from cattrs._compat import adapted_fields, fields
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
@@ -21,10 +23,10 @@ from .metadata import (
 @given(nested_classes | simple_classes())
 def test_unmodified_generated_unstructuring(cl_and_vals):
     converter = Converter()
-    cl, vals = cl_and_vals
+    cl, vals, kwargs = cl_and_vals
     fn = make_dict_unstructure_fn(cl, converter)
 
-    inst = cl(*vals)
+    inst = cl(*vals, **kwargs)
 
     res_expected = converter.unstructure(inst)
 
@@ -39,10 +41,10 @@ def test_unmodified_generated_unstructuring(cl_and_vals):
 def test_nodefs_generated_unstructuring(cl_and_vals):
     """Test omitting default values on a per-attribute basis."""
     converter = Converter()
-    cl, vals = cl_and_vals
+    cl, vals, kwargs = cl_and_vals
 
     attr_is_default = False
-    for attr, val in zip(cl.__attrs_attrs__, vals):
+    for attr, val in zip([a for a in cl.__attrs_attrs__ if not a.kw_only], vals):
         if attr.default is not NOTHING:
             fn = make_dict_unstructure_fn(
                 cl, converter, **{attr.name: override(omit_if_default=True)}
@@ -55,7 +57,7 @@ def test_nodefs_generated_unstructuring(cl_and_vals):
 
     converter.register_unstructure_hook(cl, fn)
 
-    inst = cl(*vals)
+    inst = cl(*vals, **kwargs)
 
     res = converter.unstructure(inst)
 
@@ -63,11 +65,11 @@ def test_nodefs_generated_unstructuring(cl_and_vals):
         assert attr.name not in res
 
 
-@given(nested_classes | simple_classes())
-def test_nodefs_generated_unstructuring_cl(cl_and_vals):
+@given(one_of(just(Converter), just(GenConverter)), nested_classes | simple_classes())
+def test_nodefs_generated_unstructuring_cl(converter_cls: Type[Converter], cl_and_vals):
     """Test omitting default values on a per-class basis."""
-    converter = Converter()
-    cl, vals = cl_and_vals
+    converter = converter_cls()
+    cl, vals, kwargs = cl_and_vals
 
     for attr, val in zip(cl.__attrs_attrs__, vals):
         if attr.default is not NOTHING:
@@ -79,7 +81,7 @@ def test_nodefs_generated_unstructuring_cl(cl_and_vals):
         cl, make_dict_unstructure_fn(cl, converter, _cattrs_omit_if_default=True)
     )
 
-    inst = cl(*vals)
+    inst = cl(*vals, **kwargs)
 
     res = converter.unstructure(inst)
 
@@ -104,14 +106,17 @@ def test_nodefs_generated_unstructuring_cl(cl_and_vals):
                         assert attr.name in res
 
 
-@given(nested_classes | simple_classes() | simple_typed_dataclasses())
-def test_individual_overrides(cl_and_vals):
+@given(
+    one_of(just(Converter), just(GenConverter)),
+    nested_classes | simple_classes() | simple_typed_dataclasses(),
+)
+def test_individual_overrides(converter_cls, cl_and_vals):
     """
     Test omitting default values on a per-class basis, but with individual
     overrides.
     """
-    converter = Converter()
-    cl, vals = cl_and_vals
+    converter = converter_cls()
+    cl, vals, kwargs = cl_and_vals
 
     for attr, val in zip(adapted_fields(cl), vals):
         if attr.default is not NOTHING:
@@ -131,7 +136,7 @@ def test_individual_overrides(cl_and_vals):
         ),
     )
 
-    inst = cl(*vals)
+    inst = cl(*vals, **kwargs)
 
     res = converter.unstructure(inst)
     assert "Hyp" not in repr(res)
@@ -162,10 +167,10 @@ def test_individual_overrides(cl_and_vals):
 @given(nested_typed_classes() | simple_typed_classes() | simple_typed_dataclasses())
 def test_unmodified_generated_structuring(cl_and_vals):
     converter = Converter()
-    cl, vals = cl_and_vals
+    cl, vals, kwargs = cl_and_vals
     fn = make_dict_structure_fn(cl, converter)
 
-    inst = cl(*vals)
+    inst = cl(*vals, **kwargs)
 
     unstructured = converter.unstructure(inst)
 
@@ -183,7 +188,7 @@ def test_unmodified_generated_structuring(cl_and_vals):
 )
 def test_renaming(cl_and_vals, data):
     converter = Converter()
-    cl, vals = cl_and_vals
+    cl, vals, kwargs = cl_and_vals
     attrs = fields(cl)
 
     to_replace = data.draw(sampled_from(attrs))
@@ -198,7 +203,7 @@ def test_renaming(cl_and_vals, data):
     converter.register_structure_hook(cl, s_fn)
     converter.register_unstructure_hook(cl, u_fn)
 
-    inst = cl(*vals)
+    inst = cl(*vals, **kwargs)
 
     raw = converter.unstructure(inst)
 

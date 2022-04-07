@@ -32,29 +32,58 @@ from . import (
 unstructure_strats = sampled_from(list(UnstructureStrategy))
 
 
-@given(
-    simple_typed_classes() | simple_typed_dataclasses(), unstructure_strats, booleans()
-)
-def test_simple_roundtrip(cls_and_vals, strat, detailed_validation):
+@given(simple_typed_classes() | simple_typed_dataclasses(), booleans())
+def test_simple_roundtrip(cls_and_vals, detailed_validation):
     """
     Simple classes with metadata can be unstructured and restructured.
     """
-    converter = Converter(unstruct_strat=strat, detailed_validation=detailed_validation)
-    cl, vals = cls_and_vals
+    converter = Converter(detailed_validation=detailed_validation)
+    cl, vals, kwargs = cls_and_vals
+    inst = cl(*vals, **kwargs)
+    unstructured = converter.unstructure(inst)
+    assert "Hyp" not in repr(unstructured)
+    assert inst == converter.structure(unstructured, cl)
+
+
+@given(simple_typed_classes(kw_only=False) | simple_typed_dataclasses(), booleans())
+def test_simple_roundtrip_tuple(cls_and_vals, detailed_validation):
+    """
+    Simple classes with metadata can be unstructured and restructured.
+    """
+    converter = Converter(
+        unstruct_strat=UnstructureStrategy.AS_TUPLE,
+        detailed_validation=detailed_validation,
+    )
+    cl, vals, _ = cls_and_vals
     inst = cl(*vals)
     unstructured = converter.unstructure(inst)
     assert "Hyp" not in repr(unstructured)
     assert inst == converter.structure(unstructured, cl)
 
 
-@given(simple_typed_attrs(defaults=True), unstructure_strats)
-def test_simple_roundtrip_defaults(attr_and_vals, strat):
+@given(simple_typed_attrs(defaults=True))
+def test_simple_roundtrip_defaults(attr_and_vals):
     """
     Simple classes with metadata can be unstructured and restructured.
     """
     a, _ = attr_and_vals
     cl = make_class("HypClass", {"a": a})
-    converter = Converter(unstruct_strat=strat)
+    converter = Converter()
+    inst = cl()
+    assert converter.unstructure(converter.structure({}, cl)) == converter.unstructure(
+        inst
+    )
+    assert inst == converter.structure(converter.unstructure(inst), cl)
+
+
+@given(simple_typed_attrs(defaults=True, kw_only=False))
+def test_simple_roundtrip_defaults_tuple(attr_and_vals):
+    """
+    Simple classes with metadata can be unstructured and restructured.
+    """
+    a, _ = attr_and_vals
+    cl = make_class("HypClass", {"a": a})
+    converter = Converter(unstruct_strat=UnstructureStrategy.AS_TUPLE)
     inst = cl()
     assert converter.unstructure(converter.structure({}, cl)) == converter.unstructure(
         inst
@@ -68,8 +97,9 @@ def test_simple_roundtrip_with_extra_keys_forbidden(cls_and_vals, strat):
     Simple classes can be unstructured and restructured with forbid_extra_keys=True.
     """
     converter = Converter(unstruct_strat=strat, forbid_extra_keys=True)
-    cl, vals = cls_and_vals
-    inst = cl(*vals)
+    cl, vals, kwargs = cls_and_vals
+    assume(strat is UnstructureStrategy.AS_DICT or not kwargs)
+    inst = cl(*vals, **kwargs)
     unstructured = converter.unstructure(inst)
     assert "Hyp" not in repr(unstructured)
     assert inst == converter.structure(unstructured, cl)
@@ -81,8 +111,8 @@ def test_forbid_extra_keys(cls_and_vals):
     Restructuring fails when extra keys are present (when configured)
     """
     converter = Converter(forbid_extra_keys=True)
-    cl, vals = cls_and_vals
-    inst = cl(*vals)
+    cl, vals, kwargs = cls_and_vals
+    inst = cl(*vals, **kwargs)
     unstructured = converter.unstructure(inst)
     bad_key = list(unstructured)[0] + "A" if unstructured else "Hyp"
     while bad_key in unstructured:
@@ -158,13 +188,28 @@ def test_forbid_extra_keys_nested_override():
     assert cve.value.exceptions[0].extra_fields == {"b"}
 
 
-@given(nested_typed_classes(defaults=True, min_attrs=1), unstructure_strats, booleans())
-def test_nested_roundtrip(cls_and_vals, strat, omit_if_default):
+@given(nested_typed_classes(defaults=True, min_attrs=1), booleans())
+def test_nested_roundtrip(cls_and_vals, omit_if_default):
     """
     Nested classes with metadata can be unstructured and restructured.
     """
-    converter = Converter(unstruct_strat=strat, omit_if_default=omit_if_default)
-    cl, vals = cls_and_vals
+    converter = Converter(omit_if_default=omit_if_default)
+    cl, vals, kwargs = cls_and_vals
+    # Vals are a tuple, convert into a dictionary.
+    inst = cl(*vals, **kwargs)
+    unstructured = converter.unstructure(inst)
+    assert inst == converter.structure(unstructured, cl)
+
+
+@given(nested_typed_classes(defaults=True, min_attrs=1, kw_only=False), booleans())
+def test_nested_roundtrip_tuple(cls_and_vals, omit_if_default):
+    """
+    Nested classes with metadata can be unstructured and restructured.
+    """
+    converter = Converter(
+        unstruct_strat=UnstructureStrategy.AS_TUPLE, omit_if_default=omit_if_default
+    )
+    cl, vals, _ = cls_and_vals
     # Vals are a tuple, convert into a dictionary.
     inst = cl(*vals)
     unstructured = converter.unstructure(inst)
@@ -182,8 +227,9 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     Classes with union fields can be unstructured and structured.
     """
     converter = Converter(unstruct_strat=strat)
-    cl_a, vals_a = cl_and_vals_a
-    cl_b, _ = cl_and_vals_b
+    cl_a, vals_a, kwargs_a = cl_and_vals_a
+    cl_b, _, _ = cl_and_vals_b
+    assume(strat is UnstructureStrategy.AS_DICT or not kwargs_a)
     a_field_names = {a.name for a in fields(cl_a)}
     b_field_names = {a.name for a in fields(cl_b)}
     assume(a_field_names)
@@ -196,7 +242,7 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     class C(object):
         a = attr.ib(type=Union[cl_a, cl_b])
 
-    inst = C(a=cl_a(*vals_a))
+    inst = C(a=cl_a(*vals_a, **kwargs_a))
 
     if strat is UnstructureStrategy.AS_DICT:
         unstructured = converter.unstructure(inst)
@@ -226,8 +272,8 @@ def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     Classes with union fields can be unstructured and structured.
     """
     converter = Converter(unstruct_strat=strat)
-    cl_a, vals_a = cl_and_vals_a
-    cl_b, _ = cl_and_vals_b
+    cl_a, vals_a, kwargs_a = cl_and_vals_a
+    cl_b, _, _ = cl_and_vals_b
     a_field_names = {a.name for a in fields(cl_a)}
     b_field_names = {a.name for a in fields(cl_b)}
     assume(a_field_names)
@@ -240,7 +286,7 @@ def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     class C:
         a: cl_a | cl_b
 
-    inst = C(a=cl_a(*vals_a))
+    inst = C(a=cl_a(*vals_a, **kwargs_a))
 
     if strat is UnstructureStrategy.AS_DICT:
         unstructured = converter.unstructure(inst)
@@ -264,13 +310,13 @@ def test_optional_field_roundtrip(cl_and_vals):
     Classes with optional fields can be unstructured and structured.
     """
     converter = Converter()
-    cl, vals = cl_and_vals
+    cl, vals, kwargs = cl_and_vals
 
     @attr.s
     class C(object):
         a = attr.ib(type=Optional[cl])
 
-    inst = C(a=cl(*vals))
+    inst = C(a=cl(*vals, **kwargs))
     assert inst == converter.structure(converter.unstructure(inst), C)
 
     inst = C(a=None)
@@ -307,12 +353,12 @@ def test_omit_default_roundtrip(cl_and_vals):
     Omit default on the converter works.
     """
     converter = Converter(omit_if_default=True)
-    cl, vals = cl_and_vals
+    cl, vals, kwargs = cl_and_vals
 
     @attr.s
     class C(object):
         a: int = attr.ib(default=1)
-        b: cl = attr.ib(factory=lambda: cl(*vals))
+        b: cl = attr.ib(factory=lambda: cl(*vals, **kwargs))
 
     inst = C()
     unstructured = converter.unstructure(inst)
@@ -331,9 +377,9 @@ def test_type_overrides(cl_and_vals):
     Type overrides on the GenConverter work.
     """
     converter = Converter(type_overrides={int: override(omit_if_default=True)})
-    cl, vals = cl_and_vals
+    cl, vals, kwargs = cl_and_vals
 
-    inst = cl(*vals)
+    inst = cl(*vals, **kwargs)
     unstructured = converter.unstructure(inst)
 
     for field, val in zip(fields(cl), vals):
@@ -493,12 +539,12 @@ def test_seq_of_simple_classes_unstructure(cls_and_vals, seq_type_and_annotation
 
     test_val = ("test", 1)
 
-    for cl, _ in cls_and_vals:
+    for cl, _, _ in cls_and_vals:
         converter.register_unstructure_hook(cl, lambda _: test_val)
         break  # Just register the first class.
 
     seq_type, annotation = seq_type_and_annotation
-    inputs = seq_type(cl(*vals) for cl, vals in cls_and_vals)
+    inputs = seq_type(cl(*vals, **kwargs) for cl, vals, kwargs in cls_and_vals)
     outputs = converter.unstructure(
         inputs,
         unstructure_as=annotation[cl]

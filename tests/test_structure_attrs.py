@@ -19,8 +19,8 @@ from . import simple_classes
 def test_structure_simple_from_dict(cl_and_vals):
     """Test structuring non-nested attrs classes dumped with asdict."""
     converter = Converter()
-    cl, vals = cl_and_vals
-    obj = cl(*vals)
+    cl, vals, kwargs = cl_and_vals
+    obj = cl(*vals, **kwargs)
 
     dumped = asdict(obj)
     loaded = converter.structure(dumped, cl)
@@ -32,8 +32,8 @@ def test_structure_simple_from_dict(cl_and_vals):
 def test_structure_simple_from_dict_default(cl_and_vals, data):
     """Test structuring non-nested attrs classes with default value."""
     converter = Converter()
-    cl, vals = cl_and_vals
-    obj = cl(*vals)
+    cl, vals, kwargs = cl_and_vals
+    obj = cl(*vals, **kwargs)
     attrs_with_defaults = [a for a in fields(cl) if a.default is not NOTHING]
     to_remove = data.draw(
         lists(elements=sampled_from(attrs_with_defaults), unique=True)
@@ -57,8 +57,8 @@ def test_structure_simple_from_dict_default(cl_and_vals, data):
 def test_roundtrip(cl_and_vals):
     """We dump the class, then we load it."""
     converter = Converter()
-    cl, vals = cl_and_vals
-    obj = cl(*vals)
+    cl, vals, kwargs = cl_and_vals
+    obj = cl(*vals, **kwargs)
 
     dumped = converter.unstructure(obj)
     loaded = converter.structure(dumped, cl)
@@ -66,13 +66,13 @@ def test_roundtrip(cl_and_vals):
     assert obj == loaded
 
 
-@given(simple_classes())
+@given(simple_classes(kw_only=False))
 def test_structure_tuple(cl_and_vals):
     """Test loading from a tuple, by registering the loader."""
     converter = Converter()
-    cl, vals = cl_and_vals
+    cl, vals, kwargs = cl_and_vals
     converter.register_structure_hook(cl, converter.structure_attrs_fromtuple)
-    obj = cl(*vals)
+    obj = cl(*vals, **kwargs)
 
     dumped = astuple(obj)
     loaded = converter.structure(dumped, cl)
@@ -84,8 +84,8 @@ def test_structure_tuple(cl_and_vals):
 def test_structure_union(cl_and_vals_a, cl_and_vals_b):
     """Structuring of automatically-disambiguable unions works."""
     converter = Converter()
-    cl_a, vals_a = cl_and_vals_a
-    cl_b, vals_b = cl_and_vals_b
+    cl_a, vals_a, kwargs_a = cl_and_vals_a
+    cl_b, vals_b, kwargs_b = cl_and_vals_b
     a_field_names = {a.name for a in fields(cl_a)}
     b_field_names = {a.name for a in fields(cl_b)}
     assume(a_field_names)
@@ -93,7 +93,7 @@ def test_structure_union(cl_and_vals_a, cl_and_vals_b):
 
     common_names = a_field_names & b_field_names
     if len(a_field_names) > len(common_names):
-        obj = cl_a(*vals_a)
+        obj = cl_a(*vals_a, **kwargs_a)
         dumped = asdict(obj)
         res = converter.structure(dumped, Union[cl_a, cl_b])
         assert isinstance(res, cl_a)
@@ -104,8 +104,8 @@ def test_structure_union(cl_and_vals_a, cl_and_vals_b):
 def test_structure_union_none(cl_and_vals_a, cl_and_vals_b):
     """Structuring of automatically-disambiguable unions works."""
     converter = Converter()
-    cl_a, vals_a = cl_and_vals_a
-    cl_b, _ = cl_and_vals_b
+    cl_a, vals_a, kwargs_a = cl_and_vals_a
+    cl_b, _, _ = cl_and_vals_b
     a_field_names = {a.name for a in fields(cl_a)}
     b_field_names = {a.name for a in fields(cl_b)}
     assume(a_field_names)
@@ -113,7 +113,7 @@ def test_structure_union_none(cl_and_vals_a, cl_and_vals_b):
 
     common_names = a_field_names & b_field_names
     if len(a_field_names) > len(common_names):
-        obj = cl_a(*vals_a)
+        obj = cl_a(*vals_a, **kwargs_a)
         dumped = asdict(obj)
         res = converter.structure(dumped, Union[cl_a, cl_b, None])
         assert isinstance(res, cl_a)
@@ -124,15 +124,15 @@ def test_structure_union_none(cl_and_vals_a, cl_and_vals_b):
 def test_structure_union_explicit(cl_and_vals_a, cl_and_vals_b):
     """Structuring of manually-disambiguable unions works."""
     converter = Converter()
-    cl_a, vals_a = cl_and_vals_a
-    cl_b, vals_b = cl_and_vals_b
+    cl_a, vals_a, kwargs_a = cl_and_vals_a
+    cl_b, vals_b, kwargs_b = cl_and_vals_b
 
     def dis(obj, _):
         return converter.structure(obj, cl_a)
 
     converter.register_structure_hook(Union[cl_a, cl_b], dis)
 
-    inst = cl_a(*vals_a)
+    inst = cl_a(*vals_a, **kwargs_a)
 
     assert inst == converter.structure(converter.unstructure(inst), Union[cl_a, cl_b])
 

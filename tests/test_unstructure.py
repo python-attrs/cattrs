@@ -1,7 +1,9 @@
 """Tests for dumping."""
+from typing import Type
+
 from attr import asdict, astuple
 from hypothesis import given
-from hypothesis.strategies import data, lists, sampled_from
+from hypothesis.strategies import data, just, lists, one_of, sampled_from
 
 from cattr.converters import Converter, UnstructureStrategy
 
@@ -90,8 +92,8 @@ def test_unstructure_hooks(cl_and_vals):
     Unstructure hooks work.
     """
     converter = Converter()
-    cl, vals = cl_and_vals
-    inst = cl(*vals)
+    cl, vals, kwargs = cl_and_vals
+    inst = cl(*vals, **kwargs)
 
     converter.register_unstructure_hook(cl, lambda _: "test")
 
@@ -122,12 +124,12 @@ def test_unstructure_hook_func(converter):
     assert converter.unstructure(b) is b
 
 
-@given(lists(simple_classes()), sampled_from([tuple, list]))
-def test_seq_of_simple_classes_unstructure(cls_and_vals, seq_type):
+@given(lists(simple_classes()), one_of(just(tuple), just(list)))
+def test_seq_of_simple_classes_unstructure(cls_and_vals, seq_type: Type):
     """Dumping a sequence of primitives is a simple copy operation."""
     converter = Converter()
 
-    inputs = seq_type(cl(*vals) for cl, vals in cls_and_vals)
+    inputs = seq_type(cl(*vals, **kwargs) for cl, vals, kwargs in cls_and_vals)
     outputs = converter.unstructure(inputs)
     assert type(outputs) == seq_type
     assert all(type(e) is dict for e in outputs)

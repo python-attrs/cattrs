@@ -32,6 +32,7 @@ from hypothesis.strategies import (
     booleans,
     composite,
     dictionaries,
+    fixed_dictionaries,
     floats,
     frozensets,
     integers,
@@ -49,13 +50,16 @@ from .. import gen_attr_names, make_class
 is_39_or_later = sys.version_info[:2] >= (3, 9)
 PosArg = Any
 PosArgs = Tuple[Any]
+KwArgs = Dict[str, Any]
 T = TypeVar("T")
 
 
-def simple_typed_classes(defaults=None, min_attrs=0, frozen=False):
+def simple_typed_classes(
+    defaults=None, min_attrs=0, frozen=False, kw_only=None
+) -> SearchStrategy[Tuple[Type, PosArgs, KwArgs]]:
     """Yield tuples of (class, values)."""
     return lists_of_typed_attrs(
-        defaults, min_size=min_attrs, for_frozen=frozen
+        defaults, min_size=min_attrs, for_frozen=frozen, kw_only=kw_only
     ).flatmap(partial(_create_hyp_class, frozen=frozen))
 
 
@@ -67,16 +71,20 @@ def simple_typed_dataclasses(defaults=None, min_attrs=0, frozen=False):
 
 
 def simple_typed_classes_and_strats(
-    defaults=None, min_attrs=0
-) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
+    defaults=None, min_attrs=0, kw_only=None
+) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs], SearchStrategy[KwArgs]]]:
     """Yield tuples of (class, (strategies))."""
-    return lists_of_typed_attrs(defaults, min_size=min_attrs).flatmap(
+    return lists_of_typed_attrs(defaults, min_size=min_attrs, kw_only=kw_only).flatmap(
         _create_hyp_class_and_strat
     )
 
 
 def lists_of_typed_attrs(
-    defaults=None, min_size=0, for_frozen=False, allow_mutable_defaults=True
+    defaults=None,
+    min_size=0,
+    for_frozen=False,
+    allow_mutable_defaults=True,
+    kw_only=None,
 ) -> SearchStrategy[List[Tuple[_CountingAttr, SearchStrategy[PosArg]]]]:
     # Python functions support up to 255 arguments.
     return lists(
@@ -84,60 +92,77 @@ def lists_of_typed_attrs(
             defaults,
             for_frozen=for_frozen,
             allow_mutable_defaults=allow_mutable_defaults,
+            kw_only=kw_only,
         ),
         min_size=min_size,
         max_size=50,
-    ).map(lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING))
+    ).map(
+        lambda l: sorted(l, key=lambda t: (t[0]._default is not NOTHING, t[0].kw_only))
+    )
 
 
 def simple_typed_attrs(
-    defaults=None, for_frozen=False, allow_mutable_defaults=True
+    defaults=None, for_frozen=False, allow_mutable_defaults=True, kw_only=None
 ) -> SearchStrategy[Tuple[_CountingAttr, SearchStrategy[PosArgs]]]:
     if not is_39_or_later:
         res = (
-            bare_typed_attrs(defaults)
-            | int_typed_attrs(defaults)
-            | str_typed_attrs(defaults)
-            | float_typed_attrs(defaults)
-            | frozenset_typed_attrs(defaults, legacy_types_only=True)
-            | homo_tuple_typed_attrs(defaults, legacy_types_only=True)
+            bare_typed_attrs(defaults, kw_only)
+            | int_typed_attrs(defaults, kw_only)
+            | str_typed_attrs(defaults, kw_only)
+            | float_typed_attrs(defaults, kw_only)
+            | frozenset_typed_attrs(defaults, legacy_types_only=True, kw_only=kw_only)
+            | homo_tuple_typed_attrs(defaults, legacy_types_only=True, kw_only=kw_only)
         )
         if not for_frozen:
             res = (
                 res
-                | dict_typed_attrs(defaults, allow_mutable_defaults)
+                | dict_typed_attrs(defaults, allow_mutable_defaults, kw_only)
                 | mutable_seq_typed_attrs(
-                    defaults, allow_mutable_defaults, legacy_types_only=True
+                    defaults,
+                    allow_mutable_defaults,
+                    legacy_types_only=True,
+                    kw_only=kw_only,
                 )
                 | seq_typed_attrs(
-                    defaults, allow_mutable_defaults, legacy_types_only=True
+                    defaults,
+                    allow_mutable_defaults,
+                    legacy_types_only=True,
+                    kw_only=kw_only,
                 )
                 | list_typed_attrs(
-                    defaults, allow_mutable_defaults, legacy_types_only=True
+                    defaults,
+                    allow_mutable_defaults,
+                    legacy_types_only=True,
+                    kw_only=kw_only,
                 )
                 | set_typed_attrs(
-                    defaults, allow_mutable_defaults, legacy_types_only=True
+                    defaults,
+                    allow_mutable_defaults,
+                    legacy_types_only=True,
+                    kw_only=kw_only,
                 )
             )
     else:
         res = (
-            bare_typed_attrs(defaults)
-            | int_typed_attrs(defaults)
-            | str_typed_attrs(defaults)
-            | float_typed_attrs(defaults)
-            | frozenset_typed_attrs(defaults)
-            | homo_tuple_typed_attrs(defaults)
+            bare_typed_attrs(defaults, kw_only)
+            | int_typed_attrs(defaults, kw_only)
+            | str_typed_attrs(defaults, kw_only)
+            | float_typed_attrs(defaults, kw_only)
+            | frozenset_typed_attrs(defaults, kw_only=kw_only)
+            | homo_tuple_typed_attrs(defaults, kw_only=kw_only)
         )
 
         if not for_frozen:
             res = (
                 res
-                | dict_typed_attrs(defaults, allow_mutable_defaults)
-                | new_dict_typed_attrs(defaults, allow_mutable_defaults)
-                | set_typed_attrs(defaults, allow_mutable_defaults)
-                | list_typed_attrs(defaults, allow_mutable_defaults)
-                | mutable_seq_typed_attrs(defaults, allow_mutable_defaults)
-                | seq_typed_attrs(defaults, allow_mutable_defaults)
+                | dict_typed_attrs(defaults, allow_mutable_defaults, kw_only)
+                | new_dict_typed_attrs(defaults, allow_mutable_defaults, kw_only)
+                | set_typed_attrs(defaults, allow_mutable_defaults, kw_only=kw_only)
+                | list_typed_attrs(defaults, allow_mutable_defaults, kw_only=kw_only)
+                | mutable_seq_typed_attrs(
+                    defaults, allow_mutable_defaults, kw_only=kw_only
+                )
+                | seq_typed_attrs(defaults, allow_mutable_defaults, kw_only=kw_only)
             )
 
     return res
@@ -146,44 +171,47 @@ def simple_typed_attrs(
 def _create_hyp_class(
     attrs_and_strategy: List[Tuple[_CountingAttr, SearchStrategy[PosArgs]]],
     frozen=False,
-) -> SearchStrategy[Tuple[Type, PosArgs]]:
+) -> SearchStrategy[Tuple[Type, PosArgs, KwArgs]]:
     """
     A helper function for Hypothesis to generate attrs classes.
 
-    The result is a tuple: an attrs class, and a tuple of values to
-    instantiate it.
+    The result is a tuple: an attrs class, tuple of values to
+    instantiate it, and a kwargs dict for kw_only args.
     """
 
     def key(t):
-        return t[0]._default is not attr.NOTHING
+        return (t[0]._default is not attr.NOTHING, t[0].kw_only)
 
     attrs_and_strat = sorted(attrs_and_strategy, key=key)
     attrs = [a[0] for a in attrs_and_strat]
     for i, a in enumerate(attrs):
         a.counter = i
-    vals = tuple((a[1]) for a in attrs_and_strat)
+    vals = tuple((a[1]) for a in attrs_and_strat if not a[0].kw_only)
     note(f"Class fields: {attrs}")
+    attrs_dict = OrderedDict(zip(gen_attr_names(), attrs))
+    kwarg_strats = {}
+    for attr_name, attr_and_strat in zip(gen_attr_names(), attrs_and_strat):
+        if attr_and_strat[0].kw_only:
+            if attr_name.startswith("_"):
+                attr_name = attr_name[1:]
+            kwarg_strats[attr_name] = attr_and_strat[1]
+
     return tuples(
-        just(
-            make_class(
-                "HypAttrsClass",
-                OrderedDict(zip(gen_attr_names(), attrs)),
-                frozen=frozen,
-            )
-        ),
+        just(make_class("HypAttrsClass", attrs_dict, frozen=frozen)),
         tuples(*vals),
+        fixed_dictionaries(kwarg_strats),
     )
 
 
 def _create_dataclass(
     attrs_and_strategy: List[Tuple[_CountingAttr, SearchStrategy[PosArgs]]],
     frozen=False,
-) -> SearchStrategy[Tuple[Type, PosArgs]]:
+) -> SearchStrategy[Tuple[Type, PosArgs, KwArgs]]:
     """
     A helper function for Hypothesis to generate dataclasses.
 
-    The result is a tuple: a dataclass, and a tuple of values to
-    instantiate it.
+    The result is a tuple: a dataclass, a tuple of values to
+    instantiate it, and an empty dict (usually used for kw-only attrs attributes).
     """
 
     def key(t):
@@ -212,28 +240,36 @@ def _create_dataclass(
             )
         ),
         tuples(*vals),
+        just({}),
     )
 
 
 def _create_hyp_class_and_strat(
     attrs_and_strategy: List[Tuple[_CountingAttr, SearchStrategy[PosArg]]]
-) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
+) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs], SearchStrategy[KwArgs]]]:
     def key(t):
-        return t[0].default is not attr.NOTHING
+        return (t[0].default is not attr.NOTHING, t[0].kw_only)
 
     attrs_and_strat = sorted(attrs_and_strategy, key=key)
     attrs = [a[0] for a in attrs_and_strat]
     for i, a in enumerate(attrs):
         a.counter = i
-    vals = tuple((a[1]) for a in attrs_and_strat)
+    vals = tuple((a[1]) for a in attrs_and_strat if not a[0].kw_only)
+    kwarg_strats = {}
+    for attr_name, attr_and_strat in zip(gen_attr_names(), attrs_and_strat):
+        if attr_and_strat[0].kw_only:
+            if attr_name.startswith("_"):
+                attr_name = attr_name[1:]
+            kwarg_strats[attr_name] = attr_and_strat[1]
     return tuples(
         just(make_class("HypClass", OrderedDict(zip(gen_attr_names(), attrs)))),
         just(tuples(*vals)),
+        just(fixed_dictionaries(kwarg_strats)),
     )
 
 
 @composite
-def bare_typed_attrs(draw, defaults=None):
+def bare_typed_attrs(draw, defaults=None, kw_only=None):
     """
     Generate a tuple of an attribute and a strategy that yields values
     appropriate for that attribute.
@@ -241,11 +277,18 @@ def bare_typed_attrs(draw, defaults=None):
     default = attr.NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = None
-    return (attr.ib(type=Any, default=default), just(None))
+    return (
+        attr.ib(
+            type=Any,
+            default=default,
+            kw_only=draw(booleans()) if kw_only is None else kw_only,
+        ),
+        just(None),
+    )
 
 
 @composite
-def int_typed_attrs(draw, defaults=None):
+def int_typed_attrs(draw, defaults=None, kw_only=None):
     """
     Generate a tuple of an attribute and a strategy that yields ints for that
     attribute.
@@ -253,11 +296,18 @@ def int_typed_attrs(draw, defaults=None):
     default = attr.NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(integers())
-    return (attr.ib(type=int, default=default), integers())
+    return (
+        attr.ib(
+            type=int,
+            default=default,
+            kw_only=draw(booleans()) if kw_only is None else kw_only,
+        ),
+        integers(),
+    )
 
 
 @composite
-def str_typed_attrs(draw, defaults=None):
+def str_typed_attrs(draw, defaults=None, kw_only=None):
     """
     Generate a tuple of an attribute and a strategy that yields strs for that
     attribute.
@@ -265,11 +315,18 @@ def str_typed_attrs(draw, defaults=None):
     default = NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(text())
-    return (attr.ib(type=str, default=default), text())
+    return (
+        attr.ib(
+            type=str,
+            default=default,
+            kw_only=draw(booleans()) if kw_only is None else kw_only,
+        ),
+        text(),
+    )
 
 
 @composite
-def float_typed_attrs(draw, defaults=None):
+def float_typed_attrs(draw, defaults=None, kw_only=None):
     """
     Generate a tuple of an attribute and a strategy that yields floats for that
     attribute.
@@ -277,12 +334,19 @@ def float_typed_attrs(draw, defaults=None):
     default = attr.NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(floats())
-    return (attr.ib(type=float, default=default), floats())
+    return (
+        attr.ib(
+            type=float,
+            default=default,
+            kw_only=draw(booleans()) if kw_only is None else kw_only,
+        ),
+        floats(),
+    )
 
 
 @composite
 def dict_typed_attrs(
-    draw, defaults=None, allow_mutable_defaults=True
+    draw, defaults=None, allow_mutable_defaults=True, kw_only=None
 ) -> SearchStrategy[Tuple[_CountingAttr, SearchStrategy]]:
     """
     Generate a tuple of an attribute and a strategy that yields dictionaries
@@ -298,11 +362,20 @@ def dict_typed_attrs(
         else:
             default = default_val
     type = draw(sampled_from([Dict[str, int], Dict, dict]))
-    return (attr.ib(type=type, default=default), val_strat)
+    return (
+        attr.ib(
+            type=type,
+            default=default,
+            kw_only=draw(booleans()) if kw_only is None else kw_only,
+        ),
+        val_strat,
+    )
 
 
 @composite
-def new_dict_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
+def new_dict_typed_attrs(
+    draw, defaults=None, allow_mutable_defaults=True, kw_only=None
+):
     """
     Generate a tuple of an attribute and a strategy that yields dictionaries
     for that attribute. The dictionaries map strings to integers.
@@ -320,12 +393,23 @@ def new_dict_typed_attrs(draw, defaults=None, allow_mutable_defaults=True):
     else:
         default = default_val
 
-    return (attr.ib(type=dict[str, int], default=default), val_strat)
+    return (
+        attr.ib(
+            type=dict[str, int],
+            default=default,
+            kw_only=draw(booleans()) if kw_only is None else kw_only,
+        ),
+        val_strat,
+    )
 
 
 @composite
 def set_typed_attrs(
-    draw: DrawFn, defaults=None, allow_mutable_defaults=True, legacy_types_only=False
+    draw: DrawFn,
+    defaults=None,
+    allow_mutable_defaults=True,
+    legacy_types_only=False,
+    kw_only=None,
 ):
     """
     Generate a tuple of an attribute and a strategy that yields sets
@@ -349,11 +433,20 @@ def set_typed_attrs(
             else [set, Set[int], MutableSet[int]]
         )
     )
-    return (attr.ib(type=type, default=default), val_strat)
+    return (
+        attr.ib(
+            type=type,
+            default=default,
+            kw_only=draw(booleans()) if kw_only is None else kw_only,
+        ),
+        val_strat,
+    )
 
 
 @composite
-def frozenset_typed_attrs(draw: DrawFn, defaults=None, legacy_types_only=False):
+def frozenset_typed_attrs(
+    draw: DrawFn, defaults=None, legacy_types_only=False, kw_only=None
+):
     """
     Generate a tuple of an attribute and a strategy that yields frozensets
     for that attribute. The frozensets contain integers.
@@ -369,12 +462,23 @@ def frozenset_typed_attrs(draw: DrawFn, defaults=None, legacy_types_only=False):
             else [frozenset, FrozenSet[int], FrozenSet]
         )
     )
-    return (attr.ib(type=type, default=default), val_strat)
+    return (
+        attr.ib(
+            type=type,
+            default=default,
+            kw_only=draw(booleans()) if kw_only is None else kw_only,
+        ),
+        val_strat,
+    )
 
 
 @composite
 def list_typed_attrs(
-    draw: DrawFn, defaults=None, allow_mutable_defaults=True, legacy_types_only=False
+    draw: DrawFn,
+    defaults=None,
+    allow_mutable_defaults=True,
+    legacy_types_only=False,
+    kw_only=None,
 ):
     """
     Generate a tuple of an attribute and a strategy that yields lists
@@ -400,6 +504,7 @@ def list_typed_attrs(
                 )
             ),
             default=default,
+            kw_only=draw(booleans()) if kw_only is None else kw_only,
         ),
         val_strat,
     )
@@ -407,7 +512,11 @@ def list_typed_attrs(
 
 @composite
 def seq_typed_attrs(
-    draw, defaults=None, allow_mutable_defaults=True, legacy_types_only=False
+    draw,
+    defaults=None,
+    allow_mutable_defaults=True,
+    legacy_types_only=False,
+    kw_only=None,
 ):
     """
     Generate a tuple of an attribute and a strategy that yields lists
@@ -428,6 +537,7 @@ def seq_typed_attrs(
         attr.ib(
             type=AbcSequence[int] if not legacy_types_only else Sequence[int],
             default=default,
+            kw_only=draw(booleans()) if kw_only is None else kw_only,
         ),
         val_strat,
     )
@@ -435,7 +545,11 @@ def seq_typed_attrs(
 
 @composite
 def mutable_seq_typed_attrs(
-    draw, defaults=None, allow_mutable_defaults=True, legacy_types_only=False
+    draw,
+    defaults=None,
+    allow_mutable_defaults=True,
+    legacy_types_only=False,
+    kw_only=None,
 ):
     """
     Generate a tuple of an attribute and a strategy that yields lists
@@ -458,13 +572,14 @@ def mutable_seq_typed_attrs(
             if not legacy_types_only
             else MutableSequence[float],
             default=default,
+            kw_only=draw(booleans()) if kw_only is None else kw_only,
         ),
         val_strat,
     )
 
 
 @composite
-def homo_tuple_typed_attrs(draw, defaults=None, legacy_types_only=False):
+def homo_tuple_typed_attrs(draw, defaults=None, legacy_types_only=False, kw_only=None):
     """
     Generate a tuple of an attribute and a strategy that yields homogenous
     tuples for that attribute. The tuples contain strings.
@@ -483,80 +598,96 @@ def homo_tuple_typed_attrs(draw, defaults=None, legacy_types_only=False):
                 )
             ),
             default=default,
+            kw_only=draw(booleans()) if kw_only is None else kw_only,
         ),
         val_strat,
     )
 
 
 def just_class(
-    tup: Tuple[List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs]],
-    defaults: PosArgs,
+    tup: Tuple[
+        List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs, KwArgs]
+    ],
+    defaults: tuple[PosArgs, KwArgs],
 ):
     nested_cl = tup[1][0]
     nested_cl_args = tup[1][1]
-    default = attr.Factory(lambda: nested_cl(*defaults))
+    nested_cl_kwargs = tup[1][2]
+    default = attr.Factory(lambda: nested_cl(*defaults[0], **defaults[1]))
     combined_attrs = list(tup[0])
     combined_attrs.append(
-        (attr.ib(type=nested_cl, default=default), just(nested_cl(*nested_cl_args)))
+        (
+            attr.ib(type=nested_cl, default=default),
+            just(nested_cl(*nested_cl_args, **nested_cl_kwargs)),
+        )
     )
     return _create_hyp_class_and_strat(combined_attrs)
 
 
 def list_of_class(
-    tup: Tuple[List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs]],
-    defaults: PosArgs,
-) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
+    tup: Tuple[
+        List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs, KwArgs]
+    ],
+    defaults: tuple[PosArgs, KwArgs],
+) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs], SearchStrategy[KwArgs]]]:
     nested_cl = tup[1][0]
     nested_cl_args = tup[1][1]
-    default = attr.Factory(lambda: [nested_cl(*defaults)])
+    nested_cl_kwargs = tup[1][2]
+    default = attr.Factory(lambda: [nested_cl(*defaults[0], **defaults[1])])
     combined_attrs = list(tup[0])
     combined_attrs.append(
         (
             attr.ib(type=List[nested_cl], default=default),
-            just([nested_cl(*nested_cl_args)]),
+            just([nested_cl(*nested_cl_args, **nested_cl_kwargs)]),
         )
     )
     return _create_hyp_class_and_strat(combined_attrs)
 
 
 def new_list_of_class(
-    tup: Tuple[List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs]],
-    defaults: PosArgs,
+    tup: Tuple[
+        List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs, KwArgs]
+    ],
+    defaults: tuple[PosArgs, KwArgs],
 ):
     """Uses the new 3.9 list type annotation."""
     nested_cl = tup[1][0]
     nested_cl_args = tup[1][1]
-    default = attr.Factory(lambda: [nested_cl(*defaults)])
+    nested_cl_kwargs = tup[1][2]
+    default = attr.Factory(lambda: [nested_cl(*defaults[0], **defaults[1])])
     combined_attrs = list(tup[0])
     combined_attrs.append(
         (
             attr.ib(type=list[nested_cl], default=default),
-            just([nested_cl(*nested_cl_args)]),
+            just([nested_cl(*nested_cl_args, **nested_cl_kwargs)]),
         )
     )
     return _create_hyp_class_and_strat(combined_attrs)
 
 
 def dict_of_class(
-    tup: Tuple[List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs]],
-    defaults: PosArgs,
+    tup: Tuple[
+        List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs, KwArgs]
+    ],
+    defaults: tuple[PosArgs, KwArgs],
 ):
     nested_cl = tup[1][0]
     nested_cl_args = tup[1][1]
-    default = attr.Factory(lambda: {"cls": nested_cl(*defaults)})
+    nested_cl_kwargs = tup[1][2]
+    default = attr.Factory(lambda: {"cls": nested_cl(*defaults[0], **defaults[1])})
     combined_attrs = list(tup[0])
     combined_attrs.append(
         (
             attr.ib(type=Dict[str, nested_cl], default=default),
-            just({"cls": nested_cl(*nested_cl_args)}),
+            just({"cls": nested_cl(*nested_cl_args, **nested_cl_kwargs)}),
         )
     )
     return _create_hyp_class_and_strat(combined_attrs)
 
 
 def _create_hyp_nested_strategy(
-    simple_class_strategy: SearchStrategy,
-) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
+    simple_class_strategy: SearchStrategy, kw_only=None
+) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs], SearchStrategy[KwArgs]]]:
     """
     Create a recursive attrs class.
     Given a strategy for building (simpler) classes, create and return
@@ -571,52 +702,58 @@ def _create_hyp_nested_strategy(
         Tuple[
             List[Tuple[_CountingAttr, PosArgs]], Tuple[Type, SearchStrategy[PosArgs]],
         ]
-    ] = tuples(lists_of_typed_attrs(), simple_class_strategy)
+    ] = tuples(lists_of_typed_attrs(kw_only=kw_only), simple_class_strategy)
 
     return nested_classes(attrs_and_classes)
 
 
 @composite
 def nested_classes(
-    draw: Callable[[SearchStrategy[T]], T],
+    draw: DrawFn,
     attrs_and_classes: SearchStrategy[
         Tuple[
             List[Tuple[_CountingAttr, SearchStrategy]],
-            Tuple[Type, SearchStrategy[PosArgs]],
+            Tuple[Type, SearchStrategy[PosArgs], SearchStrategy[KwArgs]],
         ]
     ],
-) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
+) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs], SearchStrategy[KwArgs]]]:
     attrs, class_and_strat = draw(attrs_and_classes)
-    cls, strat = class_and_strat
-    defaults = tuple(draw(strat))
+    cls, strat, kw_strat = class_and_strat
+    pos_defs = tuple(draw(strat))
+    kwarg_defs = draw(kw_strat)
     init_vals = tuple(draw(strat))
+    init_kwargs = draw(kw_strat)
     if is_39_or_later:
         return draw(
-            list_of_class((attrs, (cls, init_vals)), defaults)
-            | new_list_of_class((attrs, (cls, init_vals)), defaults)
-            | dict_of_class((attrs, (cls, init_vals)), defaults)
-            | just_class((attrs, (cls, init_vals)), defaults)
+            list_of_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
+            | new_list_of_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
+            | dict_of_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
+            | just_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
         )
     else:
         return draw(
-            list_of_class((attrs, (cls, init_vals)), defaults)
-            | dict_of_class((attrs, (cls, init_vals)), defaults)
-            | just_class((attrs, (cls, init_vals)), defaults)
+            list_of_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
+            | dict_of_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
+            | just_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
         )
 
 
 def nested_typed_classes_and_strat(
-    defaults=None, min_attrs=0
+    defaults=None, min_attrs=0, kw_only=None
 ) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
     return recursive(
-        simple_typed_classes_and_strats(defaults=defaults, min_attrs=min_attrs),
-        _create_hyp_nested_strategy,
+        simple_typed_classes_and_strats(
+            defaults=defaults, min_attrs=min_attrs, kw_only=kw_only
+        ),
+        partial(_create_hyp_nested_strategy, kw_only=kw_only),
     )
 
 
 @composite
-def nested_typed_classes(draw, defaults=None, min_attrs=0):
-    cl, strat = draw(
-        nested_typed_classes_and_strat(defaults=defaults, min_attrs=min_attrs)
+def nested_typed_classes(draw, defaults=None, min_attrs=0, kw_only=None):
+    cl, strat, kwarg_strat = draw(
+        nested_typed_classes_and_strat(
+            defaults=defaults, min_attrs=min_attrs, kw_only=kw_only
+        )
     )
-    return cl, draw(strat)
+    return cl, draw(strat), draw(kwarg_strat)
