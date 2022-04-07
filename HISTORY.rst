@@ -3,7 +3,8 @@ History
 =======
 22.2.0 (UNRELEASED)
 -------------------
-
+* cattrs now supports un/structuring `kw_only` fields on attrs classes into/from dictionaries.
+  (`#247 <https://github.com/python-attrs/cattrs/pull/247>`_)
 
 22.1.0 (2022-04-03)
 -------------------

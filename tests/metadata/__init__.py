@@ -9,7 +9,6 @@ from dataclasses import field, make_dataclass
 from functools import partial
 from typing import (
     Any,
-    Callable,
     Dict,
     FrozenSet,
     List,
@@ -608,7 +607,7 @@ def just_class(
     tup: Tuple[
         List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs, KwArgs]
     ],
-    defaults: tuple[PosArgs, KwArgs],
+    defaults: Tuple[PosArgs, KwArgs],
 ):
     nested_cl = tup[1][0]
     nested_cl_args = tup[1][1]
@@ -628,7 +627,7 @@ def list_of_class(
     tup: Tuple[
         List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs, KwArgs]
     ],
-    defaults: tuple[PosArgs, KwArgs],
+    defaults: Tuple[PosArgs, KwArgs],
 ) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs], SearchStrategy[KwArgs]]]:
     nested_cl = tup[1][0]
     nested_cl_args = tup[1][1]
@@ -648,7 +647,7 @@ def new_list_of_class(
     tup: Tuple[
         List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs, KwArgs]
     ],
-    defaults: tuple[PosArgs, KwArgs],
+    defaults: Tuple[PosArgs, KwArgs],
 ):
     """Uses the new 3.9 list type annotation."""
     nested_cl = tup[1][0]
@@ -669,7 +668,7 @@ def dict_of_class(
     tup: Tuple[
         List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type, PosArgs, KwArgs]
     ],
-    defaults: tuple[PosArgs, KwArgs],
+    defaults: Tuple[PosArgs, KwArgs],
 ):
     nested_cl = tup[1][0]
     nested_cl_args = tup[1][1]
