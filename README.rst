@@ -106,7 +106,7 @@ metadata.
     >>> @define
     ... class Dog:
     ...     cuteness: int
-    ...     chip: Optional[DogMicrochip]
+    ...     chip: Optional[DogMicrochip] = None
     ...
     >>> p = unstructure([Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)),
     ...                  Cat(breed=CatBreed.MAINE_COON, names=('Fluffly', 'Fluffer'))])
