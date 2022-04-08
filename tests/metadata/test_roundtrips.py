@@ -122,8 +122,9 @@ def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     Classes with union fields can be unstructured and structured.
     """
     converter = Converter(unstruct_strat=strat)
-    cl_a, vals_a = cl_and_vals_a
-    cl_b, vals_b = cl_and_vals_b
+    cl_a, vals_a, kwargs_a = cl_and_vals_a
+    cl_b, vals_b, _ = cl_and_vals_b
+    assume(strat is UnstructureStrategy.AS_DICT or not kwargs_a)
     a_field_names = {a.name for a in fields(cl_a)}
     b_field_names = {a.name for a in fields(cl_b)}
     assume(a_field_names)
@@ -180,13 +181,13 @@ def test_310_optional_field_roundtrip(cl_and_vals):
     Classes with optional fields can be unstructured and structured.
     """
     converter = Converter()
-    cl, vals = cl_and_vals
+    cl, vals, kwargs = cl_and_vals
 
     @define
     class C:
         a: cl | None
 
-    inst = C(a=cl(*vals))
+    inst = C(a=cl(*vals, **kwargs))
     assert inst == converter.structure(converter.unstructure(inst), C)
 
     inst = C(a=None)
