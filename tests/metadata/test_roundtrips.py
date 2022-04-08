@@ -137,7 +137,7 @@ def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     class C:
         a: cl_a | cl_b
 
-    inst = C(a=cl_a(*vals_a))
+    inst = C(a=cl_a(*vals_a, **kwargs_a))
 
     if strat is UnstructureStrategy.AS_DICT:
         assert inst == converter.structure(converter.unstructure(inst), C)
