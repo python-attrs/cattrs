@@ -26,7 +26,7 @@ import pkg_resources  # part of setuptools
 
 # Get the project root dir, which is the parent dir of this
 cwd = os.getcwd()
-project_root = os.path.join(os.path.dirname(cwd), u"src")
+project_root = os.path.join(os.path.dirname(cwd), "src")
 
 # Insert the project root dir as the first element in the PYTHONPATH.
 # This lets us ensure that the source package is imported, and that its
@@ -60,8 +60,8 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"cattrs"
-copyright = u"2020, Tin Tvrtković"
+project = "cattrs"
+copyright = "2020, Tin Tvrtković"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -212,7 +212,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass
 # [howto/manual]).
 latex_documents = [
-    ("index", "cattrs.tex", u"cattrs Documentation", u"Tin Tvrtković", "manual")
+    ("index", "cattrs.tex", "cattrs Documentation", "Tin Tvrtković", "manual")
 ]
 
 # The name of an image file (relative to this directory) to place at
@@ -240,7 +240,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [("index", "cattrs", u"cattrs Documentation", [u"Tin Tvrtković"], 1)]
+man_pages = [("index", "cattrs", "cattrs Documentation", ["Tin Tvrtković"], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -255,8 +255,8 @@ texinfo_documents = [
     (
         "index",
         "cattrs",
-        u"cattrs Documentation",
-        u"Tin Tvrtković",
+        "cattrs Documentation",
+        "Tin Tvrtković",
         "cattrs",
         "Composable complex class support for attrs.",
         "Miscellaneous",
