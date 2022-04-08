@@ -724,15 +724,25 @@ def nested_classes(
     init_kwargs = draw(kw_strat)
     if is_39_or_later:
         return draw(
-            list_of_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
-            | new_list_of_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
-            | dict_of_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
+            list_of_class(
+                (attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs)
+            )
+            | new_list_of_class(
+                (attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs)
+            )
+            | dict_of_class(
+                (attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs)
+            )
             | just_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
         )
     else:
         return draw(
-            list_of_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
-            | dict_of_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
+            list_of_class(
+                (attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs)
+            )
+            | dict_of_class(
+                (attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs)
+            )
             | just_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
         )
 
