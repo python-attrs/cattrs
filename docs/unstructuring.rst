@@ -29,7 +29,7 @@ a complex or recursive collection.
     >>> # A dictionary of strings to lists of tuples of floats.
     >>> data = {'a': [[1.0, 2.0], [3.0, 4.0]]}
     >>>
-    >>> copy = cattr.unstructure(data)
+    >>> copy = cattrs.unstructure(data)
     >>> data == copy
     True
     >>> data is copy
@@ -53,19 +53,19 @@ specific types of set you're using (``set[int]``, ``set[float]``,
 Function-based hooks can be used instead, but come with their own set of
 challenges - they're complicated to write efficiently.
 
-The ``GenConverter`` supports easy customizations of collection unstructuring
+The ``Converter`` supports easy customizations of collection unstructuring
 using its ``unstruct_collection_overrides`` parameter. For example, to
 unstructure all sets into lists, try the following:
 
 .. doctest::
 
   >>> from collections.abc import Set
-  >>> converter = cattr.GenConverter(unstruct_collection_overrides={Set: list})
+  >>> converter = cattrs.Converter(unstruct_collection_overrides={Set: list})
   >>>
   >>> converter.unstructure({1, 2, 3})
   [1, 2, 3]
 
-Going even further, the ``GenConverter`` contains heuristics to support the
+Going even further, the ``Converter`` contains heuristics to support the
 following Python types, in order of decreasing generality:
 
     * ``Sequence``, ``MutableSequence``, ``list``, ``tuple``
@@ -114,7 +114,7 @@ using the first type present in the annotated type.
     ...
     >>> inst = C(1, 'a')
     >>>
-    >>> converter = cattr.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
+    >>> converter = cattrs.Converter(unstruct_strat=cattrs.UnstructureStrategy.AS_TUPLE)
     >>>
     >>> converter.unstructure(inst)
     (1, 'a')
@@ -144,7 +144,7 @@ to do this.
     ...
     >>> inst = Outer(i=Inner(a=1))
     >>>
-    >>> converter = cattr.Converter()
+    >>> converter = cattrs.Converter()
     >>> converter.register_unstructure_hook(Inner, converter.unstructure_attrs_astuple)
     >>>
     >>> converter.unstructure(inst)
@@ -161,7 +161,7 @@ Of course, these methods can be used directly as well, without changing the conv
     ...
     >>> inst = C(1, 'a')
     >>>
-    >>> converter = cattr.Converter()
+    >>> converter = cattrs.Converter()
     >>>
     >>> converter.unstructure_attrs_astuple(inst)  # Default is AS_DICT.
     (1, 'a')
@@ -174,25 +174,25 @@ Hook factories operate one level higher than unstructuring hooks; unstructuring
 hooks are functions registered to a class or predicate, and hook factories
 are functions (registered via a predicate) that produce unstructuring hooks.
 
-Unstructuring hooks factories are registered using :py:attr:`cattr.Converter.register_unstructure_hook_factory`.
+Unstructuring hooks factories are registered using :py:attr:`cattrs.Converter.register_unstructure_hook_factory`.
 
 Here's a small example showing how to use factory hooks to skip unstructuring
 `init=False` attributes on all `attrs` classes.
 
 .. doctest::
 
-    >>> from attr import define, has, field, fields
-    >>> from cattr import override
-    >>> from cattr.gen import make_dict_unstructure_fn
-    
-    >>> c = cattr.GenConverter()
+    >>> from attrs import define, has, field, fields
+    >>> from cattrs import override
+    >>> from cattrs.gen import make_dict_unstructure_fn
+
+    >>> c = cattrs.Converter()
     >>> c.register_unstructure_hook_factory(has, lambda cl: make_dict_unstructure_fn(cl, c, **{a.name: override(omit=True) for a in fields(cl) if not a.init}))
 
     >>> @define
     ... class E:
     ...    an_int: int
     ...    another_int: int = field(init=False)
-    
+
     >>> inst = E(1)
     >>> inst.another_int = 5
     >>> c.unstructure(inst)

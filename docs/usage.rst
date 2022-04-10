@@ -48,7 +48,7 @@ And we can proceed with unstructuring and structuring instances of ``MyRecord``.
         a_string: str
         a_datetime: DateTime
 
-    converter = cattr.Converter()
+    converter = cattrs.Converter()
     converter.register_unstructure_hook(DateTime, lambda dt: dt.timestamp())
     converter.register_structure_hook(DateTime, lambda ts, _: pendulum.from_timestamp(ts))
 
@@ -80,7 +80,7 @@ We decide to switch to using the ISO 8601 format for our unstructured datetime i
 
 .. doctest:: pendulum-iso8601
 
-    >>> converter = cattr.Converter()
+    >>> converter = cattrs.Converter()
     >>> converter.register_unstructure_hook(DateTime, lambda dt: dt.to_iso8601_string())
     >>> converter.register_structure_hook(DateTime, lambda isostring, _: pendulum.parse(isostring))
 
@@ -129,7 +129,7 @@ We just write the code by hand and register it:
             "aSnakeCaseFloat": inner.a_snake_case_float,
             "aSnakeCaseStr": inner.a_snake_case_str
         }
-    
+
     converter.register_unstructure_hook(Inner, unstructure_inner)
 
 (Let's skip the other unstructure hook and 2 structure hooks due to verbosity.)
@@ -140,20 +140,20 @@ maintenance burden and risking bugs. Obviously this won't do.
 
 Why write code when we can write code to write code for us? In this case this
 code has already been written for you. cattrs contains a module,
-:py:mod:`cattr.gen`, with functions to automatically generate hooks exactly like this.
-These functions also take parameters to customize the generated hooks. 
+:py:mod:`cattrs.gen`, with functions to automatically generate hooks exactly like this.
+These functions also take parameters to customize the generated hooks.
 
 We can generate and register the renaming hooks we need:
 
 .. code-block:: python
 
-    from cattr.gen import make_dict_unstructure_fn, override
+    from cattrs.gen import make_dict_unstructure_fn, override
 
     converter.register_unstructure_hook(
-        Inner, 
+        Inner,
         make_dict_unstructure_fn(
-            Inner, 
-            converter, 
+            Inner,
+            converter,
             a_snake_case_int=override(rename="aSnakeCaseInt"),
             a_snake_case_float=override(rename="aSnakeCaseFloat"),
             a_snake_case_str=override(rename="aSnakeCaseStr"),
@@ -175,24 +175,24 @@ let's grab one from Stack Overflow:
 We can combine this with ``attr.fields`` to save us some typing:
 
 .. code-block:: python
-    
-    from attr import fields
-    from cattr.gen import make_dict_unstructure_fn, override
+
+    from attrs import fields
+    from cattrs.gen import make_dict_unstructure_fn, override
 
     converter.register_unstructure_hook(
-        Inner, 
+        Inner,
         make_dict_unstructure_fn(
-            Inner, 
-            converter, 
+            Inner,
+            converter,
             **{a.name: override(rename=to_camel_case(a.name)) for a in fields(Inner)}
         )
     )
 
     converter.register_unstructure_hook(
-        Outer, 
+        Outer,
         make_dict_unstructure_fn(
-            Outer, 
-            converter, 
+            Outer,
+            converter,
             **{a.name: override(rename=to_camel_case(a.name)) for a in fields(Outer)}
         )
     )
@@ -215,9 +215,9 @@ As the final step, we can combine all of this into two hook factories:
 
 .. code-block:: python
 
-    from attr import has, fields
-    from cattr import Converter
-    from cattr.gen import make_dict_unstructure_fn, make_dict_structure_fn, override
+    from attrs import has, fields
+    from cattrs import Converter
+    from cattrs.gen import make_dict_unstructure_fn, make_dict_structure_fn, override
 
     converter = Converter()
 
@@ -227,18 +227,18 @@ As the final step, we can combine all of this into two hook factories:
 
     def to_camel_case_unstructure(cls):
         return make_dict_unstructure_fn(
-            cls, 
-            converter, 
+            cls,
+            converter,
             **{
                 a.name: override(rename=to_camel_case(a.name))
                 for a in fields(cls)
             }
         )
-    
+
     def to_camel_case_structure(cls):
         return make_dict_structure_fn(
-            cls, 
-            converter, 
+            cls,
+            converter,
             **{
                 a.name: override(rename=to_camel_case(a.name))
                 for a in fields(cls)
