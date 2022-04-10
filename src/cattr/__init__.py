@@ -1,4 +1,4 @@
-from .converters import Converter, GenConverter, UnstructureStrategy
+from .converters import BaseConverter, Converter, GenConverter, UnstructureStrategy
 from .gen import override
 
 __all__ = (
@@ -8,13 +8,12 @@ __all__ = (
     "structure_attrs_fromtuple",
     "structure_attrs_fromdict",
     "UnstructureStrategy",
+    "BaseConverter",
     "Converter",
     "GenConverter",
     "override",
 )
-
-
-global_converter = GenConverter()
+from cattrs import global_converter
 
 unstructure = global_converter.unstructure
 structure = global_converter.structure

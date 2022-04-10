@@ -30,7 +30,7 @@ if "CI" in os.environ:
     settings.load_profile("CI")
 
 PosArg = Any
-PosArgs = Tuple[Any]
+PosArgs = Tuple[PosArg]
 KwArgs = Dict[str, Any]
 
 primitive_strategies = st.sampled_from(

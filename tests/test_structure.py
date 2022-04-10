@@ -20,7 +20,7 @@ from hypothesis.strategies import (
 )
 from pytest import raises
 
-from cattrs import Converter
+from cattrs import BaseConverter
 from cattrs._compat import copy_with, is_bare, is_union_type
 from cattrs.errors import IterableValidationError, StructureHandlerNotFoundError
 
@@ -70,7 +70,7 @@ sets_of_primitives = one_of(mut_sets_of_primitives, frozen_sets_of_primitives)
 @given(primitives_and_type)
 def test_structuring_primitives(primitive_and_type):
     """Test just structuring a primitive value."""
-    converter = Converter()
+    converter = BaseConverter()
     val, t = primitive_and_type
     assert converter.structure(val, t) == val
     assert converter.structure(val, Any) == val
@@ -79,7 +79,7 @@ def test_structuring_primitives(primitive_and_type):
 @given(seqs_of_primitives)
 def test_structuring_seqs(seq_and_type):
     """Test structuring sequence generic types."""
-    converter = Converter()
+    converter = BaseConverter()
     iterable, t = seq_and_type
     converted = converter.structure(iterable, t)
     for x, y in zip(iterable, converted):
@@ -89,7 +89,7 @@ def test_structuring_seqs(seq_and_type):
 @given(sets_of_primitives, set_types)
 def test_structuring_sets(set_and_type, set_type):
     """Test structuring generic sets."""
-    converter = Converter()
+    converter = BaseConverter()
     set_, input_set_type = set_and_type
 
     if input_set_type not in (Set, FrozenSet, MutableSet):
@@ -110,7 +110,7 @@ def test_structuring_sets(set_and_type, set_type):
 @given(sets_of_primitives)
 def test_stringifying_sets(set_and_type):
     """Test structuring generic sets and converting the contents to str."""
-    converter = Converter()
+    converter = BaseConverter()
     set_, input_set_type = set_and_type
 
     if is_bare(input_set_type):
@@ -126,7 +126,7 @@ def test_stringifying_sets(set_and_type):
 @given(lists(primitives_and_type, min_size=1), booleans())
 def test_structuring_hetero_tuples(list_of_vals_and_types, detailed_validation):
     """Test structuring heterogenous tuples."""
-    converter = Converter(detailed_validation=detailed_validation)
+    converter = BaseConverter(detailed_validation=detailed_validation)
     types = tuple(e[1] for e in list_of_vals_and_types)
     vals = [e[0] for e in list_of_vals_and_types]
     t = Tuple[types]
@@ -145,7 +145,7 @@ def test_structuring_hetero_tuples(list_of_vals_and_types, detailed_validation):
 @given(lists(primitives_and_type))
 def test_stringifying_tuples(list_of_vals_and_types):
     """Stringify all elements of a heterogeneous tuple."""
-    converter = Converter()
+    converter = BaseConverter()
     vals = [e[0] for e in list_of_vals_and_types]
     t = Tuple[(str,) * len(list_of_vals_and_types)]
 
@@ -163,7 +163,7 @@ def test_stringifying_tuples(list_of_vals_and_types):
 
 @given(dicts_of_primitives)
 def test_structuring_dicts(dict_and_type):
-    converter = Converter()
+    converter = BaseConverter()
     d, t = dict_and_type
 
     converted = converter.structure(d, t)
@@ -175,7 +175,7 @@ def test_structuring_dicts(dict_and_type):
 @given(dicts_of_primitives, data())
 def test_structuring_dicts_opts(dict_and_type, data):
     """Structure dicts, but with optional primitives."""
-    converter = Converter()
+    converter = BaseConverter()
     d, t = dict_and_type
     assume(not is_bare(t))
     t.__args__ = (t.__args__[0], Optional[t.__args__[1]])
@@ -189,7 +189,7 @@ def test_structuring_dicts_opts(dict_and_type, data):
 
 @given(dicts_of_primitives)
 def test_stringifying_dicts(dict_and_type):
-    converter = Converter()
+    converter = BaseConverter()
     d, t = dict_and_type
 
     converted = converter.structure(d, Dict[str, str])
@@ -201,7 +201,7 @@ def test_stringifying_dicts(dict_and_type):
 @given(primitives_and_type)
 def test_structuring_optional_primitives(primitive_and_type):
     """Test structuring Optional primitive types."""
-    converter = Converter()
+    converter = BaseConverter()
     val, type = primitive_and_type
 
     assert converter.structure(val, Optional[type]) == val
@@ -211,7 +211,7 @@ def test_structuring_optional_primitives(primitive_and_type):
 @given(lists_of_primitives().filter(lambda lp: not is_bare(lp[1])), booleans())
 def test_structuring_lists_of_opt(list_and_type, detailed_validation: bool):
     """Test structuring lists of Optional primitive types."""
-    converter = Converter(detailed_validation=detailed_validation)
+    converter = BaseConverter(detailed_validation=detailed_validation)
     l, t = list_and_type
 
     l.append(None)
@@ -247,7 +247,7 @@ def test_structuring_lists_of_opt(list_and_type, detailed_validation: bool):
 @given(lists_of_primitives())
 def test_stringifying_lists_of_opt(list_and_type):
     """Test structuring Optional primitive types into strings."""
-    converter = Converter()
+    converter = BaseConverter()
     l, t = list_and_type
 
     l.append(None)
@@ -264,7 +264,7 @@ def test_stringifying_lists_of_opt(list_and_type):
 @given(lists(integers()))
 def test_structuring_primitive_union_hook(ints):
     """Registering a union loading hook works."""
-    converter = Converter()
+    converter = BaseConverter()
 
     def structure_hook(val, cl):
         """Even ints are passed through, odd are stringified."""
@@ -283,7 +283,7 @@ def test_structuring_primitive_union_hook(ints):
 
 def test_structure_hook_func():
     """testing the hook_func method"""
-    converter = Converter()
+    converter = BaseConverter()
 
     def can_handle(cls):
         return cls.__name__.startswith("F")
@@ -309,7 +309,7 @@ def test_structure_hook_func():
 @given(data(), enums_of_primitives())
 def test_structuring_enums(data, enum):
     """Test structuring enums by their values."""
-    converter = Converter()
+    converter = BaseConverter()
     val = data.draw(sampled_from(list(enum)))
 
     assert converter.structure(val.value, enum) == val
@@ -317,11 +317,11 @@ def test_structuring_enums(data, enum):
 
 def test_structuring_unsupported():
     """Loading unsupported classes should throw."""
-    converter = Converter()
+    converter = BaseConverter()
     with raises(StructureHandlerNotFoundError) as exc:
-        converter.structure(1, Converter)
+        converter.structure(1, BaseConverter)
 
-    assert exc.value.type_ is Converter
+    assert exc.value.type_ is BaseConverter
 
     with raises(StructureHandlerNotFoundError) as exc:
         converter.structure(1, Union[int, str])
@@ -334,7 +334,7 @@ def test_subclass_registration_is_honored():
     that subclass handler should be dispatched for
     structure
     """
-    converter = Converter()
+    converter = BaseConverter()
 
     class Foo(object):
         def __init__(self, value):
@@ -352,7 +352,7 @@ def test_subclass_registration_is_honored():
 
 
 def test_structure_union_edge_case():
-    converter = Converter()
+    converter = BaseConverter()
 
     @attr.s(auto_attribs=True)
     class A:

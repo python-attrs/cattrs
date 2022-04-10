@@ -7,7 +7,7 @@ from attr import define, fields, make_class
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis.strategies import just, one_of
 
-from cattrs import Converter, UnstructureStrategy
+from cattrs import BaseConverter, UnstructureStrategy
 from cattrs._compat import is_py310_plus
 
 from . import nested_typed_classes, simple_typed_attrs, simple_typed_classes
@@ -20,7 +20,7 @@ def test_simple_roundtrip(cls_and_vals, strat):
     """
     Simple classes with metadata can be unstructured and restructured.
     """
-    converter = Converter(unstruct_strat=strat)
+    converter = BaseConverter(unstruct_strat=strat)
     cl, vals, kwargs = cls_and_vals
     assume(strat is UnstructureStrategy.AS_DICT or not kwargs)
     inst = cl(*vals, **kwargs)
@@ -35,7 +35,7 @@ def test_simple_roundtrip_defaults(attr_and_strat, strat):
     a, _ = attr_and_strat
     assume(strat is UnstructureStrategy.AS_DICT or not a.kw_only)
     cl = make_class("HypClass", {"a": a})
-    converter = Converter(unstruct_strat=strat)
+    converter = BaseConverter(unstruct_strat=strat)
     inst = cl()
     assert converter.unstructure(converter.structure({}, cl)) == converter.unstructure(
         inst
@@ -48,7 +48,7 @@ def test_nested_roundtrip(cls_and_vals):
     """
     Nested classes with metadata can be unstructured and restructured.
     """
-    converter = Converter()
+    converter = BaseConverter()
     cl, vals, kwargs = cls_and_vals
     # Vals are a tuple, convert into a dictionary.
     inst = cl(*vals, **kwargs)
@@ -60,7 +60,7 @@ def test_nested_roundtrip_tuple(cls_and_vals):
     """
     Nested classes with metadata can be unstructured and restructured.
     """
-    converter = Converter(unstruct_strat=UnstructureStrategy.AS_TUPLE)
+    converter = BaseConverter(unstruct_strat=UnstructureStrategy.AS_TUPLE)
     cl, vals, kwargs = cls_and_vals
     assert not kwargs
     # Vals are a tuple, convert into a dictionary.
@@ -78,7 +78,7 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     """
     Classes with union fields can be unstructured and structured.
     """
-    converter = Converter(unstruct_strat=strat)
+    converter = BaseConverter(unstruct_strat=strat)
     cl_a, vals_a, kwargs_a = cl_and_vals_a
     assume(strat is UnstructureStrategy.AS_DICT or not kwargs_a)
     cl_b, vals_b, _ = cl_and_vals_b
@@ -121,7 +121,7 @@ def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     """
     Classes with union fields can be unstructured and structured.
     """
-    converter = Converter(unstruct_strat=strat)
+    converter = BaseConverter(unstruct_strat=strat)
     cl_a, vals_a, kwargs_a = cl_and_vals_a
     cl_b, vals_b, _ = cl_and_vals_b
     assume(strat is UnstructureStrategy.AS_DICT or not kwargs_a)
@@ -158,7 +158,7 @@ def test_optional_field_roundtrip(cl_and_vals):
     """
     Classes with optional fields can be unstructured and structured.
     """
-    converter = Converter()
+    converter = BaseConverter()
     cl, vals, kwargs = cl_and_vals
 
     @attr.s
@@ -180,7 +180,7 @@ def test_310_optional_field_roundtrip(cl_and_vals):
     """
     Classes with optional fields can be unstructured and structured.
     """
-    converter = Converter()
+    converter = BaseConverter()
     cl, vals, kwargs = cl_and_vals
 
     @define

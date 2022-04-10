@@ -12,6 +12,7 @@ from cattrs.errors import (
     ClassValidationError,
     ForbiddenExtraKeysError,
     IterableValidationError,
+    StructureHandlerNotFoundError,
 )
 
 from ._compat import (
@@ -25,7 +26,7 @@ from ._compat import (
 from ._generics import deep_copy_with
 
 if TYPE_CHECKING:  # pragma: no cover
-    from cattr.converters import Converter
+    from cattr.converters import BaseConverter
 
 
 @frozen
@@ -215,7 +216,7 @@ def _generate_mapping(cl: Type, old_mapping: Dict[str, type]) -> Dict[str, type]
 
 def make_dict_structure_fn(
     cl: Type[T],
-    converter: "Converter",
+    converter: "BaseConverter",
     _cattrs_forbid_extra_keys: bool = False,
     _cattrs_use_linecache: bool = True,
     _cattrs_prefer_attrib_converters: bool = False,
@@ -244,7 +245,13 @@ def make_dict_structure_fn(
     # We have generic parameters and need to generate a unique name for the function
     for p in getattr(cl, "__parameters__", ()):
         # This is nasty, I am not sure how best to handle `typing.List[str]` or `TClass[int, int]` as a parameter type here
-        name_base = mapping[p.__name__]
+        try:
+            name_base = mapping[p.__name__]
+        except KeyError:
+            raise StructureHandlerNotFoundError(
+                f"Missing type for generic argument {p.__name__}, specify it when structuring.",
+                p,
+            ) from None
         name = getattr(name_base, "__name__", None) or str(name_base)
         name = re.sub(r"[\[\.\] ,]", "_", name)
         fn_name += f"_{name}"
@@ -618,7 +625,7 @@ def make_mapping_unstructure_fn(
 
 def make_mapping_structure_fn(
     cl: Type[T],
-    converter: "Converter",
+    converter: "BaseConverter",
     structure_to=dict,
     key_type=NOTHING,
     val_type=NOTHING,

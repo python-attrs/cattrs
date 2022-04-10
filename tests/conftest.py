@@ -1,12 +1,12 @@
 import pytest
 from hypothesis import HealthCheck, settings
 
-from cattrs import Converter
+from cattrs import BaseConverter, Converter
 
 
-@pytest.fixture()
-def converter():
-    return Converter()
+@pytest.fixture(params=(BaseConverter, Converter))
+def converter(request):
+    return request.param()
 
 
 settings.register_profile(

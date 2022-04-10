@@ -5,13 +5,13 @@ import pytest
 from attrs import define, field
 from attrs.validators import in_
 
-from cattrs import GenConverter
+from cattrs import Converter
 from cattrs.errors import ClassValidationError, IterableValidationError
 
 
 def test_class_validation():
     """Proper class validation errors are raised when structuring."""
-    c = GenConverter(detailed_validation=True)
+    c = Converter(detailed_validation=True)
 
     @define
     class Test:
@@ -39,7 +39,7 @@ def test_class_validation():
 
 def test_external_class_validation():
     """Proper class validation errors are raised when a classes __init__ raises."""
-    c = GenConverter(detailed_validation=True)
+    c = Converter(detailed_validation=True)
 
     @define
     class Test:
@@ -57,7 +57,7 @@ def test_external_class_validation():
 
 def test_list_validation():
     """Proper validation errors are raised structuring lists."""
-    c = GenConverter(detailed_validation=True)
+    c = Converter(detailed_validation=True)
 
     with pytest.raises(IterableValidationError) as exc:
         c.structure(["1", 2, "a", 3.0, "c"], List[int])
@@ -75,7 +75,7 @@ def test_list_validation():
 
 def test_mapping_validation():
     """Proper validation errors are raised structuring mappings."""
-    c = GenConverter(detailed_validation=True)
+    c = Converter(detailed_validation=True)
 
     with pytest.raises(IterableValidationError) as exc:
         c.structure({"1": 1, "2": "b", "c": 3}, Dict[int, int])
@@ -93,7 +93,7 @@ def test_mapping_validation():
 
 def test_set_validation():
     """Proper validation errors are raised structuring sets."""
-    c = GenConverter(detailed_validation=True)
+    c = Converter(detailed_validation=True)
 
     with pytest.raises(IterableValidationError) as exc:
         c.structure({"1", 2, "a"}, Set[int])
@@ -106,7 +106,7 @@ def test_set_validation():
 
 def test_frozenset_validation():
     """Proper validation errors are raised structuring frozensets."""
-    c = GenConverter(detailed_validation=True)
+    c = Converter(detailed_validation=True)
 
     with pytest.raises(IterableValidationError) as exc:
         c.structure({"1", 2, "a"}, FrozenSet[int])
@@ -119,7 +119,7 @@ def test_frozenset_validation():
 
 def test_homo_tuple_validation():
     """Proper validation errors are raised structuring homogenous tuples."""
-    c = GenConverter(detailed_validation=True)
+    c = Converter(detailed_validation=True)
 
     with pytest.raises(IterableValidationError) as exc:
         c.structure(["1", 2, "a"], Tuple[int, ...])
@@ -135,7 +135,7 @@ def test_homo_tuple_validation():
 
 def test_hetero_tuple_validation():
     """Proper validation errors are raised structuring heterogenous tuples."""
-    c = GenConverter(detailed_validation=True)
+    c = Converter(detailed_validation=True)
 
     with pytest.raises(IterableValidationError) as exc:
         c.structure(["1", 2, "a"], Tuple[int, int, int])

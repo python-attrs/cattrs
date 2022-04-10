@@ -4,7 +4,7 @@ from traceback import format_exc
 
 from attr import define
 
-from cattrs import GenConverter
+from cattrs import Converter
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn
 
 
@@ -15,7 +15,7 @@ def test_structure_linecache():
     class A:
         a: int
 
-    c = GenConverter(detailed_validation=False)
+    c = Converter(detailed_validation=False)
     try:
         c.structure({"a": "test"}, A)
     except ValueError:
@@ -34,7 +34,7 @@ def test_unstructure_linecache():
     class Outer:
         inner: Inner
 
-    c = GenConverter()
+    c = Converter()
     try:
         c.unstructure(Outer({}))
     except AttributeError:
@@ -49,7 +49,7 @@ def test_no_linecache():
     class A:
         a: int
 
-    c = GenConverter()
+    c = Converter()
     before = len(linecache.cache)
     c.structure(c.unstructure(A(1)), A)
     after = len(linecache.cache)

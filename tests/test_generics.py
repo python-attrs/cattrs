@@ -3,7 +3,7 @@ from typing import Dict, Generic, List, Optional, TypeVar, Union
 import pytest
 from attr import asdict, attrs, define
 
-from cattrs import Converter, GenConverter
+from cattrs import BaseConverter, Converter
 from cattrs._compat import Protocol, is_py39_plus
 from cattrs._generics import deep_copy_with
 from cattrs.errors import StructureHandlerNotFoundError
@@ -49,7 +49,7 @@ class GenericCols(Generic[T]):
         (List[int], str, TClass([1, 2, 3], "a")),
     ),
 )
-def test_able_to_structure_generics(converter: Converter, t, t2, result):
+def test_able_to_structure_generics(converter: BaseConverter, t, t2, result):
     res = converter.structure(asdict(result), TClass[t, t2])
 
     assert res == result
@@ -62,7 +62,7 @@ def test_able_to_structure_generics(converter: Converter, t, t2, result):
 @pytest.mark.parametrize("detailed_validation", [True, False])
 def test_structure_generics_with_cols(t, result, detailed_validation):
     raw = asdict(result)
-    res = GenConverter(detailed_validation=detailed_validation).structure(
+    res = Converter(detailed_validation=detailed_validation).structure(
         raw, GenericCols[t]
     )
 
@@ -82,7 +82,7 @@ def test_39_structure_generics_with_cols(t, result):
 
     expected = GenericCols(*result)
 
-    res = GenConverter().structure(asdict(expected), GenericCols[t])
+    res = Converter().structure(asdict(expected), GenericCols[t])
 
     assert res == expected
 
@@ -96,7 +96,7 @@ def test_structure_nested_generics_with_cols(t, result):
 
     expected = GenericCols(*result)
 
-    res = GenConverter().structure(asdict(expected), GenericCols[t])
+    res = Converter().structure(asdict(expected), GenericCols[t])
 
     assert res == expected
 
@@ -108,7 +108,7 @@ def test_structure_nested_generics_with_cols(t, result):
         (List[TClass[int, int]], str, TClass([TClass(1, 2)], "a")),
     ),
 )
-def test_structure_nested_generics(converter: Converter, t, t2, result):
+def test_structure_nested_generics(converter: BaseConverter, t, t2, result):
     res = converter.structure(asdict(result), TClass[t, t2])
 
     assert res == result
@@ -150,7 +150,7 @@ def test_raises_if_no_generic_params_supplied(converter):
 
     with pytest.raises(
         StructureHandlerNotFoundError,
-        match="Unsupported type: ~T. Register a structure hook for it.",
+        match="Unsupported type: ~T. Register a structure hook for it.|Missing type for generic argument T, specify it when structuring.",
     ) as exc:
         converter.structure(asdict(data), TClass)
 
@@ -158,7 +158,7 @@ def test_raises_if_no_generic_params_supplied(converter):
 
 
 def test_unstructure_generic_attrs():
-    c = GenConverter()
+    c = Converter()
 
     @attrs(auto_attribs=True)
     class Inner(Generic[T]):
@@ -184,7 +184,7 @@ def test_unstructure_generic_attrs():
 
 
 def test_unstructure_deeply_nested_generics():
-    c = GenConverter()
+    c = Converter()
 
     @define
     class Inner:
@@ -203,7 +203,7 @@ def test_unstructure_deeply_nested_generics():
 
 
 def test_unstructure_deeply_nested_generics_list():
-    c = GenConverter()
+    c = Converter()
 
     @define
     class Inner:
@@ -222,7 +222,7 @@ def test_unstructure_deeply_nested_generics_list():
 
 
 def test_unstructure_protocol():
-    c = GenConverter()
+    c = Converter()
 
     class Proto(Protocol):
         a: int

@@ -85,7 +85,7 @@ def is_literal_containing_enums(typ):
     return is_literal(typ) and any(isinstance(val, Enum) for val in typ.__args__)
 
 
-class Converter:
+class BaseConverter:
     """Converts between structured and unstructured data."""
 
     __slots__ = (
@@ -610,7 +610,7 @@ class Converter:
         return create_uniq_field_dis_func(*union_types)
 
 
-class GenConverter(Converter):
+class Converter(BaseConverter):
     """A converter which generates specialized un/structuring functions."""
 
     __slots__ = (
@@ -802,3 +802,6 @@ class GenConverter(Converter):
         h = make_mapping_structure_fn(cl, self)
         self._structure_func.register_cls_list([(cl, h)], direct=True)
         return h
+
+
+GenConverter = Converter

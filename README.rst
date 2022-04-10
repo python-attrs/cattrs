@@ -54,27 +54,27 @@ gets converted into a tuple of three ints.
 
 .. code-block:: pycon
 
-    >>> import cattr
+    >>> import cattrs
     >>>
-    >>> cattr.structure([1.0, 2, "3"], tuple[int, int, int])
+    >>> cattrs.structure([1.0, 2, "3"], tuple[int, int, int])
     (1, 2, 3)
 
 ``cattrs`` works well with ``attrs`` classes out of the box.
 
 .. code-block:: pycon
 
-    >>> from attr import frozen
-    >>> import cattr
+    >>> from attrs import frozen
+    >>> import cattrs
     >>>
-    >>> @frozen  # It works with normal classes too.
+    >>> @frozen  # It works with non-frozen classes too.
     ... class C:
     ...     a: int
     ...     b: str
     ...
     >>> instance = C(1, 'a')
-    >>> cattr.unstructure(instance)
+    >>> cattrs.unstructure(instance)
     {'a': 1, 'b': 'a'}
-    >>> cattr.structure({'a': 1, 'b': 'a'}, C)
+    >>> cattrs.structure({'a': 1, 'b': 'a'}, C)
     C(a=1, b='a')
 
 Here's a much more complex example, involving ``attrs`` classes with type
@@ -84,8 +84,8 @@ metadata.
 
     >>> from enum import unique, Enum
     >>> from typing import Optional, Sequence, Union
-    >>> from cattr import structure, unstructure
-    >>> from attr import define, field
+    >>> from cattrs import structure, unstructure
+    >>> from attrs import define, field
     >>>
     >>> @unique
     ... class CatBreed(Enum):
@@ -133,7 +133,7 @@ Features
 
 * Converts structured data into unstructured data, recursively:
 
-  * ``attrs`` classes and dataclasses are converted into dictionaries in a way similar to ``attr.asdict``, or into tuples in a way similar to ``attr.astuple``.
+  * ``attrs`` classes and dataclasses are converted into dictionaries in a way similar to ``attrs.asdict``, or into tuples in a way similar to ``attrs.astuple``.
   * Enumeration instances are converted to their values.
   * Other types are let through without conversion. This includes types such as
     integers, dictionaries, lists and instances of non-``attrs`` classes.

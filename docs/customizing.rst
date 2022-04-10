@@ -4,11 +4,10 @@ Customizing class un/structuring
 
 This section deals with customizing the unstructuring and structuring processes in `cattrs`.
 
-Using ``cattr.GenConverter``
+Using ``cattr.Converter``
 ********************************
 
-The :mod:`cattr` module contains a :class:`~cattr.Converter` subclass, the :class:`~cattr.GenConverter`.
-The ``GenConverter``, upon first encountering an ``attrs`` class, will use
+The default ``Converter``, upon first encountering an ``attrs`` class, will use
 the generation functions mentioned here to generate the specialized hooks for it,
 register the hooks and use them.
 
@@ -16,14 +15,14 @@ Manual un/structuring hooks
 ***************************
 
 You can write your own structuring and unstructuring functions and register
-them for types using :py:attr:`Converter.register_structure_hook <cattr.Converter.register_structure_hook>` and
-:py:attr:`Converter.register_unstructure_hook <cattr.Converter.register_unstructure_hook>`. This approach is the most
+them for types using :py:attr:`Converter.register_structure_hook <cattrs.Converter.register_structure_hook>` and
+:py:attr:`Converter.register_unstructure_hook <cattrs.Converter.register_unstructure_hook>`. This approach is the most
 flexible but also requires the most amount of boilerplate.
 
-Using ``cattr.gen`` generators
+Using ``cattrs.gen`` generators
 ******************************
 
-`cattrs` includes a module, :mod:`cattr.gen`, which allows for generating and
+`cattrs` includes a module, :mod:`cattrs.gen`, which allows for generating and
 compiling specialized functions for unstructuring ``attrs`` classes.
 
 One reason for generating these functions in advance is that they can bypass
@@ -44,14 +43,14 @@ default or factory values.
 
 .. doctest::
 
-    >>> from cattr.gen import make_dict_unstructure_fn, override
+    >>> from cattrs.gen import make_dict_unstructure_fn, override
     >>>
     >>> @define
     ... class WithDefault:
     ...    a: int
     ...    b: dict = Factory(dict)
     >>>
-    >>> c = cattr.Converter()
+    >>> c = cattrs.Converter()
     >>> c.register_unstructure_hook(WithDefault, make_dict_unstructure_fn(WithDefault, c, b=override(omit_if_default=True)))
     >>> c.unstructure(WithDefault(1))
     {'a': 1}
@@ -70,14 +69,14 @@ but not to the `DateTime` field.
 .. doctest::
 
     >>> from pendulum import DateTime
-    >>> from cattr.gen import make_dict_unstructure_fn, override
+    >>> from cattrs.gen import make_dict_unstructure_fn, override
     >>>
     >>> @define
     ... class TestClass:
     ...     a: Optional[int] = None
     ...     b: DateTime = Factory(DateTime.utcnow)
     >>>
-    >>> c = cattr.Converter()
+    >>> c = cattrs.Converter()
     >>> hook = make_dict_unstructure_fn(TestClass, c, _cattrs_omit_if_default=True, b=override(omit_if_default=False))
     >>> c.register_unstructure_hook(TestClass, hook)
     >>> c.unstructure(TestClass())
@@ -99,13 +98,13 @@ creating structure hooks with ``make_dict_structure_fn``.
 .. doctest::
     :options: +SKIP
 
-    >>> from cattr.gen import make_dict_structure_fn
+    >>> from cattrs.gen import make_dict_structure_fn
     >>>
     >>> @define
     ... class TestClass:
     ...    number: int = 1
     >>>
-    >>> c = cattr.GenConverter(forbid_extra_keys=True)
+    >>> c = cattrs.Converter(forbid_extra_keys=True)
     >>> c.structure({"nummber": 2}, TestClass)
     Traceback (most recent call last):
     ...
@@ -116,7 +115,7 @@ creating structure hooks with ``make_dict_structure_fn``.
     TestClass(number=1)
 
 This behavior can only be applied to classes or to the default for the
-`GenConverter`, and has no effect when generating unstructuring functions.
+`Converter`, and has no effect when generating unstructuring functions.
 
 ``rename``
 ----------
@@ -128,13 +127,13 @@ keyword in Python.
 .. doctest::
 
     >>> from pendulum import DateTime
-    >>> from cattr.gen import make_dict_unstructure_fn, make_dict_structure_fn, override
+    >>> from cattrs.gen import make_dict_unstructure_fn, make_dict_structure_fn, override
     >>>
     >>> @define
     ... class ExampleClass:
     ...     klass: Optional[int]
     >>>
-    >>> c = cattr.Converter()
+    >>> c = cattrs.Converter()
     >>> unst_hook = make_dict_unstructure_fn(ExampleClass, c, klass=override(rename="class"))
     >>> st_hook = make_dict_structure_fn(ExampleClass, c, klass=override(rename="class"))
     >>> c.register_unstructure_hook(ExampleClass, unst_hook)
@@ -154,13 +153,13 @@ or unstructuring function.
 
 .. doctest::
 
-    >>> from cattr.gen import make_dict_unstructure_fn, override
+    >>> from cattrs.gen import make_dict_unstructure_fn, override
     >>>
     >>> @define
     ... class ExampleClass:
     ...     an_int: int
     >>>
-    >>> c = cattr.Converter()
+    >>> c = cattrs.Converter()
     >>> unst_hook = make_dict_unstructure_fn(ExampleClass, c, an_int=override(omit=True))
     >>> c.register_unstructure_hook(ExampleClass, unst_hook)
     >>> c.unstructure(ExampleClass(1))
