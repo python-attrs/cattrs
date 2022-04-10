@@ -1,11 +1,10 @@
 import collections
 import typing
-from typing import Type
 
 import attr
 import pytest
 
-from cattrs import BaseConverter, Converter
+from cattrs import BaseConverter
 
 
 def test_inheritance(converter):
