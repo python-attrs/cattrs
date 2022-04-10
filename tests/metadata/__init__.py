@@ -48,7 +48,7 @@ from .. import gen_attr_names, make_class
 
 is_39_or_later = sys.version_info[:2] >= (3, 9)
 PosArg = Any
-PosArgs = Tuple[Any]
+PosArgs = Tuple[PosArg]
 KwArgs = Dict[str, Any]
 T = TypeVar("T")
 

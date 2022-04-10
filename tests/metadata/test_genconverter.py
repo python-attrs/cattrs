@@ -14,7 +14,7 @@ import attr
 import pytest
 from attr import Factory, define, fields, make_class
 from hypothesis import HealthCheck, assume, given, settings
-from hypothesis.strategies import booleans, lists, sampled_from
+from hypothesis.strategies import booleans, just, lists, one_of, sampled_from
 
 from cattrs import GenConverter as Converter
 from cattrs import UnstructureStrategy
@@ -29,7 +29,7 @@ from . import (
     simple_typed_dataclasses,
 )
 
-unstructure_strats = sampled_from(list(UnstructureStrategy))
+unstructure_strats = one_of(just(s) for s in UnstructureStrategy)
 
 
 @given(simple_typed_classes() | simple_typed_dataclasses(), booleans())
