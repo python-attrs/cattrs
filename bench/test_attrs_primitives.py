@@ -3,7 +3,7 @@ from enum import IntEnum
 import attr
 import pytest
 
-from cattr import Converter, GenConverter, UnstructureStrategy
+from cattr import BaseConverter, Converter, UnstructureStrategy
 
 
 class E(IntEnum):
@@ -45,14 +45,11 @@ class C:
     ad: E
 
 
-@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
+@pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 @pytest.mark.parametrize(
-    "unstructure_strat",
-    [UnstructureStrategy.AS_DICT, UnstructureStrategy.AS_TUPLE],
+    "unstructure_strat", [UnstructureStrategy.AS_DICT, UnstructureStrategy.AS_TUPLE]
 )
-def test_unstructure_attrs_primitives(
-    benchmark, converter_cls, unstructure_strat
-):
+def test_unstructure_attrs_primitives(benchmark, converter_cls, unstructure_strat):
     """Benchmark a large (30 attributes) attrs class containing primitives."""
 
     c = converter_cls(unstruct_strat=unstructure_strat)
@@ -94,14 +91,11 @@ def test_unstructure_attrs_primitives(
     )
 
 
-@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
+@pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 @pytest.mark.parametrize(
-    "unstructure_strat",
-    [UnstructureStrategy.AS_DICT, UnstructureStrategy.AS_TUPLE],
+    "unstructure_strat", [UnstructureStrategy.AS_DICT, UnstructureStrategy.AS_TUPLE]
 )
-def test_structure_attrs_primitives(
-    benchmark, converter_cls, unstructure_strat
-):
+def test_structure_attrs_primitives(benchmark, converter_cls, unstructure_strat):
     """Benchmark a large (30 attributes) attrs class containing primitives."""
 
     c = converter_cls(unstruct_strat=unstructure_strat)

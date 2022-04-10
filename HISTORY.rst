@@ -3,8 +3,11 @@ History
 =======
 22.2.0 (UNRELEASED)
 -------------------
-* cattrs now supports un/structuring `kw_only` fields on attrs classes into/from dictionaries.
+* cattrs now supports un/structuring ``kw_only`` fields on attrs classes into/from dictionaries.
   (`#247 <https://github.com/python-attrs/cattrs/pull/247>`_)
+* ``cattrs.Converter`` has been renamed to ``cattrs.BaseConverter``, and ``cattrs.GenConverter`` to ``cattrs.Converter``.
+  The ``GenConverter`` symbol is still available for backwards compatibility, but is deprecated.
+  If you were depending on functionality specific to the old ``Converter``, change your import to ``from cattrs import BaseConverter``.
 
 22.1.0 (2022-04-03)
 -------------------

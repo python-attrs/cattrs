@@ -1,3 +1,8 @@
-from cattrs.converters import Converter, GenConverter, UnstructureStrategy
+from cattrs.converters import (
+    BaseConverter,
+    Converter,
+    GenConverter,
+    UnstructureStrategy,
+)
 
-__all__ = ["Converter", "GenConverter", "UnstructureStrategy"]
+__all__ = ["BaseConverter", "Converter", "GenConverter", "UnstructureStrategy"]

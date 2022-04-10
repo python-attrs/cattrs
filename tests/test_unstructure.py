@@ -5,7 +5,7 @@ from attr import asdict, astuple
 from hypothesis import given
 from hypothesis.strategies import data, just, lists, one_of, sampled_from
 
-from cattr.converters import Converter, UnstructureStrategy
+from cattr.converters import BaseConverter, UnstructureStrategy
 
 from . import (
     dicts_of_primitives,
@@ -26,7 +26,7 @@ unstruct_strats = sampled_from(
 @given(seqs_of_primitives, unstruct_strats)
 def test_seq_unstructure(seq_and_type, dump_strat):
     """Dumping a sequence of primitives is a simple copy operation."""
-    converter = Converter(unstruct_strat=dump_strat)
+    converter = BaseConverter(unstruct_strat=dump_strat)
     assert converter.unstruct_strat is dump_strat
     seq = seq_and_type[0]
     dumped = converter.unstructure(seq)
@@ -39,7 +39,7 @@ def test_seq_unstructure(seq_and_type, dump_strat):
 @given(sets_of_primitives, unstruct_strats)
 def test_set_unstructure(set_and_type, dump_strat):
     """Dumping a set of primitives is a simple copy operation."""
-    converter = Converter(unstruct_strat=dump_strat)
+    converter = BaseConverter(unstruct_strat=dump_strat)
     assert converter.unstruct_strat is dump_strat
     set = set_and_type[0]
     dumped = converter.unstructure(set)
@@ -52,7 +52,7 @@ def test_set_unstructure(set_and_type, dump_strat):
 @given(dicts_of_primitives, unstruct_strats)
 def test_mapping_unstructure(map_and_type, dump_strat):
     """Dumping a mapping of primitives is a simple copy operation."""
-    converter = Converter(unstruct_strat=dump_strat)
+    converter = BaseConverter(unstruct_strat=dump_strat)
     mapping = map_and_type[0]
     dumped = converter.unstructure(mapping)
     assert dumped == mapping
@@ -63,7 +63,7 @@ def test_mapping_unstructure(map_and_type, dump_strat):
 @given(enums_of_primitives(), unstruct_strats, data())
 def test_enum_unstructure(enum, dump_strat, data):
     """Dumping enums of primitives converts them to their primitives."""
-    converter = Converter(unstruct_strat=dump_strat)
+    converter = BaseConverter(unstruct_strat=dump_strat)
 
     member = data.draw(sampled_from(list(enum.__members__.values())))
 
@@ -73,7 +73,7 @@ def test_enum_unstructure(enum, dump_strat, data):
 @given(nested_classes)
 def test_attrs_asdict_unstructure(nested_class):
     """Our dumping should be identical to `attrs`."""
-    converter = Converter()
+    converter = BaseConverter()
     instance = nested_class[0]()
     assert converter.unstructure(instance) == asdict(instance)
 
@@ -81,7 +81,7 @@ def test_attrs_asdict_unstructure(nested_class):
 @given(nested_classes)
 def test_attrs_astuple_unstructure(nested_class):
     """Our dumping should be identical to `attrs`."""
-    converter = Converter(unstruct_strat=UnstructureStrategy.AS_TUPLE)
+    converter = BaseConverter(unstruct_strat=UnstructureStrategy.AS_TUPLE)
     instance = nested_class[0]()
     assert converter.unstructure(instance) == astuple(instance)
 
@@ -91,7 +91,7 @@ def test_unstructure_hooks(cl_and_vals):
     """
     Unstructure hooks work.
     """
-    converter = Converter()
+    converter = BaseConverter()
     cl, vals, kwargs = cl_and_vals
     inst = cl(*vals, **kwargs)
 
@@ -127,7 +127,7 @@ def test_unstructure_hook_func(converter):
 @given(lists(simple_classes()), one_of(just(tuple), just(list)))
 def test_seq_of_simple_classes_unstructure(cls_and_vals, seq_type: Type):
     """Dumping a sequence of primitives is a simple copy operation."""
-    converter = Converter()
+    converter = BaseConverter()
 
     inputs = seq_type(cl(*vals, **kwargs) for cl, vals, kwargs in cls_and_vals)
     outputs = converter.unstructure(inputs)

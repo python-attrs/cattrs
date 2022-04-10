@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from attr import define
 
-from cattrs import GenConverter
+from cattrs import Converter
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn
 
 
@@ -41,7 +41,7 @@ class OuterDataclass:
 
 
 def test_roundtrip():
-    converter = GenConverter()
+    converter = Converter()
 
     fn = make_dict_unstructure_fn(Outer, converter)
 
@@ -59,7 +59,7 @@ def test_roundtrip():
 
 
 def test_roundtrip_dc():
-    converter = GenConverter()
+    converter = Converter()
 
     fn = make_dict_unstructure_fn(OuterDataclass, converter)
     converter.register_unstructure_hook(OuterDataclass, fn)

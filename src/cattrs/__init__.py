@@ -1,16 +1,14 @@
-from cattr import converters, disambiguators, dispatch, errors, gen, preconf
-
-from .converters import Converter, GenConverter, UnstructureStrategy
+from .converters import BaseConverter, Converter, UnstructureStrategy
 from .gen import override
 
 __all__ = (
-    "Converter",
+    "BaseConverter",
     "converters",
     "disambiguators",
     "dispatch",
     "errors",
     "gen",
-    "GenConverter",
+    "Converter",
     "global_converter",
     "override",
     "preconf",
@@ -26,7 +24,7 @@ __all__ = (
 )
 
 
-global_converter = GenConverter()
+global_converter = Converter()
 
 unstructure = global_converter.unstructure
 structure = global_converter.structure

@@ -4,11 +4,11 @@ import attr
 import pytest
 
 from cattrs._compat import is_py310_plus
-from cattrs.converters import Converter, GenConverter
+from cattrs.converters import BaseConverter, Converter
 
 
-@pytest.mark.parametrize("cls", (Converter, GenConverter))
-def test_custom_union_toplevel_roundtrip(cls: Type[Converter]):
+@pytest.mark.parametrize("cls", (BaseConverter, Converter))
+def test_custom_union_toplevel_roundtrip(cls: Type[BaseConverter]):
     """
     Test custom code union handling.
 
@@ -40,8 +40,8 @@ def test_custom_union_toplevel_roundtrip(cls: Type[Converter]):
 
 
 @pytest.mark.skipif(not is_py310_plus, reason="3.10 union syntax")
-@pytest.mark.parametrize("cls", (Converter, GenConverter))
-def test_310_custom_union_toplevel_roundtrip(cls: Type[Converter]):
+@pytest.mark.parametrize("cls", (BaseConverter, Converter))
+def test_310_custom_union_toplevel_roundtrip(cls: Type[BaseConverter]):
     """
     Test custom code union handling.
 
@@ -72,8 +72,8 @@ def test_310_custom_union_toplevel_roundtrip(cls: Type[Converter]):
     assert c.structure(unstructured, A | B) == inst
 
 
-@pytest.mark.parametrize("cls", (Converter, GenConverter))
-def test_custom_union_clsfield_roundtrip(cls: Type[Converter]):
+@pytest.mark.parametrize("cls", (BaseConverter, Converter))
+def test_custom_union_clsfield_roundtrip(cls: Type[BaseConverter]):
     """
     Test custom code union handling.
 

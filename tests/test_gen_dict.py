@@ -7,7 +7,7 @@ from attr._make import NOTHING
 from hypothesis import assume, given
 from hypothesis.strategies import data, just, one_of, sampled_from
 
-from cattrs import Converter, GenConverter
+from cattrs import BaseConverter, Converter
 from cattrs._compat import adapted_fields, fields
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
@@ -22,7 +22,7 @@ from .metadata import (
 
 @given(nested_classes | simple_classes())
 def test_unmodified_generated_unstructuring(cl_and_vals):
-    converter = Converter()
+    converter = BaseConverter()
     cl, vals, kwargs = cl_and_vals
     fn = make_dict_unstructure_fn(cl, converter)
 
@@ -40,7 +40,7 @@ def test_unmodified_generated_unstructuring(cl_and_vals):
 @given(nested_classes | simple_classes())
 def test_nodefs_generated_unstructuring(cl_and_vals):
     """Test omitting default values on a per-attribute basis."""
-    converter = Converter()
+    converter = BaseConverter()
     cl, vals, kwargs = cl_and_vals
 
     attr_is_default = False
@@ -65,8 +65,10 @@ def test_nodefs_generated_unstructuring(cl_and_vals):
         assert attr.name not in res
 
 
-@given(one_of(just(Converter), just(GenConverter)), nested_classes | simple_classes())
-def test_nodefs_generated_unstructuring_cl(converter_cls: Type[Converter], cl_and_vals):
+@given(one_of(just(BaseConverter), just(Converter)), nested_classes | simple_classes())
+def test_nodefs_generated_unstructuring_cl(
+    converter_cls: Type[BaseConverter], cl_and_vals
+):
     """Test omitting default values on a per-class basis."""
     converter = converter_cls()
     cl, vals, kwargs = cl_and_vals
@@ -107,7 +109,7 @@ def test_nodefs_generated_unstructuring_cl(converter_cls: Type[Converter], cl_an
 
 
 @given(
-    one_of(just(Converter), just(GenConverter)),
+    one_of(just(BaseConverter), just(Converter)),
     nested_classes | simple_classes() | simple_typed_dataclasses(),
 )
 def test_individual_overrides(converter_cls, cl_and_vals):
@@ -166,7 +168,7 @@ def test_individual_overrides(converter_cls, cl_and_vals):
 
 @given(nested_typed_classes() | simple_typed_classes() | simple_typed_dataclasses())
 def test_unmodified_generated_structuring(cl_and_vals):
-    converter = Converter()
+    converter = BaseConverter()
     cl, vals, kwargs = cl_and_vals
     fn = make_dict_structure_fn(cl, converter)
 
@@ -187,7 +189,7 @@ def test_unmodified_generated_structuring(cl_and_vals):
     simple_typed_classes(min_attrs=1) | simple_typed_dataclasses(min_attrs=1), data()
 )
 def test_renaming(cl_and_vals, data):
-    converter = Converter()
+    converter = BaseConverter()
     cl, vals, kwargs = cl_and_vals
     attrs = fields(cl)
 
@@ -215,7 +217,7 @@ def test_renaming(cl_and_vals, data):
 
 
 def test_renaming_forbid_extra_keys():
-    converter = Converter()
+    converter = BaseConverter()
 
     @define
     class A:
@@ -243,7 +245,7 @@ def test_renaming_forbid_extra_keys():
 
 
 def test_omitting():
-    converter = Converter()
+    converter = BaseConverter()
 
     @define
     class A:
@@ -260,7 +262,7 @@ def test_omitting():
 @pytest.mark.parametrize("extended_validation", [True, False])
 def test_omitting_structure(extended_validation: bool):
     """Omitting fields works with generated structuring functions."""
-    converter = Converter()
+    converter = BaseConverter()
 
     @define
     class A:

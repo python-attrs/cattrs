@@ -2,9 +2,8 @@ import dataclasses
 from typing import List
 
 import attr
-import pytest
 
-from cattrs import Converter, GenConverter
+from cattrs import BaseConverter
 
 
 @dataclasses.dataclass
@@ -17,34 +16,28 @@ class Container:
     foos: List[Foo]
 
 
-@pytest.mark.parametrize("converter_cls", [GenConverter, Converter])
-def test_dataclasses_in_attrs(converter_cls):
+def test_dataclasses_in_attrs(converter: BaseConverter):
     struct = Container([Foo("bar")])
 
     unstruct = {"foos": [{"bar": "bar"}]}
 
-    converter = converter_cls()
     assert converter.unstructure(struct) == unstruct
     assert converter.structure(unstruct, Container) == struct
 
 
-@pytest.mark.parametrize("converter_cls", [GenConverter, Converter])
-def test_dataclasses_in_container(converter_cls):
+def test_dataclasses_in_container(converter: BaseConverter):
     struct = [Foo("bar"), Foo("bat")]
 
     unstruct = [{"bar": "bar"}, {"bar": "bat"}]
 
-    converter = converter_cls()
     assert converter.unstructure(struct) == unstruct
     assert converter.structure(unstruct, List[Foo]) == struct
 
 
-@pytest.mark.parametrize("converter_cls", [GenConverter, Converter])
-def test_dataclasses(converter_cls):
+def test_dataclasses(converter: BaseConverter):
     struct = Foo("bar")
 
     unstruct = {"bar": "bar"}
 
-    converter = converter_cls()
     assert converter.unstructure(struct) == unstruct
     assert converter.structure(unstruct, Foo) == struct

@@ -1,3 +1,7 @@
-from cattr.preconf import validate_datetime
+from datetime import datetime
 
-__all__ = ["validate_datetime"]
+
+def validate_datetime(v, _):
+    if not isinstance(v, datetime):
+        raise Exception(f"Expected datetime, got {v}")
+    return v

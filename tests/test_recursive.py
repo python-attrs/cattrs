@@ -5,7 +5,7 @@ from typing import List
 
 from attr import define
 
-from cattr import GenConverter
+from cattr import Converter
 
 
 @define
@@ -14,7 +14,7 @@ class A:
 
 
 def test_simple_recursive():
-    c = GenConverter()
+    c = Converter()
 
     orig = A([A([])])
     unstructured = c.unstructure(orig)

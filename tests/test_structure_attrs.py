@@ -10,7 +10,7 @@ from hypothesis import assume, given
 from hypothesis.strategies import data, lists, sampled_from
 
 from cattrs._compat import is_py37
-from cattrs.converters import Converter, GenConverter
+from cattrs.converters import BaseConverter, Converter
 
 from . import simple_classes
 
@@ -18,7 +18,7 @@ from . import simple_classes
 @given(simple_classes())
 def test_structure_simple_from_dict(cl_and_vals):
     """Test structuring non-nested attrs classes dumped with asdict."""
-    converter = Converter()
+    converter = BaseConverter()
     cl, vals, kwargs = cl_and_vals
     obj = cl(*vals, **kwargs)
 
@@ -31,7 +31,7 @@ def test_structure_simple_from_dict(cl_and_vals):
 @given(simple_classes(defaults=True, min_attrs=1, frozen=False), data())
 def test_structure_simple_from_dict_default(cl_and_vals, data):
     """Test structuring non-nested attrs classes with default value."""
-    converter = Converter()
+    converter = BaseConverter()
     cl, vals, kwargs = cl_and_vals
     obj = cl(*vals, **kwargs)
     attrs_with_defaults = [a for a in fields(cl) if a.default is not NOTHING]
@@ -56,7 +56,7 @@ def test_structure_simple_from_dict_default(cl_and_vals, data):
 @given(simple_classes())
 def test_roundtrip(cl_and_vals):
     """We dump the class, then we load it."""
-    converter = Converter()
+    converter = BaseConverter()
     cl, vals, kwargs = cl_and_vals
     obj = cl(*vals, **kwargs)
 
@@ -69,7 +69,7 @@ def test_roundtrip(cl_and_vals):
 @given(simple_classes(kw_only=False))
 def test_structure_tuple(cl_and_vals):
     """Test loading from a tuple, by registering the loader."""
-    converter = Converter()
+    converter = BaseConverter()
     cl, vals, kwargs = cl_and_vals
     converter.register_structure_hook(cl, converter.structure_attrs_fromtuple)
     obj = cl(*vals, **kwargs)
@@ -83,7 +83,7 @@ def test_structure_tuple(cl_and_vals):
 @given(simple_classes(defaults=False), simple_classes(defaults=False))
 def test_structure_union(cl_and_vals_a, cl_and_vals_b):
     """Structuring of automatically-disambiguable unions works."""
-    converter = Converter()
+    converter = BaseConverter()
     cl_a, vals_a, kwargs_a = cl_and_vals_a
     cl_b, vals_b, kwargs_b = cl_and_vals_b
     a_field_names = {a.name for a in fields(cl_a)}
@@ -103,7 +103,7 @@ def test_structure_union(cl_and_vals_a, cl_and_vals_b):
 @given(simple_classes(defaults=False), simple_classes(defaults=False))
 def test_structure_union_none(cl_and_vals_a, cl_and_vals_b):
     """Structuring of automatically-disambiguable unions works."""
-    converter = Converter()
+    converter = BaseConverter()
     cl_a, vals_a, kwargs_a = cl_and_vals_a
     cl_b, _, _ = cl_and_vals_b
     a_field_names = {a.name for a in fields(cl_a)}
@@ -123,7 +123,7 @@ def test_structure_union_none(cl_and_vals_a, cl_and_vals_b):
 @given(simple_classes(), simple_classes())
 def test_structure_union_explicit(cl_and_vals_a, cl_and_vals_b):
     """Structuring of manually-disambiguable unions works."""
-    converter = Converter()
+    converter = BaseConverter()
     cl_a, vals_a, kwargs_a = cl_and_vals_a
     cl_b, vals_b, kwargs_b = cl_and_vals_b
 
@@ -138,7 +138,7 @@ def test_structure_union_explicit(cl_and_vals_a, cl_and_vals_b):
 
 
 @pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
-@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
+@pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal(converter_cls):
     """Structuring a class with a literal field works."""
     from typing import Literal
@@ -155,7 +155,7 @@ def test_structure_literal(converter_cls):
 
 
 @pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
-@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
+@pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_enum(converter_cls):
     """Structuring a class with a literal field works."""
     from typing import Literal
@@ -176,7 +176,7 @@ def test_structure_literal_enum(converter_cls):
 
 
 @pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
-@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
+@pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_multiple(converter_cls):
     """Structuring a class with a literal field works."""
     from typing import Literal
@@ -212,7 +212,7 @@ def test_structure_literal_multiple(converter_cls):
 
 
 @pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
-@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
+@pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_error(converter_cls):
     """Structuring a class with a literal field can raise an error."""
     from typing import Literal
@@ -228,7 +228,7 @@ def test_structure_literal_error(converter_cls):
 
 
 @pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
-@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
+@pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_multiple_error(converter_cls):
     """Structuring a class with a literal field can raise an error."""
     from typing import Literal
@@ -243,7 +243,7 @@ def test_structure_literal_multiple_error(converter_cls):
         converter.structure({"literal_field": 3}, ClassWithLiteral)
 
 
-@pytest.mark.parametrize("converter_type", [Converter, GenConverter])
+@pytest.mark.parametrize("converter_type", [BaseConverter, Converter])
 def test_structure_fallback_to_attrib_converters(converter_type):
     attrib_converter = Mock()
     attrib_converter.side_effect = lambda val: str(val)
@@ -276,7 +276,7 @@ def test_structure_fallback_to_attrib_converters(converter_type):
     assert inst.z == 42
 
 
-@pytest.mark.parametrize("converter_type", [Converter, GenConverter])
+@pytest.mark.parametrize("converter_type", [BaseConverter, Converter])
 def test_structure_prefers_attrib_converters(converter_type):
     attrib_converter = Mock()
     attrib_converter.side_effect = lambda val: str(val)

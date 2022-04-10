@@ -4,13 +4,12 @@ from typing import Dict, List, Mapping, MutableMapping
 import attr
 import pytest
 
-from cattr import Converter, GenConverter, UnstructureStrategy
+from cattr import BaseConverter, Converter, UnstructureStrategy
 
 
-@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
+@pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 @pytest.mark.parametrize(
-    "unstructure_strat",
-    [UnstructureStrategy.AS_DICT, UnstructureStrategy.AS_TUPLE],
+    "unstructure_strat", [UnstructureStrategy.AS_DICT, UnstructureStrategy.AS_TUPLE]
 )
 def test_unstructure_attrs_lists(benchmark, converter_cls, unstructure_strat):
     """
@@ -94,14 +93,11 @@ def test_unstructure_attrs_lists(benchmark, converter_cls, unstructure_strat):
     )
 
 
-@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
+@pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 @pytest.mark.parametrize(
-    "unstructure_strat",
-    [UnstructureStrategy.AS_DICT, UnstructureStrategy.AS_TUPLE],
+    "unstructure_strat", [UnstructureStrategy.AS_DICT, UnstructureStrategy.AS_TUPLE]
 )
-def test_unstructure_attrs_mappings(
-    benchmark, converter_cls, unstructure_strat
-):
+def test_unstructure_attrs_mappings(benchmark, converter_cls, unstructure_strat):
     """
     Benchmark an attrs class containing mappings.
     """
@@ -128,7 +124,7 @@ def test_unstructure_attrs_mappings(
     )
 
 
-@pytest.mark.parametrize("converter_cls", [Converter, GenConverter])
+@pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_attrs_mappings(benchmark, converter_cls):
     """
     Benchmark an attrs class containing mappings.
