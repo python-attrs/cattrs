@@ -21,10 +21,10 @@ structuring; it will simply be passed through.
 
 .. doctest::
 
-    >>> cattr.structure(1, Any)
+    >>> cattrs.structure(1, Any)
     1
     >>> d = {1: 1}
-    >>> cattr.structure(d, Any) is d
+    >>> cattrs.structure(d, Any) is d
     True
 
 ``int``, ``float``, ``str``, ``bytes``
@@ -34,9 +34,9 @@ Use any of these primitive types to convert the object to the type.
 
 .. doctest::
 
-    >>> cattr.structure(1, str)
+    >>> cattrs.structure(1, str)
     '1'
-    >>> cattr.structure("1", float)
+    >>> cattrs.structure("1", float)
     1.0
 
 In case the conversion isn't possible, the expected exceptions will be
@@ -45,7 +45,7 @@ do the conversion yourself, directly.
 
 .. code-block:: python
 
-    >>> cattr.structure("not-an-int", int)
+    >>> cattrs.structure("not-an-int", int)
     Traceback (most recent call last):
     ...
     ValueError: invalid literal for int() with base 10: 'not-an-int'
@@ -64,14 +64,14 @@ like tuples.
     ...    MAINE_COON = "maine_coon"
     ...    SACRED_BIRMAN = "birman"
     ...
-    >>> cattr.structure("siamese", CatBreed)
+    >>> cattrs.structure("siamese", CatBreed)
     <CatBreed.SIAMESE: 'siamese'>
 
 Again, in case of errors, the expected exceptions will fly out.
 
 .. code-block:: python
 
-    >>> cattr.structure("alsatian", CatBreed)
+    >>> cattrs.structure("alsatian", CatBreed)
     Traceback (most recent call last):
     ...
     ValueError: 'alsatian' is not a valid CatBreed
@@ -86,11 +86,11 @@ Optionals
 
 .. doctest::
 
-    >>> cattr.structure(None, int)
+    >>> cattrs.structure(None, int)
     Traceback (most recent call last):
     ...
     TypeError: int() argument must be a string, a bytes-like object or a number, not 'NoneType'
-    >>> cattr.structure(None, Optional[int])
+    >>> cattrs.structure(None, Optional[int])
     >>> # None was returned.
 
 Bare ``Optional`` s (non-parameterized, just ``Optional``, as opposed to
@@ -100,7 +100,7 @@ This generic type is composable with all other converters.
 
 .. doctest::
 
-    >>> cattr.structure(1, Optional[float])
+    >>> cattrs.structure(1, Optional[float])
     1.0
 
 Lists
@@ -119,14 +119,14 @@ copy an iterable into a list. A bare type, for example ``Sequence`` instead of
 
 .. doctest::
 
-    >>> cattr.structure((1, 2, 3), MutableSequence[int])
+    >>> cattrs.structure((1, 2, 3), MutableSequence[int])
     [1, 2, 3]
 
 These generic types are composable with all other converters.
 
 .. doctest::
 
-    >>> cattr.structure((1, None, 3), List[Optional[str]])
+    >>> cattrs.structure((1, None, 3), list[Optional[str]])
     ['1', None, '3']
 
 Sets and frozensets
@@ -150,14 +150,14 @@ instead of ``MutableSet[int]``, is equivalent to ``MutableSet[Any]``.
 
 .. doctest::
 
-    >>> cattr.structure([1, 2, 3, 4], Set)
+    >>> cattrs.structure([1, 2, 3, 4], Set)
     {1, 2, 3, 4}
 
 These generic types are composable with all other converters.
 
 .. doctest::
 
-    >>> cattr.structure([[1, 2], [3, 4]], Set[FrozenSet[str]])
+    >>> cattrs.structure([[1, 2], [3, 4]], set[frozenset[str]])
     {frozenset({'1', '2'}), frozenset({'4', '3'})}
 
 Dictionaries
@@ -181,7 +181,7 @@ they will be treated as ``Any`` too.
 .. doctest::
 
     >>> from collections import OrderedDict
-    >>> cattr.structure(OrderedDict([(1, 2), (3, 4)]), Dict)
+    >>> cattrs.structure(OrderedDict([(1, 2), (3, 4)]), Dict)
     {1: 2, 3: 4}
 
 These generic types are composable with all other converters. Note both keys
@@ -189,7 +189,7 @@ and values can be converted.
 
 .. doctest::
 
-    >>> cattr.structure({1: None, 2: 2.0}, Dict[str, Optional[int]])
+    >>> cattrs.structure({1: None, 2: 2.0}, dict[str, Optional[int]])
     {'1': None, '2': 2}
 
 Homogeneous and heterogeneous tuples
@@ -212,14 +212,14 @@ In all cases a tuple will be returned. Any type parameters set to
 
 .. doctest::
 
-    >>> cattr.structure([1, 2, 3], Tuple[int, str, float])
+    >>> cattrs.structure([1, 2, 3], tuple[int, str, float])
     (1, '2', 3.0)
 
 The tuple conversion is composable with all other converters.
 
 .. doctest::
 
-    >>> cattr.structure([{1: 1}, {2: 2}], Tuple[Dict[str, float], ...])
+    >>> cattrs.structure([{1: 1}, {2: 2}], tuple[dict[str, float], ...])
     ({'1': 1.0}, {'2': 2.0})
 
 Unions
@@ -287,7 +287,7 @@ and their own converters work out of the box. Given a mapping ``d`` and class
     ...     a: int
     ...     b: int
     ...
-    >>> cattr.structure({'a': 1, 'b': '2'}, A)
+    >>> cattrs.structure({'a': 1, 'b': '2'}, A)
     A(a=1, b=2)
 
 Classes like these deconstructed into tuples can be structured using
@@ -301,7 +301,7 @@ Classes like these deconstructed into tuples can be structured using
     ...     a: str
     ...     b: int
     ...
-    >>> cattr.structure_attrs_fromtuple(['string', '2'], A)
+    >>> cattrs.structure_attrs_fromtuple(['string', '2'], A)
     A(a='string', b=2)
 
 Loading from tuples can be made the default by creating a new ``Converter`` with
@@ -309,7 +309,7 @@ Loading from tuples can be made the default by creating a new ``Converter`` with
 
 .. doctest::
 
-    >>> converter = cattr.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
+    >>> converter = cattrs.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
     >>> @define
     ... class A:
     ...     a: str
@@ -332,7 +332,7 @@ attributes with ``attrib``.
 .. doctest::
 
     >>> from ipaddress import IPv4Address, ip_address
-    >>> converter = cattr.Converter()
+    >>> converter = cattrs.Converter()
 
     # Note: register_structure_hook has not been called, so this will fallback to 'ip_address'
     >>> @define
@@ -347,7 +347,7 @@ can be inverted by setting ``prefer_attrib_converters`` to ``True``.
 
 .. doctest::
 
-    >>> converter = cattr.Converter(prefer_attrib_converters=True)
+    >>> converter = cattrs.Converter(prefer_attrib_converters=True)
 
     >>> converter.register_structure_hook(int, lambda v, t: int(v))
 
@@ -392,7 +392,7 @@ attributes holding ``attrs`` classes and dataclasses.
     ... class B:
     ...     b: A
     ...
-    >>> cattr.structure({'b': {'a': '1'}}, B)
+    >>> cattrs.structure({'b': {'a': '1'}}, B)
     B(b=A(a=1))
 
 Registering custom structuring hooks
@@ -406,18 +406,18 @@ Here's an example involving a simple, classic (i.e. non-``attrs``) Python class.
 
 .. doctest::
 
-    >>> class C(object):
+    >>> class C:
     ...     def __init__(self, a):
     ...         self.a = a
     ...     def __repr__(self):
     ...         return f'C(a={self.a})'
-    >>> cattr.structure({'a': 1}, C)
+    >>> cattrs.structure({'a': 1}, C)
     Traceback (most recent call last):
     ...
     StructureHandlerNotFoundError: Unsupported type: <class '__main__.C'>. Register a structure hook for it.
     >>>
-    >>> cattr.register_structure_hook(C, lambda d, t: C(**d))
-    >>> cattr.structure({'a': 1}, C)
+    >>> cattrs.register_structure_hook(C, lambda d, t: C(**d))
+    >>> cattrs.structure({'a': 1}, C)
     C(a=1)
 
 The structuring hooks are callables that take two arguments: the object to
@@ -434,7 +434,7 @@ The function-based hooks are evaluated after the class-based hooks. In the case 
 
 .. doctest::
 
-    >>> class D(object):
+    >>> class D:
     ...     custom = True
     ...     def __init__(self, a):
     ...         self.a = a
@@ -443,8 +443,8 @@ The function-based hooks are evaluated after the class-based hooks. In the case 
     ...     @classmethod
     ...     def deserialize(cls, data):
     ...         return cls(data["a"])
-    >>> cattr.register_structure_hook_func(lambda cls: getattr(cls, "custom", False), lambda d, t: t.deserialize(d))
-    >>> cattr.structure({'a': 2}, D)
+    >>> cattrs.register_structure_hook_func(lambda cls: getattr(cls, "custom", False), lambda d, t: t.deserialize(d))
+    >>> cattrs.structure({'a': 2}, D)
     D(a=2)
 
 Structuring hook factories
@@ -454,16 +454,16 @@ Hook factories operate one level higher than structuring hooks; structuring
 hooks are functions registered to a class or predicate, and hook factories
 are functions (registered via a predicate) that produce structuring hooks.
 
-Structuring hooks factories are registered using :py:attr:`cattr.Converter.register_structure_hook_factory`.
+Structuring hooks factories are registered using :py:attr:`cattrs.Converter.register_structure_hook_factory`.
 
 Here's a small example showing how to use factory hooks to apply the `forbid_extra_keys` to all attrs classes:
 
 .. doctest::
 
-    >>> from attr import define, has
+    >>> from attrs import define, has
     >>> from cattrs.gen import make_dict_structure_fn
 
-    >>> c = cattrs.GenConverter()
+    >>> c = cattrs.Converter()
     >>> c.register_structure_hook_factory(has, lambda cl: make_dict_structure_fn(cl, c, _cattrs_forbid_extra_keys=True, _cattrs_detailed_validation=False))
 
     >>> @define
