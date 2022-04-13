@@ -12,7 +12,7 @@ from hypothesis.strategies import data, lists, sampled_from
 from cattrs._compat import is_py37
 from cattrs.converters import BaseConverter, Converter
 
-from . import simple_classes
+from .untyped import simple_classes
 
 
 @given(simple_classes())

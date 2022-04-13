@@ -7,7 +7,7 @@ from hypothesis.strategies import data, just, lists, one_of, sampled_from
 
 from cattr.converters import BaseConverter, UnstructureStrategy
 
-from . import (
+from .untyped import (
     dicts_of_primitives,
     enums_of_primitives,
     nested_classes,
