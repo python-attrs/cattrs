@@ -8,7 +8,7 @@ from hypothesis import HealthCheck, assume, given, settings
 
 from cattrs.disambiguators import create_uniq_field_dis_func
 
-from . import simple_classes
+from .untyped import simple_classes
 
 
 def test_edge_errors():

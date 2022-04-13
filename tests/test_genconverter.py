@@ -21,7 +21,7 @@ from cattrs._compat import is_py39_plus, is_py310_plus
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import make_dict_structure_fn, override
 
-from . import (
+from .typed import (
     nested_typed_classes,
     simple_typed_attrs,
     simple_typed_classes,
@@ -44,14 +44,17 @@ def test_simple_roundtrip(cls_and_vals, detailed_validation):
     assert inst == converter.structure(unstructured, cl)
 
 
-@given(simple_typed_classes(kw_only=False) | simple_typed_dataclasses(), booleans())
-def test_simple_roundtrip_tuple(cls_and_vals, detailed_validation):
+@given(
+    simple_typed_classes(kw_only=False, newtypes=False)
+    | simple_typed_dataclasses(newtypes=False),
+    booleans(),
+)
+def test_simple_roundtrip_tuple(cls_and_vals, dv: bool):
     """
     Simple classes with metadata can be unstructured and restructured.
     """
     converter = Converter(
-        unstruct_strat=UnstructureStrategy.AS_TUPLE,
-        detailed_validation=detailed_validation,
+        unstruct_strat=UnstructureStrategy.AS_TUPLE, detailed_validation=dv
     )
     cl, vals, _ = cls_and_vals
     inst = cl(*vals)
@@ -75,7 +78,7 @@ def test_simple_roundtrip_defaults(attr_and_vals):
     assert inst == converter.structure(converter.unstructure(inst), cl)
 
 
-@given(simple_typed_attrs(defaults=True, kw_only=False))
+@given(simple_typed_attrs(defaults=True, kw_only=False, newtypes=False))
 def test_simple_roundtrip_defaults_tuple(attr_and_vals):
     """
     Simple classes with metadata can be unstructured and restructured.
@@ -90,7 +93,10 @@ def test_simple_roundtrip_defaults_tuple(attr_and_vals):
     assert inst == converter.structure(converter.unstructure(inst), cl)
 
 
-@given(simple_typed_classes() | simple_typed_dataclasses(), unstructure_strats)
+@given(
+    simple_typed_classes(newtypes=False) | simple_typed_dataclasses(newtypes=False),
+    unstructure_strats,
+)
 def test_simple_roundtrip_with_extra_keys_forbidden(cls_and_vals, strat):
     """
     Simple classes can be unstructured and restructured with forbid_extra_keys=True.
@@ -200,8 +206,11 @@ def test_nested_roundtrip(cls_and_vals, omit_if_default):
     assert inst == converter.structure(unstructured, cl)
 
 
-@given(nested_typed_classes(defaults=True, min_attrs=1, kw_only=False), booleans())
-def test_nested_roundtrip_tuple(cls_and_vals, omit_if_default):
+@given(
+    nested_typed_classes(defaults=True, min_attrs=1, kw_only=False, newtypes=False),
+    booleans(),
+)
+def test_nested_roundtrip_tuple(cls_and_vals, omit_if_default: bool):
     """
     Nested classes with metadata can be unstructured and restructured.
     """
@@ -217,8 +226,8 @@ def test_nested_roundtrip_tuple(cls_and_vals, omit_if_default):
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
 @given(
-    simple_typed_classes(defaults=False),
-    simple_typed_classes(defaults=False),
+    simple_typed_classes(defaults=False, newtypes=False),
+    simple_typed_classes(defaults=False, newtypes=False),
     unstructure_strats,
 )
 def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):

@@ -20,6 +20,7 @@ from ._compat import (
     Sequence,
     Set,
     fields,
+    get_newtype_base,
     get_origin,
     has,
     has_with_generic,
@@ -150,6 +151,7 @@ class BaseConverter:
             [
                 (lambda cl: cl is Any or cl is Optional or cl is None, lambda v, _: v),
                 (is_generic_attrs, self._gen_structure_generic, True),
+                (lambda t: get_newtype_base(t) is not None, self._structure_newtype),
                 (is_literal, self._structure_simple_literal),
                 (is_literal_containing_enums, self._structure_enum_literal),
                 (is_sequence, self._structure_list),
@@ -392,6 +394,10 @@ class BaseConverter:
             return vals[val]
         except KeyError:
             raise Exception(f"{val} not in literal {type}") from None
+
+    def _structure_newtype(self, val, type):
+        base = get_newtype_base(type)
+        return self._structure_func.dispatch(base)(val, base)
 
     # Attrs classes.
 
@@ -715,9 +721,20 @@ class Converter(BaseConverter):
             is_frozenset,
             lambda cl: self.gen_unstructure_iterable(cl, unstructure_to=frozenset),
         )
+        self.register_unstructure_hook_factory(
+            lambda t: get_newtype_base(t) is not None,
+            lambda t: self._unstructure_func.dispatch(get_newtype_base(t)),
+        )
         self.register_structure_hook_factory(is_annotated, self.gen_structure_annotated)
         self.register_structure_hook_factory(is_mapping, self.gen_structure_mapping)
         self.register_structure_hook_factory(is_counter, self.gen_structure_counter)
+        self.register_structure_hook_factory(
+            lambda t: get_newtype_base(t) is not None, self.get_structure_newtype
+        )
+
+    def get_structure_newtype(self, type: Type[T]) -> Callable[[Any, Any], T]:
+        base = get_newtype_base(type)
+        return self._structure_func.dispatch(base)
 
     def gen_unstructure_annotated(self, type):
         origin = type.__origin__

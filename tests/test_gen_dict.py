@@ -12,12 +12,8 @@ from cattrs._compat import adapted_fields, fields
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
-from . import nested_classes, simple_classes
-from .metadata import (
-    nested_typed_classes,
-    simple_typed_classes,
-    simple_typed_dataclasses,
-)
+from .typed import nested_typed_classes, simple_typed_classes, simple_typed_dataclasses
+from .untyped import nested_classes, simple_classes
 
 
 @given(nested_classes | simple_classes())
@@ -166,11 +162,16 @@ def test_individual_overrides(converter_cls, cl_and_vals):
                         assert attr.name in res
 
 
-@given(nested_typed_classes() | simple_typed_classes() | simple_typed_dataclasses())
-def test_unmodified_generated_structuring(cl_and_vals):
-    converter = BaseConverter()
+@given(
+    cl_and_vals=nested_typed_classes()
+    | simple_typed_classes()
+    | simple_typed_dataclasses(),
+    dv=...,
+)
+def test_unmodified_generated_structuring(cl_and_vals, dv: bool):
+    converter = Converter(detailed_validation=dv)
     cl, vals, kwargs = cl_and_vals
-    fn = make_dict_structure_fn(cl, converter)
+    fn = make_dict_structure_fn(cl, converter, _cattrs_detailed_validation=dv)
 
     inst = cl(*vals, **kwargs)
 
@@ -189,7 +190,7 @@ def test_unmodified_generated_structuring(cl_and_vals):
     simple_typed_classes(min_attrs=1) | simple_typed_dataclasses(min_attrs=1), data()
 )
 def test_renaming(cl_and_vals, data):
-    converter = BaseConverter()
+    converter = Converter()
     cl, vals, kwargs = cl_and_vals
     attrs = fields(cl)
 

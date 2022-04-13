@@ -7,6 +7,7 @@ from typing import Mapping as TypingMapping
 from typing import MutableMapping as TypingMutableMapping
 from typing import MutableSequence as TypingMutableSequence
 from typing import MutableSet as TypingMutableSet
+from typing import NewType, Optional
 from typing import Sequence as TypingSequence
 from typing import Set as TypingSet
 from typing import Tuple, get_type_hints
@@ -133,6 +134,15 @@ if is_py37 or is_py38:
             obj is Union or isinstance(obj, _GenericAlias) and obj.__origin__ is Union
         )
 
+    def get_newtype_base(typ: Any) -> Optional[type]:
+        if (
+            (supertype := getattr(type, "__supertype__", None)) is not None
+            and getattr(typ, "__qualname__", "") == "NewType.<locals>.new_type"
+            and typ.__module__ in ("typing", "typing_extensions")
+        ):
+            return supertype
+        return None
+
     def is_sequence(type: Any) -> bool:
         return type in (List, list, Tuple, tuple) or (
             type.__class__ is _GenericAlias
@@ -258,6 +268,11 @@ else:
                 or isinstance(obj, UnionType)
             )
 
+        def get_newtype_base(typ: Any) -> Optional[type]:
+            if typ is NewType or isinstance(typ, NewType):
+                return typ.__supertype__
+            return None
+
     else:
 
         def is_union_type(obj):
@@ -266,6 +281,15 @@ else:
                 or isinstance(obj, _UnionGenericAlias)
                 and obj.__origin__ is Union
             )
+
+        def get_newtype_base(typ: Any) -> Optional[type]:
+            if (
+                (supertype := getattr(typ, "__supertype__", None)) is not None
+                and getattr(typ, "__qualname__", "") == "NewType.<locals>.new_type"
+                and typ.__module__ in ("typing", "typing_extensions")
+            ):
+                return supertype
+            return None
 
     def is_sequence(type: Any) -> bool:
         origin = getattr(type, "__origin__", None)
