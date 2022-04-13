@@ -284,8 +284,9 @@ else:
             )
 
         def get_newtype_base(typ: Any) -> Optional[type]:
+            supertype = getattr(typ, "__supertype__", None)
             if (
-                (supertype := getattr(typ, "__supertype__", None)) is not None
+                supertype is not None
                 and getattr(typ, "__qualname__", "") == "NewType.<locals>.new_type"
                 and typ.__module__ in ("typing", "typing_extensions")
             ):
