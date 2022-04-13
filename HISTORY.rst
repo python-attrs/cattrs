@@ -8,6 +8,8 @@ History
 * ``cattrs.Converter`` has been renamed to ``cattrs.BaseConverter``, and ``cattrs.GenConverter`` to ``cattrs.Converter``.
   The ``GenConverter`` symbol is still available for backwards compatibility, but is deprecated.
   If you were depending on functionality specific to the old ``Converter``, change your import to ``from cattrs import BaseConverter``.
+* ``cattrs.Converter`` (what was previously the ``GenConverter``) now supports NewTypes.
+  (`#255 <https://github.com/python-attrs/cattrs/pull/255>`_, `#94 <https://github.com/python-attrs/cattrs/issues/94>`_)
 
 22.1.0 (2022-04-03)
 -------------------
