@@ -135,7 +135,7 @@ if is_py37 or is_py38:
         )
 
     def get_newtype_base(typ: Any) -> Optional[type]:
-        supertype = getattr(type, "__supertype__", None)
+        supertype = getattr(typ, "__supertype__", None)
         if (
             supertype is not None
             and getattr(typ, "__qualname__", "") == "NewType.<locals>.new_type"
