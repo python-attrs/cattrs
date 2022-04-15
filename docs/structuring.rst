@@ -270,6 +270,11 @@ To support arbitrary unions, register a custom structuring hook for the union
 `PEP 593`_ annotations (``typing.Annotated[type, ...]``) are supported and are
 matched using the first type present in the annotated type.
 
+``typing.NewType``
+~~~~~~~~~~~~~~~~~~
+
+`NewTypes`_ are supported and are structured according to the rules for their underlying type.
+
 ``attrs`` classes and dataclasses
 ---------------------------------
 
@@ -479,3 +484,4 @@ Here's a small example showing how to use factory hooks to apply the `forbid_ext
 A complex use case for hook factories is described over at :ref:`Using factory hooks`.
 
 .. _`PEP 593` : https://www.python.org/dev/peps/pep-0593/
+.. _`NewTypes`: https://docs.python.org/3/library/typing.html#newtype
