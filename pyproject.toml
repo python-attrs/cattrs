@@ -39,7 +39,7 @@ isort = "^5.8.0"
 black = "^22.3.0"
 immutables = "^0.15"
 ujson = "^5.1.0"
-orjson = "^3.5.2"
+orjson = { version = "^3.5.2", markers = "implementation_name == 'cpython'" }
 msgpack = "^1.0.2"
 PyYAML = "^5.4.1"
 tomlkit = "^0.7.0"
