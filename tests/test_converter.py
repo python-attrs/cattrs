@@ -271,8 +271,8 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
 @pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
 @settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
 @given(
-    simple_typed_classes(defaults=False),
-    simple_typed_classes(defaults=False),
+    simple_typed_classes(defaults=False, newtypes=False),
+    simple_typed_classes(defaults=False, newtypes=False),
     unstructure_strats,
 )
 def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
