@@ -1,25 +1,37 @@
-from .converters import BaseConverter, Converter, GenConverter, UnstructureStrategy
+from .converters import BaseConverter, Converter, UnstructureStrategy
+from .errors import (
+    BaseValidationError,
+    ClassValidationError,
+    ForbiddenExtraKeysError,
+    IterableValidationError,
+    StructureHandlerNotFoundError,
+)
 from .gen import override
 
 __all__ = (
     "BaseConverter",
+    "BaseValidationError",
+    "ClassValidationError",
     "Converter",
     "converters",
     "disambiguators",
     "dispatch",
     "errors",
+    "ForbiddenExtraKeysError",
     "gen",
     "GenConverter",
     "global_converter",
+    "IterableValidationError",
     "override",
     "preconf",
-    "register_structure_hook_func",
     "register_structure_hook",
-    "register_unstructure_hook_func",
+    "register_structure_hook_func",
     "register_unstructure_hook",
+    "register_unstructure_hook_func",
+    "structure",
     "structure_attrs_fromdict",
     "structure_attrs_fromtuple",
-    "structure",
+    "StructureHandlerNotFoundError",
     "unstructure",
     "UnstructureStrategy",
 )
