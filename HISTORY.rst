@@ -10,6 +10,8 @@ History
   If you were depending on functionality specific to the old ``Converter``, change your import to ``from cattrs import BaseConverter``.
 * `NewTypes <https://docs.python.org/3/library/typing.html#newtype>`_ are now supported by the ``cattrs.Converter``.
   (`#255 <https://github.com/python-attrs/cattrs/pull/255>`_, `#94 <https://github.com/python-attrs/cattrs/issues/94>`_)
+* PyPy support (and tests, using a minimal Hypothesis profile) restored.
+  (`#253 <https://github.com/python-attrs/cattrs/issues/253>`_)
 
 22.1.0 (2022-04-03)
 -------------------
