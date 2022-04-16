@@ -1,3 +1,4 @@
+import builtins
 import sys
 from dataclasses import MISSING
 from dataclasses import fields as dataclass_fields
@@ -35,7 +36,7 @@ if is_py37:
 else:
     from typing import Protocol, get_args, get_origin  # NOQA
 
-if "ExceptionGroup" not in __builtins__:
+if "ExceptionGroup" not in dir(builtins):
     from exceptiongroup import ExceptionGroup
 else:
     ExceptionGroup = ExceptionGroup
