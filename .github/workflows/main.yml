@@ -13,11 +13,11 @@ jobs:
     name: "Python ${{ matrix.python-version }}"
     runs-on: "ubuntu-latest"
     env:
-      USING_COVERAGE: "3.7,3.8,3.9"
+      USING_COVERAGE: "3.7,3.8,3.9,3.10,pypy-3.8"
 
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10.0", "pypy-3.8"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "pypy-3.8"]
 
     steps:
       - uses: "actions/checkout@v2"
@@ -41,7 +41,7 @@ jobs:
           python-version: "3.9"
 
       - name: "Upload coverage to Codecov"
-        if: "contains(env.USING_COVERAGE, matrix.python-version)"
+        # if: "contains(env.USING_COVERAGE, matrix.python-version)"
         uses: "codecov/codecov-action@v1"
         with:
           fail_ci_if_error: true
