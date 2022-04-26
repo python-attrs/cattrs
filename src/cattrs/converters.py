@@ -184,7 +184,7 @@ class BaseConverter:
         # Unions are instances now, not classes. We use different registries.
         self._union_struct_registry: Dict[Any, Callable[[Any, Type[T]], T]] = {}
 
-    def unstructure(self, obj: Any, unstructure_as=None) -> Any:
+    def unstructure(self, obj: Any, unstructure_as: Optional[type] = None) -> Any:
         return self._unstructure_func.dispatch(
             obj.__class__ if unstructure_as is None else unstructure_as
         )(obj)
@@ -198,7 +198,7 @@ class BaseConverter:
             else UnstructureStrategy.AS_TUPLE
         )
 
-    def register_unstructure_hook(self, cls: Any, func: Callable[[T], Any]) -> None:
+    def register_unstructure_hook(self, cls: Type[T], func: Callable[[T], Any]) -> None:
         """Register a class-to-primitive converter function for a class.
 
         The converter function should take an instance of the class and return
@@ -235,7 +235,7 @@ class BaseConverter:
         """
         self._unstructure_func.register_func_list([(predicate, factory, True)])
 
-    def register_structure_hook(self, cl: Any, func: Callable[[Any, Type[T]], T]):
+    def register_structure_hook(self, cl: Type[T], func: Callable[[Any, Type[T]], T]):
         """Register a primitive-to-class converter function for a type.
 
         The converter function should take two arguments:
