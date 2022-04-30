@@ -811,12 +811,20 @@ class Converter(BaseConverter):
         return h
 
     def gen_structure_counter(self, cl: Any):
-        h = make_mapping_structure_fn(cl, self, structure_to=Counter, val_type=int)
+        h = make_mapping_structure_fn(
+            cl,
+            self,
+            structure_to=Counter,
+            val_type=int,
+            detailed_validation=self.detailed_validation,
+        )
         self._structure_func.register_cls_list([(cl, h)], direct=True)
         return h
 
     def gen_structure_mapping(self, cl: Any):
-        h = make_mapping_structure_fn(cl, self)
+        h = make_mapping_structure_fn(
+            cl, self, detailed_validation=self.detailed_validation
+        )
         self._structure_func.register_cls_list([(cl, h)], direct=True)
         return h
 

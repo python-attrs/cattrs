@@ -12,6 +12,7 @@ History
   (`#255 <https://github.com/python-attrs/cattrs/pull/255>`_, `#94 <https://github.com/python-attrs/cattrs/issues/94>`_)
 * PyPy support (and tests, using a minimal Hypothesis profile) restored.
   (`#253 <https://github.com/python-attrs/cattrs/issues/253>`_)
+* Fix propagating the `detailed_validation` flag to mapping and counter structuring generators.
 
 22.1.0 (2022-04-03)
 -------------------

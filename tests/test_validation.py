@@ -4,8 +4,10 @@ from typing import Dict, FrozenSet, List, Set, Tuple
 import pytest
 from attrs import define, field
 from attrs.validators import in_
+from hypothesis import given
 
 from cattrs import Converter
+from cattrs._compat import Counter
 from cattrs.errors import ClassValidationError, IterableValidationError
 
 
@@ -73,22 +75,46 @@ def test_list_validation():
     assert exc.value.exceptions[1].__note__ == "Structuring typing.List[int] @ index 4"
 
 
-def test_mapping_validation():
+@given(...)
+def test_mapping_validation(detailed_validation: bool):
     """Proper validation errors are raised structuring mappings."""
-    c = Converter(detailed_validation=True)
+    c = Converter(detailed_validation=detailed_validation)
 
-    with pytest.raises(IterableValidationError) as exc:
-        c.structure({"1": 1, "2": "b", "c": 3}, Dict[int, int])
+    if detailed_validation:
+        with pytest.raises(IterableValidationError) as exc:
+            c.structure({"1": 1, "2": "b", "c": 3}, Dict[int, int])
 
-    assert repr(exc.value.exceptions[0]) == repr(
-        ValueError("invalid literal for int() with base 10: 'b'")
-    )
-    assert exc.value.exceptions[0].__note__ == "Structuring mapping value @ key '2'"
+        assert repr(exc.value.exceptions[0]) == repr(
+            ValueError("invalid literal for int() with base 10: 'b'")
+        )
+        assert exc.value.exceptions[0].__note__ == "Structuring mapping value @ key '2'"
 
-    assert repr(exc.value.exceptions[1]) == repr(
-        ValueError("invalid literal for int() with base 10: 'c'")
-    )
-    assert exc.value.exceptions[1].__note__ == "Structuring mapping key @ key 'c'"
+        assert repr(exc.value.exceptions[1]) == repr(
+            ValueError("invalid literal for int() with base 10: 'c'")
+        )
+        assert exc.value.exceptions[1].__note__ == "Structuring mapping key @ key 'c'"
+    else:
+        with pytest.raises(ValueError):
+            c.structure({"1": 1, "2": "b", "c": 3}, Dict[int, int])
+
+
+@given(...)
+def test_counter_validation(detailed_validation: bool):
+    """Proper validation errors are raised structuring counters."""
+    c = Converter(detailed_validation=detailed_validation)
+
+    if detailed_validation:
+        with pytest.raises(IterableValidationError) as exc:
+            c.structure({"a": 1, "b": "b", "c": 3}, Counter[str])
+
+        assert repr(exc.value.exceptions[0]) == repr(
+            ValueError("invalid literal for int() with base 10: 'b'")
+        )
+        assert exc.value.exceptions[0].__note__ == "Structuring mapping value @ key 'b'"
+
+    else:
+        with pytest.raises(ValueError):
+            c.structure({"1": 1, "2": "b", "c": 3}, Counter[str])
 
 
 def test_set_validation():
