@@ -1,14 +1,15 @@
-from .converters import BaseConverter, Converter, UnstructureStrategy
+from .converters import BaseConverter, Converter, GenConverter, UnstructureStrategy
 from .gen import override
 
 __all__ = (
     "BaseConverter",
+    "Converter",
     "converters",
     "disambiguators",
     "dispatch",
     "errors",
     "gen",
-    "Converter",
+    "GenConverter",
     "global_converter",
     "override",
     "preconf",
