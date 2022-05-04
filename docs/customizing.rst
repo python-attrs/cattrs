@@ -5,7 +5,7 @@ Customizing class un/structuring
 This section deals with customizing the unstructuring and structuring processes in `cattrs`.
 
 Using ``cattr.Converter``
-********************************
+*************************
 
 The default ``Converter``, upon first encountering an ``attrs`` class, will use
 the generation functions mentioned here to generate the specialized hooks for it,
@@ -20,7 +20,7 @@ them for types using :py:attr:`Converter.register_structure_hook <cattrs.Convert
 flexible but also requires the most amount of boilerplate.
 
 Using ``cattrs.gen`` generators
-******************************
+*******************************
 
 `cattrs` includes a module, :mod:`cattrs.gen`, which allows for generating and
 compiling specialized functions for unstructuring ``attrs`` classes.

@@ -59,6 +59,48 @@ def test_collection_unstructure_override_set():
     assert c.unstructure({1, 2, 3}) == [1, 2, 3]
 
 
+@pytest.mark.skipif(is_py39_plus, reason="Requires Python 3.8 or lower")
+def test_collection_unstructure_override_set_38():
+    """Test overriding unstructuring sets."""
+    from typing import AbstractSet, MutableSet, Set
+
+    # First approach, predicate hook with is_mutable_set
+    c = Converter()
+
+    c._unstructure_func.register_func_list(
+        [
+            (
+                is_mutable_set,
+                partial(c.gen_unstructure_iterable, unstructure_to=list),
+                True,
+            )
+        ]
+    )
+
+    assert c.unstructure({1, 2, 3}, unstructure_as=Set[int]) == [1, 2, 3]
+
+    # Second approach, using __builtins__.set
+    c = Converter(unstruct_collection_overrides={set: list})
+
+    assert c.unstructure({1, 2, 3}, unstructure_as=Set[int]) == [1, 2, 3]
+    assert c.unstructure({1, 2, 3}, unstructure_as=MutableSet[int]) == {1, 2, 3}
+    assert c.unstructure({1, 2, 3}) == [1, 2, 3]
+
+    # Second approach, using typing.MutableSet
+    c = Converter(unstruct_collection_overrides={MutableSet: list})
+
+    assert c.unstructure({1, 2, 3}, unstructure_as=Set[int]) == [1, 2, 3]
+    assert c.unstructure({1, 2, 3}, unstructure_as=MutableSet[int]) == [1, 2, 3]
+    assert c.unstructure({1, 2, 3}) == [1, 2, 3]
+
+    # Second approach, using typing.AbstractSet
+    c = Converter(unstruct_collection_overrides={AbstractSet: list})
+
+    assert c.unstructure({1, 2, 3}, unstructure_as=Set[int]) == [1, 2, 3]
+    assert c.unstructure({1, 2, 3}, unstructure_as=MutableSet[int]) == [1, 2, 3]
+    assert c.unstructure({1, 2, 3}) == [1, 2, 3]
+
+
 @pytest.mark.skipif(not is_py39_plus, reason="Requires Python 3.9+")
 def test_collection_unstructure_override_seq():
     """Test overriding unstructuring seq."""

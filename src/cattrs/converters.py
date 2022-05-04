@@ -16,9 +16,9 @@ from ._compat import (
     Mapping,
     MutableMapping,
     MutableSequence,
-    MutableSet,
+    OriginAbstractSet,
+    OriginMutableSet,
     Sequence,
-    Set,
     fields,
     get_newtype_base,
     get_origin,
@@ -647,23 +647,27 @@ class Converter(BaseConverter):
         self.forbid_extra_keys = forbid_extra_keys
         self.type_overrides = dict(type_overrides)
 
+        unstruct_collection_overrides = {
+            get_origin(k) or k: v for k, v in unstruct_collection_overrides.items()
+        }
+
         self._unstruct_collection_overrides = unstruct_collection_overrides
 
         # Do a little post-processing magic to make things easier for users.
         co = unstruct_collection_overrides
 
         # abc.Set overrides, if defined, apply to abc.MutableSets and sets
-        if Set in co:
-            if MutableSet not in co:
-                co[MutableSet] = co[Set]
-                co[AbcMutableSet] = co[Set]  # For 3.7/3.8 compatibility.
+        if OriginAbstractSet in co:
+            if OriginMutableSet not in co:
+                co[OriginMutableSet] = co[OriginAbstractSet]
+                co[AbcMutableSet] = co[OriginAbstractSet]  # For 3.7/3.8 compatibility.
             if FrozenSetSubscriptable not in co:
-                co[FrozenSetSubscriptable] = co[Set]
+                co[FrozenSetSubscriptable] = co[OriginAbstractSet]
 
         # abc.MutableSet overrrides, if defined, apply to sets
-        if MutableSet in co:
+        if OriginMutableSet in co:
             if set not in co:
-                co[set] = co[MutableSet]
+                co[set] = co[OriginMutableSet]
 
         if FrozenSetSubscriptable in co:
             co[frozenset] = co[FrozenSetSubscriptable]  # For 3.7/3.8 compatibility.

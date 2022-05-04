@@ -1,8 +1,11 @@
 import builtins
 import sys
+from collections.abc import MutableSet as AbcMutableSet
+from collections.abc import Set as AbcSet
 from dataclasses import MISSING
 from dataclasses import fields as dataclass_fields
 from dataclasses import is_dataclass
+from typing import AbstractSet as TypingAbstractSet
 from typing import Any, Dict, FrozenSet, List
 from typing import Mapping as TypingMapping
 from typing import MutableMapping as TypingMutableMapping
@@ -109,9 +112,14 @@ def is_protocol(type: Any) -> bool:
     return issubclass(type, Protocol) and getattr(type, "_is_protocol", False)
 
 
+OriginAbstractSet = AbcSet
+OriginMutableSet = AbcMutableSet
+
 if is_py37 or is_py38:
     Set = TypingSet
+    AbstractSet = TypingAbstractSet
     MutableSet = TypingMutableSet
+
     Sequence = TypingSequence
     MutableSequence = TypingMutableSequence
     MutableMapping = TypingMutableMapping
@@ -241,6 +249,7 @@ else:
             return False
 
     Set = AbcSet
+    AbstractSet = AbcSet
     MutableSet = AbcMutableSet
     Sequence = AbcSequence
     MutableSequence = AbcMutableSequence
