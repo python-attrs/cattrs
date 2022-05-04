@@ -4,7 +4,7 @@ from datetime import datetime
 from json import dumps, loads
 from typing import Any, Type, TypeVar, Union
 
-from cattrs._compat import Counter, Set
+from cattrs._compat import AbstractSet, Counter
 
 from ..converters import BaseConverter, Converter
 
@@ -39,7 +39,7 @@ def configure_converter(converter: BaseConverter):
 def make_converter(*args, **kwargs) -> JsonConverter:
     kwargs["unstruct_collection_overrides"] = {
         **kwargs.get("unstruct_collection_overrides", {}),
-        Set: list,
+        AbstractSet: list,
         Counter: dict,
     }
     res = JsonConverter(*args, **kwargs)
