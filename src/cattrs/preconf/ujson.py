@@ -5,7 +5,7 @@ from typing import Any, AnyStr, Type, TypeVar
 
 from ujson import dumps, loads
 
-from cattrs._compat import Set
+from cattrs._compat import AbstractSet
 
 from ..converters import BaseConverter, Converter
 
@@ -40,7 +40,7 @@ def configure_converter(converter: BaseConverter):
 def make_converter(*args, **kwargs) -> UjsonConverter:
     kwargs["unstruct_collection_overrides"] = {
         **kwargs.get("unstruct_collection_overrides", {}),
-        Set: list,
+        AbstractSet: list,
     }
     res = UjsonConverter(*args, **kwargs)
     configure_converter(res)
