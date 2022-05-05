@@ -13,6 +13,8 @@ History
 * PyPy support (and tests, using a minimal Hypothesis profile) restored.
   (`#253 <https://github.com/python-attrs/cattrs/issues/253>`_)
 * Fix propagating the `detailed_validation` flag to mapping and counter structuring generators.
+* Fix ``typing.Set`` applying too broadly when used with the ``GenConverter.unstruct_collection_overrides`` parameter on Python versions below 3.9. Switch to ``typing.AbstractSet`` on those versions to restore the old behavior.
+  (`#264 <https://github.com/python-attrs/cattrs/issues/264>`_)
 
 22.1.0 (2022-04-03)
 -------------------
