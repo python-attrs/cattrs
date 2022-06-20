@@ -21,7 +21,7 @@ packages = [
 readme = "README.rst"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = ">= 3.7"
 attrs = ">= 20"
 typing_extensions = { version = "*", python = "< 3.8" }
 exceptiongroup = { version = "*", python = "< 3.11" }
