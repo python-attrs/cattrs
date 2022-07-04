@@ -1,5 +1,6 @@
 from collections import Counter
 from collections.abc import MutableSet as AbcMutableSet
+from copy import deepcopy
 from dataclasses import Field
 from enum import Enum
 from functools import lru_cache
