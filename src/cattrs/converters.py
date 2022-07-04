@@ -615,6 +615,41 @@ class BaseConverter:
             )
         return create_uniq_field_dis_func(*union_types)
 
+    def __deepcopy__(self, memo) -> "BaseConverter":
+        res = BaseConverter(
+            self._dict_factory,
+            UnstructureStrategy.AS_DICT
+            if self._unstructure_attrs == self.unstructure_attrs_asdict
+            else UnstructureStrategy.AS_TUPLE,
+            self._prefer_attrib_converters,
+            self.detailed_validation,
+        )
+        return res
+
+    def copy(
+        self,
+        dict_factory: Optional[Callable[[], Any]] = None,
+        unstruct_strat: Optional[UnstructureStrategy] = None,
+        prefer_attrib_converters: Optional[bool] = None,
+        detailed_validation: Optional[bool] = None,
+    ) -> "BaseConverter":
+        return self.__class__(
+            dict_factory if dict_factory is not None else self._dict_factory,
+            unstruct_strat
+            if unstruct_strat is not None
+            else (
+                UnstructureStrategy.AS_DICT
+                if self._unstructure_attrs == self.unstructure_attrs_asdict
+                else UnstructureStrategy.AS_TUPLE
+            ),
+            prefer_attrib_converters
+            if prefer_attrib_converters is not None
+            else self._prefer_attrib_converters,
+            detailed_validation
+            if detailed_validation is not None
+            else self.detailed_validation,
+        )
+
 
 class Converter(BaseConverter):
     """A converter which generates specialized un/structuring functions."""
@@ -835,6 +870,42 @@ class Converter(BaseConverter):
         )
         self._structure_func.register_cls_list([(cl, h)], direct=True)
         return h
+
+    def copy(
+        self,
+        dict_factory: Optional[Callable[[], Any]] = None,
+        unstruct_strat: Optional[UnstructureStrategy] = None,
+        omit_if_default: Optional[bool] = None,
+        forbid_extra_keys: Optional[bool] = None,
+        type_overrides: Optional[Mapping[Type, AttributeOverride]] = None,
+        unstruct_collection_overrides: Optional[Mapping[Type, Callable]] = None,
+        prefer_attrib_converters: Optional[bool] = None,
+        detailed_validation: Optional[bool] = None,
+    ) -> "Converter":
+        return self.__class__(
+            dict_factory if dict_factory is not None else self._dict_factory,
+            unstruct_strat
+            if unstruct_strat is not None
+            else (
+                UnstructureStrategy.AS_DICT
+                if self._unstructure_attrs == self.unstructure_attrs_asdict
+                else UnstructureStrategy.AS_TUPLE
+            ),
+            omit_if_default if omit_if_default is not None else self.omit_if_default,
+            forbid_extra_keys
+            if forbid_extra_keys is not None
+            else self.forbid_extra_keys,
+            type_overrides if type_overrides is not None else self.type_overrides,
+            unstruct_collection_overrides
+            if unstruct_collection_overrides is not None
+            else self._unstruct_collection_overrides,
+            prefer_attrib_converters
+            if prefer_attrib_converters is not None
+            else self._prefer_attrib_converters,
+            detailed_validation
+            if detailed_validation is not None
+            else self.detailed_validation,
+        )
 
 
 GenConverter = Converter
