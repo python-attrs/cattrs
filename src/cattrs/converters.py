@@ -16,10 +16,11 @@ from ._compat import (
     Mapping,
     MutableMapping,
     MutableSequence,
-    MutableSet,
+    OriginAbstractSet,
+    OriginMutableSet,
     Sequence,
-    Set,
     fields,
+    get_newtype_base,
     get_origin,
     has,
     has_with_generic,
@@ -150,6 +151,7 @@ class BaseConverter:
             [
                 (lambda cl: cl is Any or cl is Optional or cl is None, lambda v, _: v),
                 (is_generic_attrs, self._gen_structure_generic, True),
+                (lambda t: get_newtype_base(t) is not None, self._structure_newtype),
                 (is_literal, self._structure_simple_literal),
                 (is_literal_containing_enums, self._structure_enum_literal),
                 (is_sequence, self._structure_list),
@@ -182,7 +184,7 @@ class BaseConverter:
         # Unions are instances now, not classes. We use different registries.
         self._union_struct_registry: Dict[Any, Callable[[Any, Type[T]], T]] = {}
 
-    def unstructure(self, obj: Any, unstructure_as=None) -> Any:
+    def unstructure(self, obj: Any, unstructure_as: Any = None) -> Any:
         return self._unstructure_func.dispatch(
             obj.__class__ if unstructure_as is None else unstructure_as
         )(obj)
@@ -196,7 +198,7 @@ class BaseConverter:
             else UnstructureStrategy.AS_TUPLE
         )
 
-    def register_unstructure_hook(self, cls: Any, func: Callable[[T], Any]) -> None:
+    def register_unstructure_hook(self, cls: Any, func: Callable[[Any], Any]) -> None:
         """Register a class-to-primitive converter function for a class.
 
         The converter function should take an instance of the class and return
@@ -262,7 +264,7 @@ class BaseConverter:
     def register_structure_hook_factory(
         self,
         predicate: Callable[[Any], bool],
-        factory: Callable[[Any], Callable[[Any], Any]],
+        factory: Callable[[Any], Callable[[Any, Any], Any]],
     ) -> None:
         """
         Register a hook factory for a given predicate.
@@ -392,6 +394,10 @@ class BaseConverter:
             return vals[val]
         except KeyError:
             raise Exception(f"{val} not in literal {type}") from None
+
+    def _structure_newtype(self, val, type):
+        base = get_newtype_base(type)
+        return self._structure_func.dispatch(base)(val, base)
 
     # Attrs classes.
 
@@ -641,23 +647,27 @@ class Converter(BaseConverter):
         self.forbid_extra_keys = forbid_extra_keys
         self.type_overrides = dict(type_overrides)
 
+        unstruct_collection_overrides = {
+            get_origin(k) or k: v for k, v in unstruct_collection_overrides.items()
+        }
+
         self._unstruct_collection_overrides = unstruct_collection_overrides
 
         # Do a little post-processing magic to make things easier for users.
         co = unstruct_collection_overrides
 
         # abc.Set overrides, if defined, apply to abc.MutableSets and sets
-        if Set in co:
-            if MutableSet not in co:
-                co[MutableSet] = co[Set]
-                co[AbcMutableSet] = co[Set]  # For 3.7/3.8 compatibility.
+        if OriginAbstractSet in co:
+            if OriginMutableSet not in co:
+                co[OriginMutableSet] = co[OriginAbstractSet]
+                co[AbcMutableSet] = co[OriginAbstractSet]  # For 3.7/3.8 compatibility.
             if FrozenSetSubscriptable not in co:
-                co[FrozenSetSubscriptable] = co[Set]
+                co[FrozenSetSubscriptable] = co[OriginAbstractSet]
 
         # abc.MutableSet overrrides, if defined, apply to sets
-        if MutableSet in co:
+        if OriginMutableSet in co:
             if set not in co:
-                co[set] = co[MutableSet]
+                co[set] = co[OriginMutableSet]
 
         if FrozenSetSubscriptable in co:
             co[frozenset] = co[FrozenSetSubscriptable]  # For 3.7/3.8 compatibility.
@@ -715,9 +725,20 @@ class Converter(BaseConverter):
             is_frozenset,
             lambda cl: self.gen_unstructure_iterable(cl, unstructure_to=frozenset),
         )
+        self.register_unstructure_hook_factory(
+            lambda t: get_newtype_base(t) is not None,
+            lambda t: self._unstructure_func.dispatch(get_newtype_base(t)),
+        )
         self.register_structure_hook_factory(is_annotated, self.gen_structure_annotated)
         self.register_structure_hook_factory(is_mapping, self.gen_structure_mapping)
         self.register_structure_hook_factory(is_counter, self.gen_structure_counter)
+        self.register_structure_hook_factory(
+            lambda t: get_newtype_base(t) is not None, self.get_structure_newtype
+        )
+
+    def get_structure_newtype(self, type: Type[T]) -> Callable[[Any, Any], T]:
+        base = get_newtype_base(type)
+        return self._structure_func.dispatch(base)
 
     def gen_unstructure_annotated(self, type):
         origin = type.__origin__
@@ -729,7 +750,9 @@ class Converter(BaseConverter):
         h = self._structure_func.dispatch(origin)
         return h
 
-    def gen_unstructure_attrs_fromdict(self, cl: Type[T]) -> Dict[str, Any]:
+    def gen_unstructure_attrs_fromdict(
+        self, cl: Type[T]
+    ) -> Callable[[T], Dict[str, Any]]:
         origin = get_origin(cl)
         attribs = fields(origin or cl)
         if attrs_has(cl) and any(isinstance(a.type, str) for a in attribs):
@@ -746,7 +769,9 @@ class Converter(BaseConverter):
         )
         return h
 
-    def gen_structure_attrs_fromdict(self, cl: Type[T]) -> T:
+    def gen_structure_attrs_fromdict(
+        self, cl: Type[T]
+    ) -> Callable[[Mapping[str, Any], Any], T]:
         attribs = fields(get_origin(cl) if is_generic(cl) else cl)
         if attrs_has(cl) and any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.
@@ -794,12 +819,20 @@ class Converter(BaseConverter):
         return h
 
     def gen_structure_counter(self, cl: Any):
-        h = make_mapping_structure_fn(cl, self, structure_to=Counter, val_type=int)
+        h = make_mapping_structure_fn(
+            cl,
+            self,
+            structure_to=Counter,
+            val_type=int,
+            detailed_validation=self.detailed_validation,
+        )
         self._structure_func.register_cls_list([(cl, h)], direct=True)
         return h
 
     def gen_structure_mapping(self, cl: Any):
-        h = make_mapping_structure_fn(cl, self)
+        h = make_mapping_structure_fn(
+            cl, self, detailed_validation=self.detailed_validation
+        )
         self._structure_func.register_cls_list([(cl, h)], direct=True)
         return h
 

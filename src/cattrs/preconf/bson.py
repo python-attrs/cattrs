@@ -5,7 +5,7 @@ from typing import Any, Type, TypeVar
 
 from bson import DEFAULT_CODEC_OPTIONS, CodecOptions, ObjectId, decode, encode
 
-from cattrs._compat import Set, is_mapping
+from cattrs._compat import AbstractSet, is_mapping
 from cattrs.gen import make_mapping_structure_fn
 
 from ..converters import BaseConverter, Converter
@@ -89,7 +89,7 @@ def configure_converter(converter: BaseConverter):
 def make_converter(*args, **kwargs) -> BsonConverter:
     kwargs["unstruct_collection_overrides"] = {
         **kwargs.get("unstruct_collection_overrides", {}),
-        Set: list,
+        AbstractSet: list,
     }
     res = BsonConverter(*args, **kwargs)
     configure_converter(res)

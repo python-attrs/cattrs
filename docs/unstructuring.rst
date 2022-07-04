@@ -96,6 +96,12 @@ from ``typing`` on older Python versions.
 Fields marked as ``typing.Annotated[type, ...]`` are supported and are matched
 using the first type present in the annotated type.
 
+``typing.NewType``
+------------------
+
+`NewTypes`_ are supported and are unstructured according to the rules for their underlying type.
+
+
 ``attrs`` classes and dataclasses
 ---------------------------------
 
@@ -200,3 +206,5 @@ Here's a small example showing how to use factory hooks to skip unstructuring
 
 
 A complex use case for hook factories is described over at :ref:`Using factory hooks`.
+
+.. _`NewTypes`: https://docs.python.org/3/library/typing.html#newtype

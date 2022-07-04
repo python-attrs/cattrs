@@ -1,12 +1,17 @@
+import builtins
 import sys
+from collections.abc import MutableSet as AbcMutableSet
+from collections.abc import Set as AbcSet
 from dataclasses import MISSING
 from dataclasses import fields as dataclass_fields
 from dataclasses import is_dataclass
+from typing import AbstractSet as TypingAbstractSet
 from typing import Any, Dict, FrozenSet, List
 from typing import Mapping as TypingMapping
 from typing import MutableMapping as TypingMutableMapping
 from typing import MutableSequence as TypingMutableSequence
 from typing import MutableSet as TypingMutableSet
+from typing import NewType, Optional
 from typing import Sequence as TypingSequence
 from typing import Set as TypingSet
 from typing import Tuple, get_type_hints
@@ -34,7 +39,7 @@ if is_py37:
 else:
     from typing import Protocol, get_args, get_origin  # NOQA
 
-if "ExceptionGroup" not in __builtins__:
+if "ExceptionGroup" not in dir(builtins):
     from exceptiongroup import ExceptionGroup
 else:
     ExceptionGroup = ExceptionGroup
@@ -107,9 +112,14 @@ def is_protocol(type: Any) -> bool:
     return issubclass(type, Protocol) and getattr(type, "_is_protocol", False)
 
 
+OriginAbstractSet = AbcSet
+OriginMutableSet = AbcMutableSet
+
 if is_py37 or is_py38:
     Set = TypingSet
+    AbstractSet = TypingAbstractSet
     MutableSet = TypingMutableSet
+
     Sequence = TypingSequence
     MutableSequence = TypingMutableSequence
     MutableMapping = TypingMutableMapping
@@ -132,6 +142,16 @@ if is_py37 or is_py38:
         return (
             obj is Union or isinstance(obj, _GenericAlias) and obj.__origin__ is Union
         )
+
+    def get_newtype_base(typ: Any) -> Optional[type]:
+        supertype = getattr(typ, "__supertype__", None)
+        if (
+            supertype is not None
+            and getattr(typ, "__qualname__", "") == "NewType.<locals>.new_type"
+            and typ.__module__ in ("typing", "typing_extensions")
+        ):
+            return supertype
+        return None
 
     def is_sequence(type: Any) -> bool:
         return type in (List, list, Tuple, tuple) or (
@@ -229,6 +249,7 @@ else:
             return False
 
     Set = AbcSet
+    AbstractSet = AbcSet
     MutableSet = AbcMutableSet
     Sequence = AbcSequence
     MutableSequence = AbcMutableSequence
@@ -258,6 +279,11 @@ else:
                 or isinstance(obj, UnionType)
             )
 
+        def get_newtype_base(typ: Any) -> Optional[type]:
+            if typ is NewType or isinstance(typ, NewType):
+                return typ.__supertype__
+            return None
+
     else:
 
         def is_union_type(obj):
@@ -266,6 +292,16 @@ else:
                 or isinstance(obj, _UnionGenericAlias)
                 and obj.__origin__ is Union
             )
+
+        def get_newtype_base(typ: Any) -> Optional[type]:
+            supertype = getattr(typ, "__supertype__", None)
+            if (
+                supertype is not None
+                and getattr(typ, "__qualname__", "") == "NewType.<locals>.new_type"
+                and typ.__module__ in ("typing", "typing_extensions")
+            ):
+                return supertype
+            return None
 
     def is_sequence(type: Any) -> bool:
         origin = getattr(type, "__origin__", None)

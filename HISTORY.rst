@@ -8,6 +8,16 @@ History
 * ``cattrs.Converter`` has been renamed to ``cattrs.BaseConverter``, and ``cattrs.GenConverter`` to ``cattrs.Converter``.
   The ``GenConverter`` symbol is still available for backwards compatibility, but is deprecated.
   If you were depending on functionality specific to the old ``Converter``, change your import to ``from cattrs import BaseConverter``.
+* `NewTypes <https://docs.python.org/3/library/typing.html#newtype>`_ are now supported by the ``cattrs.Converter``.
+  (`#255 <https://github.com/python-attrs/cattrs/pull/255>`_, `#94 <https://github.com/python-attrs/cattrs/issues/94>`_)
+* PyPy support (and tests, using a minimal Hypothesis profile) restored.
+  (`#253 <https://github.com/python-attrs/cattrs/issues/253>`_)
+* Fix propagating the `detailed_validation` flag to mapping and counter structuring generators.
+* Fix ``typing.Set`` applying too broadly when used with the ``GenConverter.unstruct_collection_overrides`` parameter on Python versions below 3.9. Switch to ``typing.AbstractSet`` on those versions to restore the old behavior.
+  (`#264 <https://github.com/python-attrs/cattrs/issues/264>`_)
+* Uncap the required Python version, to avoid problems detailed in https://iscinumpy.dev/post/bound-version-constraints/#pinning-the-python-version-is-special (`#275 <https://github.com/python-attrs/cattrs/issues/275>`_)
+* Fix `Converter.register_structure_hook_factory` and `cattrs.gen.make_dict_unstructure_fn` type annotations.
+  (`#281 <https://github.com/python-attrs/cattrs/issues/281>`_)
 
 22.1.0 (2022-04-03)
 -------------------

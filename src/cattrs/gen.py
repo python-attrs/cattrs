@@ -46,12 +46,12 @@ T = TypeVar("T")
 
 
 def make_dict_unstructure_fn(
-    cl,
-    converter,
+    cl: Type[T],
+    converter: "BaseConverter",
     _cattrs_omit_if_default: bool = False,
     _cattrs_use_linecache: bool = True,
     **kwargs,
-) -> Callable[[Any], Dict]:
+) -> Callable[[T], Dict[str, Any]]:
     """
     Generate a specialized dict unstructuring function for an attrs class or a
     dataclass.

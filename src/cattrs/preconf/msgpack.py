@@ -4,7 +4,7 @@ from typing import Any, Type, TypeVar
 
 from msgpack import dumps, loads
 
-from cattrs._compat import Set
+from cattrs._compat import AbstractSet
 
 from ..converters import BaseConverter, Converter
 
@@ -35,7 +35,7 @@ def configure_converter(converter: BaseConverter):
 def make_converter(*args, **kwargs) -> MsgpackConverter:
     kwargs["unstruct_collection_overrides"] = {
         **kwargs.get("unstruct_collection_overrides", {}),
-        Set: list,
+        AbstractSet: list,
     }
     res = MsgpackConverter(*args, **kwargs)
     configure_converter(res)

@@ -5,7 +5,7 @@ from typing import Any, Type, TypeVar
 
 from tomlkit import dumps, loads
 
-from cattrs._compat import Set, is_mapping
+from cattrs._compat import AbstractSet, is_mapping
 
 from ..converters import BaseConverter, Converter
 from . import validate_datetime
@@ -59,7 +59,7 @@ def configure_converter(converter: BaseConverter):
 def make_converter(*args, **kwargs) -> TomlkitConverter:
     kwargs["unstruct_collection_overrides"] = {
         **kwargs.get("unstruct_collection_overrides", {}),
-        Set: list,
+        AbstractSet: list,
         tuple: list,
     }
     res = TomlkitConverter(*args, **kwargs)

@@ -24,14 +24,14 @@ from cattrs import BaseConverter
 from cattrs._compat import copy_with, is_bare, is_union_type
 from cattrs.errors import IterableValidationError, StructureHandlerNotFoundError
 
-from . import (
+from ._compat import change_type_param
+from .untyped import (
     dicts_of_primitives,
     enums_of_primitives,
     lists_of_primitives,
     primitive_strategies,
     seqs_of_primitives,
 )
-from ._compat import change_type_param
 
 NoneType = type(None)
 ints_and_type = tuples(integers(), just(int))

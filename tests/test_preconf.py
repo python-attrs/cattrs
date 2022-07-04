@@ -2,8 +2,10 @@ from datetime import datetime, timezone
 from enum import Enum, IntEnum, unique
 from json import dumps as json_dumps
 from json import loads as json_loads
+from platform import python_implementation
 from typing import Dict, List
 
+import pytest
 from attr import define
 from bson import CodecOptions, ObjectId
 from hypothesis import given
@@ -37,7 +39,6 @@ from cattrs._compat import (
 from cattrs.preconf.bson import make_converter as bson_make_converter
 from cattrs.preconf.json import make_converter as json_make_converter
 from cattrs.preconf.msgpack import make_converter as msgpack_make_converter
-from cattrs.preconf.orjson import make_converter as orjson_make_converter
 from cattrs.preconf.pyyaml import make_converter as pyyaml_make_converter
 from cattrs.preconf.tomlkit import make_converter as tomlkit_make_converter
 from cattrs.preconf.ujson import make_converter as ujson_make_converter
@@ -196,6 +197,7 @@ def test_ujson_converter(everything: Everything):
     assert converter.loads(raw, Everything) == everything
 
 
+@pytest.mark.skipif(python_implementation() == "PyPy", reason="no orjson on PyPy")
 @given(
     everythings(
         min_int=-9223372036854775808, max_int=9223372036854775807, allow_inf=False
@@ -206,11 +208,14 @@ def test_orjson(everything: Everything, detailed_validation: bool):
     from orjson import dumps as orjson_dumps
     from orjson import loads as orjson_loads
 
+    from cattrs.preconf.orjson import make_converter as orjson_make_converter
+
     converter = orjson_make_converter(detailed_validation=detailed_validation)
     raw = orjson_dumps(converter.unstructure(everything))
     assert converter.structure(orjson_loads(raw), Everything) == everything
 
 
+@pytest.mark.skipif(python_implementation() == "PyPy", reason="no orjson on PyPy")
 @given(
     everythings(
         min_int=-9223372036854775808, max_int=9223372036854775807, allow_inf=False
@@ -218,6 +223,8 @@ def test_orjson(everything: Everything, detailed_validation: bool):
     booleans(),
 )
 def test_orjson_converter(everything: Everything, detailed_validation: bool):
+    from cattrs.preconf.orjson import make_converter as orjson_make_converter
+
     converter = orjson_make_converter(detailed_validation=detailed_validation)
     raw = converter.dumps(everything)
     assert converter.loads(raw, Everything) == everything

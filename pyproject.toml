@@ -21,10 +21,10 @@ packages = [
 readme = "README.rst"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = ">= 3.7"
 attrs = ">= 20"
-typing_extensions = { version = "*", python = "~3.7" }
-exceptiongroup = { version = "*", python = "<= 3.10" }
+typing_extensions = { version = "*", python = "< 3.8" }
+exceptiongroup = { version = "*", python = "< 3.11" }
 
 [tool.poetry.dev-dependencies]
 pymongo = "^3.12.1"
@@ -39,7 +39,7 @@ isort = "^5.8.0"
 black = "^22.3.0"
 immutables = "^0.15"
 ujson = "^5.1.0"
-orjson = "^3.5.2"
+orjson = { version = "^3.5.2", markers = "implementation_name == 'cpython'" }
 msgpack = "^1.0.2"
 PyYAML = "^5.4.1"
 tomlkit = "^0.7.0"

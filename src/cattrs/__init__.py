@@ -1,4 +1,4 @@
-from .converters import BaseConverter, Converter, UnstructureStrategy
+from .converters import BaseConverter, Converter, GenConverter, UnstructureStrategy
 from .errors import (
     BaseValidationError,
     ClassValidationError,
@@ -6,6 +6,7 @@ from .errors import (
     IterableValidationError,
     StructureHandlerNotFoundError,
 )
+
 from .gen import override
 
 __all__ = (
@@ -19,6 +20,7 @@ __all__ = (
     "errors",
     "ForbiddenExtraKeysError",
     "gen",
+    "GenConverter",
     "global_converter",
     "IterableValidationError",
     "override",
