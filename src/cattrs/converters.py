@@ -264,7 +264,7 @@ class BaseConverter:
     def register_structure_hook_factory(
         self,
         predicate: Callable[[Any], bool],
-        factory: Callable[[Any], Callable[[Any], Any]],
+        factory: Callable[[Any], Callable[[Any, Any], Any]],
     ) -> None:
         """
         Register a hook factory for a given predicate.
@@ -750,7 +750,9 @@ class Converter(BaseConverter):
         h = self._structure_func.dispatch(origin)
         return h
 
-    def gen_unstructure_attrs_fromdict(self, cl: Type[T]) -> Dict[str, Any]:
+    def gen_unstructure_attrs_fromdict(
+        self, cl: Type[T]
+    ) -> Callable[[T], Dict[str, Any]]:
         origin = get_origin(cl)
         attribs = fields(origin or cl)
         if attrs_has(cl) and any(isinstance(a.type, str) for a in attribs):
@@ -767,7 +769,9 @@ class Converter(BaseConverter):
         )
         return h
 
-    def gen_structure_attrs_fromdict(self, cl: Type[T]) -> T:
+    def gen_structure_attrs_fromdict(
+        self, cl: Type[T]
+    ) -> Callable[[Mapping[str, Any], Any], T]:
         attribs = fields(get_origin(cl) if is_generic(cl) else cl)
         if attrs_has(cl) and any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.

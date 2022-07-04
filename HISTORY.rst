@@ -16,6 +16,8 @@ History
 * Fix ``typing.Set`` applying too broadly when used with the ``GenConverter.unstruct_collection_overrides`` parameter on Python versions below 3.9. Switch to ``typing.AbstractSet`` on those versions to restore the old behavior.
   (`#264 <https://github.com/python-attrs/cattrs/issues/264>`_)
 * Uncap the required Python version, to avoid problems detailed in https://iscinumpy.dev/post/bound-version-constraints/#pinning-the-python-version-is-special (`#275 <https://github.com/python-attrs/cattrs/issues/275>`_)
+* Fix `Converter.register_structure_hook_factory` and `cattrs.gen.make_dict_unstructure_fn` type annotations.
+  (`#281 <https://github.com/python-attrs/cattrs/issues/281>`_)
 
 22.1.0 (2022-04-03)
 -------------------
