@@ -146,7 +146,7 @@ class BaseConverter:
         # Per-instance register of to-attrs converters.
         # Singledispatch dispatches based on the first argument, so we
         # store the function and switch the arguments in self.loads.
-        self._structure_func = MultiStrategyDispatch(self._structure_error)
+        self._structure_func = MultiStrategyDispatch(BaseConverter._structure_error)
         self._structure_func.register_func_list(
             [
                 (lambda cl: cl is Any or cl is Optional or cl is None, lambda v, _: v),
@@ -340,7 +340,8 @@ class BaseConverter:
 
     # Python primitives to classes.
 
-    def _structure_error(self, _, cl):
+    @staticmethod
+    def _structure_error(_, cl):
         """At the bottom of the condition stack, we explode if we can't handle it."""
         msg = "Unsupported type: {0!r}. Register a structure hook for " "it.".format(cl)
         raise StructureHandlerNotFoundError(msg, type_=cl)
@@ -615,16 +616,8 @@ class BaseConverter:
             )
         return create_uniq_field_dis_func(*union_types)
 
-    def __deepcopy__(self, memo) -> "BaseConverter":
-        res = BaseConverter(
-            self._dict_factory,
-            UnstructureStrategy.AS_DICT
-            if self._unstructure_attrs == self.unstructure_attrs_asdict
-            else UnstructureStrategy.AS_TUPLE,
-            self._prefer_attrib_converters,
-            self.detailed_validation,
-        )
-        return res
+    def __deepcopy__(self, _) -> "BaseConverter":
+        return self.copy()
 
     def copy(
         self,
@@ -633,7 +626,7 @@ class BaseConverter:
         prefer_attrib_converters: Optional[bool] = None,
         detailed_validation: Optional[bool] = None,
     ) -> "BaseConverter":
-        return self.__class__(
+        res = self.__class__(
             dict_factory if dict_factory is not None else self._dict_factory,
             unstruct_strat
             if unstruct_strat is not None
@@ -649,6 +642,11 @@ class BaseConverter:
             if detailed_validation is not None
             else self.detailed_validation,
         )
+
+        res._unstructure_func = self._unstructure_func.copy(res._unstructure_identity)
+        res._structure_func = self._structure_func.copy(BaseConverter._structure_error)
+
+        return res
 
 
 class Converter(BaseConverter):
@@ -882,7 +880,7 @@ class Converter(BaseConverter):
         prefer_attrib_converters: Optional[bool] = None,
         detailed_validation: Optional[bool] = None,
     ) -> "Converter":
-        return self.__class__(
+        res = self.__class__(
             dict_factory if dict_factory is not None else self._dict_factory,
             unstruct_strat
             if unstruct_strat is not None
@@ -906,6 +904,11 @@ class Converter(BaseConverter):
             if detailed_validation is not None
             else self.detailed_validation,
         )
+
+        res._unstructure_func = self._unstructure_func.copy(res._unstructure_identity)
+        res._structure_func = self._structure_func.copy(BaseConverter._structure_error)
+
+        return res
 
 
 GenConverter = Converter

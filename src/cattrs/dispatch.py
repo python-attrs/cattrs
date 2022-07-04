@@ -1,3 +1,4 @@
+from copy import deepcopy
 from functools import lru_cache, singledispatch
 from typing import Any, Callable, List, Tuple, Union
 
@@ -89,6 +90,12 @@ class MultiStrategyDispatch:
         self._direct_dispatch.clear()
         self.dispatch.cache_clear()
 
+    def copy(self, fallback_func):
+        res = self.__class__(fallback_func)
+        res._function_dispatch = deepcopy(self._function_dispatch)
+        res._single_dispatch = deepcopy(self._single_dispatch)
+        return res
+
 
 @attr.s(slots=True)
 class FunctionDispatch:
@@ -125,3 +132,8 @@ class FunctionDispatch:
         raise StructureHandlerNotFoundError(
             f"unable to find handler for {typ}", type_=typ
         )
+
+    def __deepcopy__(self, _):
+        res = self.__class__()
+        res._handler_pairs = list(self._handler_pairs)
+        return res
