@@ -1,6 +1,5 @@
 from collections import OrderedDict
 from copy import deepcopy
-from re import S
 from typing import Callable, Type
 
 from attr import define

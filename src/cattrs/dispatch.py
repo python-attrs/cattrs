@@ -90,8 +90,8 @@ class MultiStrategyDispatch:
         self._direct_dispatch.clear()
         self.dispatch.cache_clear()
 
-    def copy(self, fallback_func):
-        res = self.__class__(fallback_func)
+    def __deepcopy__(self, _):
+        res = self.__class__(None)
         res._function_dispatch = deepcopy(self._function_dispatch)
         res._single_dispatch = deepcopy(self._single_dispatch)
         return res

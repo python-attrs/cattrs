@@ -1,5 +1,6 @@
 from collections import Counter
 from collections.abc import MutableSet as AbcMutableSet
+from copy import deepcopy
 from dataclasses import Field
 from enum import Enum
 from functools import lru_cache
@@ -309,7 +310,8 @@ class BaseConverter:
         """Convert an enum to its value."""
         return obj.value
 
-    def _unstructure_identity(self, obj):
+    @staticmethod
+    def _unstructure_identity(obj):
         """Just pass it through."""
         return obj
 
@@ -643,8 +645,8 @@ class BaseConverter:
             else self.detailed_validation,
         )
 
-        res._unstructure_func = self._unstructure_func.copy(res._unstructure_identity)
-        res._structure_func = self._structure_func.copy(BaseConverter._structure_error)
+        res._unstructure_func = deepcopy(self._unstructure_func)
+        res._structure_func = deepcopy(self._structure_func)
 
         return res
 
@@ -905,8 +907,8 @@ class Converter(BaseConverter):
             else self.detailed_validation,
         )
 
-        res._unstructure_func = self._unstructure_func.copy(res._unstructure_identity)
-        res._structure_func = self._structure_func.copy(BaseConverter._structure_error)
+        res._unstructure_func = deepcopy(self._unstructure_func)
+        res._structure_func = deepcopy(self._structure_func)
 
         return res
 
