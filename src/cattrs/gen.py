@@ -36,7 +36,11 @@ class AttributeOverride:
     omit: bool = False  # Omit the field completely.
 
 
-def override(omit_if_default=None, rename=None, omit: bool = False):
+def override(
+    omit_if_default: Optional[bool] = None,
+    rename: Optional[str] = None,
+    omit: bool = False,
+):
     return AttributeOverride(omit_if_default=omit_if_default, rename=rename, omit=omit)
 
 
@@ -50,7 +54,7 @@ def make_dict_unstructure_fn(
     converter: "BaseConverter",
     _cattrs_omit_if_default: bool = False,
     _cattrs_use_linecache: bool = True,
-    **kwargs,
+    **kwargs: AttributeOverride,
 ) -> Callable[[T], Dict[str, Any]]:
     """
     Generate a specialized dict unstructuring function for an attrs class or a
