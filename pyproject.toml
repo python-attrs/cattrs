@@ -38,7 +38,7 @@ pendulum = "^2.1.2"
 isort = "^5.8.0"
 black = "^22.3.0"
 immutables = "^0.15"
-ujson = "^5.1.0"
+ujson = "^5.4.0"
 orjson = { version = "^3.5.2", markers = "implementation_name == 'cpython'" }
 msgpack = "^1.0.2"
 PyYAML = "^5.4.1"
