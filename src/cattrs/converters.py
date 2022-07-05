@@ -3,18 +3,7 @@ from collections.abc import MutableSet as AbcMutableSet
 from dataclasses import Field
 from enum import Enum
 from functools import lru_cache
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generator,
-    Iterable,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar, Union
 
 from attr import Attribute
 from attr import has as attrs_has
@@ -95,24 +84,6 @@ def is_optional(typ):
 
 def is_literal_containing_enums(typ):
     return is_literal(typ) and any(isinstance(val, Enum) for val in typ.__args__)
-
-
-def _zip_strict(
-    iterable1: Iterable[T], iterable2: Iterable[V]
-) -> Generator[Tuple[T, V], None, None]:
-    """`zip` but raising if iterables don't finish together."""
-    iterator2 = iter(iterable2)
-    for value1 in iterable1:
-        try:
-            value2 = next(iterator2)
-        except StopIteration:
-            raise ValueError(f"{iterable1} has more items than {iterable2}") from None
-        yield value1, value2
-    try:
-        next(iterator2)
-    except StopIteration:
-        return
-    raise ValueError(f"{iterable2} has more items than {iterable1}")
 
 
 class BaseConverter:
@@ -602,36 +573,49 @@ class BaseConverter:
                 return tuple(conv(e, tup_type) for e in obj)
         else:
             # We're dealing with a heterogenous tuple.
+            exp_len = len(tup_params)
+            try:
+                len_obj = len(obj)
+            except TypeError:
+                pass  # most likely an unsized iterator, eg generator
+            else:
+                if len_obj > exp_len:
+                    exp_len = len_obj
             if self.detailed_validation:
-
-                def iter_types_and_values() -> Tuple[Any, Any]:
-                    try:
-                        yield from _zip_strict(tup_params, obj)
-                    except ValueError as exc_:
-                        exc_.__note__ = f"Structuring {tup} @ index {ix}"
-                        errors.append(exc_)
-
                 errors = []
                 res = []
-                for ix, (t, e) in enumerate(iter_types_and_values()):
+                for ix, (t, e) in enumerate(zip(tup_params, obj)):
                     try:
                         conv = self._structure_func.dispatch(t)
                         res.append(conv(e, t))
                     except Exception as exc:
                         exc.__note__ = f"Structuring {tup} @ index {ix}"
                         errors.append(exc)
+                if len(res) < exp_len:
+                    problem = "Not enough" if len(res) < len(tup_params) else "Too many"
+                    exc = ValueError(
+                        f"{problem} values in {obj!r} to structure as {tup!r}"
+                    )
+                    exc.__note__ = f"Structuring {tup}"
+                    errors.append(exc)
                 if errors:
                     raise IterableValidationError(
                         f"While structuring {tup!r}", errors, tup
                     )
                 return tuple(res)
             else:
-                return tuple(
+                res = tuple(
                     [
                         self._structure_func.dispatch(t)(e, t)
-                        for t, e in _zip_strict(tup_params, obj)
+                        for t, e in zip(tup_params, obj)
                     ]
                 )
+                if len(res) < exp_len:
+                    problem = "Not enough" if len(res) < len(tup_params) else "Too many"
+                    raise ValueError(
+                        f"{problem} values in {obj!r} to structure as {tup!r}"
+                    )
+                return res
 
     @staticmethod
     def _get_dis_func(union) -> Callable[..., Type]:
