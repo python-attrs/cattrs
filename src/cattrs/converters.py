@@ -184,7 +184,7 @@ class BaseConverter:
         # Unions are instances now, not classes. We use different registries.
         self._union_struct_registry: Dict[Any, Callable[[Any, Type[T]], T]] = {}
 
-    def unstructure(self, obj: Any, unstructure_as: Any = None) -> Any:
+    def unstructure(self, obj: Any, unstructure_as: Optional[Any] = None) -> Any:
         return self._unstructure_func.dispatch(
             obj.__class__ if unstructure_as is None else unstructure_as
         )(obj)
@@ -283,7 +283,7 @@ class BaseConverter:
         return self._structure_func.dispatch(cl)(obj, cl)
 
     # Classes to Python primitives.
-    def unstructure_attrs_asdict(self, obj) -> Dict[str, Any]:
+    def unstructure_attrs_asdict(self, obj: Any) -> Dict[str, Any]:
         """Our version of `attrs.asdict`, so we can call back to us."""
         attrs = fields(obj.__class__)
         dispatch = self._unstructure_func.dispatch
@@ -294,7 +294,7 @@ class BaseConverter:
             rv[name] = dispatch(a.type or v.__class__)(v)
         return rv
 
-    def unstructure_attrs_astuple(self, obj) -> Tuple[Any, ...]:
+    def unstructure_attrs_astuple(self, obj: Any) -> Tuple[Any, ...]:
         """Our version of `attrs.astuple`, so we can call back to us."""
         attrs = fields(obj.__class__)
         dispatch = self._unstructure_func.dispatch
@@ -305,7 +305,7 @@ class BaseConverter:
             res.append(dispatch(a.type or v.__class__)(v))
         return tuple(res)
 
-    def _unstructure_enum(self, obj):
+    def _unstructure_enum(self, obj: Enum):
         """Convert an enum to its value."""
         return obj.value
 
@@ -342,19 +342,23 @@ class BaseConverter:
     # Python primitives to classes.
 
     @staticmethod
-    def _structure_error(_, cl):
+    def _structure_error(_, cl: Type) -> None:
         """At the bottom of the condition stack, we explode if we can't handle it."""
         msg = "Unsupported type: {0!r}. Register a structure hook for " "it.".format(cl)
         raise StructureHandlerNotFoundError(msg, type_=cl)
 
-    def _gen_structure_generic(self, cl):
+    def _gen_structure_generic(
+        self, cl: Any
+    ) -> Callable[[Mapping[str, Any], Any], Any]:
         """Create and return a hook for structuring generics."""
         fn = make_dict_structure_fn(
             cl, self, _cattrs_prefer_attrib_converters=self._prefer_attrib_converters
         )
         return fn
 
-    def _gen_attrs_union_structure(self, cl):
+    def _gen_attrs_union_structure(
+        self, cl: Any
+    ) -> Callable[[Any, Type[T]], Optional[Type[T]]]:
         """Generate a structuring function for a union of attrs classes (and maybe None)."""
         dis_fn = self._get_dis_func(cl)
         has_none = NoneType in cl.__args__
@@ -374,7 +378,7 @@ class BaseConverter:
         return structure_attrs_union
 
     @staticmethod
-    def _structure_call(obj, cl):
+    def _structure_call(obj: Any, cl: Type[T]) -> Any:
         """Just call ``cl`` with the given ``obj``.
 
         This is just an optimization on the ``_structure_default`` case, when
@@ -853,7 +857,7 @@ class Converter(BaseConverter):
         # only direct dispatch so that subclasses get separately generated
         return h
 
-    def gen_unstructure_iterable(self, cl: Any, unstructure_to=None):
+    def gen_unstructure_iterable(self, cl: Any, unstructure_to: Optional[Any] = None):
         unstructure_to = self._unstruct_collection_overrides.get(
             get_origin(cl) or cl, unstructure_to or list
         )
@@ -861,7 +865,9 @@ class Converter(BaseConverter):
         self._unstructure_func.register_cls_list([(cl, h)], direct=True)
         return h
 
-    def gen_unstructure_hetero_tuple(self, cl: Any, unstructure_to=None):
+    def gen_unstructure_hetero_tuple(
+        self, cl: Any, unstructure_to: Optional[Any] = None
+    ):
         unstructure_to = self._unstruct_collection_overrides.get(
             get_origin(cl) or cl, unstructure_to or list
         )
@@ -869,7 +875,12 @@ class Converter(BaseConverter):
         self._unstructure_func.register_cls_list([(cl, h)], direct=True)
         return h
 
-    def gen_unstructure_mapping(self, cl: Any, unstructure_to=None, key_handler=None):
+    def gen_unstructure_mapping(
+        self,
+        cl: Any,
+        unstructure_to: Optional[Any] = None,
+        key_handler: Optional[Callable[[Any, Optional[Any]], Any]] = None,
+    ):
         unstructure_to = self._unstruct_collection_overrides.get(
             get_origin(cl) or cl, unstructure_to or dict
         )
