@@ -4,7 +4,19 @@ from copy import deepcopy
 from dataclasses import Field
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    NoReturn,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from attr import Attribute
 from attr import has as attrs_has
@@ -20,6 +32,7 @@ from ._compat import (
     OriginAbstractSet,
     OriginMutableSet,
     Sequence,
+    Set,
     fields,
     get_newtype_base,
     get_origin,
@@ -44,6 +57,12 @@ from .disambiguators import create_uniq_field_dis_func
 from .dispatch import MultiStrategyDispatch
 from .gen import (
     AttributeOverride,
+    DictStructureFn,
+    DictUnstructureFn,
+    HeteroTupleUnstructureFn,
+    IterableUnstructureFn,
+    MappingStructureFn,
+    MappingUnstructureFn,
     make_dict_structure_fn,
     make_dict_unstructure_fn,
     make_hetero_tuple_unstructure_fn,
@@ -64,26 +83,26 @@ class UnstructureStrategy(Enum):
     AS_TUPLE = "astuple"
 
 
-def _subclass(typ):
+def _subclass(typ: Type) -> Callable[[Type], bool]:
     """a shortcut"""
     return lambda cls: issubclass(cls, typ)
 
 
-def is_attrs_union(typ):
+def is_attrs_union(typ: Type) -> bool:
     return is_union_type(typ) and all(has(get_origin(e) or e) for e in typ.__args__)
 
 
-def is_attrs_union_or_none(typ):
+def is_attrs_union_or_none(typ: Type) -> bool:
     return is_union_type(typ) and all(
         e is NoneType or has(get_origin(e) or e) for e in typ.__args__
     )
 
 
-def is_optional(typ):
+def is_optional(typ: Type) -> bool:
     return is_union_type(typ) and NoneType in typ.__args__ and len(typ.__args__) == 2
 
 
-def is_literal_containing_enums(typ):
+def is_literal_containing_enums(typ: Type) -> bool:
     return is_literal(typ) and any(isinstance(val, Enum) for val in typ.__args__)
 
 
@@ -183,9 +202,9 @@ class BaseConverter:
         self._dict_factory = dict_factory
 
         # Unions are instances now, not classes. We use different registries.
-        self._union_struct_registry: Dict[Any, Callable[[Any, Type[T]], T]] = {}
+        self._union_struct_registry = {}
 
-    def unstructure(self, obj: Any, unstructure_as: Optional[Any] = None) -> Any:
+    def unstructure(self, obj: Any, unstructure_as: Any = None) -> Any:
         return self._unstructure_func.dispatch(
             obj.__class__ if unstructure_as is None else unstructure_as
         )(obj)
@@ -213,8 +232,8 @@ class BaseConverter:
             self._unstructure_func.register_cls_list([(cls, func)])
 
     def register_unstructure_hook_func(
-        self, check_func: Callable[[Any], bool], func: Callable[[T], Any]
-    ):
+        self, check_func: Callable[[Any], bool], func: Callable[[Any], Any]
+    ) -> None:
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
         """
@@ -236,7 +255,9 @@ class BaseConverter:
         """
         self._unstructure_func.register_func_list([(predicate, factory, True)])
 
-    def register_structure_hook(self, cl: Any, func: Callable[[Any, Type[T]], T]):
+    def register_structure_hook(
+        self, cl: Any, func: Callable[[Any, Type[T]], T]
+    ) -> None:
         """Register a primitive-to-class converter function for a type.
 
         The converter function should take two arguments:
@@ -256,7 +277,7 @@ class BaseConverter:
 
     def register_structure_hook_func(
         self, check_func: Callable[[Type[T]], bool], func: Callable[[Any, Type[T]], T]
-    ):
+    ) -> None:
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
         """
@@ -306,22 +327,22 @@ class BaseConverter:
             res.append(dispatch(a.type or v.__class__)(v))
         return tuple(res)
 
-    def _unstructure_enum(self, obj: Enum):
+    def _unstructure_enum(self, obj: Enum) -> Any:
         """Convert an enum to its value."""
         return obj.value
 
     @staticmethod
-    def _unstructure_identity(obj):
+    def _unstructure_identity(obj: T) -> T:
         """Just pass it through."""
         return obj
 
-    def _unstructure_seq(self, seq):
+    def _unstructure_seq(self, seq: Sequence[T]) -> Sequence[T]:
         """Convert a sequence to primitive equivalents."""
         # We can reuse the sequence class, so tuples stay tuples.
         dispatch = self._unstructure_func.dispatch
         return seq.__class__(dispatch(e.__class__)(e) for e in seq)
 
-    def _unstructure_mapping(self, mapping):
+    def _unstructure_mapping(self, mapping: Mapping[T, V]) -> Mapping[T, V]:
         """Convert a mapping of attr classes to primitive equivalents."""
 
         # We can reuse the mapping class, so dicts stay dicts and OrderedDicts
@@ -332,7 +353,10 @@ class BaseConverter:
             for k, v in mapping.items()
         )
 
-    def _unstructure_union(self, obj):
+    # note: Use UnionType when 3.11 is released as
+    # the behaviour of @final is changed. This would
+    # affect how we can support UnionType in ._compat.py
+    def _unstructure_union(self, obj: Any) -> Any:
         """
         Unstructure an object as a union.
 
@@ -343,14 +367,12 @@ class BaseConverter:
     # Python primitives to classes.
 
     @staticmethod
-    def _structure_error(_, cl: Type) -> None:
+    def _structure_error(_, cl: Type) -> NoReturn:
         """At the bottom of the condition stack, we explode if we can't handle it."""
         msg = "Unsupported type: {0!r}. Register a structure hook for " "it.".format(cl)
         raise StructureHandlerNotFoundError(msg, type_=cl)
 
-    def _gen_structure_generic(
-        self, cl: Any
-    ) -> Callable[[Mapping[str, Any], Any], Any]:
+    def _gen_structure_generic(self, cl: Type[T]) -> DictStructureFn[T]:
         """Create and return a hook for structuring generics."""
         fn = make_dict_structure_fn(
             cl, self, _cattrs_prefer_attrib_converters=self._prefer_attrib_converters
@@ -416,7 +438,7 @@ class BaseConverter:
             converted = self._structure_attribute(a, value)
             conv_obj.append(converted)
 
-        return cl(*conv_obj)  # type: ignore
+        return cl(*conv_obj)
 
     def _structure_attribute(self, a: Union[Attribute, Field], value: Any) -> Any:
         """Handle an individual attrs attribute."""
@@ -445,7 +467,7 @@ class BaseConverter:
         # For public use.
 
         conv_obj = {}  # Start with a fresh dict, to ignore extra keys.
-        for a in fields(cl):  # type: ignore
+        for a in fields(cl):
             name = a.name
 
             try:
@@ -458,9 +480,9 @@ class BaseConverter:
 
             conv_obj[name] = self._structure_attribute(a, val)
 
-        return cl(**conv_obj)  # type: ignore
+        return cl(**conv_obj)
 
-    def _structure_list(self, obj, cl):
+    def _structure_list(self, obj: Iterable[T], cl: Any) -> List[T]:
         """Convert an iterable to a potentially generic list."""
         if is_bare(cl) or cl.__args__[0] is Any:
             res = [e for e in obj]
@@ -487,7 +509,9 @@ class BaseConverter:
                 res = [handler(e, elem_type) for e in obj]
         return res
 
-    def _structure_set(self, obj, cl, structure_to=set):
+    def _structure_set(
+        self, obj: Iterable[T], cl: Any, structure_to: type = set
+    ) -> Set[T]:
         """Convert an iterable into a potentially generic set."""
         if is_bare(cl) or cl.__args__[0] is Any:
             return structure_to(obj)
@@ -512,11 +536,13 @@ class BaseConverter:
         else:
             return structure_to([handler(e, elem_type) for e in obj])
 
-    def _structure_frozenset(self, obj, cl):
+    def _structure_frozenset(
+        self, obj: Iterable[T], cl: Any
+    ) -> FrozenSetSubscriptable[T]:
         """Convert an iterable into a potentially generic frozenset."""
-        return self._structure_set(obj, cl, structure_to=frozenset)
+        return self._structure_set(obj, cl, structure_to=frozenset)  # type: ignore (incompatible type between frozenset and set)
 
-    def _structure_dict(self, obj, cl):
+    def _structure_dict(self, obj: Mapping[T, V], cl: Any) -> Dict[T, V]:
         """Convert a mapping into a potentially generic dict."""
         if is_bare(cl) or cl.__args__ == (Any, Any):
             return dict(obj)
@@ -548,7 +574,7 @@ class BaseConverter:
         handler = self._union_struct_registry[union]
         return handler(obj, union)
 
-    def _structure_tuple(self, obj, tup: Type[T]) -> T:
+    def _structure_tuple(self, obj: Any, tup: Type[T]) -> T:
         """Deal with structuring into a tuple."""
         if tup in (Tuple, tuple):
             tup_params = None
@@ -837,7 +863,9 @@ class Converter(BaseConverter):
         # only direct dispatch so that subclasses get separately generated
         return h
 
-    def gen_unstructure_iterable(self, cl: Any, unstructure_to: Optional[Any] = None):
+    def gen_unstructure_iterable(
+        self, cl: Any, unstructure_to: Any = None
+    ) -> IterableUnstructureFn:
         unstructure_to = self._unstruct_collection_overrides.get(
             get_origin(cl) or cl, unstructure_to or list
         )
@@ -846,8 +874,8 @@ class Converter(BaseConverter):
         return h
 
     def gen_unstructure_hetero_tuple(
-        self, cl: Any, unstructure_to: Optional[Any] = None
-    ):
+        self, cl: Any, unstructure_to: Any = None
+    ) -> HeteroTupleUnstructureFn:
         unstructure_to = self._unstruct_collection_overrides.get(
             get_origin(cl) or cl, unstructure_to or list
         )
@@ -858,9 +886,9 @@ class Converter(BaseConverter):
     def gen_unstructure_mapping(
         self,
         cl: Any,
-        unstructure_to: Optional[Any] = None,
+        unstructure_to: Any = None,
         key_handler: Optional[Callable[[Any, Optional[Any]], Any]] = None,
-    ):
+    ) -> MappingUnstructureFn:
         unstructure_to = self._unstruct_collection_overrides.get(
             get_origin(cl) or cl, unstructure_to or dict
         )
@@ -870,7 +898,7 @@ class Converter(BaseConverter):
         self._unstructure_func.register_cls_list([(cl, h)], direct=True)
         return h
 
-    def gen_structure_counter(self, cl: Any):
+    def gen_structure_counter(self, cl: Any) -> MappingStructureFn[T]:
         h = make_mapping_structure_fn(
             cl,
             self,
@@ -881,7 +909,7 @@ class Converter(BaseConverter):
         self._structure_func.register_cls_list([(cl, h)], direct=True)
         return h
 
-    def gen_structure_mapping(self, cl: Any):
+    def gen_structure_mapping(self, cl: Any) -> MappingStructureFn[T]:
         h = make_mapping_structure_fn(
             cl, self, detailed_validation=self.detailed_validation
         )

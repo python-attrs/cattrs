@@ -2,7 +2,7 @@
 from collections import OrderedDict
 from functools import reduce
 from operator import or_
-from typing import Callable, Dict, Mapping, Optional, Type, Any
+from typing import Any, Callable, Dict, Mapping, Optional, Type
 
 from attr import NOTHING, fields
 
@@ -24,7 +24,7 @@ def create_uniq_field_dis_func(
         raise ValueError("At least two classes have no attributes.")
     # TODO: Deal with a single class having no required attrs.
     # For each class, attempt to generate a single unique required field.
-    uniq_attrs_dict = OrderedDict()  # type: Dict[str, Type]
+    uniq_attrs_dict: Dict[str, Type] = OrderedDict()
     cls_and_attrs.sort(key=lambda c_a: -len(c_a[1]))
 
     fallback = None  # If none match, try this.
@@ -48,8 +48,7 @@ def create_uniq_field_dis_func(
         else:
             fallback = cl
 
-    def dis_func(data):
-        # type: (Mapping[Any, Any]) -> Optional[Type]
+    def dis_func(data: Mapping[Any, Any]) -> Optional[Type]:
         if not isinstance(data, Mapping):
             raise ValueError("Only input mappings are supported.")
         for k, v in uniq_attrs_dict.items():
