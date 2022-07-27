@@ -5,8 +5,10 @@ from typing import Callable, Type
 from attr import define
 from hypothesis import given
 from hypothesis.strategies import just, one_of
+from pytest import raises
 
 from cattrs import BaseConverter, Converter, UnstructureStrategy
+from cattrs.errors import ClassValidationError
 
 from . import unstructure_strats
 
@@ -82,6 +84,7 @@ def test_copy_converter(
     dict_factory: Callable,
     omit_if_default: bool,
 ):
+    """cattrs.Converter can be copied, and keeps its attributs."""
     c = Converter(
         unstruct_strat=strat,
         prefer_attrib_converters=prefer_attrib,
@@ -140,3 +143,28 @@ def test_copy_hooks(
     assert c.detailed_validation == copy.detailed_validation
     assert c._prefer_attrib_converters == copy._prefer_attrib_converters
     assert c._dict_factory == copy._dict_factory
+
+
+@given(prefer_attrib=..., dict_factory=one_of(just(dict), just(OrderedDict)))
+def test_detailed_validation(prefer_attrib: bool, dict_factory: Callable):
+    """Copies with different detailed validation work correctly."""
+    c = Converter(
+        prefer_attrib_converters=prefer_attrib,
+        detailed_validation=True,
+        dict_factory=dict_factory,
+    )
+
+    # So the converter gets generated.
+    c.structure({"a": 1}, Simple)
+
+    copy = c.copy(detailed_validation=False)
+
+    assert c is not copy
+    assert copy.detailed_validation is False
+
+    with raises(ClassValidationError):
+        c.structure({}, Simple)
+
+    breakpoint()
+    with raises(ValueError):
+        copy.structure({}, Simple)
