@@ -52,9 +52,8 @@ def test_external_class_validation():
     with pytest.raises(ClassValidationError) as exc:
         c.structure({"a": 1, "b": "c", "c": "1"}, Test)
 
-    assert repr(exc.value.exceptions[0]) == repr(
-        ValueError("'b' must be in ['a', 'b'] (got 'c')")
-    )
+    assert type(exc.value.exceptions[0]) == ValueError
+    assert str(exc.value.exceptions[0].args[0]) == "'b' must be in ['a', 'b'] (got 'c')"
 
 
 def test_list_validation():
