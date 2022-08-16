@@ -340,7 +340,7 @@ def make_dict_structure_fn(
             lines.append(f"{i}except Exception as e:")
             i = f"{i}  "
             lines.append(
-                f"{i}e.__note__ = 'Structuring class ' + {cl.__qualname__!r} + ' @ attribute', {an}"
+                f"{i}e.__note__ = 'Structuring class ' + {cl.__qualname__!r} + ' @ attribute {an}'"
             )
             lines.append(f"{i}errors.append(e)")
 
