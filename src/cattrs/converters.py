@@ -645,8 +645,8 @@ class BaseConverter:
             else self.detailed_validation,
         )
 
-        res._unstructure_func = deepcopy(self._unstructure_func)
-        res._structure_func = deepcopy(self._structure_func)
+        self._unstructure_func.copy_to(res._unstructure_func)
+        self._structure_func.copy_to(res._structure_func)
 
         return res
 
@@ -659,6 +659,8 @@ class Converter(BaseConverter):
         "forbid_extra_keys",
         "type_overrides",
         "_unstruct_collection_overrides",
+        "_struct_copy_skip",
+        "_unstruct_copy_skip",
     )
 
     def __init__(
@@ -770,6 +772,10 @@ class Converter(BaseConverter):
         self.register_structure_hook_factory(
             lambda t: get_newtype_base(t) is not None, self.get_structure_newtype
         )
+
+        # We keep these so we can more correctly copy the hooks.
+        self._struct_copy_skip = self._structure_func.get_num_fns()
+        self._unstruct_copy_skip = self._unstructure_func.get_num_fns()
 
     def get_structure_newtype(self, type: Type[T]) -> Callable[[Any, Any], T]:
         base = get_newtype_base(type)
@@ -907,8 +913,10 @@ class Converter(BaseConverter):
             else self.detailed_validation,
         )
 
-        res._unstructure_func = deepcopy(self._unstructure_func)
-        res._structure_func = deepcopy(self._structure_func)
+        self._unstructure_func.copy_to(
+            res._unstructure_func, skip=self._unstruct_copy_skip
+        )
+        self._structure_func.copy_to(res._structure_func, skip=self._struct_copy_skip)
 
         return res
 

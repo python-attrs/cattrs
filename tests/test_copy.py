@@ -165,6 +165,37 @@ def test_detailed_validation(prefer_attrib: bool, dict_factory: Callable):
     with raises(ClassValidationError):
         c.structure({}, Simple)
 
-    breakpoint()
-    with raises(ValueError):
+    with raises(KeyError):
         copy.structure({}, Simple)
+
+
+@given(
+    prefer_attrib=...,
+    dict_factory=one_of(just(dict), just(OrderedDict)),
+    detailed_validation=...,
+)
+def test_col_overrides(
+    prefer_attrib: bool, dict_factory: Callable, detailed_validation: bool
+):
+    """Copies with different sequence overrides work correctly."""
+    c = Converter(
+        prefer_attrib_converters=prefer_attrib,
+        detailed_validation=detailed_validation,
+        dict_factory=dict_factory,
+        unstruct_collection_overrides={list: tuple},
+    )
+
+    # So the converter gets generated.
+    assert c.unstructure([1, 2, 3]) == (1, 2, 3)
+    # We also stick a manual hook on there so it gets copied too.
+    c.register_unstructure_hook(Simple, lambda s: s.a)
+
+    copy = c.copy(unstruct_collection_overrides={})
+
+    assert c is not copy
+
+    assert c.unstructure([1, 2, 3]) == (1, 2, 3)
+    assert copy.unstructure([1, 2, 3]) == [1, 2, 3]
+
+    assert c.unstructure(Simple(1)) == 1
+    assert copy.unstructure(Simple(1)) == 1
