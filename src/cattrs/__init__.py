@@ -1,4 +1,4 @@
-from .converters import BaseConverter, Converter, UnstructureStrategy
+from .converters import BaseConverter, Converter, GenConverter, UnstructureStrategy
 from .errors import (
     BaseValidationError,
     ClassValidationError,
