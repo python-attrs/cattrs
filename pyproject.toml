@@ -27,23 +27,23 @@ typing_extensions = { version = "*", python = "< 3.8" }
 exceptiongroup = { version = "*", python = "< 3.11" }
 
 [tool.poetry.dev-dependencies]
-pymongo = "^3.12.1"
-flake8 = "^3.9.0"
-tox = "^3.23.0"
+pymongo = "^4.2.0"
+flake8 = "^5.0.4"
+tox = "^3.26.0"
 Sphinx = "^4.1.2"
-pytest = "^7.1.1"
+pytest = "^7.1.3"
 pytest-benchmark = "^3.2.3"
-hypothesis = "^6.41.0"
+hypothesis = "^6.54.5"
 pendulum = "^2.1.2"
-isort = "^5.8.0"
-black = "^22.3.0"
-immutables = "^0.15"
+isort = { version = "5.10.1", python = "<4" }
+black = "^22.8.0"
+immutables = "^0.18"
 ujson = "^5.4.0"
 orjson = { version = "^3.5.2", markers = "implementation_name == 'cpython'" }
 msgpack = "^1.0.2"
-PyYAML = "^5.4.1"
-tomlkit = "^0.7.0"
-furo = "^2021.7.31-beta.41"
+PyYAML = "^6.0"
+tomlkit = { version = "^0.11.4", python = "<4" }
+furo = "^2022.6.21"
 coverage = "^6.2"
 
 [tool.poetry.urls]
