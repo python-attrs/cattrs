@@ -19,6 +19,8 @@ History
 * Fix `Converter.register_structure_hook_factory` and `cattrs.gen.make_dict_unstructure_fn` type annotations.
   (`#281 <https://github.com/python-attrs/cattrs/issues/281>`_)
 * Expose all error classes in the `cattr.errors` namespace. Note that it is deprecated, just use `cattrs.errors`. (`#252 <https://github.com/python-attrs/cattrs/issues/252>`_)
+* ``cattrs.Converter`` and ``cattrs.BaseConverter`` can now copy themselves using the ``copy`` method.
+  (`#284 <https://github.com/python-attrs/cattrs/pull/284>`_)
 
 22.1.0 (2022-04-03)
 -------------------
