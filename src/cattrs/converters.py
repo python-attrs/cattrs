@@ -575,6 +575,14 @@ class BaseConverter:
                 return tuple(conv(e, tup_type) for e in obj)
         else:
             # We're dealing with a heterogenous tuple.
+            exp_len = len(tup_params)
+            try:
+                len_obj = len(obj)
+            except TypeError:
+                pass  # most likely an unsized iterator, eg generator
+            else:
+                if len_obj > exp_len:
+                    exp_len = len_obj
             if self.detailed_validation:
                 errors = []
                 res = []
@@ -585,18 +593,31 @@ class BaseConverter:
                     except Exception as exc:
                         exc.__note__ = f"Structuring {tup} @ index {ix}"
                         errors.append(exc)
+                if len(res) < exp_len:
+                    problem = "Not enough" if len(res) < len(tup_params) else "Too many"
+                    exc = ValueError(
+                        f"{problem} values in {obj!r} to structure as {tup!r}"
+                    )
+                    exc.__note__ = f"Structuring {tup}"
+                    errors.append(exc)
                 if errors:
                     raise IterableValidationError(
                         f"While structuring {tup!r}", errors, tup
                     )
                 return tuple(res)
             else:
-                return tuple(
+                res = tuple(
                     [
                         self._structure_func.dispatch(t)(e, t)
                         for t, e in zip(tup_params, obj)
                     ]
                 )
+                if len(res) < exp_len:
+                    problem = "Not enough" if len(res) < len(tup_params) else "Too many"
+                    raise ValueError(
+                        f"{problem} values in {obj!r} to structure as {tup!r}"
+                    )
+                return res
 
     @staticmethod
     def _get_dis_func(union) -> Callable[..., Type]:

@@ -129,7 +129,10 @@ def test_structuring_hetero_tuples(list_of_vals_and_types, detailed_validation):
     converter = BaseConverter(detailed_validation=detailed_validation)
     types = tuple(e[1] for e in list_of_vals_and_types)
     vals = [e[0] for e in list_of_vals_and_types]
-    t = Tuple[types]
+    if types:
+        t = Tuple[types]
+    else:
+        t = Tuple
 
     converted = converter.structure(vals, t)
 
@@ -141,13 +144,24 @@ def test_structuring_hetero_tuples(list_of_vals_and_types, detailed_validation):
     for x, y in zip(types, converted):
         assert isinstance(y, x)
 
+    t2 = Tuple[types + (str,)]  # one longer
+    vals2 = vals + [None]  # one longer
+    expected_exception = IterableValidationError if detailed_validation else ValueError
+    with raises(expected_exception):
+        converter.structure(vals, t2)
+    with raises(expected_exception):
+        converter.structure(vals2, t)
+
 
 @given(lists(primitives_and_type))
 def test_stringifying_tuples(list_of_vals_and_types):
     """Stringify all elements of a heterogeneous tuple."""
     converter = BaseConverter()
     vals = [e[0] for e in list_of_vals_and_types]
-    t = Tuple[(str,) * len(list_of_vals_and_types)]
+    if len(list_of_vals_and_types):
+        t = Tuple[(str,) * len(list_of_vals_and_types)]
+    else:
+        t = Tuple
 
     converted = converter.structure(vals, t)
 
