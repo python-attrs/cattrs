@@ -13,8 +13,8 @@ Contents:
 
    readme
    installation
-   usage
    converters
+   usage
    structuring
    unstructuring
    validation
