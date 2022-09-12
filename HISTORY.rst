@@ -21,6 +21,8 @@ History
 * Expose all error classes in the `cattr.errors` namespace. Note that it is deprecated, just use `cattrs.errors`. (`#252 <https://github.com/python-attrs/cattrs/issues/252>`_)
 * ``cattrs.Converter`` and ``cattrs.BaseConverter`` can now copy themselves using the ``copy`` method.
   (`#284 <https://github.com/python-attrs/cattrs/pull/284>`_)
+* Fix usage of notes for the final version of `PEP 678<https://peps.python.org/pep-0678/>`_, supported since ``exceptiongroup>=1.0.0rc4``.
+  (`#303 <303 <https://github.com/python-attrs/cattrs/pull/303>`_)
 
 22.1.0 (2022-04-03)
 -------------------
