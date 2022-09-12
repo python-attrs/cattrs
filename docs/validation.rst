@@ -14,7 +14,7 @@ In essence, ExceptionGroups are trees of exceptions.
 When un/structuring a class, `cattrs` will gather any exceptions on a field-by-field basis and raise them as a ``cattrs.ClassValidationError``, which is a subclass of ``BaseValidationError``.
 When structuring sequences and mappings, `cattrs` will gather any exceptions on a key- or index-basis and raise them as a ``cattrs.IterableValidationError``, which is a subclass of ``BaseValidationError``.
 
-The exceptions will also have their ``__note__`` attributes set, as per `PEP 678`_, showing the field, key or index for each inner exception.
+The exceptions will also have their ``__notes__`` attributes set, as per `PEP 678`_, showing the field, key or index for each inner exception.
 
 A simple example involving a class containing a list and a dictionary:
 

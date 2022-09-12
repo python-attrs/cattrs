@@ -340,7 +340,7 @@ def make_dict_structure_fn(
             lines.append(f"{i}except Exception as e:")
             i = f"{i}  "
             lines.append(
-                f"{i}e.__note__ = 'Structuring class {cl.__qualname__} @ attribute {an}'"
+                f"{i}e.__notes__ = getattr(e, '__notes__', ()) + ('Structuring class {cl.__qualname__} @ attribute {an}',)"
             )
             lines.append(f"{i}errors.append(e)")
 
@@ -703,7 +703,7 @@ def make_mapping_structure_fn(
             lines.append(f"      value = {v_s}")
             lines.append("    except Exception as e:")
             lines.append(
-                "      e.__note__ = 'Structuring mapping value @ key ' + repr(k)"
+                "      e.__notes__ = getattr(e, '__notes__', ()) + ('Structuring mapping value @ key ' + repr(k),)"
             )
             lines.append("      errors.append(e)")
             lines.append("      continue")
@@ -712,7 +712,7 @@ def make_mapping_structure_fn(
             lines.append("      res[key] = value")
             lines.append("    except Exception as e:")
             lines.append(
-                "      e.__note__ = 'Structuring mapping key @ key ' + repr(k)"
+                "      e.__notes__ = getattr(e, '__notes__', ()) + ('Structuring mapping key @ key ' + repr(k),)"
             )
             lines.append("      errors.append(e)")
             lines.append("  if errors:")
