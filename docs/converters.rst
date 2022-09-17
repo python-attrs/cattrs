@@ -2,7 +2,7 @@
 Converters
 ==========
 
-All ``cattrs`` functionality is exposed through a ``cattrs.Converter`` object.
+All ``cattrs`` functionality is exposed through a :py:class:`cattrs.Converter` object.
 Global ``cattrs`` functions, such as ``cattrs.unstructure()``, use a single
 global converter. Changes done to this global converter, such as registering new
 ``structure`` and ``unstructure`` hooks, affect all code using the global
@@ -37,6 +37,9 @@ Currently, a converter contains the following state:
 * a reference to an unstructuring strategy (either AS_DICT or AS_TUPLE).
 * a ``dict_factory`` callable, used for creating ``dicts`` when dumping
   ``attrs`` classes using ``AS_DICT``.
+
+Converters may be cloned using the :py:attr:`cattrs.Converter.copy` method.
+The new copy may be changed through the `copy` arguments, but will retain all manually registered hooks from the original.
 
 ``cattrs.Converter``
 --------------------

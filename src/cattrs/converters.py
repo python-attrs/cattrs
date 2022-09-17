@@ -146,7 +146,7 @@ class BaseConverter:
         # Per-instance register of to-attrs converters.
         # Singledispatch dispatches based on the first argument, so we
         # store the function and switch the arguments in self.loads.
-        self._structure_func = MultiStrategyDispatch(self._structure_error)
+        self._structure_func = MultiStrategyDispatch(BaseConverter._structure_error)
         self._structure_func.register_func_list(
             [
                 (lambda cl: cl is Any or cl is Optional or cl is None, lambda v, _: v),
@@ -309,7 +309,8 @@ class BaseConverter:
         """Convert an enum to its value."""
         return obj.value
 
-    def _unstructure_identity(self, obj):
+    @staticmethod
+    def _unstructure_identity(obj):
         """Just pass it through."""
         return obj
 
@@ -340,7 +341,8 @@ class BaseConverter:
 
     # Python primitives to classes.
 
-    def _structure_error(self, _, cl):
+    @staticmethod
+    def _structure_error(_, cl):
         """At the bottom of the condition stack, we explode if we can't handle it."""
         msg = "Unsupported type: {0!r}. Register a structure hook for " "it.".format(cl)
         raise StructureHandlerNotFoundError(msg, type_=cl)
@@ -573,6 +575,14 @@ class BaseConverter:
                 return tuple(conv(e, tup_type) for e in obj)
         else:
             # We're dealing with a heterogenous tuple.
+            exp_len = len(tup_params)
+            try:
+                len_obj = len(obj)
+            except TypeError:
+                pass  # most likely an unsized iterator, eg generator
+            else:
+                if len_obj > exp_len:
+                    exp_len = len_obj
             if self.detailed_validation:
                 errors = []
                 res = []
@@ -583,18 +593,31 @@ class BaseConverter:
                     except Exception as exc:
                         exc.__note__ = f"Structuring {tup} @ index {ix}"
                         errors.append(exc)
+                if len(res) < exp_len:
+                    problem = "Not enough" if len(res) < len(tup_params) else "Too many"
+                    exc = ValueError(
+                        f"{problem} values in {obj!r} to structure as {tup!r}"
+                    )
+                    exc.__note__ = f"Structuring {tup}"
+                    errors.append(exc)
                 if errors:
                     raise IterableValidationError(
                         f"While structuring {tup!r}", errors, tup
                     )
                 return tuple(res)
             else:
-                return tuple(
+                res = tuple(
                     [
                         self._structure_func.dispatch(t)(e, t)
                         for t, e in zip(tup_params, obj)
                     ]
                 )
+                if len(res) < exp_len:
+                    problem = "Not enough" if len(res) < len(tup_params) else "Too many"
+                    raise ValueError(
+                        f"{problem} values in {obj!r} to structure as {tup!r}"
+                    )
+                return res
 
     @staticmethod
     def _get_dis_func(union) -> Callable[..., Type]:
@@ -615,6 +638,38 @@ class BaseConverter:
             )
         return create_uniq_field_dis_func(*union_types)
 
+    def __deepcopy__(self, _) -> "BaseConverter":
+        return self.copy()
+
+    def copy(
+        self,
+        dict_factory: Optional[Callable[[], Any]] = None,
+        unstruct_strat: Optional[UnstructureStrategy] = None,
+        prefer_attrib_converters: Optional[bool] = None,
+        detailed_validation: Optional[bool] = None,
+    ) -> "BaseConverter":
+        res = self.__class__(
+            dict_factory if dict_factory is not None else self._dict_factory,
+            unstruct_strat
+            if unstruct_strat is not None
+            else (
+                UnstructureStrategy.AS_DICT
+                if self._unstructure_attrs == self.unstructure_attrs_asdict
+                else UnstructureStrategy.AS_TUPLE
+            ),
+            prefer_attrib_converters
+            if prefer_attrib_converters is not None
+            else self._prefer_attrib_converters,
+            detailed_validation
+            if detailed_validation is not None
+            else self.detailed_validation,
+        )
+
+        self._unstructure_func.copy_to(res._unstructure_func)
+        self._structure_func.copy_to(res._structure_func)
+
+        return res
+
 
 class Converter(BaseConverter):
     """A converter which generates specialized un/structuring functions."""
@@ -624,6 +679,8 @@ class Converter(BaseConverter):
         "forbid_extra_keys",
         "type_overrides",
         "_unstruct_collection_overrides",
+        "_struct_copy_skip",
+        "_unstruct_copy_skip",
     )
 
     def __init__(
@@ -736,6 +793,10 @@ class Converter(BaseConverter):
             lambda t: get_newtype_base(t) is not None, self.get_structure_newtype
         )
 
+        # We keep these so we can more correctly copy the hooks.
+        self._struct_copy_skip = self._structure_func.get_num_fns()
+        self._unstruct_copy_skip = self._unstructure_func.get_num_fns()
+
     def get_structure_newtype(self, type: Type[T]) -> Callable[[Any, Any], T]:
         base = get_newtype_base(type)
         return self._structure_func.dispatch(base)
@@ -835,6 +896,49 @@ class Converter(BaseConverter):
         )
         self._structure_func.register_cls_list([(cl, h)], direct=True)
         return h
+
+    def copy(
+        self,
+        dict_factory: Optional[Callable[[], Any]] = None,
+        unstruct_strat: Optional[UnstructureStrategy] = None,
+        omit_if_default: Optional[bool] = None,
+        forbid_extra_keys: Optional[bool] = None,
+        type_overrides: Optional[Mapping[Type, AttributeOverride]] = None,
+        unstruct_collection_overrides: Optional[Mapping[Type, Callable]] = None,
+        prefer_attrib_converters: Optional[bool] = None,
+        detailed_validation: Optional[bool] = None,
+    ) -> "Converter":
+        res = self.__class__(
+            dict_factory if dict_factory is not None else self._dict_factory,
+            unstruct_strat
+            if unstruct_strat is not None
+            else (
+                UnstructureStrategy.AS_DICT
+                if self._unstructure_attrs == self.unstructure_attrs_asdict
+                else UnstructureStrategy.AS_TUPLE
+            ),
+            omit_if_default if omit_if_default is not None else self.omit_if_default,
+            forbid_extra_keys
+            if forbid_extra_keys is not None
+            else self.forbid_extra_keys,
+            type_overrides if type_overrides is not None else self.type_overrides,
+            unstruct_collection_overrides
+            if unstruct_collection_overrides is not None
+            else self._unstruct_collection_overrides,
+            prefer_attrib_converters
+            if prefer_attrib_converters is not None
+            else self._prefer_attrib_converters,
+            detailed_validation
+            if detailed_validation is not None
+            else self.detailed_validation,
+        )
+
+        self._unstructure_func.copy_to(
+            res._unstructure_func, skip=self._unstruct_copy_skip
+        )
+        self._structure_func.copy_to(res._structure_func, skip=self._struct_copy_skip)
+
+        return res
 
 
 GenConverter = Converter

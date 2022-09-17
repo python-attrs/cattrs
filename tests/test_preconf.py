@@ -84,15 +84,15 @@ def everythings(
     max_int=None,
     allow_inf=True,
     allow_null_bytes_in_keys=True,
-    allow_quotes_in_keys=True,
     allow_control_characters_in_values=True,
     min_key_length=0,
     allow_datetime_microseconds=True,
+    key_blacklist_characters=[],
 ):
     key_text = text(
         characters(
             blacklist_categories=("Cs",) if allow_null_bytes_in_keys else ("Cs", "Cc"),
-            blacklist_characters='"' if not allow_quotes_in_keys else None,
+            blacklist_characters=key_blacklist_characters,
         ),
         min_size=min_key_length,
     )
@@ -314,7 +314,7 @@ def test_pyyaml_converter(everything: Everything):
     everythings(
         min_key_length=1,
         allow_null_bytes_in_keys=False,
-        allow_quotes_in_keys=False,
+        key_blacklist_characters=['"', "\\"],
         allow_control_characters_in_values=False,
     ),
     booleans(),
@@ -333,7 +333,7 @@ def test_tomlkit(everything: Everything, detailed_validation: bool):
     everythings(
         min_key_length=1,
         allow_null_bytes_in_keys=False,
-        allow_quotes_in_keys=False,
+        key_blacklist_characters=['"', "\\"],
         allow_control_characters_in_values=False,
     ),
     booleans(),

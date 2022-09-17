@@ -48,7 +48,7 @@ class MultiStrategyDispatch:
 
         return self._function_dispatch.dispatch(cl)
 
-    def register_cls_list(self, cls_and_handler, direct: bool = False):
+    def register_cls_list(self, cls_and_handler, direct: bool = False) -> None:
         """Register a class to direct or singledispatch."""
         for cls, handler in cls_and_handler:
             if direct:
@@ -89,6 +89,14 @@ class MultiStrategyDispatch:
         self._direct_dispatch.clear()
         self.dispatch.cache_clear()
 
+    def get_num_fns(self) -> int:
+        return self._function_dispatch.get_num_fns()
+
+    def copy_to(self, other: "MultiStrategyDispatch", skip: int = 0):
+        self._function_dispatch.copy_to(other._function_dispatch, skip=skip)
+        for cls, fn in self._single_dispatch.registry.items():
+            other._single_dispatch.register(cls, fn)
+
 
 @attr.s(slots=True)
 class FunctionDispatch:
@@ -125,3 +133,9 @@ class FunctionDispatch:
         raise StructureHandlerNotFoundError(
             f"unable to find handler for {typ}", type_=typ
         )
+
+    def get_num_fns(self) -> int:
+        return len(self._handler_pairs)
+
+    def copy_to(self, other: "FunctionDispatch", skip: int = 0):
+        other._handler_pairs.extend(self._handler_pairs[skip:])

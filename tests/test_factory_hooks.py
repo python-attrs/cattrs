@@ -1,8 +1,6 @@
 """Tests for the factory hooks documentation."""
-import pytest
 from attr import define, fields, has
 
-from cattrs import BaseConverter, Converter
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
 
@@ -11,7 +9,6 @@ def to_camel_case(snake_str):
     return components[0] + "".join(x.title() for x in components[1:])
 
 
-@pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_snake_to_camel(converter_cls):
     @define
     class Inner:
