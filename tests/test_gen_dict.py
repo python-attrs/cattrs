@@ -292,15 +292,15 @@ def test_omitting_structure(extended_validation: bool):
 @pytest.mark.skipif(not is_py39_plus, reason="literals and annotated are 3.9+")
 def test_type_names_with_quotes():
     """Types with quote characters in their reprs should work."""
-    from typing import Annotated, Literal
+    from typing import Annotated, Literal, Union
 
     converter = Converter()
 
     assert converter.structure({1: 1}, Dict[Annotated[int, "'"], int]) == {1: 1}
 
     converter.register_structure_hook_func(
-        lambda t: t is Literal["a", 2, 3] | Literal[4], lambda v, _: v
+        lambda t: t is Union[Literal["a", 2, 3], Literal[4]], lambda v, _: v
     )
     assert converter.structure(
-        {2: "a"}, Dict[Literal["a", 2, 3] | Literal[4], str]
+        {2: "a"}, Dict[Union[Literal["a", 2, 3], Literal[4]], str]
     ) == {2: "a"}
