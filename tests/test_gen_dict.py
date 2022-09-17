@@ -1,5 +1,5 @@
 """Tests for generated dict functions."""
-from typing import Annotated, Dict, Literal, Type
+from typing import Dict, Type
 
 import pytest
 from attr import Factory, define, field
@@ -292,6 +292,7 @@ def test_omitting_structure(extended_validation: bool):
 @pytest.mark.skipif(not is_py39_plus, reason="literals and annotated are 3.9+")
 def test_type_names_with_quotes():
     """Types with quote characters in their reprs should work."""
+    from typing import Annotated, Literal
 
     converter = Converter()
 
