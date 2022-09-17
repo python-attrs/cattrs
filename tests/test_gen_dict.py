@@ -1,5 +1,5 @@
 """Tests for generated dict functions."""
-from typing import Type
+from typing import Annotated, Dict, Literal, Type
 
 import pytest
 from attr import Factory, define, field
@@ -287,3 +287,18 @@ def test_omitting_structure(extended_validation: bool):
     assert structured.a == 1
     assert structured.c == 1
     assert not hasattr(structured, "b")
+
+
+def test_type_names_with_quotes():
+    """Types with quote characters in their reprs should work."""
+
+    converter = Converter()
+
+    assert converter.structure({1: 1}, Dict[Annotated[int, "'"], int]) == {1: 1}
+
+    converter.register_structure_hook_func(
+        lambda t: t is Literal["a", 2, 3] | Literal[4], lambda v, _: v
+    )
+    assert converter.structure(
+        {2: "a"}, Dict[Literal["a", 2, 3] | Literal[4], str]
+    ) == {2: "a"}
