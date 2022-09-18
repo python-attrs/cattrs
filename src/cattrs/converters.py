@@ -495,7 +495,8 @@ class BaseConverter:
                     try:
                         res.append(handler(e, elem_type))
                     except Exception as e:
-                        e.__note__ = f"Structuring {cl} @ index {ix}"
+                        msg = f"Structuring {cl} @ index {ix}"
+                        e.__notes__ = getattr(e, "__notes__", ()) + (msg,)
                         errors.append(e)
                     finally:
                         ix += 1
@@ -522,9 +523,8 @@ class BaseConverter:
                 try:
                     res.add(handler(e, elem_type))
                 except Exception as exc:
-                    exc.__note__ = (
-                        f"Structuring {structure_to.__name__} @ element {e!r}"
-                    )
+                    msg = f"Structuring {structure_to.__name__} @ element {e!r}"
+                    exc.__notes__ = getattr(e, "__notes__", ()) + (msg,)
                     errors.append(exc)
             if errors:
                 raise IterableValidationError(f"While structuring {cl!r}", errors, cl)
@@ -593,7 +593,8 @@ class BaseConverter:
                     try:
                         res.append(conv(e, tup_type))
                     except Exception as exc:
-                        exc.__note__ = f"Structuring {tup} @ index {ix}"
+                        msg = f"Structuring {tup} @ index {ix}"
+                        exc.__notes__ = getattr(e, "__notes__", ()) + (msg,)
                         errors.append(exc)
                 if errors:
                     raise IterableValidationError(
@@ -620,14 +621,16 @@ class BaseConverter:
                         conv = self._structure_func.dispatch(t)
                         res.append(conv(e, t))
                     except Exception as exc:
-                        exc.__note__ = f"Structuring {tup} @ index {ix}"
+                        msg = f"Structuring {tup} @ index {ix}"
+                        exc.__notes__ = getattr(e, "__notes__", ()) + (msg,)
                         errors.append(exc)
                 if len(res) < exp_len:
                     problem = "Not enough" if len(res) < len(tup_params) else "Too many"
                     exc = ValueError(
                         f"{problem} values in {obj!r} to structure as {tup!r}"
                     )
-                    exc.__note__ = f"Structuring {tup}"
+                    msg = f"Structuring {tup}"
+                    exc.__notes__ = getattr(e, "__notes__", ()) + (msg,)
                     errors.append(exc)
                 if errors:
                     raise IterableValidationError(
