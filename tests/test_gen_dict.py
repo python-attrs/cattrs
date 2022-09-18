@@ -1,5 +1,5 @@
 """Tests for generated dict functions."""
-from typing import Type
+from typing import Dict, Type
 
 import pytest
 from attr import Factory, define, field
@@ -8,7 +8,7 @@ from hypothesis import assume, given
 from hypothesis.strategies import data, just, one_of, sampled_from
 
 from cattrs import BaseConverter, Converter
-from cattrs._compat import adapted_fields, fields
+from cattrs._compat import adapted_fields, fields, is_py39_plus
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
@@ -287,3 +287,20 @@ def test_omitting_structure(extended_validation: bool):
     assert structured.a == 1
     assert structured.c == 1
     assert not hasattr(structured, "b")
+
+
+@pytest.mark.skipif(not is_py39_plus, reason="literals and annotated are 3.9+")
+def test_type_names_with_quotes():
+    """Types with quote characters in their reprs should work."""
+    from typing import Annotated, Literal, Union
+
+    converter = Converter()
+
+    assert converter.structure({1: 1}, Dict[Annotated[int, "'"], int]) == {1: 1}
+
+    converter.register_structure_hook_func(
+        lambda t: t is Union[Literal["a", 2, 3], Literal[4]], lambda v, _: v
+    )
+    assert converter.structure(
+        {2: "a"}, Dict[Union[Literal["a", 2, 3], Literal[4]], str]
+    ) == {2: "a"}

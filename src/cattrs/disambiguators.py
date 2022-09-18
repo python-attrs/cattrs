@@ -2,14 +2,16 @@
 from collections import OrderedDict
 from functools import reduce
 from operator import or_
-from typing import Callable, Dict, Mapping, Optional, Type
+from typing import Any, Callable, Dict, Mapping, Optional, Type
 
 from attr import NOTHING, fields
 
 from cattrs._compat import get_origin
 
 
-def create_uniq_field_dis_func(*classes: Type) -> Callable:
+def create_uniq_field_dis_func(
+    *classes: Type[Any],
+) -> Callable[[Mapping[Any, Any]], Optional[Type[Any]]]:
     """Given attr classes, generate a disambiguation function.
 
     The function is based on unique fields."""
@@ -22,7 +24,7 @@ def create_uniq_field_dis_func(*classes: Type) -> Callable:
         raise ValueError("At least two classes have no attributes.")
     # TODO: Deal with a single class having no required attrs.
     # For each class, attempt to generate a single unique required field.
-    uniq_attrs_dict = OrderedDict()  # type: Dict[str, Type]
+    uniq_attrs_dict: Dict[str, Type] = OrderedDict()
     cls_and_attrs.sort(key=lambda c_a: -len(c_a[1]))
 
     fallback = None  # If none match, try this.
@@ -46,8 +48,7 @@ def create_uniq_field_dis_func(*classes: Type) -> Callable:
         else:
             fallback = cl
 
-    def dis_func(data):
-        # type: (Mapping) -> Optional[Type]
+    def dis_func(data: Mapping[Any, Any]) -> Optional[Type]:
         if not isinstance(data, Mapping):
             raise ValueError("Only input mappings are supported.")
         for k, v in uniq_attrs_dict.items():

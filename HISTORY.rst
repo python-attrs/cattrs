@@ -15,13 +15,17 @@ History
 * Fix propagating the `detailed_validation` flag to mapping and counter structuring generators.
 * Fix ``typing.Set`` applying too broadly when used with the ``GenConverter.unstruct_collection_overrides`` parameter on Python versions below 3.9. Switch to ``typing.AbstractSet`` on those versions to restore the old behavior.
   (`#264 <https://github.com/python-attrs/cattrs/issues/264>`_)
-* Uncap the required Python version, to avoid problems detailed in https://iscinumpy.dev/post/bound-version-constraints/#pinning-the-python-version-is-special (`#275 <https://github.com/python-attrs/cattrs/issues/275>`_)
+* Uncap the required Python version, to avoid problems detailed in https://iscinumpy.dev/post/bound-version-constraints/#pinning-the-python-version-is-special
+  (`#275 <https://github.com/python-attrs/cattrs/issues/275>`_)
 * Fix `Converter.register_structure_hook_factory` and `cattrs.gen.make_dict_unstructure_fn` type annotations.
   (`#281 <https://github.com/python-attrs/cattrs/issues/281>`_)
-* Expose all error classes in the `cattr.errors` namespace. Note that it is deprecated, just use `cattrs.errors`. (`#252 <https://github.com/python-attrs/cattrs/issues/252>`_)
+* Expose all error classes in the `cattr.errors` namespace. Note that it is deprecated, just use `cattrs.errors`.
+  (`#252 <https://github.com/python-attrs/cattrs/issues/252>`_)
 * ``cattrs.Converter`` and ``cattrs.BaseConverter`` can now copy themselves using the ``copy`` method.
   (`#284 <https://github.com/python-attrs/cattrs/pull/284>`_)
-* Fix usage of notes for the final version of `PEP 678<https://peps.python.org/pep-0678/>`_, supported since ``exceptiongroup>=1.0.0rc4``.
+* Fix generating structuring functions for types with quotes in the name.
+  (`#291 <https://github.com/python-attrs/cattrs/issues/291>`_ `#277 <https://github.com/python-attrs/cattrs/issues/277>`_)
+* Fix usage of notes for the final version of `PEP 678 <https://peps.python.org/pep-0678/>`_, supported since ``exceptiongroup>=1.0.0rc4``.
   (`#303 <303 <https://github.com/python-attrs/cattrs/pull/303>`_)
 
 22.1.0 (2022-04-03)
