@@ -3,7 +3,18 @@ import re
 import uuid
 from dataclasses import is_dataclass
 from threading import local
-from typing import TYPE_CHECKING, Any, Callable, Dict, Mapping, Optional, Type, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Mapping,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+)
 
 import attr
 from attr import NOTHING, frozen, resolve_types
@@ -218,6 +229,9 @@ def _generate_mapping(cl: Type, old_mapping: Dict[str, type]) -> Dict[str, type]
     return mapping
 
 
+DictStructureFn = Callable[[Mapping[str, Any], Any], T]
+
+
 def make_dict_structure_fn(
     cl: Type[T],
     converter: "BaseConverter",
@@ -226,7 +240,7 @@ def make_dict_structure_fn(
     _cattrs_prefer_attrib_converters: bool = False,
     _cattrs_detailed_validation: bool = True,
     **kwargs: AttributeOverride,
-) -> Callable[[Mapping[str, Any], Any], T]:
+) -> DictStructureFn[T]:
     """Generate a specialized dict structuring function for an attrs class."""
 
     mapping = {}
@@ -504,7 +518,12 @@ def make_dict_structure_fn(
     return globs[fn_name]
 
 
-def make_iterable_unstructure_fn(cl: Any, converter, unstructure_to=None):
+IterableUnstructureFn = Callable[[Iterable[Any]], Any]
+
+
+def make_iterable_unstructure_fn(
+    cl: Any, converter: "BaseConverter", unstructure_to: Any = None
+) -> IterableUnstructureFn:
     """Generate a specialized unstructure function for an iterable."""
     handler = converter.unstructure
 
@@ -535,7 +554,12 @@ def make_iterable_unstructure_fn(cl: Any, converter, unstructure_to=None):
     return fn
 
 
-def make_hetero_tuple_unstructure_fn(cl: Any, converter, unstructure_to=None):
+HeteroTupleUnstructureFn = Callable[[Tuple[Any, ...]], Any]
+
+
+def make_hetero_tuple_unstructure_fn(
+    cl: Any, converter: "BaseConverter", unstructure_to: Any = None
+) -> HeteroTupleUnstructureFn:
     """Generate a specialized unstructure function for a heterogenous tuple."""
     fn_name = "unstructure_tuple"
 
@@ -576,9 +600,15 @@ def make_hetero_tuple_unstructure_fn(cl: Any, converter, unstructure_to=None):
     return fn
 
 
+MappingUnstructureFn = Callable[[Mapping[Any, Any]], Any]
+
+
 def make_mapping_unstructure_fn(
-    cl: Any, converter, unstructure_to=None, key_handler=None
-):
+    cl: Any,
+    converter: "BaseConverter",
+    unstructure_to: Any = None,
+    key_handler: Optional[Callable[[Any, Optional[Any]], Any]] = None,
+) -> MappingUnstructureFn:
     """Generate a specialized unstructure function for a mapping."""
     kh = key_handler or converter.unstructure
     val_handler = converter.unstructure
@@ -627,18 +657,21 @@ def make_mapping_unstructure_fn(
     return fn
 
 
+MappingStructureFn = Callable[[Mapping[Any, Any], Any], T]
+
+
 def make_mapping_structure_fn(
     cl: Type[T],
     converter: "BaseConverter",
-    structure_to=dict,
+    structure_to: Type = dict,
     key_type=NOTHING,
     val_type=NOTHING,
     detailed_validation: bool = True,
-) -> Callable[[Mapping, Any], T]:
+) -> MappingStructureFn[T]:
     """Generate a specialized unstructure function for a mapping."""
     fn_name = "structure_mapping"
 
-    globs = {"__cattr_mapping_cl": structure_to}
+    globs: Dict[str, Type] = {"__cattr_mapping_cl": structure_to}
 
     lines = []
     lines.append(f"def {fn_name}(mapping, _):")
@@ -734,7 +767,7 @@ def make_mapping_structure_fn(
     return fn
 
 
-def _generate_unique_filename(cls, func_name, reserve=True):
+def _generate_unique_filename(cls: Any, func_name: str, reserve: bool = True) -> str:
     """
     Create a "filename" suitable for a function being generated.
     """
