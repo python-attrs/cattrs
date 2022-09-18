@@ -21,6 +21,7 @@ History
 * Expose all error classes in the `cattr.errors` namespace. Note that it is deprecated, just use `cattrs.errors`. (`#252 <https://github.com/python-attrs/cattrs/issues/252>`_)
 * ``cattrs.Converter`` and ``cattrs.BaseConverter`` can now copy themselves using the ``copy`` method.
   (`#284 <https://github.com/python-attrs/cattrs/pull/284>`_)
+* Fix generating structuring functions for types with quotes in the name. (`#291 <https://github.com/python-attrs/cattrs/issues/291>`_ `#277 <https://github.com/python-attrs/cattrs/issues/277>`_)
 
 22.1.0 (2022-04-03)
 -------------------

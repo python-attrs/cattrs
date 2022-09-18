@@ -354,7 +354,7 @@ def make_dict_structure_fn(
             lines.append(f"{i}except Exception as e:")
             i = f"{i}  "
             lines.append(
-                f"{i}e.__note__ = 'Structuring class {cl.__qualname__} @ attribute {an}'"
+                f"{i}e.__note__ = 'Structuring class ' + {cl.__qualname__!r} + ' @ attribute {an}'"
             )
             lines.append(f"{i}errors.append(e)")
 
@@ -366,7 +366,7 @@ def make_dict_structure_fn(
             ]
 
         post_lines.append(
-            f"  if errors: raise __c_cve('While structuring {cl.__name__}', errors, __cl)"
+            f"  if errors: raise __c_cve('While structuring ' + {cl.__name__!r}, errors, __cl)"
         )
         instantiation_lines = (
             ["  try:"]
@@ -374,7 +374,7 @@ def make_dict_structure_fn(
             + [f"      {line}" for line in invocation_lines]
             + ["    )"]
             + [
-                f"  except Exception as exc: raise __c_cve('While structuring {cl.__name__}', [exc], __cl)"
+                f"  except Exception as exc: raise __c_cve('While structuring ' + {cl.__name__!r}, [exc], __cl)"
             ]
         )
     else:
@@ -750,7 +750,7 @@ def make_mapping_structure_fn(
             lines.append("      errors.append(e)")
             lines.append("  if errors:")
             lines.append(
-                f"    raise IterableValidationError('While structuring {cl!r}', errors, __cattr_mapping_cl)"
+                f"    raise IterableValidationError('While structuring ' + {repr(cl)!r}, errors, __cattr_mapping_cl)"
             )
         else:
             lines.append(f"  res = {{{k_s}: {v_s} for k, v in mapping.items()}}")
