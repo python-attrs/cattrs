@@ -1,6 +1,8 @@
 """Preconfigured converters for tomlkit."""
 from base64 import b85decode, b85encode
 from datetime import datetime
+from enum import Enum
+from operator import attrgetter
 from typing import Any, Type, TypeVar
 
 from tomlkit import dumps, loads
@@ -11,6 +13,7 @@ from ..converters import BaseConverter, Converter
 from . import validate_datetime
 
 T = TypeVar("T")
+_enum_value_getter = attrgetter("_value_")
 
 
 class TomlkitConverter(Converter):
@@ -39,8 +42,14 @@ def configure_converter(converter: BaseConverter):
         key_handler = str
         args = getattr(cl, "__args__", None)
         if args:
+            # Currently, tomlkit has inconsistent behavior on 3.11
+            # so we paper over it here.
+            # https://github.com/sdispater/tomlkit/issues/237
             if issubclass(args[0], str):
-                key_handler = None
+                if issubclass(args[0], Enum):
+                    key_handler = _enum_value_getter
+                else:
+                    key_handler = None
             elif issubclass(args[0], bytes):
 
                 def key_handler(k: bytes):
