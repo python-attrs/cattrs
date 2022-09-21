@@ -4,13 +4,15 @@ History
 22.2.0 (UNRELEASED)
 -------------------
 * Python 3.11 support.
+* ``cattrs.Converter`` has been renamed to ``cattrs.BaseConverter``, and ``cattrs.GenConverter`` to ``cattrs.Converter``.
+  The ``GenConverter`` name is still available for backwards compatibility, but is deprecated.
+  If you were depending on functionality specific to the old ``Converter``, change your import to ``from cattrs import BaseConverter``.
 * cattrs now supports un/structuring ``kw_only`` fields on attrs classes into/from dictionaries.
   (`#247 <https://github.com/python-attrs/cattrs/pull/247>`_)
-* ``cattrs.Converter`` has been renamed to ``cattrs.BaseConverter``, and ``cattrs.GenConverter`` to ``cattrs.Converter``.
-  The ``GenConverter`` symbol is still available for backwards compatibility, but is deprecated.
-  If you were depending on functionality specific to the old ``Converter``, change your import to ``from cattrs import BaseConverter``.
 * `NewTypes <https://docs.python.org/3/library/typing.html#newtype>`_ are now supported by the ``cattrs.Converter``.
   (`#255 <https://github.com/python-attrs/cattrs/pull/255>`_, `#94 <https://github.com/python-attrs/cattrs/issues/94>`_)
+* ``cattrs.Converter`` and ``cattrs.BaseConverter`` can now copy themselves using the ``copy`` method.
+  (`#284 <https://github.com/python-attrs/cattrs/pull/284>`_)
 * PyPy support (and tests, using a minimal Hypothesis profile) restored.
   (`#253 <https://github.com/python-attrs/cattrs/issues/253>`_)
 * Fix propagating the `detailed_validation` flag to mapping and counter structuring generators.
@@ -22,8 +24,6 @@ History
   (`#281 <https://github.com/python-attrs/cattrs/issues/281>`_)
 * Expose all error classes in the `cattr.errors` namespace. Note that it is deprecated, just use `cattrs.errors`.
   (`#252 <https://github.com/python-attrs/cattrs/issues/252>`_)
-* ``cattrs.Converter`` and ``cattrs.BaseConverter`` can now copy themselves using the ``copy`` method.
-  (`#284 <https://github.com/python-attrs/cattrs/pull/284>`_)
 * Fix generating structuring functions for types with quotes in the name.
   (`#291 <https://github.com/python-attrs/cattrs/issues/291>`_ `#277 <https://github.com/python-attrs/cattrs/issues/277>`_)
 * Fix usage of notes for the final version of `PEP 678 <https://peps.python.org/pep-0678/>`_, supported since ``exceptiongroup>=1.0.0rc4``.
