@@ -538,7 +538,7 @@ class BaseConverter:
         self, obj: Iterable[T], cl: Any
     ) -> FrozenSetSubscriptable[T]:
         """Convert an iterable into a potentially generic frozenset."""
-        return self._structure_set(obj, cl, structure_to=frozenset)  # type: ignore (incompatible type between frozenset and set)
+        return self._structure_set(obj, cl, structure_to=frozenset)
 
     def _structure_dict(self, obj: Mapping[T, V], cl: Any) -> Dict[T, V]:
         """Convert a mapping into a potentially generic dict."""
