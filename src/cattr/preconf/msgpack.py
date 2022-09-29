@@ -1,4 +1,4 @@
 """Preconfigured converters for msgpack."""
-from cattrs.preconf.msgpack import configure_converter, make_converter
+from cattrs.preconf.msgpack import configure_converter, make_converter, MsgpackConverter
 
-__all__ = ["make_converter", "configure_converter"]
+__all__ = ["configure_converter", "make_converter", "MsgpackConverter"]
