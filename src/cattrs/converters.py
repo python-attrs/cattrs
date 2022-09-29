@@ -841,7 +841,7 @@ class Converter(BaseConverter):
         while get_newtype_base(base) is not None:
             base = get_newtype_base(base)
         handler = self._structure_func.dispatch(base)
-        return lambda v, _: handler(v, cl=base)
+        return lambda v, _: handler(v, base)
 
     def gen_unstructure_annotated(self, type):
         origin = type.__origin__
