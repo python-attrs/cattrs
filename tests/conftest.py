@@ -7,6 +7,11 @@ from cattrs import BaseConverter, Converter
 
 
 @pytest.fixture(params=(True, False))
+def genconverter(request):
+    return Converter(detailed_validation=request.param)
+
+
+@pytest.fixture(params=(True, False))
 def converter(request, converter_cls):
     return converter_cls(detailed_validation=request.param)
 

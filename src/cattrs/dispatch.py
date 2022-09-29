@@ -60,17 +60,18 @@ class MultiStrategyDispatch:
 
     def register_func_list(
         self,
-        func_and_handler: List[
+        pred_and_handler: List[
             Union[
                 Tuple[Callable[[Any], bool], Any],
                 Tuple[Callable[[Any], bool], Any, bool],
             ]
         ],
     ):
-        """register a function to determine if the handle
-        should be used for the type
         """
-        for tup in func_and_handler:
+        Register a predicate function to determine if the handle
+        should be used for the type.
+        """
+        for tup in pred_and_handler:
             if len(tup) == 2:
                 func, handler = tup
                 self._function_dispatch.register(func, handler)

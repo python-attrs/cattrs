@@ -2,7 +2,7 @@
 Validation
 ==========
 
-`cattrs` has a detailed validation mode since version 2022.1.0, and this mode is enabled by default.
+`cattrs` has a detailed validation mode since version 22.1.0, and this mode is enabled by default.
 When running under detailed validation, the un/structuring hooks are slightly slower but produce more precise and exhaustive error messages.
 
 Detailed validation

@@ -274,6 +274,25 @@ matched using the first type present in the annotated type.
 ~~~~~~~~~~~~~~~~~~
 
 `NewTypes`_ are supported and are structured according to the rules for their underlying type.
+Their hooks can also be overriden using :py:attr:`cattrs.Converter.register_structure_hook`.
+
+.. doctest::
+
+    >>> from typing import NewType
+    >>> from datetime import datetime
+
+    >>> IsoDate = NewType("IsoDate", datetime)
+
+    >>> converter = cattrs.Converter()
+    >>> converter.register_structure_hook(IsoDate, lambda v, _: datetime.fromisoformat(v))
+
+    >>> converter.structure("2022-01-01", IsoDate)
+    datetime.datetime(2022, 1, 1, 0, 0)
+
+.. versionadded:: 22.2.0
+
+.. note::
+    NewTypes are not supported by the legacy BaseConverter.
 
 ``attrs`` classes and dataclasses
 ---------------------------------

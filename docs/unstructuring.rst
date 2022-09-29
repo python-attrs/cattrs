@@ -100,7 +100,12 @@ using the first type present in the annotated type.
 ------------------
 
 `NewTypes`_ are supported and are unstructured according to the rules for their underlying type.
+Their hooks can also be overriden using :py:attr:`cattrs.Converter.register_unstructure_hook`.
 
+.. versionadded:: 22.2.0
+
+.. note::
+    NewTypes are not supported by the legacy BaseConverter.
 
 ``attrs`` classes and dataclasses
 ---------------------------------
