@@ -96,6 +96,8 @@ from ``typing`` on older Python versions.
 Fields marked as ``typing.Annotated[type, ...]`` are supported and are matched
 using the first type present in the annotated type.
 
+.. _unstructuring_newtypes:
+
 ``typing.NewType``
 ------------------
 
@@ -104,6 +106,8 @@ Their hooks can also be overriden using :py:attr:`cattrs.Converter.register_unst
 
 .. versionadded:: 22.2.0
 
+.. seealso:: :ref:`Structuring NewTypes. <structuring_newtypes>`
+
 .. note::
     NewTypes are not supported by the legacy BaseConverter.
 
@@ -111,7 +115,7 @@ Their hooks can also be overriden using :py:attr:`cattrs.Converter.register_unst
 ---------------------------------
 
 ``attrs`` classes and dataclasses are supported out of the box.
-:class:`.Converter` s support two unstructuring strategies:
+:class:`cattrs.Converter` s support two unstructuring strategies:
 
     * ``UnstructureStrategy.AS_DICT`` - similar to ``attr.asdict``, unstructures ``attrs`` and dataclass instances into dictionaries. This is the default.
     * ``UnstructureStrategy.AS_TUPLE`` - similar to ``attr.astuple``, unstructures ``attrs`` and dataclass instances into tuples.
@@ -210,6 +214,6 @@ Here's a small example showing how to use factory hooks to skip unstructuring
     {'an_int': 1}
 
 
-A complex use case for hook factories is described over at :ref:`Using factory hooks`.
+A complex use case for hook factories is described over at :ref:`usage:Using factory hooks`.
 
 .. _`NewTypes`: https://docs.python.org/3/library/typing.html#newtype
