@@ -24,7 +24,9 @@ def test_newtype_structure_hooks(genconverter: BaseConverter):
         genconverter.structure("0", PositiveIntNewType)
 
     assert genconverter.structure("1", PositiveIntNewType) == 1
-    assert genconverter.structure("0", BigPositiveIntNewType) == 0
+
+    with pytest.raises(ZeroDivisionError):
+        genconverter.structure("0", BigPositiveIntNewType)
 
     genconverter.register_structure_hook(
         BigPositiveIntNewType, lambda v, _: int(v) if int(v) > 50 else 1 / 0

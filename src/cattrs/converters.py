@@ -837,9 +837,6 @@ class Converter(BaseConverter):
 
     def get_structure_newtype(self, type: Type[T]) -> Callable[[Any, Any], T]:
         base = get_newtype_base(type)
-        # Handling newtypes of newtypes.
-        while get_newtype_base(base) is not None:
-            base = get_newtype_base(base)
         handler = self._structure_func.dispatch(base)
         return lambda v, _: handler(v, base)
 
