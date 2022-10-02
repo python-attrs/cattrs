@@ -3,16 +3,16 @@ History
 =======
 22.2.0 (UNRELEASED)
 -------------------
-* Python 3.11 support.
-* ``cattrs.Converter`` has been renamed to ``cattrs.BaseConverter``, and ``cattrs.GenConverter`` to ``cattrs.Converter``.
+* *Potentially breaking*: ``cattrs.Converter`` has been renamed to ``cattrs.BaseConverter``, and ``cattrs.GenConverter`` to ``cattrs.Converter``.
   The ``GenConverter`` name is still available for backwards compatibility, but is deprecated.
   If you were depending on functionality specific to the old ``Converter``, change your import to ``from cattrs import BaseConverter``.
-* cattrs now supports un/structuring ``kw_only`` fields on attrs classes into/from dictionaries.
-  (`#247 <https://github.com/python-attrs/cattrs/pull/247>`_)
 * `NewTypes <https://docs.python.org/3/library/typing.html#newtype>`_ are now supported by the ``cattrs.Converter``.
   (`#255 <https://github.com/python-attrs/cattrs/pull/255>`_, `#94 <https://github.com/python-attrs/cattrs/issues/94>`_, `#297 <https://github.com/python-attrs/cattrs/issues/297>`_)
 * ``cattrs.Converter`` and ``cattrs.BaseConverter`` can now copy themselves using the ``copy`` method.
   (`#284 <https://github.com/python-attrs/cattrs/pull/284>`_)
+* Python 3.11 support.
+* cattrs now supports un/structuring ``kw_only`` fields on attrs classes into/from dictionaries.
+  (`#247 <https://github.com/python-attrs/cattrs/pull/247>`_)
 * PyPy support (and tests, using a minimal Hypothesis profile) restored.
   (`#253 <https://github.com/python-attrs/cattrs/issues/253>`_)
 * Fix propagating the `detailed_validation` flag to mapping and counter structuring generators.
