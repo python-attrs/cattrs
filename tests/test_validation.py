@@ -27,14 +27,14 @@ def test_class_validation():
     assert repr(exc.value.exceptions[0]) == repr(
         ValueError("invalid literal for int() with base 10: 'a'")
     )
-    assert exc.value.exceptions[0].__notes__ == (
-        "Structuring class test_class_validation.<locals>.Test @ attribute a",
-    )
+    assert exc.value.exceptions[0].__notes__ == [
+        "Structuring class test_class_validation.<locals>.Test @ attribute a"
+    ]
 
     assert repr(exc.value.exceptions[1]) == repr(KeyError("c"))
-    assert exc.value.exceptions[1].__notes__ == (
-        "Structuring class test_class_validation.<locals>.Test @ attribute c",
-    )
+    assert exc.value.exceptions[1].__notes__ == [
+        "Structuring class test_class_validation.<locals>.Test @ attribute c"
+    ]
 
 
 def test_external_class_validation():
@@ -64,16 +64,16 @@ def test_list_validation():
     assert repr(exc.value.exceptions[0]) == repr(
         ValueError("invalid literal for int() with base 10: 'a'")
     )
-    assert exc.value.exceptions[0].__notes__ == (
-        "Structuring typing.List[int] @ index 2",
-    )
+    assert exc.value.exceptions[0].__notes__ == [
+        "Structuring typing.List[int] @ index 2"
+    ]
 
     assert repr(exc.value.exceptions[1]) == repr(
         ValueError("invalid literal for int() with base 10: 'c'")
     )
-    assert exc.value.exceptions[1].__notes__ == (
-        "Structuring typing.List[int] @ index 4",
-    )
+    assert exc.value.exceptions[1].__notes__ == [
+        "Structuring typing.List[int] @ index 4"
+    ]
 
 
 @given(...)
@@ -88,16 +88,16 @@ def test_mapping_validation(detailed_validation: bool):
         assert repr(exc.value.exceptions[0]) == repr(
             ValueError("invalid literal for int() with base 10: 'b'")
         )
-        assert exc.value.exceptions[0].__notes__ == (
-            "Structuring mapping value @ key '2'",
-        )
+        assert exc.value.exceptions[0].__notes__ == [
+            "Structuring mapping value @ key '2'"
+        ]
 
         assert repr(exc.value.exceptions[1]) == repr(
             ValueError("invalid literal for int() with base 10: 'c'")
         )
-        assert exc.value.exceptions[1].__notes__ == (
-            "Structuring mapping key @ key 'c'",
-        )
+        assert exc.value.exceptions[1].__notes__ == [
+            "Structuring mapping key @ key 'c'"
+        ]
     else:
         with pytest.raises(ValueError):
             c.structure({"1": 1, "2": "b", "c": 3}, Dict[int, int])
@@ -115,9 +115,9 @@ def test_counter_validation(detailed_validation: bool):
         assert repr(exc.value.exceptions[0]) == repr(
             ValueError("invalid literal for int() with base 10: 'b'")
         )
-        assert exc.value.exceptions[0].__notes__ == (
-            "Structuring mapping value @ key 'b'",
-        )
+        assert exc.value.exceptions[0].__notes__ == [
+            "Structuring mapping value @ key 'b'"
+        ]
 
     else:
         with pytest.raises(ValueError):
@@ -134,7 +134,7 @@ def test_set_validation():
     assert repr(exc.value.exceptions[0]) == repr(
         ValueError("invalid literal for int() with base 10: 'a'")
     )
-    assert exc.value.exceptions[0].__notes__ == ("Structuring set @ element 'a'",)
+    assert exc.value.exceptions[0].__notes__ == ["Structuring set @ element 'a'"]
 
 
 def test_frozenset_validation():
@@ -147,7 +147,7 @@ def test_frozenset_validation():
     assert repr(exc.value.exceptions[0]) == repr(
         ValueError("invalid literal for int() with base 10: 'a'")
     )
-    assert exc.value.exceptions[0].__notes__ == ("Structuring frozenset @ element 'a'",)
+    assert exc.value.exceptions[0].__notes__ == ["Structuring frozenset @ element 'a'"]
 
 
 def test_homo_tuple_validation():
@@ -160,9 +160,9 @@ def test_homo_tuple_validation():
     assert repr(exc.value.exceptions[0]) == repr(
         ValueError("invalid literal for int() with base 10: 'a'")
     )
-    assert exc.value.exceptions[0].__notes__ == (
-        "Structuring typing.Tuple[int, ...] @ index 2",
-    )
+    assert exc.value.exceptions[0].__notes__ == [
+        "Structuring typing.Tuple[int, ...] @ index 2"
+    ]
 
 
 def test_hetero_tuple_validation():
@@ -175,6 +175,6 @@ def test_hetero_tuple_validation():
     assert repr(exc.value.exceptions[0]) == repr(
         ValueError("invalid literal for int() with base 10: 'a'")
     )
-    assert exc.value.exceptions[0].__notes__ == (
-        "Structuring typing.Tuple[int, int, int] @ index 2",
-    )
+    assert exc.value.exceptions[0].__notes__ == [
+        "Structuring typing.Tuple[int, int, int] @ index 2"
+    ]
