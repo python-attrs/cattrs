@@ -226,6 +226,9 @@ class BaseConverter:
             resolve_types(cls)
         if is_union_type(cls):
             self._unstructure_func.register_func_list([(lambda t: t == cls, func)])
+        elif get_newtype_base(cls) is not None:
+            # This is a newtype, so we handle it specially.
+            self._unstructure_func.register_func_list([(lambda t: t is cls, func)])
         else:
             self._unstructure_func.register_cls_list([(cls, func)])
 
@@ -270,6 +273,9 @@ class BaseConverter:
         if is_union_type(cl):
             self._union_struct_registry[cl] = func
             self._structure_func.clear_cache()
+        elif get_newtype_base(cl) is not None:
+            # This is a newtype, so we handle it specially.
+            self._structure_func.register_func_list([(lambda t: t is cl, func)])
         else:
             self._structure_func.register_cls_list([(cl, func)])
 
@@ -831,7 +837,8 @@ class Converter(BaseConverter):
 
     def get_structure_newtype(self, type: Type[T]) -> Callable[[Any, Any], T]:
         base = get_newtype_base(type)
-        return self._structure_func.dispatch(base)
+        handler = self._structure_func.dispatch(base)
+        return lambda v, _: handler(v, base)
 
     def gen_unstructure_annotated(self, type):
         origin = type.__origin__

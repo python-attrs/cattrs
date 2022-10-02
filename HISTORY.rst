@@ -10,7 +10,7 @@ History
 * cattrs now supports un/structuring ``kw_only`` fields on attrs classes into/from dictionaries.
   (`#247 <https://github.com/python-attrs/cattrs/pull/247>`_)
 * `NewTypes <https://docs.python.org/3/library/typing.html#newtype>`_ are now supported by the ``cattrs.Converter``.
-  (`#255 <https://github.com/python-attrs/cattrs/pull/255>`_, `#94 <https://github.com/python-attrs/cattrs/issues/94>`_)
+  (`#255 <https://github.com/python-attrs/cattrs/pull/255>`_, `#94 <https://github.com/python-attrs/cattrs/issues/94>`_, `#297 <https://github.com/python-attrs/cattrs/issues/297>`_)
 * ``cattrs.Converter`` and ``cattrs.BaseConverter`` can now copy themselves using the ``copy`` method.
   (`#284 <https://github.com/python-attrs/cattrs/pull/284>`_)
 * PyPy support (and tests, using a minimal Hypothesis profile) restored.

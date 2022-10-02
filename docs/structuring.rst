@@ -270,10 +270,33 @@ To support arbitrary unions, register a custom structuring hook for the union
 `PEP 593`_ annotations (``typing.Annotated[type, ...]``) are supported and are
 matched using the first type present in the annotated type.
 
+.. _structuring_newtypes:
+
 ``typing.NewType``
 ~~~~~~~~~~~~~~~~~~
 
 `NewTypes`_ are supported and are structured according to the rules for their underlying type.
+Their hooks can also be overriden using :py:attr:`cattrs.Converter.register_structure_hook`.
+
+.. doctest::
+
+    >>> from typing import NewType
+    >>> from datetime import datetime
+
+    >>> IsoDate = NewType("IsoDate", datetime)
+
+    >>> converter = cattrs.Converter()
+    >>> converter.register_structure_hook(IsoDate, lambda v, _: datetime.fromisoformat(v))
+
+    >>> converter.structure("2022-01-01", IsoDate)
+    datetime.datetime(2022, 1, 1, 0, 0)
+
+.. versionadded:: 22.2.0
+
+.. seealso:: :ref:`Unstructuring NewTypes. <unstructuring_newtypes>`
+
+.. note::
+    NewTypes are not supported by the legacy BaseConverter.
 
 ``attrs`` classes and dataclasses
 ---------------------------------
@@ -481,7 +504,7 @@ Here's a small example showing how to use factory hooks to apply the `forbid_ext
     cattrs.errors.ForbiddenExtraKeysError: Extra fields in constructor for E: else
 
 
-A complex use case for hook factories is described over at :ref:`Using factory hooks`.
+A complex use case for hook factories is described over at :ref:`usage:Using factory hooks`.
 
 .. _`PEP 593` : https://www.python.org/dev/peps/pep-0593/
 .. _`NewTypes`: https://docs.python.org/3/library/typing.html#newtype

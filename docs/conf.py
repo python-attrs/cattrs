@@ -282,3 +282,4 @@ doctest_global_setup = (
     "from enum import Enum, unique"
 )
 autodoc_typehints = "description"
+autosectionlabel_prefix_document = True
