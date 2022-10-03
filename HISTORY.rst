@@ -1,7 +1,7 @@
 =======
 History
 =======
-22.2.0 (UNRELEASED)
+22.2.0 (2022-10-03)
 -------------------
 * *Potentially breaking*: ``cattrs.Converter`` has been renamed to ``cattrs.BaseConverter``, and ``cattrs.GenConverter`` to ``cattrs.Converter``.
   The ``GenConverter`` name is still available for backwards compatibility, but is deprecated.
