@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,400&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+h2 {
+    margin-bottom: 0.5em;
+}
+
+div.article-container>article {
+    font-size: 19px;
+    line-height: 31px;
+}
+
+div.admonition {
+    font-size: 15px;
+    line-height: 27px;
+    margin-top: 2em;
+    margin-bottom: 2em;
+}
+
+p.admonition-title {
+    font-size: 15px !important;
+    line-height: 20px !important;
+}
+
+article>li>a {
+    font-size: 19px;
+    line-height: 31px;
+}
+
+div.tab-set {
+    margin-top: 1em;
+    margin-bottom: 2em;
+}
+
+div.tab-set pre {
+    padding: 1.25em;
+}

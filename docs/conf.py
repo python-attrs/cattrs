@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # cattrs documentation build configuration file, created by
@@ -15,8 +14,7 @@
 
 import os
 import sys
-
-import pkg_resources  # part of setuptools
+from importlib.metadata import version as v
 
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory is
@@ -69,7 +67,7 @@ copyright = "2020, Tin Tvrtković"
 #
 # The short X.Y version.
 
-version = pkg_resources.require(project)[0].version
+version = v("cattrs")
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -118,11 +116,13 @@ exclude_patterns = ["_build"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 html_theme = "furo"
-
-# Theme options are theme-specific and customize the look and feel of a
-# theme further.  For a list of options available for each theme, see the
-# documentation.
-# html_theme_options = {}
+html_theme_options = {
+    "light_css_variables": {
+        "font-stack": "Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji",
+        "font-stack--monospace": "'Ubuntu Mono', monospace",
+        "code-font-size": "90%",
+    }
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -149,6 +149,8 @@ html_theme = "furo"
 # static files, so a file named "default.css" will overwrite the builtin
 # "default.css".
 html_static_path = ["_static"]
+
+html_css_files = ["custom.css"]
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page
 # bottom, using the given strftime format.
