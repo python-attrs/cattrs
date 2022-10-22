@@ -1,16 +1,10 @@
-import pytest
-
 from cattrs.dispatch import FunctionDispatch
-from cattrs.errors import StructureHandlerNotFoundError
 
 
 def test_function_dispatch():
     dispatch = FunctionDispatch()
 
-    with pytest.raises(StructureHandlerNotFoundError) as exc:
-        dispatch.dispatch(float)
-
-    assert exc.value.type_ is float
+    assert dispatch.dispatch(float) is None
 
     test_func = object()
 

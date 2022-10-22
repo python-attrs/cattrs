@@ -145,7 +145,9 @@ def test_structure_list_of_generic_unions(converter):
     assert res == data
 
 
-def test_raises_if_no_generic_params_supplied(converter):
+def test_raises_if_no_generic_params_supplied(
+    converter: Union[Converter, BaseConverter]
+):
     data = TClass(1, "a")
 
     with pytest.raises(

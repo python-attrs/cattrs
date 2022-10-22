@@ -1,9 +1,7 @@
 from functools import lru_cache, singledispatch
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 import attr
-
-from .errors import StructureHandlerNotFoundError
 
 
 @attr.s
@@ -24,29 +22,32 @@ class MultiStrategyDispatch:
         "_function_dispatch",
         "_single_dispatch",
         "_generators",
+        "_fallback_func",
         "dispatch",
     )
 
-    def __init__(self, fallback_func):
+    def __init__(self, fallback_func: Callable[[Any, Any], Any]):
         self._direct_dispatch = {}
         self._function_dispatch = FunctionDispatch()
         self._function_dispatch.register(lambda _: True, fallback_func)
         self._single_dispatch = singledispatch(_DispatchNotFound)
         self.dispatch = lru_cache(maxsize=None)(self._dispatch)
+        self._fallback_func = fallback_func
 
-    def _dispatch(self, cl):
+    def _dispatch(self, typ: Any) -> Callable[[Any, Any], Any]:
         try:
-            dispatch = self._single_dispatch.dispatch(cl)
+            dispatch = self._single_dispatch.dispatch(typ)
             if dispatch is not _DispatchNotFound:
                 return dispatch
         except Exception:
             pass
 
-        direct_dispatch = self._direct_dispatch.get(cl)
+        direct_dispatch = self._direct_dispatch.get(typ)
         if direct_dispatch is not None:
             return direct_dispatch
 
-        return self._function_dispatch.dispatch(cl)
+        res = self._function_dispatch.dispatch(typ)
+        return res if res is not None else self._fallback_func
 
     def register_cls_list(self, cls_and_handler, direct: bool = False) -> None:
         """Register a class to direct or singledispatch."""
@@ -109,12 +110,14 @@ class FunctionDispatch:
     objects that help determine dispatch should be instantiated objects.
     """
 
-    _handler_pairs: list = attr.ib(factory=list)
+    _handler_pairs: List[
+        Tuple[Callable[[Any], bool], Callable[[Any, Any], Any], bool]
+    ] = attr.ib(factory=list)
 
     def register(self, can_handle: Callable[[Any], bool], func, is_generator=False):
         self._handler_pairs.insert(0, (can_handle, func, is_generator))
 
-    def dispatch(self, typ):
+    def dispatch(self, typ: Any) -> Optional[Callable[[Any, Any], Any]]:
         """
         returns the appropriate handler, for the object passed.
         """
@@ -131,9 +134,7 @@ class FunctionDispatch:
                     return handler(typ)
                 else:
                     return handler
-        raise StructureHandlerNotFoundError(
-            f"unable to find handler for {typ}", type_=typ
-        )
+        return None
 
     def get_num_fns(self) -> int:
         return len(self._handler_pairs)
