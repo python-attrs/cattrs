@@ -658,7 +658,7 @@ class BaseConverter:
                 return res
 
     @staticmethod
-    def _get_dis_func(union) -> Callable[..., Type]:
+    def _get_dis_func(union: Any) -> Callable[[Any], Type]:
         """Fetch or try creating a disambiguation function for a union."""
         union_types = union.__args__
         if NoneType in union_types:  # type: ignore
