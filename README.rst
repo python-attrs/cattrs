@@ -161,11 +161,12 @@ Features
 ``cattrs`` comes with preconfigured converters for a number of serialization libraries, including json, msgpack, bson, yaml and toml.
 For details, see the `cattr.preconf package <https://cattrs.readthedocs.io/en/latest/preconf.html>`_.
 
-Additional documentation
-------------------------
+Additional documentation and talks
+----------------------------------
 * `On structured and unstructured data, or the case for cattrs <https://threeofwands.com/on-structured-and-unstructured-data-or-the-case-for-cattrs/>`_
 * `Why I use attrs instead of pydantic <https://threeofwands.com/why-i-use-attrs-instead-of-pydantic/>`_
 * `cattrs I: un/structuring speed <https://threeofwands.com/why-cattrs-is-so-fast/>`_
+* `Python has a macro language - it's Python (PyCon IT 2022) <https://www.youtube.com/watch?v=UYRSixikUTo>`_
 
 Credits
 -------
