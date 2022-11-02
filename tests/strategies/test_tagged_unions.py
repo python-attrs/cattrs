@@ -1,3 +1,5 @@
+from typing import Union
+
 from attrs import define
 
 from cattrs import BaseConverter
@@ -16,7 +18,7 @@ class B:
 
 def test_defaults(converter: BaseConverter) -> None:
     """Defaults should work."""
-    union = A | B
+    union = Union[A, B]
     configure_tagged_union(union, converter)
 
     assert converter.unstructure(A(1), union) == {"_type": "A", "a": 1}
@@ -28,7 +30,7 @@ def test_defaults(converter: BaseConverter) -> None:
 
 def test_tag_name(converter: BaseConverter) -> None:
     """Tag names are customizable."""
-    union = A | B
+    union = Union[A, B]
     tag_name = "t"
     configure_tagged_union(union, converter, tag_name=tag_name)
 
@@ -41,7 +43,7 @@ def test_tag_name(converter: BaseConverter) -> None:
 
 def test_tag_generator(converter: BaseConverter) -> None:
     """Tag values are customizable using a callable."""
-    union = A | B
+    union = Union[A, B]
     configure_tagged_union(
         union, converter, tag_generator=lambda t: f"{t.__module__}.{t.__name__}"
     )
@@ -65,7 +67,7 @@ def test_tag_generator(converter: BaseConverter) -> None:
 
 def test_tag_generator_dict(converter: BaseConverter) -> None:
     """Tag values are customizable using a dict."""
-    union = A | B
+    union = Union[A, B]
     configure_tagged_union(
         union,
         converter,
@@ -81,7 +83,7 @@ def test_tag_generator_dict(converter: BaseConverter) -> None:
 
 def test_default_member(converter: BaseConverter) -> None:
     """Tagged unions can have default members."""
-    union = A | B
+    union = Union[A, B]
     configure_tagged_union(union, converter, default=A)
     assert converter.unstructure(A(1), union) == {"_type": "A", "a": 1}
     assert converter.unstructure(B("1"), union) == {"_type": "B", "a": "1"}
