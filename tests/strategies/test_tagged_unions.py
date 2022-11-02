@@ -1,7 +1,7 @@
 from attrs import define
 
 from cattrs import BaseConverter
-from cattrs.strategies.unions import configure_tagged_union
+from cattrs.strategies import configure_tagged_union
 
 
 @define

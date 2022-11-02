@@ -5,6 +5,8 @@ from attrs import NOTHING
 
 from cattrs import Converter
 
+__all__ = []
+
 
 def default_tag_generator(typ: Type) -> str:
     """Return the class name."""
@@ -19,13 +21,15 @@ def configure_tagged_union(
     default: Optional[Type] = NOTHING,
 ) -> None:
     """
-    Configure the converter so that the given union `union` is un/structured
-    with the help of an additional piece of data in the unstructured payload,
-    the tag.
+    Configure the converter so that `union` (which should be a union) is
+    un/structured with the help of an additional piece of data in the
+    unstructured payload, the tag.
 
+    :param converter: The converter to apply the strategy to.
     :param tag_generator: A `tag_generator` function is used to map each
         member of the union to a tag, which is then included in the
-        unstructured payload. By default, the name of the class is used.
+        unstructured payload. The default tag generator returns the name of
+        the class.
     :param tag_name: The key under which the tag will be set in the
         unstructured payload. By default, `'_type'`.
     :param default: An optional class to be used if the tag information
@@ -47,7 +51,7 @@ def configure_tagged_union(
     cl_to_tag = {cl: tag_generator(cl) for cl in args}
 
     if default is not NOTHING:
-        tag_to_cl = defaultdict(lambda: default, **tag_to_cl)
+        tag_to_cl = defaultdict(lambda: default, tag_to_cl)
         cl_to_tag = defaultdict(lambda: default, cl_to_tag)
 
     def unstructure_tagged_union(
