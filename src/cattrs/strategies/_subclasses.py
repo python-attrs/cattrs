@@ -1,0 +1,53 @@
+"""Strategies for customizing subclass behaviors."""
+from gc import collect
+from typing import Dict, Optional, Tuple, Type, Union, List
+
+from ..converters import Converter
+
+def include_subclasses(
+    cl: Type, converter: Converter, subclasses: Optional[Tuple[Type]] = None
+) -> None:
+    """
+    Modify the given converter so that the attrs/dataclass `cl` is
+    un/structured as if it was a union of itself and all its subclasses
+    that are defined at the time when this strategy is applied.
+
+    Subclasses are detected using the `__subclasses__` method, or
+    they can be explicitly provided.
+    """
+    # Due to https://github.com/python-attrs/attrs/issues/1047
+    collect()
+    # This hook is for instances of A, but not instances of subclasses.
+    base_hook = converter.gen_unstructure_attrs_fromdict(cl)
+
+    def unstructure_a(val: cl, c=converter) -> Dict:
+        """
+        If val is an instance of `A`, use the hook.
+
+        If val is an instance of a subclass, dispatch on its exact
+        runtime type.
+        """
+        if val.__class__ is cl:
+            return base_hook(val)
+        return c.unstructure(val, unstructure_as=val.__class__)
+
+    # This needs to use function dispatch, using singledispatch will again
+    # match A and all subclasses, which is not what we want.
+    converter.register_unstructure_hook_func(lambda cls: cls is cl, unstructure_a)
+
+    if subclasses is not None:
+        subclass_union = Union[(cl, subclasses)]
+    else:
+        subclass_union = Union[(cl, *cl.__subclasses__())]
+
+    dis_fn = converter._get_dis_func(subclass_union)
+
+    base_struct_hook = converter.gen_structure_attrs_fromdict(cl)
+
+    def structure_a(val: dict, _, c=converter, cl=cl) -> cl:
+        dis_cl = dis_fn(val)
+        if dis_cl is cl:
+            return base_struct_hook(val, cl)
+        return c.structure(val, dis_cl)
+
+    converter.register_structure_hook_func(lambda cls: cls is cl, structure_a)
