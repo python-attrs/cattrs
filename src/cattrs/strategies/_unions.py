@@ -39,7 +39,7 @@ def configure_tagged_union(
     un/structuring base strategy.
     """
     args = union.__args__
-    tag_to_cl = {}
+    tag_to_hook = {}
     for cl in args:
         tag = tag_generator(cl)
         handler = converter._structure_func.dispatch(cl)
@@ -47,11 +47,16 @@ def configure_tagged_union(
         def structure_union_member(val: dict, _cl=cl, _h=handler) -> cl:
             return _h(val, _cl)
 
-        tag_to_cl[tag] = structure_union_member
+        tag_to_hook[tag] = structure_union_member
     cl_to_tag = {cl: tag_generator(cl) for cl in args}
 
     if default is not NOTHING:
-        tag_to_cl = defaultdict(lambda: default, tag_to_cl)
+        default_handler = converter._structure_func.dispatch(default)
+
+        def structure_default(val: dict, _cl=default, _h=default_handler):
+            return _h(val, _cl)
+
+        tag_to_hook = defaultdict(lambda: structure_default, tag_to_hook)
         cl_to_tag = defaultdict(lambda: default, cl_to_tag)
 
     def unstructure_tagged_union(
@@ -64,23 +69,22 @@ def configure_tagged_union(
     if default is NOTHING:
 
         def structure_tagged_union(
-            val: dict, _, _tag_to_cl=tag_to_cl, _tag_name=tag_name
+            val: dict, _, _tag_to_cl=tag_to_hook, _tag_name=tag_name
         ) -> union:
             return _tag_to_cl[val[_tag_name]](val)
 
     else:
-        default_handler = converter._structure_func.dispatch(default)
 
         def structure_tagged_union(
             val: dict,
             _,
-            _tag_to_cl=tag_to_cl,
+            _tag_to_hook=tag_to_hook,
             _tag_name=tag_name,
             _dh=default_handler,
             _default=default,
         ) -> union:
             if _tag_name in val:
-                return _tag_to_cl[val[_tag_name]](val)
+                return _tag_to_hook[val[_tag_name]](val)
             else:
                 return _dh(val, _default)
 

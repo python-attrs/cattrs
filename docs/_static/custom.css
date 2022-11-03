@@ -1,7 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,400&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
-h2 {
+h2, h3 {
     margin-bottom: 0.5em;
+    margin-top: 2rem;
 }
 
 div.article-container>article {
