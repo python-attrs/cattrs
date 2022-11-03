@@ -93,3 +93,12 @@ def test_default_member(converter: BaseConverter) -> None:
 
     assert converter.structure({"_type": "A", "a": 1}, union) == A(1)
     assert converter.structure({"_type": "B", "a": 1}, union) == B("1")
+
+
+def test_default_member_validation(converter: BaseConverter) -> None:
+    """Default members are structured properly.."""
+    union = Union[A, B]
+    configure_tagged_union(union, converter, default=A)
+
+    # A.a should be coerced to an int.
+    assert converter.structure({"_type": "A", "a": "1"}, union) == A(1)
