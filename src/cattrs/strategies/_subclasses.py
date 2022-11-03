@@ -4,6 +4,17 @@ from typing import Dict, Optional, Tuple, Type, Union, List
 
 from ..converters import Converter
 
+
+def _make_subclasses_tree(cl: Type) -> List[Type]:
+    return [cl] + [
+        sscl for scl in cl.__subclasses__() for sscl in _make_subclasses_tree(scl)
+    ]
+
+
+def _has_subclasses(cl):
+    return bool(cl.__subclasses__())
+
+
 def include_subclasses(
     cl: Type, converter: Converter, subclasses: Optional[Tuple[Type]] = None
 ) -> None:
@@ -36,12 +47,16 @@ def include_subclasses(
     converter.register_unstructure_hook_func(lambda cls: cls is cl, unstructure_a)
 
     if subclasses is not None:
-        subclass_union = Union[(cl, subclasses)]
+        parent_subclass_tree = (cl, subclasses)
     else:
-        subclass_union = Union[(cl, *cl.__subclasses__())]
+        parent_subclass_tree = tuple(_make_subclasses_tree(cl))
 
+    # for cl in parent_subclass_tree:
+    #     if not _has_subclasses(cl):
+    #         continue
+
+    subclass_union = Union[parent_subclass_tree]
     dis_fn = converter._get_dis_func(subclass_union)
-
     base_struct_hook = converter.gen_structure_attrs_fromdict(cl)
 
     def structure_a(val: dict, _, c=converter, cl=cl) -> cl:
