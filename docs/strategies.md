@@ -50,6 +50,9 @@ Here are some common `tag_generator` uses:
 The union members aren't required to be attrs classes or dataclasses, although those work automatically.
 They may be anything that cattrs can un/structure from/to a dictionary, for example a type with registered custom hooks.
 
+A default member can be specified to be used if the tag is missing or is unknown.
+This is useful for evolving APIs in a backwards-compatible way; an endpoint taking class `A` can be changed to take `A | B` with `A` as the default (for old clients which do not send the tag).
+
 This strategy only applies in the context of the union; the normal un/structuring hooks are left untouched.
 This also means union members can be reused in multiple unions easily.
 
