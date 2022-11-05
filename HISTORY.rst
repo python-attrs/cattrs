@@ -1,6 +1,11 @@
 =======
 History
 =======
+
+22.3.0 (UNRELEASED)
+-------------------
+* Introduce the `tagged_union` strategy. (`#318 <https://github.com/python-attrs/cattrs/pull/318>`_ `#317 <https://github.com/python-attrs/cattrs/issues/317>`_)
+
 22.2.0 (2022-10-03)
 -------------------
 * *Potentially breaking*: ``cattrs.Converter`` has been renamed to ``cattrs.BaseConverter``, and ``cattrs.GenConverter`` to ``cattrs.Converter``.
