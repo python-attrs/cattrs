@@ -1,6 +1,6 @@
 """Strategies for customizing subclass behaviors."""
 from gc import collect
-from typing import Dict, Optional, Tuple, Type, Union, List
+from typing import Dict, Optional, Tuple, Type, Union, List, Callable
 
 from ..converters import Converter
 
@@ -28,6 +28,27 @@ def include_subclasses(
     """
     # Due to https://github.com/python-attrs/attrs/issues/1047
     collect()
+
+    can_handle, unstructure_a = gen_unstructure_handling_pair(converter, cl)
+
+    # This needs to use function dispatch, using singledispatch will again
+    # match A and all subclasses, which is not what we want.
+    converter.register_unstructure_hook_func(can_handle, unstructure_a)
+
+    if subclasses is not None:
+        parent_subclass_tree = (cl, subclasses)
+    else:
+        parent_subclass_tree = tuple(_make_subclasses_tree(cl))
+
+    for cl in parent_subclass_tree:
+        if not _has_subclasses(cl):
+            continue
+
+        can_handle, structure_a = gen_structure_handling_pair(converter, cl)
+        converter.register_structure_hook_func(can_handle, structure_a)
+
+
+def gen_unstructure_handling_pair(converter: Converter, cl: Type):
     # This hook is for instances of A, but not instances of subclasses.
     base_hook = converter.gen_unstructure_attrs_fromdict(cl)
 
@@ -42,20 +63,12 @@ def include_subclasses(
             return base_hook(val)
         return c.unstructure(val, unstructure_as=val.__class__)
 
-    # This needs to use function dispatch, using singledispatch will again
-    # match A and all subclasses, which is not what we want.
-    converter.register_unstructure_hook_func(lambda cls: cls is cl, unstructure_a)
+    return (lambda cls: cls is cl, unstructure_a)
 
-    if subclasses is not None:
-        parent_subclass_tree = (cl, subclasses)
-    else:
-        parent_subclass_tree = tuple(_make_subclasses_tree(cl))
 
-    # for cl in parent_subclass_tree:
-    #     if not _has_subclasses(cl):
-    #         continue
-
-    subclass_union = Union[parent_subclass_tree]
+def gen_structure_handling_pair(converter: Converter, cl: Type) -> Tuple[Callable]:
+    class_tree = _make_subclasses_tree(cl)
+    subclass_union = Union[tuple(class_tree)]
     dis_fn = converter._get_dis_func(subclass_union)
     base_struct_hook = converter.gen_structure_attrs_fromdict(cl)
 
@@ -65,4 +78,4 @@ def include_subclasses(
             return base_struct_hook(val, cl)
         return c.structure(val, dis_cl)
 
-    converter.register_structure_hook_func(lambda cls: cls is cl, structure_a)
+    return (lambda cls: cls is cl, structure_a)
