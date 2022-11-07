@@ -29,12 +29,6 @@ def include_subclasses(
     # Due to https://github.com/python-attrs/attrs/issues/1047
     collect()
 
-    can_handle, unstructure_a = gen_unstructure_handling_pair(converter, cl)
-
-    # This needs to use function dispatch, using singledispatch will again
-    # match A and all subclasses, which is not what we want.
-    converter.register_unstructure_hook_func(can_handle, unstructure_a)
-
     if subclasses is not None:
         parent_subclass_tree = (cl, subclasses)
     else:
@@ -44,8 +38,17 @@ def include_subclasses(
         if not _has_subclasses(cl):
             continue
 
-        can_handle, structure_a = gen_structure_handling_pair(converter, cl)
-        converter.register_structure_hook_func(can_handle, structure_a)
+        # Unstructuring ...
+        can_handle_unstruct, unstructure_a = gen_unstructure_handling_pair(
+            converter, cl
+        )
+        # This needs to use function dispatch, using singledispatch will again
+        # match A and all subclasses, which is not what we want.
+        converter.register_unstructure_hook_func(can_handle_unstruct, unstructure_a)
+
+        # Structuring...
+        can_handle_struct, structure_a = gen_structure_handling_pair(converter, cl)
+        converter.register_structure_hook_func(can_handle_struct, structure_a)
 
 
 def gen_unstructure_handling_pair(converter: Converter, cl: Type):
@@ -67,8 +70,8 @@ def gen_unstructure_handling_pair(converter: Converter, cl: Type):
 
 
 def gen_structure_handling_pair(converter: Converter, cl: Type) -> Tuple[Callable]:
-    class_tree = _make_subclasses_tree(cl)
-    subclass_union = Union[tuple(class_tree)]
+    class_tree = tuple(_make_subclasses_tree(cl))
+    subclass_union = Union[class_tree]
     dis_fn = converter._get_dis_func(subclass_union)
     base_struct_hook = converter.gen_structure_attrs_fromdict(cl)
 

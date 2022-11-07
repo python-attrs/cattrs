@@ -5,7 +5,7 @@ import inspect
 import attr
 import pytest
 
-from cattrs import BaseConverter, Converter
+from cattrs import Converter
 from cattrs.errors import ClassValidationError
 from cattrs.strategies._subclasses import _make_subclasses_tree, include_subclasses
 
@@ -88,7 +88,7 @@ IDS_TO_STRUCT_UNSTRUCT = {
 }
 
 
-@pytest.fixture(params=(True, False))
+@pytest.fixture(params=(True, False), ids=["with-subclasses", "wo-subclasses"])
 def conv_w_subclasses(request):
     c = Converter()
     if request.param:
@@ -130,33 +130,17 @@ def test_structuring_with_inheritance(
             converter.structure(unstructured, GrandChild)
 
 
-def test_structure_non_attr_subclass():
-    @attr.define
-    class A:
-        a: int
-
-    class B(A):
-        def __init__(self, a: int, b: int):
-            super().__init__(self, a)
-            self.b = b
-
-    converter = Converter(include_subclasses=True)
-    d = dict(a=1, b=2)
-    with pytest.raises(ValueError, match="has no usable unique attributes"):
-        converter.structure(d, A)
-
-
 def test_structure_as_union():
-    converter = Converter(include_subclasses=True)
+    converter = Converter()
+    include_subclasses(Parent, converter)
     the_list = [dict(p=1, c1=2)]
     res = converter.structure(the_list, typing.List[typing.Union[Parent, Child1]])
-    _show_source(converter, Parent)
-    _show_source(converter, Child1)
     assert res == [Child1(1, 2)]
 
 
 def test_circular_reference():
-    c = Converter(include_subclasses=True)
+    c = Converter()
+    include_subclasses(CircularA, c)
     struct = CircularB(a=1, other=[CircularB(a=2, other=[], b=3)], b=4)
     unstruct = dict(a=1, other=[dict(a=2, other=[], b=3)], b=4)
 
@@ -190,8 +174,11 @@ def test_unstructuring_with_inheritance(
             pytest.xfail("Cannot succeed if include_subclasses strategy is not used")
         assert converter.unstructure(structured, unstructure_as=Parent) == unstructured
 
+    if structured.__class__ == GrandChild:
+        assert converter.unstructure(structured, unstructure_as=Child1) == unstructured
 
-def test_unstructuring_unknown_subclass():
+
+def test_structuring_unstructuring_unknown_subclass():
     @attr.define
     class A:
         a: int
@@ -200,20 +187,24 @@ def test_unstructuring_unknown_subclass():
     class A1(A):
         a1: int
 
-    converter = Converter(include_subclasses=True)
-    assert converter.unstructure(A1(1, 2), unstructure_as=A) == {"a": 1, "a1": 2}
+    converter = Converter()
+    include_subclasses(A, converter)
 
+    # We define A2 after having created the custom un/structuring functions for A and A1
     @attr.define
     class A2(A1):
         a2: int
 
-    _show_source(converter, A, "unstructure")
+    # Even if A2 did not exist, unstructuring_as A works:
+    assert converter.unstructure(A2(1, 2, 3), unstructure_as=A) == dict(a=1, a1=2, a2=3)
 
-    with pytest.raises(UnknownSubclassError, match="Subclass.*A2.*of.*A1.* is unknown"):
-        converter.unstructure(A2(1, 2, 3), unstructure_as=A1)
+    # This is an known edge case. The result here is not the correct one! It should be
+    # the same as the previous assert. We leave as-is for now and we document that
+    # it is preferable to know all subclasses tree before calling include_subclasses
+    assert converter.unstructure(A2(1, 2, 3), unstructure_as=A1) == {"a": 1, "a1": 2}
 
-    with pytest.raises(UnknownSubclassError, match="Subclass.*A2.*of.*A.* is unknown"):
-        converter.unstructure(A2(1, 2, 3), unstructure_as=A)
+    # This is another edge-case: the result should be A2(1, 2, 3)...
+    assert converter.structure(dict(a=1, a1=2, a2=3), A) == A1(1, 2)
 
 
 def test_class_tree_generator():
