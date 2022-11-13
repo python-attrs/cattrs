@@ -11,31 +11,33 @@ def _make_subclasses_tree(cl: Type) -> List[Type]:
     ]
 
 
-def _has_subclasses(cl):
-    return bool(cl.__subclasses__())
+def _has_subclasses(cl: Type, given_subclasses: Tuple[Type]):
+    actual = set(cl.__subclasses__())
+    given = set(given_subclasses)
+    return bool(actual & given)
 
 
 def include_subclasses(
     cl: Type, converter: Converter, subclasses: Optional[Tuple[Type]] = None
 ) -> None:
     """
-    Modify the given converter so that the attrs/dataclass `cl` is
-    un/structured as if it was a union of itself and all its subclasses
-    that are defined at the time when this strategy is applied.
+    Modify the given converter so that the attrs/dataclass `cl` is un/structured as if
+    it was a union of itself and all its subclasses that are defined at the time when
+    this strategy is applied.
 
-    Subclasses are detected using the `__subclasses__` method, or
-    they can be explicitly provided.
+    Subclasses are detected using the `__subclasses__` method, or they can be explicitly
+    provided.
     """
     # Due to https://github.com/python-attrs/attrs/issues/1047
     collect()
 
     if subclasses is not None:
-        parent_subclass_tree = (cl, subclasses)
+        parent_subclass_tree = (cl,) + subclasses
     else:
         parent_subclass_tree = tuple(_make_subclasses_tree(cl))
 
     for cl in parent_subclass_tree:
-        if not _has_subclasses(cl):
+        if not _has_subclasses(cl, parent_subclass_tree):
             continue
 
         # Unstructuring ...
@@ -47,7 +49,9 @@ def include_subclasses(
         converter.register_unstructure_hook_func(can_handle_unstruct, unstructure_a)
 
         # Structuring...
-        can_handle_struct, structure_a = gen_structure_handling_pair(converter, cl)
+        can_handle_struct, structure_a = gen_structure_handling_pair(
+            converter, cl, parent_subclass_tree
+        )
         converter.register_structure_hook_func(can_handle_struct, structure_a)
 
 
@@ -69,8 +73,11 @@ def gen_unstructure_handling_pair(converter: Converter, cl: Type):
     return (lambda cls: cls is cl, unstructure_a)
 
 
-def gen_structure_handling_pair(converter: Converter, cl: Type) -> Tuple[Callable]:
-    class_tree = tuple(_make_subclasses_tree(cl))
+def gen_structure_handling_pair(
+    converter: Converter, cl: Type, given_subclasses_tree: Tuple[Type]
+) -> Tuple[Callable]:
+    actual_subclass_tree = tuple(_make_subclasses_tree(cl))
+    class_tree = tuple(set(actual_subclass_tree) & set(given_subclasses_tree))
     subclass_union = Union[class_tree]
     dis_fn = converter._get_dis_func(subclass_union)
     base_struct_hook = converter.gen_structure_attrs_fromdict(cl)

@@ -5,7 +5,8 @@ import inspect
 import attr
 import pytest
 
-from cattrs import Converter
+from cattrs import Converter, override
+from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn
 from cattrs.errors import ClassValidationError
 from cattrs.strategies._subclasses import _make_subclasses_tree, include_subclasses
 
@@ -205,6 +206,23 @@ def test_structuring_unstructuring_unknown_subclass():
 
     # This is another edge-case: the result should be A2(1, 2, 3)...
     assert converter.structure(dict(a=1, a1=2, a2=3), A) == A1(1, 2)
+
+
+def test_structuring_with_subclasses_argument():
+    c = Converter()
+    include_subclasses(Parent, c, subclasses=(Child1,))
+
+    structured_child, unstructured_child = IDS_TO_STRUCT_UNSTRUCT[
+        "non-union-compose-child"
+    ]
+    assert c.structure(unstructured_child, NonUnionCompose) == structured_child
+    assert c.unstructure(structured_child) == unstructured_child
+
+    structured_gchild, unstructured_gchild = IDS_TO_STRUCT_UNSTRUCT[
+        "non-union-compose-grandchild"
+    ]
+    assert c.structure(unstructured_gchild, NonUnionCompose) == structured_child
+    assert c.unstructure(structured_gchild) == unstructured_gchild
 
 
 def test_class_tree_generator():
