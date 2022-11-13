@@ -227,12 +227,7 @@ def test_structuring_with_subclasses_argument():
 
 def test_overrides():
     c = Converter()
-    overrides = {"p": override(rename="u")}
-    c.register_unstructure_hook(
-        Parent, make_dict_unstructure_fn(Parent, c, **overrides)
-    )
-    c.register_structure_hook(Parent, make_dict_structure_fn(Parent, c, **overrides))
-    include_subclasses(Parent, c)
+    include_subclasses(Parent, c, overrides={"p": override(rename="u")})
 
     assert c.unstructure(Parent(1)) == {"u": 1}
     assert c.structure({"u": 1}, Parent) == Parent(1)

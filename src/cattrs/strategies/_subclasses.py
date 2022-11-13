@@ -3,6 +3,7 @@ from gc import collect
 from typing import Dict, Optional, Tuple, Type, Union, List, Callable
 
 from ..converters import Converter
+from ..gen import AttributeOverride, make_dict_structure_fn, make_dict_unstructure_fn
 
 
 def _make_subclasses_tree(cl: Type) -> List[Type]:
@@ -18,7 +19,10 @@ def _has_subclasses(cl: Type, given_subclasses: Tuple[Type]):
 
 
 def include_subclasses(
-    cl: Type, converter: Converter, subclasses: Optional[Tuple[Type]] = None
+    cl: Type,
+    converter: Converter,
+    subclasses: Optional[Tuple[Type]] = None,
+    overrides: Optional[Dict[str, AttributeOverride]] = None,
 ) -> None:
     """
     Modify the given converter so that the attrs/dataclass `cl` is un/structured as if
@@ -27,6 +31,9 @@ def include_subclasses(
 
     Subclasses are detected using the `__subclasses__` method, or they can be explicitly
     provided.
+
+    overrides is a mapping of some or all the parent class field names to attribute
+    overrides instantiated with :func:`cattrs.gen.override`
     """
     # Due to https://github.com/python-attrs/attrs/issues/1047
     collect()
@@ -36,13 +43,16 @@ def include_subclasses(
     else:
         parent_subclass_tree = tuple(_make_subclasses_tree(cl))
 
+    if overrides is None:
+        overrides = {}
+
     for cl in parent_subclass_tree:
         if not _has_subclasses(cl, parent_subclass_tree):
             continue
 
         # Unstructuring ...
         can_handle_unstruct, unstructure_a = gen_unstructure_handling_pair(
-            converter, cl
+            converter, cl, overrides
         )
         # This needs to use function dispatch, using singledispatch will again
         # match A and all subclasses, which is not what we want.
@@ -50,14 +60,18 @@ def include_subclasses(
 
         # Structuring...
         can_handle_struct, structure_a = gen_structure_handling_pair(
-            converter, cl, parent_subclass_tree
+            converter, cl, parent_subclass_tree, overrides
         )
         converter.register_structure_hook_func(can_handle_struct, structure_a)
 
 
-def gen_unstructure_handling_pair(converter: Converter, cl: Type):
+def gen_unstructure_handling_pair(
+    converter: Converter,
+    cl: Type,
+    overrides: Optional[Dict[str, AttributeOverride]] = None,
+):
     # This hook is for instances of A, but not instances of subclasses.
-    base_hook = converter.gen_unstructure_attrs_fromdict(cl)
+    base_hook = make_dict_unstructure_fn(cl, converter, **overrides)
 
     def unstructure_a(val: cl, c=converter) -> Dict:
         """
@@ -74,13 +88,16 @@ def gen_unstructure_handling_pair(converter: Converter, cl: Type):
 
 
 def gen_structure_handling_pair(
-    converter: Converter, cl: Type, given_subclasses_tree: Tuple[Type]
+    converter: Converter,
+    cl: Type,
+    given_subclasses_tree: Tuple[Type],
+    overrides: Optional[Dict[str, AttributeOverride]] = None,
 ) -> Tuple[Callable]:
     actual_subclass_tree = tuple(_make_subclasses_tree(cl))
     class_tree = tuple(set(actual_subclass_tree) & set(given_subclasses_tree))
     subclass_union = Union[class_tree]
     dis_fn = converter._get_dis_func(subclass_union)
-    base_struct_hook = converter.gen_structure_attrs_fromdict(cl)
+    base_struct_hook = make_dict_structure_fn(cl, converter, **overrides)
 
     def structure_a(val: dict, _, c=converter, cl=cl) -> cl:
         dis_cl = dis_fn(val)
