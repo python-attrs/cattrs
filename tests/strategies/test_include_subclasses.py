@@ -225,6 +225,21 @@ def test_structuring_with_subclasses_argument():
     assert c.unstructure(structured_gchild) == unstructured_gchild
 
 
+def test_overrides():
+    c = Converter()
+    overrides = {"p": override(rename="u")}
+    c.register_unstructure_hook(
+        Parent, make_dict_unstructure_fn(Parent, c, **overrides)
+    )
+    c.register_structure_hook(Parent, make_dict_structure_fn(Parent, c, **overrides))
+    include_subclasses(Parent, c)
+
+    assert c.unstructure(Parent(1)) == {"u": 1}
+    assert c.structure({"u": 1}, Parent) == Parent(1)
+
+    assert c.unstructure(Child1(1, 2)) == {"u": 1, "c1": 2}
+
+
 def test_class_tree_generator():
     class P:
         pass
