@@ -289,3 +289,4 @@ autodoc_typehints = "description"
 autosectionlabel_prefix_document = True
 copybutton_prompt_text = r">>> |\.\.\. "
 copybutton_prompt_is_regexp = True
+myst_heading_anchors = 3
