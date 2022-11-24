@@ -1,36 +1,50 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,400&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,400&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
 
-h2 {
-    margin-bottom: 0.5em;
+h2,
+h3 {
+  margin-bottom: 0.5em;
+  margin-top: 2rem;
 }
 
-div.article-container>article {
-    font-size: 19px;
-    line-height: 31px;
+:target > h1:first-of-type,
+:target > h2:first-of-type,
+:target > h3:first-of-type,
+span:target ~ h1:first-of-type,
+span:target ~ h2:first-of-type,
+span:target ~ h3:first-of-type,
+span:target ~ h4:first-of-type,
+span:target ~ h5:first-of-type,
+span:target ~ h6:first-of-type {
+  text-decoration: underline dashed;
+}
+
+div.article-container > article {
+  font-size: 18px;
+  line-height: 31px;
 }
 
 div.admonition {
-    font-size: 15px;
-    line-height: 27px;
-    margin-top: 2em;
-    margin-bottom: 2em;
+  font-size: 15px;
+  line-height: 27px;
+  margin-top: 2em;
+  margin-bottom: 2em;
 }
 
 p.admonition-title {
-    font-size: 15px !important;
-    line-height: 20px !important;
+  font-size: 15px !important;
+  line-height: 20px !important;
 }
 
-article>li>a {
-    font-size: 19px;
-    line-height: 31px;
+article > li > a {
+  font-size: 19px;
+  line-height: 31px;
 }
 
 div.tab-set {
-    margin-top: 1em;
-    margin-bottom: 2em;
+  margin-top: 1em;
+  margin-bottom: 2em;
 }
 
 div.tab-set pre {
-    padding: 1.25em;
+  padding: 1.25em;
 }

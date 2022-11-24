@@ -43,6 +43,8 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.doctest",
     "sphinx.ext.autosectionlabel",
+    "sphinx_copybutton",
+    "myst_parser",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -121,7 +123,9 @@ html_theme_options = {
         "font-stack": "Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji",
         "font-stack--monospace": "'Ubuntu Mono', monospace",
         "code-font-size": "90%",
-    }
+        "color-highlight-on-target": "transparent",
+    },
+    "dark_css_variables": {"color-highlight-on-target": "transparent"},
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -285,3 +289,6 @@ doctest_global_setup = (
 )
 autodoc_typehints = "description"
 autosectionlabel_prefix_document = True
+copybutton_prompt_text = r">>> |\.\.\. "
+copybutton_prompt_is_regexp = True
+myst_heading_anchors = 3

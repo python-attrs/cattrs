@@ -8,6 +8,7 @@ Subpackages
    :maxdepth: 4
 
    cattrs.preconf
+   cattrs.strategies
 
 Submodules
 ----------

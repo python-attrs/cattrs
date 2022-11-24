@@ -8,6 +8,7 @@
    usage
    structuring
    unstructuring
+   strategies
    validation
    preconf
    customizing

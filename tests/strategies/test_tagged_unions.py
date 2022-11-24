@@ -1,0 +1,104 @@
+from typing import Union
+
+from attrs import define
+
+from cattrs import BaseConverter
+from cattrs.strategies import configure_tagged_union
+
+
+@define
+class A:
+    a: int
+
+
+@define
+class B:
+    a: str
+
+
+def test_defaults(converter: BaseConverter) -> None:
+    """Defaults should work."""
+    union = Union[A, B]
+    configure_tagged_union(union, converter)
+
+    assert converter.unstructure(A(1), union) == {"_type": "A", "a": 1}
+    assert converter.unstructure(B("1"), union) == {"_type": "B", "a": "1"}
+
+    assert converter.structure({"_type": "A", "a": 1}, union) == A(1)
+    assert converter.structure({"_type": "B", "a": 1}, union) == B("1")
+
+
+def test_tag_name(converter: BaseConverter) -> None:
+    """Tag names are customizable."""
+    union = Union[A, B]
+    tag_name = "t"
+    configure_tagged_union(union, converter, tag_name=tag_name)
+
+    assert converter.unstructure(A(1), union) == {tag_name: "A", "a": 1}
+    assert converter.unstructure(B("1"), union) == {tag_name: "B", "a": "1"}
+
+    assert converter.structure({tag_name: "A", "a": 1}, union) == A(1)
+    assert converter.structure({tag_name: "B", "a": 1}, union) == B("1")
+
+
+def test_tag_generator(converter: BaseConverter) -> None:
+    """Tag values are customizable using a callable."""
+    union = Union[A, B]
+    configure_tagged_union(
+        union, converter, tag_generator=lambda t: f"{t.__module__}.{t.__name__}"
+    )
+
+    assert converter.unstructure(A(1), union) == {
+        "_type": "tests.strategies.test_tagged_unions.A",
+        "a": 1,
+    }
+    assert converter.unstructure(B("1"), union) == {
+        "_type": "tests.strategies.test_tagged_unions.B",
+        "a": "1",
+    }
+
+    assert converter.structure(
+        {"_type": "tests.strategies.test_tagged_unions.A", "a": 1}, union
+    ) == A(1)
+    assert converter.structure(
+        {"_type": "tests.strategies.test_tagged_unions.B", "a": 1}, union
+    ) == B("1")
+
+
+def test_tag_generator_dict(converter: BaseConverter) -> None:
+    """Tag values are customizable using a dict."""
+    union = Union[A, B]
+    configure_tagged_union(
+        union,
+        converter,
+        tag_generator={cl: f"type:{cl.__name__}" for cl in union.__args__}.get,
+    )
+
+    assert converter.unstructure(A(1), union) == {"_type": "type:A", "a": 1}
+    assert converter.unstructure(B("1"), union) == {"_type": "type:B", "a": "1"}
+
+    assert converter.structure({"_type": "type:A", "a": 1}, union) == A(1)
+    assert converter.structure({"_type": "type:B", "a": 1}, union) == B("1")
+
+
+def test_default_member(converter: BaseConverter) -> None:
+    """Tagged unions can have default members."""
+    union = Union[A, B]
+    configure_tagged_union(union, converter, default=A)
+    assert converter.unstructure(A(1), union) == {"_type": "A", "a": 1}
+    assert converter.unstructure(B("1"), union) == {"_type": "B", "a": "1"}
+
+    # No tag, so should structure as A.
+    assert converter.structure({"a": 1}, union) == A(1)
+
+    assert converter.structure({"_type": "A", "a": 1}, union) == A(1)
+    assert converter.structure({"_type": "B", "a": 1}, union) == B("1")
+
+
+def test_default_member_validation(converter: BaseConverter) -> None:
+    """Default members are structured properly.."""
+    union = Union[A, B]
+    configure_tagged_union(union, converter, default=A)
+
+    # A.a should be coerced to an int.
+    assert converter.structure({"_type": "A", "a": "1"}, union) == A(1)
