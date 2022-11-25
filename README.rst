@@ -10,7 +10,7 @@ cattrs
         :target: https://github.com/python-attrs/cattrs/actions?workflow=CI
 
 .. image:: https://readthedocs.org/projects/cattrs/badge/?version=latest
-        :target: https://cattrs.readthedocs.io/en/latest/?badge=latest
+        :target: https://catt.rs/en/latest/?badge=latest
         :alt: Documentation Status
 
 .. image:: https://img.shields.io/pypi/pyversions/cattrs.svg
@@ -26,7 +26,7 @@ cattrs
 
 ----
 
-``cattrs`` is an open source Python library for structuring and unstructuring
+**cattrs** is an open source Python library for structuring and unstructuring
 data. ``cattrs`` works best with ``attrs`` classes, dataclasses and the usual
 Python collections, but other kinds of classes are supported by manually
 registering converters.
@@ -124,7 +124,7 @@ to add type metadata to attributes, so ``cattrs`` will know how to structure and
 destructure them.
 
 * Free software: MIT license
-* Documentation: https://cattrs.readthedocs.io.
+* Documentation: https://catt.rs
 * Python versions supported: 3.7 and up. (Older Python versions, like 2.7, 3.5 and 3.6 are supported by older versions; see the changelog.)
 
 
@@ -159,7 +159,7 @@ Features
   * Custom converters for any type can be registered using ``register_structure_hook``.
 
 ``cattrs`` comes with preconfigured converters for a number of serialization libraries, including json, msgpack, bson, yaml and toml.
-For details, see the `cattr.preconf package <https://cattrs.readthedocs.io/en/latest/preconf.html>`_.
+For details, see the `cattr.preconf package <https://catt.rs/en/stable/preconf.html>`_.
 
 Additional documentation and talks
 ----------------------------------
