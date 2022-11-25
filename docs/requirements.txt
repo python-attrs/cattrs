@@ -1,2 +1,3 @@
-furo==2021.7.31b41
-poetry==1.2.0a2
+furo==2022.9.29
+poetry==1.2.0
+sphinx-copybutton==0.5.0
