@@ -2,12 +2,13 @@
 History
 =======
 
-22.3.0 (UNRELEASED)
+23.1.0 (UNRELEASED)
 -------------------
 * Introduce the `tagged_union` strategy. (`#318 <https://github.com/python-attrs/cattrs/pull/318>`_ `#317 <https://github.com/python-attrs/cattrs/issues/317>`_)
 * Introduce `override.struct_hook` and `override.unstruct_hook`. Learn more `here <https://catt.rs/en/latest/customizing.html#struct-hook-and-unstruct-hook>`_.
   (`#326 <https://github.com/python-attrs/cattrs/pull/326>`_)
 * Fix generating structuring functions for types with angle brackets (`<>`) and pipe symbols (`|`) in the name.
+  (`#319 <https://github.com/python-attrs/cattrs/issues/319>`_, `#327 <https://github.com/python-attrs/cattrs/pull/327>`_)
 
 22.2.0 (2022-10-03)
 -------------------
