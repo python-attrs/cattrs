@@ -3,6 +3,7 @@ from collections.abc import MutableSet as AbcMutableSet
 from dataclasses import Field
 from enum import Enum
 from functools import lru_cache
+from pathlib import Path
 from typing import (
     Any,
     Callable,
@@ -143,7 +144,11 @@ class BaseConverter:
 
         self._unstructure_func = MultiStrategyDispatch(self._unstructure_identity)
         self._unstructure_func.register_cls_list(
-            [(bytes, self._unstructure_identity), (str, self._unstructure_identity)]
+            [
+                (bytes, self._unstructure_identity),
+                (str, self._unstructure_identity),
+                (Path, str),
+            ]
         )
         self._unstructure_func.register_func_list(
             [
@@ -194,6 +199,7 @@ class BaseConverter:
                 (int, self._structure_call),
                 (float, self._structure_call),
                 (Enum, self._structure_call),
+                (Path, self._structure_call),
             ]
         )
 
