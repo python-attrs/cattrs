@@ -133,3 +133,7 @@ div.tab-set {
 div.tab-set pre {
   padding: 1.25em;
 }
+
+body:not([data-theme="light"]) .highlight {
+  background: #18181a;
+}
