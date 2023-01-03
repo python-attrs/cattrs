@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import linecache
 import re
 import uuid
@@ -17,7 +19,7 @@ from typing import (
 )
 
 import attr
-from attr import NOTHING, frozen, resolve_types
+from attr import NOTHING, Attribute, frozen, resolve_types
 
 from cattrs.errors import (
     ClassValidationError,
@@ -45,14 +47,18 @@ class AttributeOverride:
     omit_if_default: Optional[bool] = None
     rename: Optional[str] = None
     omit: bool = False  # Omit the field completely.
+    struct_hook: Optional[Callable[[Any, Any], Any]] = None  # Structure hook to use.
+    unstruct_hook: Optional[Callable[[Any], Any]] = None  # Structure hook to use.
 
 
 def override(
     omit_if_default: Optional[bool] = None,
     rename: Optional[str] = None,
     omit: bool = False,
+    struct_hook: Optional[Callable[[Any, Any], Any]] = None,
+    unstruct_hook: Optional[Callable[[Any], Any]] = None,
 ):
-    return AttributeOverride(omit_if_default=omit_if_default, rename=rename, omit=omit)
+    return AttributeOverride(omit_if_default, rename, omit, struct_hook, unstruct_hook)
 
 
 _neutral = AttributeOverride()
@@ -120,24 +126,27 @@ def make_dict_unstructure_fn(
             # If a type is manually overwritten, this function should be
             # regenerated.
             handler = None
-            if a.type is not None:
-                t = a.type
-                if isinstance(t, TypeVar):
-                    if t.__name__ in mapping:
-                        t = mapping[t.__name__]
-                    else:
-                        handler = converter.unstructure
-                elif is_generic(t) and not is_bare(t) and not is_annotated(t):
-                    t = deep_copy_with(t, mapping)
-
-                if handler is None:
-                    try:
-                        handler = converter._unstructure_func.dispatch(t)
-                    except RecursionError:
-                        # There's a circular reference somewhere down the line
-                        handler = converter.unstructure
+            if override.unstruct_hook is not None:
+                handler = override.unstruct_hook
             else:
-                handler = converter.unstructure
+                if a.type is not None:
+                    t = a.type
+                    if isinstance(t, TypeVar):
+                        if t.__name__ in mapping:
+                            t = mapping[t.__name__]
+                        else:
+                            handler = converter.unstructure
+                    elif is_generic(t) and not is_bare(t) and not is_annotated(t):
+                        t = deep_copy_with(t, mapping)
+
+                    if handler is None:
+                        try:
+                            handler = converter._unstructure_func.dispatch(t)
+                        except RecursionError:
+                            # There's a circular reference somewhere down the line
+                            handler = converter.unstructure
+                else:
+                    handler = converter.unstructure
 
             is_identity = handler == converter._unstructure_identity
 
@@ -229,6 +238,28 @@ def _generate_mapping(cl: Type, old_mapping: Dict[str, type]) -> Dict[str, type]
     return mapping
 
 
+def find_structure_handler(
+    a: Attribute, type: Any, c: BaseConverter, prefer_attrs_converters: bool = False
+) -> Optional[Callable[[Any, Any], Any]]:
+    """Find the appropriate structure handler to use.
+
+    Return `None` if no handler should be used.
+    """
+    if a.converter is not None and prefer_attrs_converters:
+        # If the user as requested to use attrib converters, use nothing
+        # so it falls back to that.
+        handler = None
+    elif a.converter is not None and not prefer_attrs_converters and type is not None:
+        handler = c._structure_func.dispatch(type)
+        if handler == c._structure_error:
+            handler = None
+    elif type is not None:
+        handler = c._structure_func.dispatch(type)
+    else:
+        handler = c.structure
+    return handler
+
+
 DictStructureFn = Callable[[Mapping[str, Any], Any], T]
 
 
@@ -311,20 +342,13 @@ def make_dict_structure_fn(
             # For each attribute, we try resolving the type here and now.
             # If a type is manually overwritten, this function should be
             # regenerated.
-            if a.converter is not None and _cattrs_prefer_attrib_converters:
-                handler = None
-            elif (
-                a.converter is not None
-                and not _cattrs_prefer_attrib_converters
-                and t is not None
-            ):
-                handler = converter._structure_func.dispatch(t)
-                if handler == converter._structure_error:
-                    handler = None
-            elif t is not None:
-                handler = converter._structure_func.dispatch(t)
+            if override.struct_hook is not None:
+                # If the user has requested an override, just use that.
+                handler = override.struct_hook
             else:
-                handler = converter.structure
+                handler = find_structure_handler(
+                    a, t, converter, _cattrs_prefer_attrib_converters
+                )
 
             struct_handler_name = f"__c_structure_{an}"
             internal_arg_parts[struct_handler_name] = handler
