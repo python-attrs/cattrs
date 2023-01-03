@@ -7,6 +7,7 @@ from collections.abc import Sequence as AbcSequence
 from collections.abc import Set as AbcSet
 from dataclasses import field, make_dataclass
 from functools import partial
+from pathlib import Path
 from typing import (
     Any,
     Dict,
@@ -15,6 +16,7 @@ from typing import (
     MutableSequence,
     MutableSet,
     NewType,
+    Optional,
     Sequence,
     Set,
     Tuple,
@@ -126,6 +128,7 @@ def simple_typed_attrs(
             | float_typed_attrs(defaults, kw_only)
             | frozenset_typed_attrs(defaults, legacy_types_only=True, kw_only=kw_only)
             | homo_tuple_typed_attrs(defaults, legacy_types_only=True, kw_only=kw_only)
+            | path_typed_attrs(defaults, kw_only=kw_only)
         )
         if newtypes:
             res = (
@@ -170,6 +173,7 @@ def simple_typed_attrs(
             | float_typed_attrs(defaults, kw_only)
             | frozenset_typed_attrs(defaults, kw_only=kw_only)
             | homo_tuple_typed_attrs(defaults, kw_only=kw_only)
+            | path_typed_attrs(defaults, kw_only=kw_only)
         )
         if newtypes:
             res = (
@@ -367,6 +371,29 @@ def float_typed_attrs(draw, defaults=None, kw_only=None):
             kw_only=draw(booleans()) if kw_only is None else kw_only,
         ),
         floats(),
+    )
+
+
+@composite
+def path_typed_attrs(
+    draw: DrawFn, defaults: Optional[bool] = None, kw_only: Optional[bool] = None
+) -> Tuple[_CountingAttr, SearchStrategy[Path]]:
+    """
+    Generate a tuple of an attribute and a strategy that yields paths for that
+    attribute.
+    """
+    from string import ascii_lowercase
+
+    default = attr.NOTHING
+    if defaults is True or (defaults is None and draw(booleans())):
+        default = Path(draw(text(ascii_lowercase, min_size=1)))
+    return (
+        attr.ib(
+            type=Path,
+            default=default,
+            kw_only=draw(booleans()) if kw_only is None else kw_only,
+        ),
+        text(ascii_lowercase, min_size=1).map(Path),
     )
 
 

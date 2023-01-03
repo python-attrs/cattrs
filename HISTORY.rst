@@ -9,6 +9,8 @@ History
   (`#326 <https://github.com/python-attrs/cattrs/pull/326>`_)
 * Fix generating structuring functions for types with angle brackets (`<>`) and pipe symbols (`|`) in the name.
   (`#319 <https://github.com/python-attrs/cattrs/issues/319>`_, `#327 <https://github.com/python-attrs/cattrs/pull/327>`_)
+* `pathlib.Path` is now supported by default.
+  (`#81 <https://github.com/python-attrs/cattrs/issues/81>`_)
 
 22.2.0 (2022-10-03)
 -------------------
