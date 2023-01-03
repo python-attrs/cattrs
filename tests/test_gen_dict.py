@@ -304,3 +304,40 @@ def test_type_names_with_quotes():
     assert converter.structure(
         {2: "a"}, Dict[Union[Literal["a", 2, 3], Literal[4]], str]
     ) == {2: "a"}
+
+
+def test_overriding_struct_hook(converter: BaseConverter) -> None:
+    """Overriding structure hooks works."""
+    from math import ceil
+
+    @define
+    class A:
+        a: int
+        b: str
+
+    converter.register_structure_hook(
+        A,
+        make_dict_structure_fn(
+            A, converter, a=override(struct_hook=lambda v, _: ceil(v))
+        ),
+    )
+
+    assert converter.structure({"a": 0.5, "b": 1}, A) == A(1, "1")
+
+
+def test_overriding_unstruct_hook(converter: BaseConverter) -> None:
+    """Overriding unstructure hooks works."""
+
+    @define
+    class A:
+        a: int
+        b: str
+
+    converter.register_unstructure_hook(
+        A,
+        make_dict_unstructure_fn(
+            A, converter, a=override(unstruct_hook=lambda v: v + 1)
+        ),
+    )
+
+    assert converter.unstructure(A(1, "")) == {"a": 2, "b": ""}
