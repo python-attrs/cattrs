@@ -302,7 +302,10 @@ def make_dict_structure_fn(
                 p,
             ) from None
         name = getattr(name_base, "__name__", None) or str(name_base)
-        name = re.sub(r"[\[\.\] ,]", "_", name)
+        # `<>` can be present in lambdas
+        # `|` can be present in unions
+        name = re.sub(r"[\[\.\] ,<>]", "_", name)
+        name = re.sub(r"\|", "u", name)
         fn_name += f"_{name}"
 
     internal_arg_parts = {"__cl": cl}

@@ -4,7 +4,7 @@ import pytest
 from attr import asdict, attrs, define
 
 from cattrs import BaseConverter, Converter
-from cattrs._compat import Protocol, is_py39_plus
+from cattrs._compat import Protocol, is_py39_plus, is_py310_plus
 from cattrs._generics import deep_copy_with
 from cattrs.errors import StructureHandlerNotFoundError
 
@@ -243,3 +243,24 @@ def test_unstructure_protocol():
 
     raw = c.unstructure(initial)
     assert raw == {"inner": {"a": 1}}
+
+
+@pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
+def test_roundtrip_generic_with_union() -> None:
+    """Generators should handle classes with unions in their names."""
+    c = Converter()
+
+    @define
+    class A:
+        a: int
+
+    @define
+    class B:
+        b: int
+
+    @define
+    class Outer(Generic[T]):
+        member: T
+
+    raw = c.unstructure(Outer(A(1)), unstructure_as=Outer[A | B])
+    assert c.structure(raw, Outer[A | B]) == Outer((A(1)))
