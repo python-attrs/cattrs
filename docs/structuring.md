@@ -1,4 +1,4 @@
-# What you can structure and how
+# What You Can Structure and How
 
 The philosophy of `cattrs` structuring is simple: give it an instance of Python
 built-in types and collections, and a type describing the data you want out.
@@ -59,7 +59,7 @@ like tuples.
 ...    SIAMESE = "siamese"
 ...    MAINE_COON = "maine_coon"
 ...    SACRED_BIRMAN = "birman"
-...
+
 >>> cattrs.structure("siamese", CatBreed)
 <CatBreed.SIAMESE: 'siamese'>
 ```
@@ -90,7 +90,7 @@ In case the conversion isn't possible, the resulting exception is propagated out
 
 ```
 
-## Collections and other generics
+## Collections and Other Generics
 
 ### Optionals
 
@@ -146,7 +146,7 @@ These generic types are composable with all other converters.
 ['1', None, '3']
 ```
 
-### Sets and frozensets
+### Sets and Frozensets
 
 Sets and frozensets can be produced from any iterable object. Types converting
 to sets are:
@@ -211,7 +211,7 @@ and values can be converted.
 {'1': None, '2': 2}
 ```
 
-### Homogeneous and heterogeneous tuples
+### Homogeneous and Heterogeneous Tuples
 
 Homogeneous and heterogeneous tuples can be produced from iterable objects.
 Heterogeneous tuples require an iterable with the number of elements matching
@@ -285,8 +285,6 @@ To support arbitrary unions, register a custom structuring hook for the union
 [PEP 593](https://www.python.org/dev/peps/pep-0593/) annotations (`typing.Annotated[type, ...]`) are supported and are
 matched using the first type present in the annotated type.
 
-(structuring_newtypes)=
-
 ### `typing.NewType`
 
 [NewTypes](https://docs.python.org/3/library/typing.html#newtype) are supported and are structured according to the rules for their underlying type.
@@ -310,7 +308,7 @@ datetime.datetime(2022, 1, 1, 0, 0)
 
 ```
 
-```{seealso} [Unstructuring NewTypes.](<unstructuring_newtypes>)
+```{seealso} [Unstructuring NewTypes.](unstructuring.md#typingnewtype)
 
 ```
 
@@ -370,7 +368,7 @@ A(a='string', b=2)
 Structuring from tuples can also be made the default for specific classes only;
 see registering custom structure hooks below.
 
-## Using attribute types and converters
+## Using Attribute Types and Converters
 
 By default, {meth}`structure() <cattrs.BaseConverter.structure>` will use hooks registered using {meth}`register_structure_hook() <cattrs.BaseConverter.register_structure_hook>`,
 to convert values to the attribute type, and fallback to invoking any converters registered on
@@ -407,7 +405,7 @@ but this priority can be inverted by setting `prefer_attrib_converters` to `True
 A(a=15)
 ```
 
-### Complex `attrs` classes and dataclasses
+### Complex `attrs` Classes and Dataclasses
 
 Complex `attrs` classes and dataclasses are classes with type information
 available for some or all attributes. These classes support almost arbitrary
@@ -444,13 +442,13 @@ attributes holding `attrs` classes and dataclasses.
 B(b=A(a=1))
 ```
 
-## Registering custom structuring hooks
+## Registering Custom Structuring Hooks
 
-`cattrs` doesn't know how to structure non-`attrs` classes by default,
+_cattrs_ doesn't know how to structure non-_attrs_ classes by default,
 so it has to be taught. This can be done by registering structuring hooks on
 a converter instance (including the global converter).
 
-Here's an example involving a simple, classic (i.e. non-`attrs`) Python class.
+Here's an example involving a simple, classic (i.e. non-_attrs_) Python class.
 
 ```{doctest}
 
@@ -472,13 +470,13 @@ C(a=1)
 
 The structuring hooks are callables that take two arguments: the object to
 convert to the desired class and the type to convert to.
-The type may seem redundant but is useful when dealing with generic types.
+(The type may seem redundant but is useful when dealing with generic types.)
 
 When using {meth}`cattrs.register_structure_hook`, the hook will be registered on the global converter.
 If you want to avoid changing the global converter, create an instance of {class}`cattrs.Converter` and register the hook on that.
 
-In some situations, it is not possible to decide on the converter using typing mechanisms alone (such as with attrs classes). In these situations,
-cattrs provides a register_structure_func_hook instead, which accepts a predicate function to determine whether that type can be handled instead.
+In some situations, it is not possible to decide on the converter using typing mechanisms alone (such as with _attrs_ classes). In these situations,
+_cattrs_ provides a {meth}`register_unstructure_hook_func() <cattrs.BaseConverter.register_unstructure_hook_func()>` hook instead, which accepts a predicate function to determine whether that type can be handled instead.
 
 The function-based hooks are evaluated after the class-based hooks. In the case where both a class-based hook and a function-based hook are present, the class-based hook will be used.
 
@@ -502,13 +500,13 @@ The function-based hooks are evaluated after the class-based hooks. In the case 
 D(a=2)
 ```
 
-## Structuring hook factories
+## Structuring Hook Factories
 
 Hook factories operate one level higher than structuring hooks; structuring
 hooks are functions registered to a class or predicate, and hook factories
 are functions (registered via a predicate) that produce structuring hooks.
 
-Structuring hooks factories are registered using {meth}`Converter.register_structure_hook_factory <cattrs.BaseConverter.register_structure_hook_factory>`.
+Structuring hooks factories are registered using {meth}`Converter.register_structure_hook_factory() <cattrs.BaseConverter.register_structure_hook_factory>`.
 
 Here's a small example showing how to use factory hooks to apply the `forbid_extra_keys` to all attrs classes:
 
@@ -536,7 +534,3 @@ cattrs.errors.ForbiddenExtraKeysError: Extra fields in constructor for E: else
 ```
 
 A complex use case for hook factories is described over at {ref}`usage:Using factory hooks`.
-
-```
-
-```
