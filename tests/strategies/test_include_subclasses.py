@@ -1,14 +1,14 @@
-import collections
 import typing
-import inspect
+from functools import partial
+from copy import deepcopy
 
 import attr
 import pytest
 
 from cattrs import Converter, override
-from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn
 from cattrs.errors import ClassValidationError
-from cattrs.strategies._subclasses import _make_subclasses_tree, include_subclasses
+from cattrs.strategies._subclasses import _make_subclasses_tree
+from cattrs.strategies import configure_tagged_union, include_subclasses
 
 
 @attr.define
@@ -62,38 +62,81 @@ class CircularB(CircularA):
     b: int
 
 
+def _remove_type_name(unstructured: typing.Union[typing.Dict, typing.List]):
+    if isinstance(unstructured, list):
+        iterator = unstructured
+    elif isinstance(unstructured, dict):
+        if "type_name" in unstructured:
+            unstructured.pop("type_name")
+        iterator = unstructured.values()
+    for item in iterator:
+        if isinstance(item, (list, dict)):
+            _remove_type_name(item)
+    return unstructured
+
+
 IDS_TO_STRUCT_UNSTRUCT = {
-    "parent-only": (Parent(1), dict(p=1)),
-    "child1-only": (Child1(1, 2), dict(p=1, c1=2)),
-    "grandchild-only": (GrandChild(1, 2, 3), dict(p=1, c1=2, g=3)),
-    "union-compose-parent": (UnionCompose(Parent(1)), dict(a=dict(p=1))),
-    "union-compose-child": (UnionCompose(Child1(1, 2)), dict(a=dict(p=1, c1=2))),
+    "parent-only": (Parent(1), dict(p=1, type_name="Parent")),
+    "child1-only": (Child1(1, 2), dict(p=1, c1=2, type_name="Child1")),
+    "grandchild-only": (
+        GrandChild(1, 2, 3),
+        dict(p=1, c1=2, g=3, type_name="GrandChild"),
+    ),
+    "union-compose-parent": (
+        UnionCompose(Parent(1)),
+        dict(a=dict(p=1, type_name="Parent")),
+    ),
+    "union-compose-child": (
+        UnionCompose(Child1(1, 2)),
+        dict(a=dict(p=1, c1=2, type_name="Child1")),
+    ),
     "union-compose-grandchild": (
         UnionCompose(GrandChild(1, 2, 3)),
-        dict(a=(dict(p=1, c1=2, g=3))),
+        dict(a=(dict(p=1, c1=2, g=3, type_name="GrandChild"))),
     ),
-    "non-union-compose-parent": (NonUnionCompose(Parent(1)), dict(a=dict(p=1))),
-    "non-union-compose-child": (NonUnionCompose(Child1(1, 2)), dict(a=dict(p=1, c1=2))),
+    "non-union-compose-parent": (
+        NonUnionCompose(Parent(1)),
+        dict(a=dict(p=1, type_name="Parent")),
+    ),
+    "non-union-compose-child": (
+        NonUnionCompose(Child1(1, 2)),
+        dict(a=dict(p=1, c1=2, type_name="Child1")),
+    ),
     "non-union-compose-grandchild": (
         NonUnionCompose(GrandChild(1, 2, 3)),
-        dict(a=(dict(p=1, c1=2, g=3))),
+        dict(a=(dict(p=1, c1=2, g=3, type_name="GrandChild"))),
     ),
     "union-container": (
         UnionContainer([Parent(1), GrandChild(1, 2, 3)]),
-        dict(a=[dict(p=1), dict(p=1, c1=2, g=3)]),
+        dict(
+            a=[
+                dict(p=1, type_name="Parent"),
+                dict(p=1, c1=2, g=3, type_name="GrandChild"),
+            ]
+        ),
     ),
     "non-union-container": (
         NonUnionContainer([Parent(1), GrandChild(1, 2, 3)]),
-        dict(a=[dict(p=1), dict(p=1, c1=2, g=3)]),
+        dict(
+            a=[
+                dict(p=1, type_name="Parent"),
+                dict(p=1, c1=2, g=3, type_name="GrandChild"),
+            ]
+        ),
     ),
 }
 
 
-@pytest.fixture(params=(True, False), ids=["with-subclasses", "wo-subclasses"])
+@pytest.fixture(
+    params=["with-subclasses", "with-subclasses-and-union", "wo-subclasses"]
+)
 def conv_w_subclasses(request):
     c = Converter()
-    if request.param:
+    if request.param == "with-subclasses":
         include_subclasses(Parent, c)
+    elif request.param == "with-subclasses-and-union":
+        union_strategy = partial(configure_tagged_union, tag_name="type_name")
+        include_subclasses(Parent, c, union_strategy=union_strategy)
 
     return c, request.param
 
@@ -106,9 +149,11 @@ def test_structuring_with_inheritance(
 ):
     structured, unstructured = struct_unstruct
 
-    converter, included_subclasses = conv_w_subclasses
+    converter, included_subclasses_param = conv_w_subclasses
+    if included_subclasses_param != "with-subclasses-and-union":
+        unstructured = _remove_type_name(deepcopy(unstructured))
 
-    if not included_subclasses and isinstance(
+    if "wo-subclasses" in included_subclasses_param and isinstance(
         structured, (NonUnionContainer, NonUnionCompose)
     ):
         pytest.xfail(
@@ -117,7 +162,7 @@ def test_structuring_with_inheritance(
     assert converter.structure(unstructured, structured.__class__) == structured
 
     if structured.__class__ in {Child1, Child2, GrandChild}:
-        if not included_subclasses:
+        if "wo-subclasses" in included_subclasses_param:
             pytest.xfail(
                 "Cannot structure subclasses if include_subclasses strategy is not used"
             )
@@ -162,16 +207,19 @@ def test_unstructuring_with_inheritance(
     conv_w_subclasses: typing.Tuple[Converter, bool], struct_unstruct
 ):
     structured, unstructured = struct_unstruct
-    converter, included_subclasses = conv_w_subclasses
+    converter, included_subclasses_param = conv_w_subclasses
 
-    if not included_subclasses:
+    if "wo-subclasses" in included_subclasses_param:
         if isinstance(structured, (NonUnionContainer, NonUnionCompose)):
             pytest.xfail("Cannot succeed if include_subclasses strategy is not used")
+
+    if included_subclasses_param != "with-subclasses-and-union":
+        unstructured = _remove_type_name(deepcopy(unstructured))
 
     assert converter.unstructure(structured) == unstructured
 
     if structured.__class__ in {Child1, Child2, GrandChild}:
-        if not included_subclasses:
+        if "wo-subclasses" in included_subclasses_param:
             pytest.xfail("Cannot succeed if include_subclasses strategy is not used")
         assert converter.unstructure(structured, unstructure_as=Parent) == unstructured
 
@@ -215,12 +263,14 @@ def test_structuring_with_subclasses_argument():
     structured_child, unstructured_child = IDS_TO_STRUCT_UNSTRUCT[
         "non-union-compose-child"
     ]
+    unstructured_child = _remove_type_name(deepcopy(unstructured_child))
     assert c.structure(unstructured_child, NonUnionCompose) == structured_child
     assert c.unstructure(structured_child) == unstructured_child
 
     structured_gchild, unstructured_gchild = IDS_TO_STRUCT_UNSTRUCT[
         "non-union-compose-grandchild"
     ]
+    unstructured_gchild = _remove_type_name(deepcopy(unstructured_gchild))
     assert c.structure(unstructured_gchild, NonUnionCompose) == structured_child
     assert c.unstructure(structured_gchild) == unstructured_gchild
 
