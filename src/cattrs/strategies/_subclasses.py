@@ -1,6 +1,6 @@
 """Strategies for customizing subclass behaviors."""
 from gc import collect
-from typing import Dict, Optional, Tuple, Type, Union, List, Callable, Any
+from typing import Dict, Optional, Tuple, Type, Union, List, Callable, Any, get_args
 
 from ..converters import Converter, BaseConverter
 from ..gen import AttributeOverride, make_dict_structure_fn, make_dict_unstructure_fn
@@ -53,33 +53,46 @@ def include_subclasses(
     if overrides is None:
         overrides = {}
 
-    # The iteration approach is required if subclasses are more than one level deep: ? n;
-    for cl in parent_subclass_tree:
+    # The iteration approach is required if subclasses are more than one level deep:
+    for i, cl in enumerate(parent_subclass_tree):
         if not _has_subclasses(cl, parent_subclass_tree):
             continue
 
         # We re-create a reduced union type to handle the following case:
-        # >>> converter.structure(d, as=Child)
-        # and the `as=Child` will be transformed to a union type of itself and its
-        # subtypes, that way we guarantee that the returned object will not be the
-        # parent.
+        #
+        #     converter.structure(d, as=Child)
+        #
+        # In the above, the `as=Child` argument will be transformed to a union type of
+        # itself and its subtypes, that way we guarantee that the returned object will
+        # not be the parent.
         subclass_union = _get_union_type(cl, parent_subclass_tree)
+
+        def cls_is_cl(cls, _cl=cl):
+            return cls is _cl
 
         if union_strategy is None:
             unstruct_hook = gen_unstructure_hook(converter, cl, overrides)
+            unstruct_predicate = cls_is_cl
             struct_hook = gen_structure_hook(converter, cl, subclass_union, overrides)
         else:
             union_strategy(subclass_union, converter)
-            unstruct_hook = converter._unstructure_func.dispatch(subclass_union)
-            struct_hook = converter._union_struct_registry[subclass_union]
+            if i == 0:
 
-        # Note: the closure approach is needed due to python scoping rule. If we define
-        # the lambda here, the last class in the iteration will be used in all lambdas.
-        cls_is_cl = gen_cls_is_cl(cl)
+                def cls_is_in_union(cls, _union_classes=get_args(subclass_union)):
+                    return cls in _union_classes
+
+                unstruct_hook = converter._unstructure_func.dispatch(subclass_union)
+                unstruct_predicate = cls_is_in_union
+            else:
+                unstruct_hook = None
+                unstruct_predicate = None
+            struct_hook = converter._union_struct_registry[subclass_union]
 
         # This needs to use function dispatch, using singledispatch will again
         # match A and all subclasses, which is not what we want.
-        converter.register_unstructure_hook_func(cls_is_cl, unstruct_hook)
+        if unstruct_hook is not None:
+            converter.register_unstructure_hook_func(unstruct_predicate, unstruct_hook)
+
         converter.register_structure_hook_func(cls_is_cl, struct_hook)
 
 
@@ -125,7 +138,3 @@ def gen_structure_hook(
         return c.structure(val, dis_cl)
 
     return structure_hook
-
-
-def gen_cls_is_cl(cl):
-    return lambda cls: cls is cl

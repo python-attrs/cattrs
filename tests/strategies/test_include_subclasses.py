@@ -78,6 +78,7 @@ def _remove_type_name(unstructured: typing.Union[typing.Dict, typing.List]):
 IDS_TO_STRUCT_UNSTRUCT = {
     "parent-only": (Parent(1), dict(p=1, type_name="Parent")),
     "child1-only": (Child1(1, 2), dict(p=1, c1=2, type_name="Child1")),
+    "child2-only": (Child2(1, 2), dict(p=1, c2=2, type_name="Child2")),
     "grandchild-only": (
         GrandChild(1, 2, 3),
         dict(p=1, c1=2, g=3, type_name="GrandChild"),
@@ -128,13 +129,13 @@ IDS_TO_STRUCT_UNSTRUCT = {
 
 
 @pytest.fixture(
-    params=["with-subclasses", "with-subclasses-and-union", "wo-subclasses"]
+    params=["with-subclasses", "with-subclasses-and-tagged-union", "wo-subclasses"]
 )
 def conv_w_subclasses(request):
     c = Converter()
     if request.param == "with-subclasses":
         include_subclasses(Parent, c)
-    elif request.param == "with-subclasses-and-union":
+    elif request.param == "with-subclasses-and-tagged-union":
         union_strategy = partial(configure_tagged_union, tag_name="type_name")
         include_subclasses(Parent, c, union_strategy=union_strategy)
 
@@ -150,7 +151,7 @@ def test_structuring_with_inheritance(
     structured, unstructured = struct_unstruct
 
     converter, included_subclasses_param = conv_w_subclasses
-    if included_subclasses_param != "with-subclasses-and-union":
+    if included_subclasses_param != "with-subclasses-and-tagged-union":
         unstructured = _remove_type_name(deepcopy(unstructured))
 
     if "wo-subclasses" in included_subclasses_param and isinstance(
@@ -213,7 +214,7 @@ def test_unstructuring_with_inheritance(
         if isinstance(structured, (NonUnionContainer, NonUnionCompose)):
             pytest.xfail("Cannot succeed if include_subclasses strategy is not used")
 
-    if included_subclasses_param != "with-subclasses-and-union":
+    if included_subclasses_param != "with-subclasses-and-tagged-union":
         unstructured = _remove_type_name(deepcopy(unstructured))
 
     assert converter.unstructure(structured) == unstructured
@@ -275,14 +276,35 @@ def test_structuring_with_subclasses_argument():
     assert c.unstructure(structured_gchild) == unstructured_gchild
 
 
-def test_overrides():
+@pytest.mark.parametrize(
+    "struct_unstruct", ["parent-only", "child1-only", "child2-only", "grandchild-only"]
+)
+@pytest.mark.parametrize(
+    "with_union_strategy",
+    [True, False],
+    ids=["with-union-strategy", "wo-union-strategy"],
+)
+def test_overrides(with_union_strategy: bool, struct_unstruct: str):
     c = Converter()
-    include_subclasses(Parent, c, overrides={"p": override(rename="u")})
+    union_strategy = (
+        partial(configure_tagged_union, tag_name="type_name")
+        if with_union_strategy
+        else None
+    )
+    include_subclasses(
+        Parent, c, overrides={"p": override(rename="u")}, union_strategy=union_strategy
+    )
 
-    assert c.unstructure(Parent(1)) == {"u": 1}
-    assert c.structure({"u": 1}, Parent) == Parent(1)
+    structured, unstructured = IDS_TO_STRUCT_UNSTRUCT[struct_unstruct]
+    unstructured = unstructured.copy()
+    val = unstructured.pop("p")
+    unstructured["u"] = val
+    if not with_union_strategy:
+        unstructured = _remove_type_name(unstructured)
 
-    assert c.unstructure(Child1(1, 2)) == {"u": 1, "c1": 2}
+    assert c.unstructure(structured) == unstructured
+    assert c.structure(unstructured, Parent) == structured
+    assert c.structure(unstructured, structured.__class__) == structured
 
 
 def test_class_tree_generator():
