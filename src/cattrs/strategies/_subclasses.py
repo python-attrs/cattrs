@@ -56,8 +56,24 @@ def include_subclasses(
     if overrides is None:
         overrides = {}
 
+    if union_strategy is None:
+        _include_subclasses_without_union_strategy(
+            cl, converter, parent_subclass_tree, overrides
+        )
+    else:
+        _include_subclasses_with_union_strategy(
+            converter, parent_subclass_tree, union_strategy, overrides
+        )
+
+
+def _include_subclasses_without_union_strategy(
+    cl,
+    converter: Converter,
+    parent_subclass_tree: Tuple[Type],
+    overrides: Dict[str, AttributeOverride],
+):
     # The iteration approach is required if subclasses are more than one level deep:
-    for i, cl in enumerate(parent_subclass_tree):
+    for cl in parent_subclass_tree:
         # We re-create a reduced union type to handle the following case:
         #
         #     converter.structure(d, as=Child)
@@ -73,78 +89,90 @@ def include_subclasses(
         base_struct_hook = make_dict_structure_fn(cl, converter, **overrides)
         base_unstruct_hook = make_dict_unstructure_fn(cl, converter, **overrides)
 
-        if union_strategy is None:
-            if subclass_union is None:
+        if subclass_union is None:
 
-                def struct_hook(
-                    val: dict, _, _cl=cl, _base_hook=base_struct_hook
-                ) -> cl:
-                    return _base_hook(val, _cl)
+            def struct_hook(val: dict, _, _cl=cl, _base_hook=base_struct_hook) -> cl:
+                return _base_hook(val, _cl)
 
-            else:
-                dis_fn = converter._get_dis_func(subclass_union)
+        else:
+            dis_fn = converter._get_dis_func(subclass_union)
 
-                def struct_hook(
-                    val: dict,
-                    _,
-                    _c=converter,
-                    _cl=cl,
-                    _base_hook=base_struct_hook,
-                    _dis_fn=dis_fn,
-                ) -> cl:
-                    """
-                    If val is disambiguated to the class `cl`, use its base hook.
-
-                    If val is disambiguated to a subclass, dispatch on its exact runtime
-                    type.
-                    """
-                    dis_cl = _dis_fn(val)
-                    if dis_cl is _cl:
-                        return _base_hook(val, _cl)
-                    return _c.structure(val, dis_cl)
-
-            def unstruct_hook(
-                val: parent_subclass_tree[0],
+            def struct_hook(
+                val: dict,
+                _,
                 _c=converter,
                 _cl=cl,
-                _base_hook=base_unstruct_hook,
-            ) -> Dict:
+                _base_hook=base_struct_hook,
+                _dis_fn=dis_fn,
+            ) -> cl:
                 """
-                If val is an instance of the class `cl`, use the hook.
+                If val is disambiguated to the class `cl`, use its base hook.
 
-                If val is an instance of a subclass, dispatch on its exact runtime type.
+                If val is disambiguated to a subclass, dispatch on its exact runtime
+                type.
                 """
-                if val.__class__ is _cl:
-                    return _base_hook(val)
-                return _c.unstructure(val, unstructure_as=val.__class__)
+                dis_cl = _dis_fn(val)
+                if dis_cl is _cl:
+                    return _base_hook(val, _cl)
+                return _c.structure(val, dis_cl)
 
-            unstruct_predicate = cls_is_cl
-        else:
-            if subclass_union is not None:
-                union_strategy(subclass_union, converter)
-                struct_hook = converter._union_struct_registry[subclass_union]
-            else:
-                struct_hook = None
+        def unstruct_hook(
+            val: parent_subclass_tree[0],
+            _c=converter,
+            _cl=cl,
+            _base_hook=base_unstruct_hook,
+        ) -> Dict:
+            """
+            If val is an instance of the class `cl`, use the hook.
 
-            if i == 0 and subclass_union is not None:
-                if subclass_union is not None:
-                    union_classes = get_args(subclass_union)
-                else:
-                    union_classes = ()
-
-                def cls_is_in_union(cls, _union_classes=union_classes):
-                    return cls in _union_classes
-
-                unstruct_hook = converter._unstructure_func.dispatch(subclass_union)
-                unstruct_predicate = cls_is_in_union
-            else:
-                unstruct_hook = None
-                unstruct_predicate = None
+            If val is an instance of a subclass, dispatch on its exact runtime type.
+            """
+            if val.__class__ is _cl:
+                return _base_hook(val)
+            return _c.unstructure(val, unstructure_as=val.__class__)
 
         # This needs to use function dispatch, using singledispatch will again
         # match A and all subclasses, which is not what we want.
-        if unstruct_hook is not None:
-            converter.register_unstructure_hook_func(unstruct_predicate, unstruct_hook)
+        converter.register_structure_hook_func(cls_is_cl, struct_hook)
+        converter.register_unstructure_hook_func(cls_is_cl, unstruct_hook)
 
-        if struct_hook is not None:
-            converter.register_structure_hook_func(cls_is_cl, struct_hook)
+
+def _include_subclasses_with_union_strategy(
+    converter: Converter,
+    union_classes: Tuple[Type],
+    union_strategy: Callable[[Any, BaseConverter], Any],
+    overrides: Dict[str, AttributeOverride],
+):
+    parent_classes = [cl for cl in union_classes if _has_subclasses(cl, union_classes)]
+    if not parent_classes:
+        return
+
+    for cl in union_classes:
+
+        def cls_is_cl(cls, _cl=cl):
+            return cls is _cl
+
+        converter.register_structure_hook_func(
+            cls_is_cl, make_dict_structure_fn(cl, converter, **overrides)
+        )
+        converter.register_unstructure_hook_func(
+            cls_is_cl, make_dict_unstructure_fn(cl, converter, **overrides)
+        )
+
+    for cl in parent_classes:
+        subclass_union = _get_union_type(cl, union_classes)
+        sub_union_classes = get_args(subclass_union)
+        union_strategy(subclass_union, converter)
+        struct_hook = converter._union_struct_registry[subclass_union]
+        unstruct_hook = converter._unstructure_func.dispatch(subclass_union)
+
+        def cls_is_cl(cls, _cl=cl):
+            return cls is _cl
+
+        def cls_is_in_union(cls, _union_classes=sub_union_classes):
+            return cls in _union_classes
+
+        # This needs to use function dispatch, using singledispatch will again
+        # match A and all subclasses, which is not what we want.
+        converter.register_structure_hook_func(cls_is_cl, struct_hook)
+        converter.register_unstructure_hook_func(cls_is_in_union, unstruct_hook)
