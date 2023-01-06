@@ -248,12 +248,16 @@ def test_structuring_unstructuring_unknown_subclass():
     # Even if A2 did not exist, unstructuring_as A works:
     assert converter.unstructure(A2(1, 2, 3), unstructure_as=A) == dict(a=1, a1=2, a2=3)
 
-    # This is an known edge case. The result here is not the correct one! It should be
-    # the same as the previous assert. We leave as-is for now and we document that
-    # it is preferable to know all subclasses tree before calling include_subclasses
-    assert converter.unstructure(A2(1, 2, 3), unstructure_as=A1) == {"a": 1, "a1": 2}
+    # As well as when unstructuring as A1, in other words, unstructuring works for
+    # unknown classes.
+    assert converter.unstructure(A2(1, 2, 3), unstructure_as=A1) == {
+        "a": 1,
+        "a1": 2,
+        "a2": 3,
+    }
 
-    # This is another edge-case: the result should be A2(1, 2, 3)...
+    # But as expected, structuring unknown classes as their parent fails to give the
+    # correct answer. This is a documented drawback, we just confirm it.
     assert converter.structure(dict(a=1, a1=2, a2=3), A) == A1(1, 2)
 
 
@@ -300,7 +304,7 @@ def test_overrides(with_union_strategy: bool, struct_unstruct: str):
     val = unstructured.pop("p")
     unstructured["u"] = val
     if not with_union_strategy:
-        unstructured = _remove_type_name(unstructured)
+        unstructured.pop("type_name")
 
     assert c.unstructure(structured) == unstructured
     assert c.structure(unstructured, Parent) == structured
