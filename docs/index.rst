@@ -3,7 +3,6 @@
    :hidden:
 
    self
-   installation
    converters
    usage
    structuring

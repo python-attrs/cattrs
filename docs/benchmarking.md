@@ -1,6 +1,4 @@
-============
-Benchmarking
-============
+# Benchmarking
 
 cattrs includes a benchmarking suite to help detect performance regressions and
 guide performance optimizations.
@@ -9,8 +7,7 @@ The suite is based on pytest and pytest-benchmark. Benchmarks are similar to
 tests, with the exception of being stored in the `bench/` directory and being
 used to verify performance instead of correctness.
 
-A Sample Workflow
-~~~~~~~~~~~~~~~~~
+## A Sample Workflow
 
 First, ensure the system you're benchmarking on is as stable as possible. For
 example, the pyperf library has a `system tune` command that can tweak
