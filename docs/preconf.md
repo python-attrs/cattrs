@@ -37,7 +37,7 @@ All preconf converters now have `loads` and `dumps` methods, which combine un/st
 ...     a: int
 
 >>> converter.dumps(Test(1))
->>> '{"a": 1}'
+'{"a": 1}'
 ```
 
 Particular libraries may have additional constraints documented below.
