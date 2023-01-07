@@ -19,8 +19,8 @@ contributing
 history
 ```
 
-```{eval-rst}
-.. include:: ../README.rst
+```{include} ../README.md
+
 ```
 
 # Indices and tables
