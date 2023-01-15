@@ -42,6 +42,7 @@ from cattrs.preconf.msgpack import make_converter as msgpack_make_converter
 from cattrs.preconf.pyyaml import make_converter as pyyaml_make_converter
 from cattrs.preconf.tomlkit import make_converter as tomlkit_make_converter
 from cattrs.preconf.ujson import make_converter as ujson_make_converter
+from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
 
 
 @define
@@ -350,3 +351,22 @@ def test_bson_objectid():
     o = ObjectId()
     assert o == converter.structure(str(o), ObjectId)
     assert o == converter.structure(o, ObjectId)
+
+
+@given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
+def test_cbor2(everything: Everything):
+    from cbor2 import dumps as cbor2_dumps
+    from cbor2 import loads as cbor2_loads
+
+    converter = cbor2_make_converter()
+    raw = cbor2_dumps(converter.unstructure(everything))
+    assert (
+        converter.structure(cbor2_loads(raw), Everything) == everything
+    )
+
+
+@given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
+def test_cbor2_converter(everything: Everything):
+    converter = cbor2_make_converter()
+    raw = converter.dumps(everything)
+    assert converter.loads(raw, Everything) == everything

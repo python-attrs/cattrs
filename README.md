@@ -16,8 +16,8 @@ registering converters.
 
 Python has a rich set of powerful, easy to use, built-in data types like
 dictionaries, lists and tuples. These data types are also the lingua franca
-of most data serialization libraries, for formats like json, msgpack, yaml or
-toml.
+of most data serialization libraries, for formats like json, msgpack, cbor,
+yaml or toml.
 
 Data types like this, and mappings like `dict` s in particular, represent
 unstructured data. Your data is, in all likelihood, structured: not all
@@ -139,7 +139,7 @@ destructure them.
   - `typing.Union` s of anything, given that you provide a disambiguation function for it.
   - Custom converters for any type can be registered using `register_structure_hook`.
 
-_cattrs_ comes with preconfigured converters for a number of serialization libraries, including json, msgpack, bson, yaml and toml.
+_cattrs_ comes with preconfigured converters for a number of serialization libraries, including json, msgpack, cbor2, bson, yaml and toml.
 For details, see the [cattr.preconf package](https://catt.rs/en/stable/preconf.html).
 
 ## Additional documentation and talks

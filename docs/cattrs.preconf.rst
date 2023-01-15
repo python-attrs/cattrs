@@ -12,6 +12,14 @@ cattrs.preconf.bson module
    :undoc-members:
    :show-inheritance:
 
+cattrs.preconf.cbor2 module
+--------------------------
+
+.. automodule:: cattrs.preconf.cbor2
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 cattrs.preconf.json module
 --------------------------
 
