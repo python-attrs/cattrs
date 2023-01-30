@@ -88,6 +88,11 @@ Tuples are serialized as lists.
 Use keyword argument `datetime_as_timestamp=True` to encode as UNIX timestamp integer/float (CBOR Tag 1)
 **note:** this replaces timezone information as UTC.
 
+Use keyword arguemnt `canonical=True` for efficient encoding to the smallest binary output.
+
+Floats can be forced to smaller output by casting to lower-precision formats by casting to `numpy` floats (and back to Python floats).
+Example: `float(np.float32(value))` or `float(np.float16(value))`
+
 ## _bson_
 
 Found at {mod}`cattrs.preconf.bson`. Tested against the _bson_ module bundled with the _pymongo_ library, not the standalone PyPI _bson_ package.
