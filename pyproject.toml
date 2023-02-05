@@ -48,6 +48,7 @@ coverage = "^6.2"
 urllib3 = { version = "^1.26.12", python = "<4" }
 sphinx-copybutton = "^0.5.0"
 myst-parser = "^0.18.1"
+cbor2 = "^5.4.6"
 
 [tool.poetry.urls]
 "Changelog" = "https://catt.rs/en/latest/history.html"

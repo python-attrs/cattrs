@@ -75,6 +75,24 @@ _msgpack_ doesn't support integers less than -9223372036854775808, and greater t
 
 When parsing msgpack data from bytes, the library needs to be passed `strict_map_key=False` to get the full range of compatibility.
 
+## _cbor2_
+
+Found at {mod}`cattrs.preconf.cbor2`.
+
+_cbor2_ implements a fully featured CBOR encoder with several extensions for handling shared references, big integers, rational numbers and so on.
+
+Sets are serialized and deserialized to sets.
+Tuples are serialized as lists.
+
+`datetime` s are serialized as a text string by default (CBOR Tag 0).
+Use keyword argument `datetime_as_timestamp=True` to encode as UNIX timestamp integer/float (CBOR Tag 1)
+**note:** this replaces timezone information as UTC.
+
+Use keyword arguemnt `canonical=True` for efficient encoding to the smallest binary output.
+
+Floats can be forced to smaller output by casting to lower-precision formats by casting to `numpy` floats (and back to Python floats).
+Example: `float(np.float32(value))` or `float(np.float16(value))`
+
 ## _bson_
 
 Found at {mod}`cattrs.preconf.bson`. Tested against the _bson_ module bundled with the _pymongo_ library, not the standalone PyPI _bson_ package.
