@@ -37,12 +37,12 @@ from cattrs._compat import (
     TupleSubscriptable,
 )
 from cattrs.preconf.bson import make_converter as bson_make_converter
+from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
 from cattrs.preconf.json import make_converter as json_make_converter
 from cattrs.preconf.msgpack import make_converter as msgpack_make_converter
 from cattrs.preconf.pyyaml import make_converter as pyyaml_make_converter
 from cattrs.preconf.tomlkit import make_converter as tomlkit_make_converter
 from cattrs.preconf.ujson import make_converter as ujson_make_converter
-from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
 
 
 @define
@@ -360,9 +360,7 @@ def test_cbor2(everything: Everything):
 
     converter = cbor2_make_converter()
     raw = cbor2_dumps(converter.unstructure(everything))
-    assert (
-        converter.structure(cbor2_loads(raw), Everything) == everything
-    )
+    assert converter.structure(cbor2_loads(raw), Everything) == everything
 
 
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
