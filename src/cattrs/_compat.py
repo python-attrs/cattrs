@@ -243,12 +243,17 @@ else:
     from typing import Annotated
     from typing import Counter as TypingCounter
     from typing import (
+        TypedDict,
         Union,
         _AnnotatedAlias,
         _GenericAlias,
         _SpecialGenericAlias,
+        _TypedDictMeta,
         _UnionGenericAlias,
     )
+
+    def is_typeddict(cls) -> bool:
+        return cls.__class__ is _TypedDictMeta
 
     try:
         # Not present on 3.9.0, so we try carefully.
