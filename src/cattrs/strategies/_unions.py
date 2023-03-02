@@ -5,7 +5,7 @@ from attrs import NOTHING
 
 from cattrs import Converter
 
-__all__ = []
+__all__ = ["default_tag_generator", "configure_tagged_union"]
 
 
 def default_tag_generator(typ: Type) -> str:
