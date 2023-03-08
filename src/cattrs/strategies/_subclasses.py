@@ -1,6 +1,6 @@
 """Strategies for customizing subclass behaviors."""
 from gc import collect
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, get_args
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
 from ..converters import BaseConverter, Converter
 from ..gen import (
