@@ -1,13 +1,13 @@
 import typing
-from functools import partial
 from copy import deepcopy
+from functools import partial
+from typing import Tuple
 
 import attr
 import pytest
 
 from cattrs import Converter, override
 from cattrs.errors import ClassValidationError
-from cattrs.strategies._subclasses import _make_subclasses_tree
 from cattrs.strategies import configure_tagged_union, include_subclasses
 
 
@@ -148,8 +148,8 @@ def conv_w_subclasses(request):
     "struct_unstruct", IDS_TO_STRUCT_UNSTRUCT.values(), ids=IDS_TO_STRUCT_UNSTRUCT
 )
 def test_structuring_with_inheritance(
-    conv_w_subclasses: typing.Tuple[Converter, bool], struct_unstruct
-):
+    conv_w_subclasses: Tuple[Converter, bool], struct_unstruct
+) -> None:
     structured, unstructured = struct_unstruct
 
     converter, included_subclasses_param = conv_w_subclasses
@@ -176,7 +176,7 @@ def test_structuring_with_inheritance(
 
     if structured.__class__ in {Parent, Child1, Child2}:
         with pytest.raises(ClassValidationError):
-            converter.structure(unstructured, GrandChild)
+            _ = converter.structure(unstructured, GrandChild)
 
 
 def test_structure_as_union():
@@ -201,14 +201,11 @@ def test_circular_reference(conv_w_subclasses):
     if included_subclasses_param != "with-subclasses-and-tagged-union":
         unstruct = _remove_type_name(unstruct)
 
-    if included_subclasses_param == "wo-subclasses":
-        # We already now that it will fail
-        return
+    if "wo-subclasses" in included_subclasses_param:
+        pytest.xfail("Cannot succeed if include_subclasses strategy is not used")
 
     res = c.unstructure(struct)
-    if "wo-subclasses" or "tagged-union" in included_subclasses_param:
-        # TODO: tagged-union should work here, but it does not yet.
-        pytest.xfail("Cannot succeed if include_subclasses strategy is not used")
+
     assert res == unstruct
 
     res = c.unstructure(struct, CircularA)
@@ -222,7 +219,7 @@ def test_circular_reference(conv_w_subclasses):
     "struct_unstruct", IDS_TO_STRUCT_UNSTRUCT.values(), ids=IDS_TO_STRUCT_UNSTRUCT
 )
 def test_unstructuring_with_inheritance(
-    conv_w_subclasses: typing.Tuple[Converter, bool], struct_unstruct
+    conv_w_subclasses: Tuple[Converter, bool], struct_unstruct
 ):
     structured, unstructured = struct_unstruct
     converter, included_subclasses_param = conv_w_subclasses
@@ -326,29 +323,3 @@ def test_overrides(with_union_strategy: bool, struct_unstruct: str):
     assert c.unstructure(structured) == unstructured
     assert c.structure(unstructured, Parent) == structured
     assert c.structure(unstructured, structured.__class__) == structured
-
-
-def test_class_tree_generator():
-    class P:
-        pass
-
-    class C1(P):
-        pass
-
-    class C2(P):
-        pass
-
-    class GC1(C2):
-        pass
-
-    class GC2(C2):
-        pass
-
-    tree_c1 = _make_subclasses_tree(C1)
-    assert tree_c1 == [C1]
-
-    tree_c2 = _make_subclasses_tree(C2)
-    assert tree_c2 == [C2, GC1, GC2]
-
-    tree_p = _make_subclasses_tree(P)
-    assert tree_p == [P, C1, C2, GC1, GC2]

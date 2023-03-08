@@ -1,9 +1,14 @@
 """Strategies for customizing subclass behaviors."""
 from gc import collect
-from typing import Dict, Optional, Tuple, Type, Union, List, Callable, Any, get_args
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, get_args
 
-from ..converters import Converter, BaseConverter
-from ..gen import AttributeOverride, make_dict_structure_fn, make_dict_unstructure_fn
+from ..converters import BaseConverter, Converter
+from ..gen import (
+    AttributeOverride,
+    _already_generating,
+    make_dict_structure_fn,
+    make_dict_unstructure_fn,
+)
 
 
 def _make_subclasses_tree(cl: Type) -> List[Type]:
@@ -12,7 +17,8 @@ def _make_subclasses_tree(cl: Type) -> List[Type]:
     ]
 
 
-def _has_subclasses(cl: Type, given_subclasses: Tuple[Type]):
+def _has_subclasses(cl: Type, given_subclasses: Tuple[Type, ...]) -> bool:
+    """Whether the given class has subclasses from `given_subclasses`."""
     actual = set(cl.__subclasses__())
     given = set(given_subclasses)
     return bool(actual & given)
@@ -31,7 +37,7 @@ def _get_union_type(cl: Type, given_subclasses_tree: Tuple[Type]) -> Optional[Ty
 def include_subclasses(
     cl: Type,
     converter: Converter,
-    subclasses: Optional[Tuple[Type]] = None,
+    subclasses: Optional[Tuple[Type, ...]] = None,
     union_strategy: Optional[Callable[[Any, BaseConverter], Any]] = None,
     overrides: Optional[Dict[str, AttributeOverride]] = None,
 ) -> None:
@@ -139,40 +145,76 @@ def _include_subclasses_without_union_strategy(
 
 def _include_subclasses_with_union_strategy(
     converter: Converter,
-    union_classes: Tuple[Type],
+    union_classes: Tuple[Type, ...],
     union_strategy: Callable[[Any, BaseConverter], Any],
     overrides: Dict[str, AttributeOverride],
 ):
+    """
+    This function is tricky because we're dealing with what is essentially a circular reference.
+
+    We need to generate a structure hook for a class that is both:
+    * specific for that particular class and its own fields
+    * but should handle specific functions for all its descendants too
+
+    Hence the dance with registering below.
+    """
+
     parent_classes = [cl for cl in union_classes if _has_subclasses(cl, union_classes)]
     if not parent_classes:
         return
 
+    original_unstruct_hooks = {}
+    original_struct_hooks = {}
     for cl in union_classes:
+        # In the first pass, every class gets its own unstructure function according to
+        # the overrides.
+        # We just generate the hooks, and do not register them. This allows us to manipulate
+        # the _already_generating set to force runtime dispatch.
+        _already_generating.working_set = set(union_classes) - {cl}
+        try:
+            unstruct_hook = make_dict_unstructure_fn(cl, converter, **overrides)
+            struct_hook = make_dict_structure_fn(cl, converter, **overrides)
+        finally:
+            _already_generating.working_set = set()
+        original_unstruct_hooks[cl] = unstruct_hook
+        original_struct_hooks[cl] = struct_hook
+
+    # Now that's done, we can register all the hooks and generate the
+    # union handler. The union handler needs them.
+    final_union = Union[union_classes]  # type: ignore
+
+    for cl, hook in original_unstruct_hooks.items():
 
         def cls_is_cl(cls, _cl=cl):
             return cls is _cl
 
-        converter.register_structure_hook_func(
-            cls_is_cl, make_dict_structure_fn(cl, converter, **overrides)
-        )
-        converter.register_unstructure_hook_func(
-            cls_is_cl, make_dict_unstructure_fn(cl, converter, **overrides)
-        )
+        converter.register_unstructure_hook_func(cls_is_cl, hook)
 
-    for cl in parent_classes:
-        subclass_union = _get_union_type(cl, union_classes)
-        sub_union_classes = get_args(subclass_union)
-        union_strategy(subclass_union, converter)
-        struct_hook = converter._union_struct_registry[subclass_union]
-        unstruct_hook = converter._unstructure_func.dispatch(subclass_union)
+    for cl, hook in original_struct_hooks.items():
 
         def cls_is_cl(cls, _cl=cl):
             return cls is _cl
 
-        def cls_is_in_union(cls, _union_classes=sub_union_classes):
-            return cls in _union_classes
+        converter.register_structure_hook_func(cls_is_cl, hook)
 
-        # This needs to use function dispatch, using singledispatch will again
-        # match A and all subclasses, which is not what we want.
-        converter.register_structure_hook_func(cls_is_cl, struct_hook)
-        converter.register_unstructure_hook_func(cls_is_in_union, unstruct_hook)
+    union_strategy(final_union, converter)
+    unstruct_hook = converter._unstructure_func.dispatch(final_union)
+    struct_hook = converter._structure_func.dispatch(final_union)
+
+    for cl in union_classes:
+        # In the second pass, we overwrite the hooks with the union hook.
+
+        def cls_is_cl(cls, _cl=cl):
+            return cls is _cl
+
+        converter.register_unstructure_hook_func(cls_is_cl, unstruct_hook)
+        subclasses = tuple([c for c in union_classes if issubclass(c, cl)])
+        if len(subclasses) > 1:
+            u = Union[subclasses]  # type: ignore
+            union_strategy(u, converter)
+            struct_hook = converter._structure_func.dispatch(u)
+
+            def sh(payload: dict, _, _u=u, _s=struct_hook) -> cl:
+                return _s(payload, _u)
+
+            converter.register_structure_hook_func(cls_is_cl, sh)
