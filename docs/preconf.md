@@ -43,6 +43,7 @@ All preconf converters now have `loads` and `dumps` methods, which combine un/st
 Particular libraries may have additional constraints documented below.
 
 Third-party libraries can be specified as optional (extra) dependencies on `cattrs` during installation.
+Optional install targets should match the name of the {mod}`cattrs.preconf` modules.
 
 ```console
 # Using pip
