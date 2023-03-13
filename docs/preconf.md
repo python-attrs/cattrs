@@ -42,6 +42,16 @@ All preconf converters now have `loads` and `dumps` methods, which combine un/st
 
 Particular libraries may have additional constraints documented below.
 
+Third-party libraries can be specified as optional (extra) dependencies on `cattrs` during installation.
+
+```console
+# Using pip
+pip install cattrs[ujson]
+
+# Using poetry
+poetry add --extras tomlkit cattrs
+```
+
 ## Standard Library _json_
 
 Found at {mod}`cattrs.preconf.json`.

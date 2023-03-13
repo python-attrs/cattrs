@@ -10,6 +10,7 @@
 - `pathlib.Path` is now supported by default.
   ([#81](https://github.com/python-attrs/cattrs/issues/81))
 - Add `cbor2` serialization library to the `cattr.preconf` package.
+- Add optional dependencies for `cattrs.preconf` third-party libraries. ([#337](https://github.com/python-attrs/cattrs/pull/337))
 
 ## 22.2.0 (2022-10-03)
 
