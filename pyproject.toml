@@ -41,7 +41,6 @@ pyyaml = ["PyYAML"]
 tomlkit = ["tomlkit"]
 cbor2 = ["cbor2"]
 bson = ["pymongo"]
-preconf = ["ujson", "orjson", "msgpack", "PyYAML", "tomlkit", "cbor2", "pymongo"]
 
 [tool.poetry.group.dev.dependencies]
 flake8 = {version = "^5.0.4", python = "^3.8"}
