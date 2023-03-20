@@ -22,7 +22,11 @@ from attr import Attribute
 from attr import has as attrs_has
 from attr import resolve_types
 
-from cattrs.errors import IterableValidationError, StructureHandlerNotFoundError
+from cattrs.errors import (
+    IterableValidationError,
+    IterableValidationNote,
+    StructureHandlerNotFoundError,
+)
 
 from ._compat import (
     FrozenSetSubscriptable,
@@ -507,7 +511,9 @@ class BaseConverter:
                     try:
                         res.append(handler(e, elem_type))
                     except Exception as e:
-                        msg = f"Structuring {cl} @ index {ix}"
+                        msg = IterableValidationNote(
+                            f"Structuring {cl} @ index {ix}", ix, elem_type
+                        )
                         e.__notes__ = getattr(e, "__notes__", []) + [msg]
                         errors.append(e)
                     finally:

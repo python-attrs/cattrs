@@ -22,6 +22,7 @@ import attr
 from attr import NOTHING, Attribute, frozen, resolve_types
 
 from cattrs.errors import (
+    AttributeValidationNote,
     ClassValidationError,
     ForbiddenExtraKeysError,
     IterableValidationError,
@@ -331,6 +332,7 @@ def make_dict_structure_fn(
         lines.append("  errors = []")
         invocation_lines.append("**res,")
         internal_arg_parts["__c_cve"] = ClassValidationError
+        internal_arg_parts["__c_avn"] = AttributeValidationNote
         for a in attrs:
             an = a.name
             override = kwargs.get(an, _neutral)
@@ -365,6 +367,8 @@ def make_dict_structure_fn(
                 i = f"{i}  "
             lines.append(f"{i}try:")
             i = f"{i}  "
+            type_name = f"__c_type_{an}"
+            internal_arg_parts[type_name] = t
             if handler:
                 if handler == converter._structure_call:
                     internal_arg_parts[struct_handler_name] = t
@@ -381,7 +385,7 @@ def make_dict_structure_fn(
             lines.append(f"{i}except Exception as e:")
             i = f"{i}  "
             lines.append(
-                f"{i}e.__notes__ = getattr(e, '__notes__', []) + [\"Structuring class {cl.__qualname__} @ attribute {an}\"]"
+                f'{i}e.__notes__ = getattr(e, \'__notes__\', []) + [__c_avn("Structuring class {cl.__qualname__} @ attribute {an}", "{an}", __c_type_{an})]'
             )
             lines.append(f"{i}errors.append(e)")
 

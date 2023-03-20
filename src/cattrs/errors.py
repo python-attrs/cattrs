@@ -1,4 +1,4 @@
-from typing import Optional, Set, Type
+from typing import Any, Optional, Set, Type
 
 from cattrs._compat import ExceptionGroup
 
@@ -33,6 +33,32 @@ class ClassValidationError(BaseValidationError):
     """Raised when validating a class if any attributes are invalid."""
 
     pass
+
+
+class AttributeValidationNote(str):
+    """Attached as a note to an exception when an attribute fails structuring."""
+
+    name: str
+    type: Any
+
+    def __new__(cls, string: str, name: str, type: Any) -> "AttributeValidationNote":
+        instance = str.__new__(cls, string)
+        instance.name = name
+        instance.type = type
+        return instance
+
+
+class IterableValidationNote(str):
+    """Attached as a note to an exception when an iterable element fails structuring."""
+
+    index: int
+    type: Any
+
+    def __new__(cls, string: str, index: int, type: Any) -> "IterableValidationNote":
+        instance = str.__new__(cls, string)
+        instance.index = index
+        instance.type = type
+        return instance
 
 
 class ForbiddenExtraKeysError(Exception):

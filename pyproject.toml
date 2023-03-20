@@ -85,5 +85,4 @@ requires = ["poetry-core>=1.1.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
-plugins = "unionize.py"
 strict = true
