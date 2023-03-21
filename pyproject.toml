@@ -25,9 +25,24 @@ python = ">= 3.7"
 attrs = ">= 20"
 typing_extensions = { version = "*", python = "< 3.8" }
 exceptiongroup = { version = "*", python = "< 3.11" }
+ujson = { version = "^5.4.0", optional = true }
+orjson = { version = "^3.5.2", markers = "implementation_name == 'cpython'", optional = true }
+msgpack = { version = "^1.0.2", optional = true }
+PyYAML = { version = "^6.0", optional = true }
+tomlkit = { version = "^0.11.4", python = "<4", optional = true }
+cbor2 = { version = "^5.4.6", optional = true }
+pymongo = { version = "^4.2.0", optional = true }
+
+[tool.poetry.extras]
+ujson = ["ujson"]
+orjson = ["orjson"]
+msgpack = ["msgpack"]
+pyyaml = ["PyYAML"]
+tomlkit = ["tomlkit"]
+cbor2 = ["cbor2"]
+bson = ["pymongo"]
 
 [tool.poetry.group.dev.dependencies]
-pymongo = "^4.2.0"
 flake8 = {version = "^5.0.4", python = "^3.8"}
 tox = "^3.26.0"
 Sphinx = "^5.3.0"
@@ -38,17 +53,11 @@ pendulum = "^2.1.2"
 isort = { version = "5.10.1", python = "<4" }
 black = "^22.8.0"
 immutables = "^0.18"
-ujson = "^5.4.0"
-orjson = { version = "^3.5.2", markers = "implementation_name == 'cpython'" }
-msgpack = "^1.0.2"
-PyYAML = "^6.0"
-tomlkit = { version = "^0.11.4", python = "<4" }
 furo = "^2022.9.29"
 coverage = "^6.2"
 urllib3 = { version = "^1.26.12", python = "<4" }
 sphinx-copybutton = "^0.5.0"
 myst-parser = "^0.18.1"
-cbor2 = "^5.4.6"
 
 [tool.poetry.urls]
 "Changelog" = "https://catt.rs/en/latest/history.html"
