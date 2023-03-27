@@ -40,7 +40,7 @@ def format_exception(exc: BaseException, type: Union[Type, None]) -> str:
 
 
 def transform_error(
-    exc: ClassValidationError | IterableValidationError | BaseException,
+    exc: Union[ClassValidationError, IterableValidationError, BaseException],
     path: str = "$",
     format_exception: Callable[
         [BaseException, Union[Type, None]], str
