@@ -30,7 +30,7 @@ class IterableValidationNote(str):
     type: Any
 
     def __new__(
-        cls, string: str, index: int | str, type: Any
+        cls, string: str, index: Union[int, str], type: Any
     ) -> "IterableValidationNote":
         instance = str.__new__(cls, string)
         instance.index = index
