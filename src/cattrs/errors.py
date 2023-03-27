@@ -1,4 +1,4 @@
-from typing import Any, Optional, Set, Type
+from typing import Any, List, Optional, Set, Tuple, Type
 
 from cattrs._compat import ExceptionGroup
 
@@ -23,16 +23,42 @@ class BaseValidationError(ExceptionGroup):
         return ClassValidationError(self.message, excs, self.cl)
 
 
+class IterableValidationNote(str):
+    """Attached as a note to an exception when an iterable element fails structuring."""
+
+    index: int | str  # Ints for list indices, strs for dict keys
+    type: Any
+
+    def __new__(
+        cls, string: str, index: int | str, type: Any
+    ) -> "IterableValidationNote":
+        instance = str.__new__(cls, string)
+        instance.index = index
+        instance.type = type
+        return instance
+
+
 class IterableValidationError(BaseValidationError):
     """Raised when structuring an iterable."""
 
-    pass
+    def group_exceptions(
+        self,
+    ) -> Tuple[List[Tuple[Exception, IterableValidationNote]], List[Exception]]:
+        """Split the exceptions into two groups: with and without validation notes."""
+        excs_with_notes = []
+        other_excs = []
+        for subexc in self.exceptions:
+            if hasattr(subexc, "__notes__"):
+                for note in subexc.__notes__:
+                    if note.__class__ is IterableValidationNote:
+                        excs_with_notes.append((subexc, note))
+                        break
+                else:
+                    other_excs.append(subexc)
+            else:
+                other_excs.append(subexc)
 
-
-class ClassValidationError(BaseValidationError):
-    """Raised when validating a class if any attributes are invalid."""
-
-    pass
+        return excs_with_notes, other_excs
 
 
 class AttributeValidationNote(str):
@@ -48,17 +74,27 @@ class AttributeValidationNote(str):
         return instance
 
 
-class IterableValidationNote(str):
-    """Attached as a note to an exception when an iterable element fails structuring."""
+class ClassValidationError(BaseValidationError):
+    """Raised when validating a class if any attributes are invalid."""
 
-    index: int
-    type: Any
+    def group_exceptions(
+        self,
+    ) -> Tuple[List[Tuple[Exception, AttributeValidationNote]], List[Exception]]:
+        """Split the exceptions into two groups: with and without validation notes."""
+        excs_with_notes = []
+        other_excs = []
+        for subexc in self.exceptions:
+            if hasattr(subexc, "__notes__"):
+                for note in subexc.__notes__:
+                    if note.__class__ is AttributeValidationNote:
+                        excs_with_notes.append((subexc, note))
+                        break
+                else:
+                    other_excs.append(subexc)
+            else:
+                other_excs.append(subexc)
 
-    def __new__(cls, string: str, index: int, type: Any) -> "IterableValidationNote":
-        instance = str.__new__(cls, string)
-        instance.index = index
-        instance.type = type
-        return instance
+        return excs_with_notes, other_excs
 
 
 class ForbiddenExtraKeysError(Exception):
