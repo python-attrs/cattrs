@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Set, Tuple, Type
+from typing import Any, List, Optional, Set, Tuple, Type, Union
 
 from cattrs._compat import ExceptionGroup
 
@@ -26,7 +26,7 @@ class BaseValidationError(ExceptionGroup):
 class IterableValidationNote(str):
     """Attached as a note to an exception when an iterable element fails structuring."""
 
-    index: int | str  # Ints for list indices, strs for dict keys
+    index: Union[int, str]  # Ints for list indices, strs for dict keys
     type: Any
 
     def __new__(
