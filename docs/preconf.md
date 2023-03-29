@@ -88,6 +88,10 @@ When parsing msgpack data from bytes, the library needs to be passed `strict_map
 
 ## _cbor2_
 
+```{versionadded} 23.1.0
+
+```
+
 Found at {mod}`cattrs.preconf.cbor2`.
 
 _cbor2_ implements a fully featured CBOR encoder with several extensions for handling shared references, big integers, rational numbers and so on.

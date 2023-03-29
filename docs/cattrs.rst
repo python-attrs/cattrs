@@ -53,6 +53,14 @@ cattrs.gen module
    :undoc-members:
    :show-inheritance:
 
+cattrs.v module
+---------------
+
+.. automodule:: cattrs.v
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

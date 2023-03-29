@@ -148,7 +148,7 @@ def test_mapping_errors(c: Converter) -> None:
 
     @define
     class C:
-        a: dict[str, int]
+        a: Dict[str, int]
 
     try:
         c.structure({"a": {"a": "str", "b": 1, "c": "str"}}, C)

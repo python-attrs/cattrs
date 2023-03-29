@@ -3,8 +3,11 @@
 _cattrs_ has a detailed validation mode since version 22.1.0, and this mode is enabled by default.
 When running under detailed validation, the un/structuring hooks are slightly slower but produce more precise and exhaustive error messages.
 
-## Detailed validation
+## Detailed Validation
 
+```{versionadded} 22.1.0
+
+```
 In detailed validation mode, any un/structuring errors will be grouped and raised together as a {class}`cattrs.BaseValidationError`, which is a [PEP 654 ExceptionGroup](https://www.python.org/dev/peps/pep-0654/).
 ExceptionGroups are special exceptions which contain lists of other exceptions, which may themselves be other ExceptionGroups.
 In essence, ExceptionGroups are trees of exceptions.
@@ -23,7 +26,7 @@ class Class:
     a_list: list[int]
     a_dict: dict[str, int]
 
->>> structure({"a_list": ["a"], "a_dict": {"str": "a"}})
+>>> structure({"a_list": ["a"], "a_dict": {"str": "a"}}, Class)
   + Exception Group Traceback (most recent call last):
   |   File "<stdin>", line 1, in <module>
   |   File "/Users/tintvrtkovic/pg/cattrs/src/cattr/converters.py", line 276, in structure
@@ -63,7 +66,52 @@ class Class:
       +------------------------------------
 ```
 
-## Non-detailed validation
+### Transforming Exceptions into Error Messages
+
+```{versionadded} 23.1.0
+
+```
+
+ExceptionGroup stack traces are great while you're developing, but sometimes a more compact representation of validation errors is better.
+_cattrs_ provides a helper function, {func}`cattrs.transform_error`, which transforms validation errors into lists of error messages.
+
+The example from the previous paragraph produces the following error messages:
+
+```python
+>>> from cattrs import transform_error
+
+>>> try:
+...     structure({"a_list": ["a"], "a_dict": {"str": "a"}}, Class)
+... except Exception as exc:
+...     print(transform_error(exc))
+
+[
+    'invalid value for type, expected int @ $.a_list[0]',
+    "invalid value for type, expected int @ $.a_dict['str']"
+]
+```
+
+A small number of built-in exceptions are converted into error messages automatically.
+This can be further customized by providing {func}`cattrs.transform_error` with a function that it can use to turn individual, non-ExceptionGroup exceptions into error messages.
+A useful pattern is wrapping the default, {func}`cattrs.v.format_exception` function.
+
+```
+>>> from cattrs.v iomport format_exception
+
+>>> def my_exception_formatter(exc: BaseException, type) -> str:
+...     if isinstance(exc, MyInterestingException):
+...         return "My error message"
+...     return format_exception(exc, type)
+
+>>> try:
+...     structure(..., Class)
+... except Exception as exc:
+...     print(transform_error(exc, format_exception=my_exception_formatter))
+```
+
+If even more customization is required, {func}`cattrs.transform_error` can be copied over into your codebase and adjusted as needed.
+
+## Non-detailed Validation
 
 Non-detailed validation can be enabled by initializing any of the converters with `detailed_validation=False`.
 In this mode, any errors during un/structuring will bubble up directly as soon as they happen.

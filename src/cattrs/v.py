@@ -11,6 +11,15 @@ __all__ = ["format_exception", "transform_error"]
 
 
 def format_exception(exc: BaseException, type: Union[Type, None]) -> str:
+    """The default exception formatter, handling the most common exceptions.
+
+    The following exceptions are handled specially:
+    * `KeyErrors` (`required field missing`)
+    * `ValueErrors` (`invalid value for type, expected <type>` or just `invalid value`)
+    * `TypeErrors` (`invalid value for type, expected <type>` and a couple special cases for iterables)
+    * `cattrs.ForbiddenExtraKeysError`
+    * some `AttributeErrors` (special cased for structing mappings)
+    """
     if isinstance(exc, KeyError):
         res = "required field missing"
     elif isinstance(exc, ValueError):
