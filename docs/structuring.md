@@ -245,7 +245,7 @@ The tuple conversion is composable with all other converters.
 ### Unions
 
 Unions of `NoneType` and a single other type are supported (also known as
-`Optional` s). All other unions a require a disambiguation function.
+`Optional` s). All other unions require a disambiguation function.
 
 #### Automatic Disambiguation
 
