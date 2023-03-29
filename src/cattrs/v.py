@@ -1,5 +1,5 @@
 """Cattrs validation."""
-from typing import Callable, Type, Union
+from typing import Callable, List, Type, Union
 
 from .errors import (
     ClassValidationError,
@@ -45,7 +45,7 @@ def transform_error(
     format_exception: Callable[
         [BaseException, Union[Type, None]], str
     ] = format_exception,
-) -> list[str]:
+) -> List[str]:
     """Transform an exception into a list of error messages.
 
     To get detailed error messages, the exception should be produced by a converter
