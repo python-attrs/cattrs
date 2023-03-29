@@ -280,6 +280,8 @@ the first time an appropriate union is structured.
 To support arbitrary unions, register a custom structuring hook for the union
 (see [Registering custom structuring hooks](structuring.md#registering-custom-structuring-hooks)).
 
+Another option is to use a custom strategy (see [Strategies](strategies.md)).
+
 ### `typing.Annotated`
 
 [PEP 593](https://www.python.org/dev/peps/pep-0593/) annotations (`typing.Annotated[type, ...]`) are supported and are
