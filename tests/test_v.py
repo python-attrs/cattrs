@@ -10,7 +10,7 @@ from typing import (
 )
 
 from attrs import Factory, define
-from pytest import fixture
+from pytest import fixture, raises
 
 from cattrs import Converter, transform_error
 from cattrs._compat import Mapping
@@ -68,12 +68,18 @@ def test_attribute_errors(c: Converter) -> None:
     class E:
         a: Optional[int]
 
-    try:
+    with raises(Exception) as exc:
         c.structure({"a": "str"}, E)
-    except Exception as exc:
-        assert transform_error(exc) == [
-            f"invalid value for type, expected {Optional[int]!r} @ $.a"
-        ]
+
+    # Complicated due to various Python versions.
+    tn = (
+        Optional[int].__name__
+        if hasattr(Optional[int], "__name__")
+        else repr(Optional[int])
+    )
+    assert transform_error(exc.value) == [
+        f"invalid value for type, expected {tn} @ $.a"
+    ]
 
 
 def test_class_errors(c: Converter) -> None:
