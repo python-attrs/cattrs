@@ -1,5 +1,13 @@
 """Tests for the cattrs.v framework."""
-from typing import Dict, List, MutableMapping, MutableSequence, Sequence, Tuple
+from typing import (
+    Dict,
+    List,
+    MutableMapping,
+    MutableSequence,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 from attrs import Factory, define
 from pytest import fixture
@@ -55,6 +63,17 @@ def test_attribute_errors(c: Converter) -> None:
         c.structure({"c": {"a": "str"}}, D)
     except Exception as exc:
         assert transform_error(exc) == ["invalid value for type, expected int @ $.c.a"]
+
+    @define
+    class E:
+        a: Optional[int]
+
+    try:
+        c.structure({"a": "str"}, E)
+    except Exception as exc:
+        assert transform_error(exc) == [
+            f"invalid value for type, expected {Optional[int]!r} @ $.a"
+        ]
 
 
 def test_class_errors(c: Converter) -> None:

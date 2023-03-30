@@ -24,7 +24,8 @@ def format_exception(exc: BaseException, type: Union[Type, None]) -> str:
         res = "required field missing"
     elif isinstance(exc, ValueError):
         if type is not None:
-            res = f"invalid value for type, expected {type.__name__}"
+            tn = type.__name__ if hasattr(type, "__name__") else repr(type)
+            res = f"invalid value for type, expected {tn}"
         else:
             res = "invalid value"
     elif isinstance(exc, TypeError):
@@ -34,7 +35,8 @@ def format_exception(exc: BaseException, type: Union[Type, None]) -> str:
             else:
                 res = f"invalid type ({exc})"
         else:
-            res = f"invalid value for type, expected {type.__name__}"
+            tn = type.__name__ if hasattr(type, "__name__") else repr(type)
+            res = f"invalid value for type, expected {tn}"
     elif isinstance(exc, ForbiddenExtraKeysError):
         res = f"extra fields found ({', '.join(exc.extra_fields)})"
     elif isinstance(exc, AttributeError) and exc.args[0].endswith(
