@@ -53,7 +53,7 @@ pendulum = "^2.1.2"
 isort = { version = "5.10.1", python = "<4" }
 black = "^23.1.0"
 immutables = "^0.18"
-furo = "^2022.9.29"
+furo = "^2023.3.27"
 coverage = "^6.2"
 urllib3 = { version = "^1.26.12", python = "<4" }
 sphinx-copybutton = "^0.5.0"
