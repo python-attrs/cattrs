@@ -22,7 +22,11 @@ from attr import Attribute
 from attr import has as attrs_has
 from attr import resolve_types
 
-from cattrs.errors import IterableValidationError, StructureHandlerNotFoundError
+from cattrs.errors import (
+    IterableValidationError,
+    IterableValidationNote,
+    StructureHandlerNotFoundError,
+)
 
 from ._compat import (
     FrozenSetSubscriptable,
@@ -507,7 +511,9 @@ class BaseConverter:
                     try:
                         res.append(handler(e, elem_type))
                     except Exception as e:
-                        msg = f"Structuring {cl} @ index {ix}"
+                        msg = IterableValidationNote(
+                            f"Structuring {cl} @ index {ix}", ix, elem_type
+                        )
                         e.__notes__ = getattr(e, "__notes__", []) + [msg]
                         errors.append(e)
                     finally:
@@ -531,13 +537,20 @@ class BaseConverter:
         if self.detailed_validation:
             errors = []
             res = set()
+            ix = 0
             for e in obj:
                 try:
                     res.add(handler(e, elem_type))
                 except Exception as exc:
-                    msg = f"Structuring {structure_to.__name__} @ element {e!r}"
+                    msg = IterableValidationNote(
+                        f"Structuring {structure_to.__name__} @ element {e!r}",
+                        ix,
+                        elem_type,
+                    )
                     exc.__notes__ = getattr(e, "__notes__", []) + [msg]
                     errors.append(exc)
+                finally:
+                    ix += 1
             if errors:
                 raise IterableValidationError(f"While structuring {cl!r}", errors, cl)
             return res if structure_to is set else structure_to(res)
@@ -601,13 +614,18 @@ class BaseConverter:
             if self.detailed_validation:
                 errors = []
                 res = []
-                for ix, e in enumerate(obj):
+                ix = 0
+                for e in obj:
                     try:
                         res.append(conv(e, tup_type))
                     except Exception as exc:
-                        msg = f"Structuring {tup} @ index {ix}"
+                        msg = IterableValidationNote(
+                            f"Structuring {tup} @ index {ix}", ix, tup_type
+                        )
                         exc.__notes__ = getattr(e, "__notes__", []) + [msg]
                         errors.append(exc)
+                    finally:
+                        ix += 1
                 if errors:
                     raise IterableValidationError(
                         f"While structuring {tup!r}", errors, tup
@@ -633,7 +651,9 @@ class BaseConverter:
                         conv = self._structure_func.dispatch(t)
                         res.append(conv(e, t))
                     except Exception as exc:
-                        msg = f"Structuring {tup} @ index {ix}"
+                        msg = IterableValidationNote(
+                            f"Structuring {tup} @ index {ix}", ix, t
+                        )
                         exc.__notes__ = getattr(e, "__notes__", []) + [msg]
                         errors.append(exc)
                 if len(res) < exp_len:

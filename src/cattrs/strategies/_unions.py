@@ -38,7 +38,7 @@ def configure_tagged_union(
     The tagged union strategy currently only works with the dict
     un/structuring base strategy.
 
-    .. versionadded:: 22.3.0
+    .. versionadded:: 23.1.0
     """
     args = union.__args__
     tag_to_hook = {}

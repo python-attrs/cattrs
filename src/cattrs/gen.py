@@ -22,9 +22,11 @@ import attr
 from attr import NOTHING, Attribute, frozen, resolve_types
 
 from cattrs.errors import (
+    AttributeValidationNote,
     ClassValidationError,
     ForbiddenExtraKeysError,
     IterableValidationError,
+    IterableValidationNote,
     StructureHandlerNotFoundError,
 )
 
@@ -331,6 +333,7 @@ def make_dict_structure_fn(
         lines.append("  errors = []")
         invocation_lines.append("**res,")
         internal_arg_parts["__c_cve"] = ClassValidationError
+        internal_arg_parts["__c_avn"] = AttributeValidationNote
         for a in attrs:
             an = a.name
             override = kwargs.get(an, _neutral)
@@ -365,6 +368,8 @@ def make_dict_structure_fn(
                 i = f"{i}  "
             lines.append(f"{i}try:")
             i = f"{i}  "
+            type_name = f"__c_type_{an}"
+            internal_arg_parts[type_name] = t
             if handler:
                 if handler == converter._structure_call:
                     internal_arg_parts[struct_handler_name] = t
@@ -381,7 +386,7 @@ def make_dict_structure_fn(
             lines.append(f"{i}except Exception as e:")
             i = f"{i}  "
             lines.append(
-                f"{i}e.__notes__ = getattr(e, '__notes__', []) + [\"Structuring class {cl.__qualname__} @ attribute {an}\"]"
+                f'{i}e.__notes__ = getattr(e, \'__notes__\', []) + [__c_avn("Structuring class {cl.__qualname__} @ attribute {an}", "{an}", __c_type_{an})]'
             )
             lines.append(f"{i}errors.append(e)")
 
@@ -701,7 +706,7 @@ def make_mapping_structure_fn(
     globs: Dict[str, Type] = {"__cattr_mapping_cl": structure_to}
 
     lines = []
-    lines.append(f"def {fn_name}(mapping, _):")
+    internal_arg_parts = {}
 
     # Let's try fishing out the type args.
     if not is_bare(cl):
@@ -755,15 +760,23 @@ def make_mapping_structure_fn(
         lines.append("  res = dict(mapping)")
     else:
         if detailed_validation:
+            internal_arg_parts["IterableValidationError"] = IterableValidationError
+            internal_arg_parts["IterableValidationNote"] = IterableValidationNote
+            internal_arg_parts["val_type"] = (
+                val_type if val_type is not NOTHING else Any
+            )
+            internal_arg_parts["key_type"] = (
+                key_type if key_type is not NOTHING else Any
+            )
             globs["enumerate"] = enumerate
-            globs["IterableValidationError"] = IterableValidationError
+
             lines.append("  res = {}; errors = []")
             lines.append("  for ix, (k, v) in enumerate(mapping.items()):")
             lines.append("    try:")
             lines.append(f"      value = {v_s}")
             lines.append("    except Exception as e:")
             lines.append(
-                "      e.__notes__ = getattr(e, '__notes__', []) + ['Structuring mapping value @ key ' + repr(k)]"
+                "      e.__notes__ = getattr(e, '__notes__', []) + [IterableValidationNote('Structuring mapping value @ key ' + repr(k), k, val_type)]"
             )
             lines.append("      errors.append(e)")
             lines.append("      continue")
@@ -772,7 +785,7 @@ def make_mapping_structure_fn(
             lines.append("      res[key] = value")
             lines.append("    except Exception as e:")
             lines.append(
-                "      e.__notes__ = getattr(e, '__notes__', []) + ['Structuring mapping key @ key ' + repr(k)]"
+                "      e.__notes__ = getattr(e, '__notes__', []) + [IterableValidationNote('Structuring mapping key @ key ' + repr(k), k, key_type)]"
             )
             lines.append("      errors.append(e)")
             lines.append("  if errors:")
@@ -784,7 +797,14 @@ def make_mapping_structure_fn(
     if structure_to is not dict:
         lines.append("  res = __cattr_mapping_cl(res)")
 
-    total_lines = lines + ["  return res"]
+    internal_arg_line = ", ".join([f"{i}={i}" for i in internal_arg_parts])
+    if internal_arg_line:
+        internal_arg_line = f", {internal_arg_line}"
+    for k, v in internal_arg_parts.items():
+        globs[k] = v
+
+    def_line = f"def {fn_name}(mapping, _{internal_arg_line}):"
+    total_lines = [def_line] + lines + ["  return res"]
     script = "\n".join(total_lines)
 
     eval(compile(script, "", "exec"), globs)

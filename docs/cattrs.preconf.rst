@@ -13,7 +13,7 @@ cattrs.preconf.bson module
    :show-inheritance:
 
 cattrs.preconf.cbor2 module
---------------------------
+---------------------------
 
 .. automodule:: cattrs.preconf.cbor2
    :members:

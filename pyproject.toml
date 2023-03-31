@@ -51,13 +51,15 @@ pytest-benchmark = "^3.2.3"
 hypothesis = "^6.54.5"
 pendulum = "^2.1.2"
 isort = { version = "5.10.1", python = "<4" }
-black = "^22.8.0"
+black = "^23.1.0"
 immutables = "^0.18"
-furo = "^2022.9.29"
+furo = "^2023.3.27"
 coverage = "^6.2"
 urllib3 = { version = "^1.26.12", python = "<4" }
 sphinx-copybutton = "^0.5.0"
 myst-parser = "^0.18.1"
+cbor2 = "^5.4.6"
+pyperf = "^2.6.0"
 
 [tool.poetry.urls]
 "Changelog" = "https://catt.rs/en/latest/history.html"
@@ -85,5 +87,4 @@ requires = ["poetry-core>=1.1.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
-plugins = "unionize.py"
 strict = true

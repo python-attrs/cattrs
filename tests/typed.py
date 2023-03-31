@@ -798,9 +798,7 @@ def _create_hyp_nested_strategy(
     # A strategy producing tuples of the form ([list of attributes], <given
     # class strategy>).
     attrs_and_classes: SearchStrategy[
-        Tuple[
-            List[Tuple[_CountingAttr, PosArgs]], Tuple[Type, SearchStrategy[PosArgs]],
-        ]
+        Tuple[List[Tuple[_CountingAttr, PosArgs]], Tuple[Type, SearchStrategy[PosArgs]]]
     ] = tuples(
         lists_of_typed_attrs(kw_only=kw_only, newtypes=newtypes), simple_class_strategy
     )
