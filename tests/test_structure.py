@@ -24,7 +24,6 @@ from cattrs import BaseConverter
 from cattrs._compat import copy_with, is_bare, is_union_type
 from cattrs.errors import IterableValidationError, StructureHandlerNotFoundError
 
-from ._compat import change_type_param
 from .untyped import (
     dicts_of_primitives,
     enums_of_primitives,
@@ -192,7 +191,7 @@ def test_structuring_dicts_opts(dict_and_type, data):
     converter = BaseConverter()
     d, t = dict_and_type
     assume(not is_bare(t))
-    t.__args__ = (t.__args__[0], Optional[t.__args__[1]])
+    t = copy_with(t, (t.__args__[0], Optional[t.__args__[1]]))
     d = {k: v if data.draw(booleans()) else None for k, v in d.items()}
 
     converted = converter.structure(d, t)
@@ -223,7 +222,7 @@ def test_structuring_optional_primitives(primitive_and_type):
 
 
 @given(lists_of_primitives().filter(lambda lp: not is_bare(lp[1])), booleans())
-def test_structuring_lists_of_opt(list_and_type, detailed_validation: bool):
+def test_structuring_lists_of_opt(list_and_type, detailed_validation: bool) -> None:
     """Test structuring lists of Optional primitive types."""
     converter = BaseConverter(detailed_validation=detailed_validation)
     l, t = list_and_type
@@ -248,14 +247,12 @@ def test_structuring_lists_of_opt(list_and_type, detailed_validation: bool):
     optional_t = Optional[args[0]]
     # We want to create a generic type annotation with an optional
     # type parameter.
-    t = change_type_param(t, optional_t)
+    t = copy_with(t, optional_t)
 
     converted = converter.structure(l, t)
 
     for x, y in zip(l, converted):
         assert x == y
-
-    t.__args__ = args
 
 
 @given(lists_of_primitives())
