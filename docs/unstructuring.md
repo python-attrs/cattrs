@@ -102,6 +102,18 @@ Similar logic applies to the set and mapping hierarchies.
 Make sure you're using the types from `collections.abc` on Python 3.9+, and
 from `typing` on older Python versions.
 
+### `typing.Final`
+
+[PEP 591](https://peps.python.org/pep-0591/) Final attribute types (`Final[int]`) are supported and unstructured appropriately.
+
+```{versionadded} 23.1.0
+
+```
+
+```{seealso} [Structuring Final.](structuring.md#typingfinal)
+
+```
+
 ## `typing.Annotated`
 
 Fields marked as `typing.Annotated[type, ...]` are supported and are matched

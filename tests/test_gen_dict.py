@@ -318,7 +318,10 @@ def test_overriding_struct_hook(converter: BaseConverter) -> None:
     converter.register_structure_hook(
         A,
         make_dict_structure_fn(
-            A, converter, a=override(struct_hook=lambda v, _: ceil(v))
+            A,
+            converter,
+            a=override(struct_hook=lambda v, _: ceil(v)),
+            _cattrs_detailed_validation=converter.detailed_validation,
         ),
     )
 
@@ -336,7 +339,10 @@ def test_overriding_unstruct_hook(converter: BaseConverter) -> None:
     converter.register_unstructure_hook(
         A,
         make_dict_unstructure_fn(
-            A, converter, a=override(unstruct_hook=lambda v: v + 1)
+            A,
+            converter,
+            a=override(unstruct_hook=lambda v: v + 1),
+            _cattrs_detailed_validation=converter.detailed_validation,
         ),
     )
 

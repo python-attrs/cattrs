@@ -38,6 +38,7 @@ from ._compat import (
     Sequence,
     Set,
     fields,
+    get_final_base,
     get_newtype_base,
     get_origin,
     has,
@@ -160,6 +161,11 @@ class BaseConverter:
                     is_protocol,
                     lambda o: self.unstructure(o, unstructure_as=o.__class__),
                 ),
+                (
+                    lambda t: get_final_base(t) is not None,
+                    lambda t: self._unstructure_func.dispatch(get_final_base(t)),
+                    True,
+                ),
                 (is_mapping, self._unstructure_mapping),
                 (is_sequence, self._unstructure_seq),
                 (is_mutable_set, self._unstructure_seq),
@@ -179,6 +185,11 @@ class BaseConverter:
                 (lambda cl: cl is Any or cl is Optional or cl is None, lambda v, _: v),
                 (is_generic_attrs, self._gen_structure_generic, True),
                 (lambda t: get_newtype_base(t) is not None, self._structure_newtype),
+                (
+                    lambda t: get_final_base(t) is not None,
+                    self._structure_final_factory,
+                    True,
+                ),
                 (is_literal, self._structure_simple_literal),
                 (is_literal_containing_enums, self._structure_enum_literal),
                 (is_sequence, self._structure_list),
@@ -441,6 +452,14 @@ class BaseConverter:
     def _structure_newtype(self, val, type):
         base = get_newtype_base(type)
         return self._structure_func.dispatch(base)(val, base)
+
+    def _structure_final_factory(self, type):
+        base = get_final_base(type)
+        res = self._structure_func.dispatch(base)
+        if res == self._structure_call:
+            # It's not really `structure_call` for Finals (can't call Final())
+            return lambda v, _: self._structure_call(v, base)
+        return res
 
     # Attrs classes.
 

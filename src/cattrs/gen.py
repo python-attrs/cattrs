@@ -36,6 +36,7 @@ from ._compat import (
     get_origin,
     is_annotated,
     is_bare,
+    is_bare_final,
     is_generic,
 )
 from ._generics import deep_copy_with
@@ -142,6 +143,14 @@ def make_dict_unstructure_fn(
                         t = deep_copy_with(t, mapping)
 
                     if handler is None:
+                        if (
+                            is_bare_final(t)
+                            and a.default is not NOTHING
+                            and not isinstance(a.default, attr.Factory)
+                        ):
+                            # This is a special case where we can use the
+                            # type of the default to dispatch on.
+                            t = a.default.__class__
                         try:
                             handler = converter._unstructure_func.dispatch(t)
                         except RecursionError:
@@ -256,7 +265,25 @@ def find_structure_handler(
         if handler == c._structure_error:
             handler = None
     elif type is not None:
-        handler = c._structure_func.dispatch(type)
+        if (
+            is_bare_final(type)
+            and a.default is not NOTHING
+            and not isinstance(a.default, attr.Factory)
+        ):
+            # This is a special case where we can use the
+            # type of the default to dispatch on.
+            type = a.default.__class__
+            handler = c._structure_func.dispatch(type)
+            if handler == c._structure_call:
+                # Finals can't really be used with _structure_call, so
+                # we wrap it so the rest of the toolchain doesn't get
+                # confused.
+
+                def handler(v, _, _h=handler):
+                    return _h(v, type)
+
+        else:
+            handler = c._structure_func.dispatch(type)
     else:
         handler = c.structure
     return handler
@@ -429,20 +456,13 @@ def make_dict_structure_fn(
             # For each attribute, we try resolving the type here and now.
             # If a type is manually overwritten, this function should be
             # regenerated.
-            if a.converter is not None and _cattrs_prefer_attrib_converters:
-                handler = None
-            elif (
-                a.converter is not None
-                and not _cattrs_prefer_attrib_converters
-                and t is not None
-            ):
-                handler = converter._structure_func.dispatch(t)
-                if handler == converter._structure_error:
-                    handler = None
-            elif t is not None:
-                handler = converter._structure_func.dispatch(t)
+            if override.struct_hook is not None:
+                # If the user has requested an override, just use that.
+                handler = override.struct_hook
             else:
-                handler = converter.structure
+                handler = find_structure_handler(
+                    a, t, converter, _cattrs_prefer_attrib_converters
+                )
 
             kn = an if override.rename is None else override.rename
             allowed_fields.add(kn)
@@ -482,20 +502,13 @@ def make_dict_structure_fn(
                 # For each attribute, we try resolving the type here and now.
                 # If a type is manually overwritten, this function should be
                 # regenerated.
-                if a.converter is not None and _cattrs_prefer_attrib_converters:
-                    handler = None
-                elif (
-                    a.converter is not None
-                    and not _cattrs_prefer_attrib_converters
-                    and t is not None
-                ):
-                    handler = converter._structure_func.dispatch(t)
-                    if handler == converter._structure_error:
-                        handler = None
-                elif t is not None:
-                    handler = converter._structure_func.dispatch(t)
+                if override.struct_hook is not None:
+                    # If the user has requested an override, just use that.
+                    handler = override.struct_hook
                 else:
-                    handler = converter.structure
+                    handler = find_structure_handler(
+                        a, t, converter, _cattrs_prefer_attrib_converters
+                    )
 
                 struct_handler_name = f"__c_structure_{an}"
                 internal_arg_parts[struct_handler_name] = handler

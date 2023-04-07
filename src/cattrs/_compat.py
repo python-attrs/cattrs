@@ -6,7 +6,7 @@ from dataclasses import MISSING
 from dataclasses import fields as dataclass_fields
 from dataclasses import is_dataclass
 from typing import AbstractSet as TypingAbstractSet
-from typing import Any, Dict, FrozenSet, List
+from typing import Any, Dict, Final, FrozenSet, List
 from typing import Mapping as TypingMapping
 from typing import MutableMapping as TypingMutableMapping
 from typing import MutableSequence as TypingMutableSequence
@@ -110,6 +110,20 @@ def is_hetero_tuple(type: Any) -> bool:
 
 def is_protocol(type: Any) -> bool:
     return issubclass(type, Protocol) and getattr(type, "_is_protocol", False)
+
+
+def is_bare_final(type) -> bool:
+    return type is Final
+
+
+def get_final_base(type) -> type | None:
+    """Return the base of the Final annotation, if it is Final."""
+    if type is Final:
+        return Any
+    elif type.__class__ is _GenericAlias and type.__origin__ is Final:
+        return type.__args__[0]
+    else:
+        return None
 
 
 OriginAbstractSet = AbcSet

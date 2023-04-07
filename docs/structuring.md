@@ -1,8 +1,8 @@
 # What You Can Structure and How
 
-The philosophy of `cattrs` structuring is simple: give it an instance of Python
+The philosophy of _cattrs_ structuring is simple: give it an instance of Python
 built-in types and collections, and a type describing the data you want out.
-`cattrs` will convert the input data into the type you want, or throw an
+_cattrs_ will convert the input data into the type you want, or throw an
 exception.
 
 All structuring conversions are composable, where applicable. This is
@@ -281,6 +281,18 @@ To support arbitrary unions, register a custom structuring hook for the union
 (see [Registering custom structuring hooks](structuring.md#registering-custom-structuring-hooks)).
 
 Another option is to use a custom tagged union strategy (see [Strategies - Tagged Unions](strategies.md#tagged-unions)).
+
+### `typing.Final`
+
+[PEP 591](https://peps.python.org/pep-0591/) Final attribute types (`Final[int]`) are supported and structured appropriately.
+
+```{versionadded} 23.1.0
+
+```
+
+```{seealso} [Unstructuring Final.](unstructuring.md#typingfinal)
+
+```
 
 ### `typing.Annotated`
 
