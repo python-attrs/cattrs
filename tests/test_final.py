@@ -1,8 +1,7 @@
-from typing import Final
-
 from attrs import Factory, define
 
 from cattrs import Converter
+from cattrs._compat import Final
 
 
 @define
