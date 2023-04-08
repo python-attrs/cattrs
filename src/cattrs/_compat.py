@@ -6,7 +6,7 @@ from dataclasses import MISSING
 from dataclasses import fields as dataclass_fields
 from dataclasses import is_dataclass
 from typing import AbstractSet as TypingAbstractSet
-from typing import Any, Dict, Final, FrozenSet, List
+from typing import Any, Dict, FrozenSet, List
 from typing import Mapping as TypingMapping
 from typing import MutableMapping as TypingMutableMapping
 from typing import MutableSequence as TypingMutableSequence
@@ -34,10 +34,10 @@ if is_py37:
     def get_origin(cl):
         return getattr(cl, "__origin__", None)
 
-    from typing_extensions import Protocol
+    from typing_extensions import Final, Protocol
 
 else:
-    from typing import Protocol, get_args, get_origin  # NOQA
+    from typing import Final, Protocol, get_args, get_origin  # NOQA
 
 if "ExceptionGroup" not in dir(builtins):
     from exceptiongroup import ExceptionGroup
