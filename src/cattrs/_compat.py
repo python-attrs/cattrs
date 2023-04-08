@@ -116,7 +116,7 @@ def is_bare_final(type) -> bool:
     return type is Final
 
 
-def get_final_base(type) -> type | None:
+def get_final_base(type) -> Optional[type]:
     """Return the base of the Final annotation, if it is Final."""
     if type is Final:
         return Any
