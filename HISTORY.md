@@ -4,8 +4,10 @@
 
 - Introduce the `tagged_union` strategy. ([#318](https://github.com/python-attrs/cattrs/pull/318) [#317](https://github.com/python-attrs/cattrs/issues/317))
 - Introduce the `cattrs.transform_error` helper function for formatting validation exceptions. ([258](https://github.com/python-attrs/cattrs/issues/258) [342](https://github.com/python-attrs/cattrs/pull/342))
+- Add support for `typing.Final`.
+  ([#340](https://github.com/python-attrs/cattrs/issues/340) [#349](https://github.com/python-attrs/cattrs/pull/349))
 - Introduce `override.struct_hook` and `override.unstruct_hook`. Learn more [here](https://catt.rs/en/latest/customizing.html#struct-hook-and-unstruct-hook).
-  [#326](https://github.com/python-attrs/cattrs/pull/326)
+  ([#326](https://github.com/python-attrs/cattrs/pull/326))
 - Fix generating structuring functions for types with angle brackets (`<>`) and pipe symbols (`|`) in the name.
   ([#319](https://github.com/python-attrs/cattrs/issues/319) [#327](https://github.com/python-attrs/cattrs/pull/327>))
 - `pathlib.Path` is now supported by default.

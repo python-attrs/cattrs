@@ -34,10 +34,10 @@ if is_py37:
     def get_origin(cl):
         return getattr(cl, "__origin__", None)
 
-    from typing_extensions import Protocol
+    from typing_extensions import Final, Protocol
 
 else:
-    from typing import Protocol, get_args, get_origin  # NOQA
+    from typing import Final, Protocol, get_args, get_origin  # NOQA
 
 if "ExceptionGroup" not in dir(builtins):
     from exceptiongroup import ExceptionGroup
@@ -110,6 +110,20 @@ def is_hetero_tuple(type: Any) -> bool:
 
 def is_protocol(type: Any) -> bool:
     return issubclass(type, Protocol) and getattr(type, "_is_protocol", False)
+
+
+def is_bare_final(type) -> bool:
+    return type is Final
+
+
+def get_final_base(type) -> Optional[type]:
+    """Return the base of the Final annotation, if it is Final."""
+    if type is Final:
+        return Any
+    elif type.__class__ is _GenericAlias and type.__origin__ is Final:
+        return type.__args__[0]
+    else:
+        return None
 
 
 OriginAbstractSet = AbcSet
