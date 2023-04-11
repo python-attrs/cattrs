@@ -305,3 +305,10 @@ def fallback_field(
 class MyInternalAttr:
     NewField: str
 ```
+
+This should enable the a use case where `cattrs` could now `structure` both key names into `NewField` on the `attr`.
+
+```
+converter.structure({"NewField": "foo"}, MyInternalAttr)
+converter.structure({"OldField": "foo"}, MyInternalAttr)
+```
