@@ -256,3 +256,52 @@ converter.register_structure_hook_factory(
 
 The `converter` instance will now un/structure every attrs class to camel case.
 Nothing has been omitted from this final example; it's complete.
+
+## Using fallback key names
+
+Sometimes when [structuring](./structuring.md) data, the input data may be in multiple formats that need to be converted into a common attr.
+
+Consider an example where a data store creates a new schema version and renames a key (ie, `{'OldField':  'value1'}` in V1 becomes `{'NewField': 'value1'}` in V2), while also leaving existing records in the system with the V1 schema. Both keys should convert to the same `attr` field.
+
+Under this condition, builtin customizations such as [rename](./customizing.md#rename) could prove insufficient in loading teh  - `cattr` could not structure both `OldField` and `NewField` into a single field using `rename`, at least not on the same converter.
+
+In order to support both fields, it is possible to wrap a [converter](./converters.md) with some custom preprocessing, and decorate your `attr`. An example is below.
+
+```
+from typing import Any, Dict, List
+
+from attrs import define
+from cattrs import Converter
+from cattrs.gen import make_dict_structure_fn
+
+converter = Converter()
+
+
+def fallback_field(
+    converter_arg: Converter,
+    old_to_new_field: Dict[str, str]
+):
+    def decorator(cls):
+        stuct = make_dict_structure_fn(cls, converter_arg)
+
+        def structure(d: Dict[str, Any], cl):
+            for k, v in old_to_new_field.items():
+                if k in d:
+                    d[v] = d[k]
+
+            return stuct(d, cl)
+
+        converter_arg.register_structure_hook(cls, structure)
+
+        return cls
+
+    return decorator
+
+
+@fallback_field(
+    converter_arg=converter, old_to_new_field={"OldField": "NewField"}
+)
+@define
+class MyInternalAttr:
+    NewField: str
+```
