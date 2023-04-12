@@ -67,9 +67,9 @@ def configure_converter(converter: BaseConverter):
 
 def make_converter(*args, **kwargs) -> TomlkitConverter:
     kwargs["unstruct_collection_overrides"] = {
-        **kwargs.get("unstruct_collection_overrides", {}),
         AbstractSet: list,
         tuple: list,
+        **kwargs.get("unstruct_collection_overrides", {}),
     }
     res = TomlkitConverter(*args, **kwargs)
     configure_converter(res)
