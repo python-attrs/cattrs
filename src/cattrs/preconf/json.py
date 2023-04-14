@@ -38,9 +38,9 @@ def configure_converter(converter: BaseConverter):
 
 def make_converter(*args, **kwargs) -> JsonConverter:
     kwargs["unstruct_collection_overrides"] = {
-        **kwargs.get("unstruct_collection_overrides", {}),
         AbstractSet: list,
         Counter: dict,
+        **kwargs.get("unstruct_collection_overrides", {}),
     }
     res = JsonConverter(*args, **kwargs)
     configure_converter(res)

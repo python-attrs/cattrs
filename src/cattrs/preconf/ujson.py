@@ -39,8 +39,8 @@ def configure_converter(converter: BaseConverter):
 
 def make_converter(*args, **kwargs) -> UjsonConverter:
     kwargs["unstruct_collection_overrides"] = {
-        **kwargs.get("unstruct_collection_overrides", {}),
         AbstractSet: list,
+        **kwargs.get("unstruct_collection_overrides", {}),
     }
     res = UjsonConverter(*args, **kwargs)
     configure_converter(res)

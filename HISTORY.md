@@ -14,6 +14,8 @@
   ([#81](https://github.com/python-attrs/cattrs/issues/81))
 - Add `cbor2` serialization library to the `cattr.preconf` package.
 - Add optional dependencies for `cattrs.preconf` third-party libraries. ([#337](https://github.com/python-attrs/cattrs/pull/337))
+- All preconf converters now allow overriding the default `unstruct_collection_overrides` in `make_converter`.
+  ([#350](https://github.com/python-attrs/cattrs/issues/350) [#353](https://github.com/python-attrs/cattrs/pull/353))
 
 ## 22.2.0 (2022-10-03)
 

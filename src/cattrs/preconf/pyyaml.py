@@ -35,8 +35,8 @@ def configure_converter(converter: BaseConverter):
 
 def make_converter(*args, **kwargs) -> PyyamlConverter:
     kwargs["unstruct_collection_overrides"] = {
-        **kwargs.get("unstruct_collection_overrides", {}),
         FrozenSetSubscriptable: list,
+        **kwargs.get("unstruct_collection_overrides", {}),
     }
     res = PyyamlConverter(*args, **kwargs)
     configure_converter(res)
