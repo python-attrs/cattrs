@@ -43,7 +43,11 @@ def make_dict_unstructure_fn(
             if is_generic(base) and not str(base).startswith("typing.Generic"):
                 mapping = generate_mapping(base, mapping)
                 break
-        cl = origin
+
+        # It's possible for origin to be None if this is a subclass
+        # of a generic class.
+        if origin is not None:
+            cl = origin
 
     cl_name = cl.__name__
     fn_name = "unstructure_typeddict_" + cl_name
@@ -99,6 +103,7 @@ def make_dict_unstructure_fn(
             return converter._unstructure_identity
 
         for a in attrs:
+            print(a)
             attr_name = a.name
             override = kwargs.get(attr_name, neutral)
             if override.omit:
@@ -189,7 +194,10 @@ def make_dict_structure_fn(
     if is_generic(cl):
         base = get_origin(cl)
         mapping = generate_mapping(cl, mapping)
-        cl = base
+        if base is not None:
+            # It's possible for this to be a subclass of a generic,
+            # so no origin.
+            cl = base
 
     for base in getattr(cl, "__orig_bases__", ()):
         if is_generic(base) and not str(base).startswith("typing.Generic"):

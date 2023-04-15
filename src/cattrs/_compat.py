@@ -103,6 +103,14 @@ def adapted_fields(cl) -> List[Attribute]:
         return attribs
 
 
+def is_subclass(obj: type, bases) -> bool:
+    """A safe version of issubclass (won't raise)."""
+    try:
+        return issubclass(obj, bases)
+    except TypeError:
+        return False
+
+
 def is_hetero_tuple(type: Any) -> bool:
     origin = getattr(type, "__origin__", None)
     return origin is tuple and ... not in type.__args__
@@ -243,7 +251,7 @@ else:
     from typing import Annotated
     from typing import Counter as TypingCounter
     from typing import (
-        TypedDict,
+        Generic,
         Union,
         _AnnotatedAlias,
         _GenericAlias,
@@ -253,7 +261,9 @@ else:
     )
 
     def is_typeddict(cls) -> bool:
-        return cls.__class__ is _TypedDictMeta
+        return cls.__class__ is _TypedDictMeta or (
+            is_generic(cls) and (cls.__origin__.__class__ is _TypedDictMeta)
+        )
 
     try:
         # Not present on 3.9.0, so we try carefully.
@@ -393,8 +403,12 @@ else:
             or getattr(type, "__origin__", None) is Counter
         )
 
-    def is_generic(obj):
-        return isinstance(obj, _GenericAlias) or isinstance(obj, GenericAlias)
+    def is_generic(obj) -> bool:
+        return (
+            isinstance(obj, _GenericAlias)
+            or isinstance(obj, GenericAlias)
+            or is_subclass(obj, Generic)
+        )
 
     def copy_with(type, args):
         """Replace a generic type's arguments."""

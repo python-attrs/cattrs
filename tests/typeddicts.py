@@ -1,7 +1,7 @@
 """Strategies for typed dicts."""
 from datetime import datetime
 from string import ascii_lowercase
-from typing import Generic, List, Optional, TypedDict, TypeVar
+from typing import Generic, List, NotRequired, Optional, Required, TypedDict, TypeVar
 
 from attr import NOTHING
 from hypothesis.strategies import (
@@ -28,12 +28,18 @@ T3 = TypeVar("T3")
 
 @composite
 def int_attributes(
-    draw: DrawFn, total: bool = True
+    draw: DrawFn, total: bool = True, not_required: bool = False
 ) -> tuple[int, SearchStrategy, SearchStrategy]:
     if total:
-        return int, integers(), text(ascii_lowercase)
+        if not_required and draw(booleans()):
+            return (NotRequired[int], integers() | just(NOTHING), text(ascii_lowercase))
+        else:
+            return int, integers(), text(ascii_lowercase)
     else:
-        return int, integers() | just(NOTHING), text(ascii_lowercase)
+        if not_required and draw(booleans()):
+            return Required[int], integers(), text(ascii_lowercase)
+        else:
+            return int, integers() | just(NOTHING), text(ascii_lowercase)
 
 
 def datetime_attributes(
@@ -65,7 +71,7 @@ def list_of_int_attributes(
 
 @composite
 def simple_typeddicts(
-    draw: DrawFn, total: Optional[bool] = None
+    draw: DrawFn, total: Optional[bool] = None, not_required: bool = False
 ) -> tuple[TypedDictType, dict]:
     """Generate simple typed dicts.
 
@@ -76,7 +82,7 @@ def simple_typeddicts(
 
     attrs = draw(
         lists(
-            int_attributes(total)
+            int_attributes(total, not_required)
             | list_of_int_attributes(total)
             | datetime_attributes(total)
         )
@@ -118,7 +124,7 @@ def simple_typeddicts_with_extra_keys(
 
 @composite
 def generic_typeddicts(
-    draw: DrawFn, total: Optional[bool] = None
+    draw: DrawFn, total: Optional[bool] = None, include_not_required: bool = False
 ) -> tuple[TypedDictType, dict]:
     """Generate generic typed dicts.
 
@@ -162,20 +168,20 @@ def generic_typeddicts(
 
     if draw(booleans()):
 
-        class InheritedTypedDict(cls):
+        class InheritedTypedDict(cls[*actual_types]):
             inherited: int
 
         cls = InheritedTypedDict
         success_payload["inherited"] = draw(integers())
+    else:
+        cls = cls[*actual_types]
 
-    return (cls[*actual_types], success_payload)
+    return (cls, success_payload)
 
 
 def make_typeddict(
     cls_name: str, attrs: dict[str, type], total: bool = True, bases: list = []
 ) -> TypedDictType:
-    from inspect import get_annotations
-
     globs = {"TypedDict": TypedDict}
     lines = []
 
@@ -187,17 +193,14 @@ def make_typeddict(
 
     lines.append(f"class {cls_name}(TypedDict{bases_snippet},total={total}):")
     for n, t in attrs.items():
-        globs[f"_{n}_type"] = t
-        lines.append(f"  {n}: _{n}_type")
+        # Strip the initial underscore if present, to prevent mangling.
+        trimmed = n[1:] if n.startswith("_") else n
+        globs[f"_{trimmed}_type"] = t
+        lines.append(f"  {n}: _{trimmed}_type")
 
     script = "\n".join(lines)
     eval(compile(script, "name", "exec"), globs)
 
     cls = globs[cls_name]
-
-    print(len(attrs))
-    print(get_annotations(cls))
-    if len(attrs) != len(get_annotations(cls)):
-        breakpoint()
 
     return cls

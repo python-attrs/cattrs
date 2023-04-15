@@ -6,6 +6,8 @@ from hypothesis import assume, given
 from hypothesis.strategies import booleans
 
 from cattrs import Converter
+from cattrs._compat import is_generic
+from cattrs.gen._generics import generate_mapping
 
 from .typeddicts import (
     generic_typeddicts,
@@ -22,6 +24,30 @@ def mk_converter(detailed_validation: bool = True) -> Converter:
     return c
 
 
+def get_annot(t) -> dict:
+    """Our version, handling type vars properly."""
+    if is_generic(t):
+        # This will have typevars.
+        origin = getattr(t, "__origin__", None)
+        if origin is not None:
+            origin_annotations = get_annotations(origin)
+            args = t.__args__
+            params = origin.__parameters__
+            param_to_args = dict(zip(params, args))
+            return {
+                k: param_to_args[v] if v in param_to_args else v
+                for k, v in origin_annotations.items()
+            }
+        else:
+            # Origin is `None`, so this is a subclass for a generic typeddict.
+            mapping = generate_mapping(t)
+            return {
+                k: mapping[v.__name__] if v.__name__ in mapping else v
+                for k, v in get_annotations(t).items()
+            }
+    return get_annotations(t)
+
+
 @given(simple_typeddicts())
 def test_simple_roundtrip(cls_and_instance) -> None:
     """Round-trips for simple classes work."""
@@ -30,10 +56,10 @@ def test_simple_roundtrip(cls_and_instance) -> None:
 
     unstructured = c.unstructure(instance, unstructure_as=cls)
 
-    if all(a is not datetime for _, a in get_annotations(cls).items()):
+    if all(a is not datetime for _, a in get_annot(cls).items()):
         assert unstructured == instance
 
-    if all(a is int for _, a in get_annotations(cls).items()):
+    if all(a is int for _, a in get_annot(cls).items()):
         assert unstructured is instance
 
     restructured = c.structure(unstructured, cls)
@@ -50,10 +76,10 @@ def test_simple_nontotal(cls_and_instance, detailed_validation: bool) -> None:
 
     unstructured = c.unstructure(instance, unstructure_as=cls)
 
-    if all(a is not datetime for _, a in get_annotations(cls).items()):
+    if all(a is not datetime for _, a in get_annot(cls).items()):
         assert unstructured == instance
 
-    if all(a is int for _, a in get_annotations(cls).items()):
+    if all(a is int for _, a in get_annot(cls).items()):
         assert unstructured is instance
 
     restructured = c.structure(unstructured, cls)
@@ -67,8 +93,8 @@ def test_int_override(cls_and_instance) -> None:
     """Overriding a base unstructure handler should work."""
     cls, instance = cls_and_instance
 
-    assume(any(a is int for _, a in get_annotations(cls).items()))
-    assume(all(a is not datetime for _, a in get_annotations(cls).items()))
+    assume(any(a is int for _, a in get_annot(cls).items()))
+    assume(all(a is not datetime for _, a in get_annot(cls).items()))
 
     c = mk_converter()
     c.register_unstructure_hook(int, lambda i: i)
@@ -108,15 +134,19 @@ def test_generics(
     cls, instance = cls_and_instance
 
     unstructured = c.unstructure(instance, unstructure_as=cls)
-    print(get_annotations(cls))
 
-    if all(a is not datetime for _, a in get_annotations(cls).items()):
+    if all(a is not datetime for _, a in get_annot(cls).items()):
         assert unstructured == instance
 
-    if all(a is int for _, a in get_annotations(cls).items()):
+    if all(a is int for _, a in get_annot(cls).items()):
         assert unstructured is instance
 
     restructured = c.structure(unstructured, cls)
 
     assert restructured is not unstructured
     assert restructured == instance
+
+
+@given(generic_typeddicts(total=True), booleans())
+def test_not_required() -> None:
+    pass
