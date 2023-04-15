@@ -259,17 +259,16 @@ Nothing has been omitted from this final example; it's complete.
 
 ## Using fallback key names
 
-Sometimes when [structuring](./structuring.md) data, the input data may be in multiple formats that need to be converted into a common attr.
+Sometimes when structuring data, the input data may be in multiple formats that need to be converted into a common attribute.
 
-Consider an example where a data store creates a new schema version and renames a key (ie, `{'OldField':  'value1'}` in V1 becomes `{'NewField': 'value1'}` in V2), while also leaving existing records in the system with the V1 schema. Both keys should convert to the same `attr` field.
+Consider an example where a data store creates a new schema version and renames a key (ie, `{'old_field':  'value1'}` in v1 becomes `{'new_field': 'value1'}` in v2), while also leaving existing records in the system with the V1 schema. Both keys should convert to the same field.
 
-Under this condition, builtin customizations such as [rename](./customizing.md#rename) could prove insufficient in loading teh  - `cattr` could not structure both `OldField` and `NewField` into a single field using `rename`, at least not on the same converter.
+Here, builtin customizations such as [rename](./customizing.md#rename) are insufficient - _cattrs_ cannot structure both `old_field` and `new_field` into a single field using `rename`, at least not on the same converter.
 
-In order to support both fields, it is possible to wrap a [converter](./converters.md) with some custom preprocessing, and decorate your `attr`. An example is below.
+In order to support both fields, you can apply a little preprocessing to the default _cattrs_ structuring hooks.
+One approach is to write the following decorator and apply it to your class.
 
-```
-from typing import Any, Dict, List
-
+```python
 from attrs import define
 from cattrs import Converter
 from cattrs.gen import make_dict_structure_fn
@@ -279,17 +278,17 @@ converter = Converter()
 
 def fallback_field(
     converter_arg: Converter,
-    old_to_new_field: Dict[str, str]
+    old_to_new_field: dict[str, str]
 ):
     def decorator(cls):
-        stuct = make_dict_structure_fn(cls, converter_arg)
+        struct = make_dict_structure_fn(cls, converter_arg)
 
-        def structure(d: Dict[str, Any], cl):
+        def structure(d, cl):
             for k, v in old_to_new_field.items():
                 if k in d:
                     d[v] = d[k]
 
-            return stuct(d, cl)
+            return struct(d, cl)
 
         converter_arg.register_structure_hook(cls, structure)
 
@@ -298,17 +297,15 @@ def fallback_field(
     return decorator
 
 
-@fallback_field(
-    converter_arg=converter, old_to_new_field={"OldField": "NewField"}
-)
+@fallback_field(converter, {"old_field": "new_field"})
 @define
 class MyInternalAttr:
-    NewField: str
+    new_field: str
 ```
 
-This should enable the a use case where `cattrs` could now `structure` both key names into `NewField` on the `attr`.
+_cattrs_ will now structure both key names into `new_field` on your class.
 
 ```
-converter.structure({"NewField": "foo"}, MyInternalAttr)
-converter.structure({"OldField": "foo"}, MyInternalAttr)
+converter.structure({"new_field": "foo"}, MyInternalAttr)
+converter.structure({"old_field": "foo"}, MyInternalAttr)
 ```
