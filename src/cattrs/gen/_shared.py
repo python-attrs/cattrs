@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
-from attr import Attribute
+from attr import NOTHING, Attribute, Factory
+
+from .._compat import is_bare_final
 
 if TYPE_CHECKING:  # pragma: no cover
     from cattr.converters import BaseConverter
@@ -24,7 +26,25 @@ def find_structure_handler(
         if handler == c._structure_error:
             handler = None
     elif type is not None:
-        handler = c._structure_func.dispatch(type)
+        if (
+            is_bare_final(type)
+            and a.default is not NOTHING
+            and not isinstance(a.default, Factory)
+        ):
+            # This is a special case where we can use the
+            # type of the default to dispatch on.
+            type = a.default.__class__
+            handler = c._structure_func.dispatch(type)
+            if handler == c._structure_call:
+                # Finals can't really be used with _structure_call, so
+                # we wrap it so the rest of the toolchain doesn't get
+                # confused.
+
+                def handler(v, _, _h=handler):
+                    return _h(v, type)
+
+        else:
+            handler = c._structure_func.dispatch(type)
     else:
         handler = c.structure
     return handler

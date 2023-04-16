@@ -7,7 +7,13 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Type, TypeVar
 
 from attr import NOTHING, Attribute
 
-from .._compat import get_origin, is_annotated, is_bare, is_generic
+from .._compat import (
+    get_notrequired_base,
+    get_origin,
+    is_annotated,
+    is_bare,
+    is_generic,
+)
 from .._generics import deep_copy_with
 from ..errors import ClassValidationError, StructureHandlerNotFoundError
 from . import AttributeOverride
@@ -80,6 +86,9 @@ def make_dict_unstructure_fn(
                 break
             handler = None
             t = a.type
+            nrb = get_notrequired_base(t)
+            if nrb is not NOTHING:
+                t = nrb
 
             if isinstance(t, TypeVar):
                 if t.__name__ in mapping:
@@ -103,10 +112,10 @@ def make_dict_unstructure_fn(
             return converter._unstructure_identity
 
         for a in attrs:
-            print(a)
             attr_name = a.name
             override = kwargs.get(attr_name, neutral)
             if override.omit:
+                lines.append(f"  res.pop('{attr_name}', None)")
                 continue
             kn = attr_name if override.rename is None else override.rename
             attr_required = attr_name in req_keys
@@ -119,6 +128,10 @@ def make_dict_unstructure_fn(
                 handler = override.unstruct_hook
             else:
                 t = a.type
+                nrb = get_notrequired_base(t)
+                if nrb is not NOTHING:
+                    t = nrb
+
                 if isinstance(t, TypeVar):
                     if t.__name__ in mapping:
                         t = mapping[t.__name__]
@@ -252,6 +265,10 @@ def make_dict_structure_fn(
             if override.omit:
                 continue
             t = a.type
+            nrb = get_notrequired_base(t)
+            if nrb is not NOTHING:
+                t = nrb
+
             if isinstance(t, TypeVar):
                 t = mapping.get(t.__name__, t)
             elif is_generic(t) and not is_bare(t) and not is_annotated(t):
@@ -320,7 +337,12 @@ def make_dict_structure_fn(
             if not attr_required:
                 non_required.append(a)
                 continue
+
             t = a.type
+            nrb = get_notrequired_base(t)
+            if nrb is not NOTHING:
+                t = nrb
+
             if isinstance(t, TypeVar):
                 t = mapping.get(t.__name__, t)
             elif is_generic(t) and not is_bare(t) and not is_annotated(t):
@@ -362,6 +384,11 @@ def make_dict_structure_fn(
                 an = a.name
                 override = kwargs.get(an, neutral)
                 t = a.type
+
+                nrb = get_notrequired_base(t)
+                if nrb is not NOTHING:
+                    t = nrb
+
                 if isinstance(t, TypeVar):
                     t = mapping.get(t.__name__, t)
                 elif is_generic(t) and not is_bare(t) and not is_annotated(t):

@@ -34,6 +34,8 @@ def generate_mapping(cl: Type, old_mapping: Dict[str, type] = {}) -> Dict[str, t
             if not hasattr(base, "__args__"):
                 continue
             base_args = base.__args__
+            if not hasattr(base.__origin__, "__parameters__"):
+                continue
             base_params = base.__origin__.__parameters__
             for param, arg in zip(base_params, base_args):
                 mapping[param.__name__] = arg

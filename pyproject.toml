@@ -51,7 +51,7 @@ pytest-benchmark = "^3.2.3"
 hypothesis = "^6.54.5"
 pendulum = "^2.1.2"
 isort = { version = "5.10.1", python = "<4" }
-black = "^23.1.0"
+black = "^23.3.0"
 immutables = "^0.18"
 furo = "^2023.3.27"
 coverage = "^6.2"

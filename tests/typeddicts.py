@@ -42,36 +42,61 @@ def int_attributes(
             return int, integers() | just(NOTHING), text(ascii_lowercase)
 
 
+@composite
 def datetime_attributes(
-    total: bool = True,
-) -> SearchStrategy[tuple[datetime, SearchStrategy, SearchStrategy]]:
+    draw: DrawFn, total: bool = True, not_required: bool = False
+) -> tuple[datetime, SearchStrategy, SearchStrategy]:
     success_strat = datetimes().map(lambda dt: dt.replace(microsecond=0))
-    return just(
-        (
-            datetime,
-            success_strat if total else success_strat | just(NOTHING),
-            text(ascii_lowercase),
-        )
-    )
+    type = datetime
+    strat = success_strat if total else success_strat | just(NOTHING)
+    if not_required and draw(booleans()):
+        if total:
+            type = NotRequired[type]
+            strat = success_strat | just(NOTHING)
+        else:
+            type = Required[type]
+            strat = success_strat
+    return (type, strat, text(ascii_lowercase))
 
 
 @composite
 def list_of_int_attributes(
-    draw: DrawFn, total: bool = True
+    draw: DrawFn, total: bool = True, not_required: bool = False
 ) -> tuple[List[int], SearchStrategy, SearchStrategy]:
     if total:
-        return List[int], lists(integers()), text(ascii_lowercase).map(lambda v: [v])
+        if not_required and draw(booleans()):
+            return (
+                NotRequired[List[int]],
+                lists(integers()) | just(NOTHING),
+                text(ascii_lowercase).map(lambda v: [v]),
+            )
+        else:
+            return (
+                List[int],
+                lists(integers()),
+                text(ascii_lowercase).map(lambda v: [v]),
+            )
     else:
-        return (
-            List[int],
-            lists(integers()) | just(NOTHING),
-            text(ascii_lowercase).map(lambda v: [v]),
-        )
+        if not_required and draw(booleans()):
+            return (
+                Required[List[int]],
+                lists(integers()),
+                text(ascii_lowercase).map(lambda v: [v]),
+            )
+        else:
+            return (
+                List[int],
+                lists(integers()) | just(NOTHING),
+                text(ascii_lowercase).map(lambda v: [v]),
+            )
 
 
 @composite
 def simple_typeddicts(
-    draw: DrawFn, total: Optional[bool] = None, not_required: bool = False
+    draw: DrawFn,
+    total: Optional[bool] = None,
+    not_required: bool = False,
+    min_attrs: int = 0,
 ) -> tuple[TypedDictType, dict]:
     """Generate simple typed dicts.
 
@@ -83,8 +108,9 @@ def simple_typeddicts(
     attrs = draw(
         lists(
             int_attributes(total, not_required)
-            | list_of_int_attributes(total)
-            | datetime_attributes(total)
+            | list_of_int_attributes(total, not_required)
+            | datetime_attributes(total, not_required),
+            min_size=min_attrs,
         )
     )
 
@@ -124,7 +150,7 @@ def simple_typeddicts_with_extra_keys(
 
 @composite
 def generic_typeddicts(
-    draw: DrawFn, total: Optional[bool] = None, include_not_required: bool = False
+    draw: DrawFn, total: Optional[bool] = None
 ) -> tuple[TypedDictType, dict]:
     """Generate generic typed dicts.
 

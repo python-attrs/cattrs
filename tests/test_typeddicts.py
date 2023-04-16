@@ -7,7 +7,9 @@ from hypothesis.strategies import booleans
 
 from cattrs import Converter
 from cattrs._compat import is_generic
+from cattrs.gen import override
 from cattrs.gen._generics import generate_mapping
+from cattrs.gen.typeddicts import make_dict_structure_fn, make_dict_unstructure_fn
 
 from .typeddicts import (
     generic_typeddicts,
@@ -147,6 +149,59 @@ def test_generics(
     assert restructured == instance
 
 
-@given(generic_typeddicts(total=True), booleans())
-def test_not_required() -> None:
-    pass
+@given(simple_typeddicts(total=True, not_required=True), booleans())
+def test_not_required(
+    cls_and_instance: tuple[type, dict], detailed_validation: bool
+) -> None:
+    """NotRequired[] keys are handled."""
+    c = mk_converter(detailed_validation=detailed_validation)
+    cls, instance = cls_and_instance
+
+    unstructured = c.unstructure(instance, unstructure_as=cls)
+    restructured = c.structure(unstructured, cls)
+
+    assert restructured == instance
+
+
+@given(simple_typeddicts(total=False, not_required=True), booleans())
+def test_required(
+    cls_and_instance: tuple[type, dict], detailed_validation: bool
+) -> None:
+    """Required[] keys are handled."""
+    c = mk_converter(detailed_validation=detailed_validation)
+    cls, instance = cls_and_instance
+
+    unstructured = c.unstructure(instance, unstructure_as=cls)
+    restructured = c.structure(unstructured, cls)
+
+    assert restructured == instance
+
+
+@given(simple_typeddicts(min_attrs=1, total=True), booleans())
+def test_omit(cls_and_instance: tuple[type, dict], detailed_validation: bool) -> None:
+    """`override(omit=True)` works."""
+    c = mk_converter(detailed_validation=detailed_validation)
+
+    cls, instance = cls_and_instance
+    key = next(iter(get_annot(cls)))
+    c.register_unstructure_hook(
+        cls, make_dict_unstructure_fn(cls, c, **{key: override(omit=True)})
+    )
+
+    unstructured = c.unstructure(instance, unstructure_as=cls)
+
+    assert key not in unstructured
+
+    unstructured[key] = c.unstructure(instance[key])
+    restructured = c.structure(unstructured, cls)
+
+    assert restructured == instance
+
+    c.register_structure_hook(
+        cls, make_dict_structure_fn(cls, c, **{key: override(omit=True)})
+    )
+    del unstructured[key]
+    del instance[key]
+    restructured = c.structure(unstructured, cls)
+
+    assert restructured == instance

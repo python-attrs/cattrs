@@ -55,6 +55,11 @@ from ._compat import (
 )
 from .disambiguators import create_uniq_field_dis_func
 from .dispatch import MultiStrategyDispatch
+from .errors import (
+    IterableValidationError,
+    IterableValidationNote,
+    StructureHandlerNotFoundError,
+)
 from .gen import (
     AttributeOverride,
     DictStructureFn,
@@ -934,7 +939,7 @@ class Converter(BaseConverter):
     def gen_structure_attrs_fromdict(
         self, cl: Type[T]
     ) -> Callable[[Mapping[str, Any], Any], T]:
-        attribs = fields(get_origin(cl) if is_generic(cl) else cl)
+        attribs = fields(get_origin(cl) or cl if is_generic(cl) else cl)
         if attrs_has(cl) and any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.
             resolve_types(cl)

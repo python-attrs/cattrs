@@ -252,6 +252,8 @@ else:
     from typing import Counter as TypingCounter
     from typing import (
         Generic,
+        NotRequired,
+        Required,
         Union,
         _AnnotatedAlias,
         _GenericAlias,
@@ -264,6 +266,11 @@ else:
         return cls.__class__ is _TypedDictMeta or (
             is_generic(cls) and (cls.__origin__.__class__ is _TypedDictMeta)
         )
+
+    def get_notrequired_base(type) -> "Union[Any, Literal[NOTHING]]":
+        if get_origin(type) in (NotRequired, Required):
+            return get_args(type)[0]
+        return NOTHING
 
     try:
         # Not present on 3.9.0, so we try carefully.

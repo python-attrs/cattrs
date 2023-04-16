@@ -85,7 +85,8 @@ def make_dict_unstructure_fn(
             if is_generic(base) and not str(base).startswith("typing.Generic"):
                 mapping = generate_mapping(base, mapping)
                 break
-        cl = origin
+        if origin is not None:
+            cl = origin
 
     cl_name = cl.__name__
     fn_name = "unstructure_" + cl_name
@@ -234,7 +235,8 @@ def make_dict_structure_fn(
     if is_generic(cl):
         base = get_origin(cl)
         mapping = generate_mapping(cl, mapping)
-        cl = base
+        if base is not None:
+            cl = base
 
     for base in getattr(cl, "__orig_bases__", ()):
         if is_generic(base) and not str(base).startswith("typing.Generic"):
