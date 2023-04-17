@@ -15,7 +15,12 @@ from .._compat import (
     is_generic,
 )
 from .._generics import deep_copy_with
-from ..errors import ClassValidationError, StructureHandlerNotFoundError
+from ..errors import (
+    AttributeValidationNote,
+    ClassValidationError,
+    ForbiddenExtraKeysError,
+    StructureHandlerNotFoundError,
+)
 from . import AttributeOverride
 from ._consts import already_generating, neutral
 from ._generics import generate_mapping
@@ -117,6 +122,10 @@ def make_dict_unstructure_fn(
             if override.omit:
                 lines.append(f"  res.pop('{attr_name}', None)")
                 continue
+            if override.rename is not None:
+                # We also need to pop when renaming, since we're copying
+                # the original.
+                lines.append(f"  res.pop('{attr_name}', None)")
             kn = attr_name if override.rename is None else override.rename
             attr_required = attr_name in req_keys
 
@@ -154,10 +163,13 @@ def make_dict_unstructure_fn(
                 globs[unstruct_handler_name] = handler
                 internal_arg_parts[unstruct_handler_name] = handler
                 invoke = f"{unstruct_handler_name}(instance['{attr_name}'])"
-            else:
+            elif override.rename is None:
                 # We're not doing anything to this attribute, so
                 # it'll already be present in the input dict.
                 continue
+            else:
+                # Probably renamed, we just fetch it.
+                invoke = f"instance['{attr_name}']"
 
             if attr_required:
                 # No default or no override.
@@ -258,6 +270,7 @@ def make_dict_structure_fn(
     if _cattrs_detailed_validation:
         lines.append("  errors = []")
         internal_arg_parts["__c_cve"] = ClassValidationError
+        internal_arg_parts["__c_avn"] = AttributeValidationNote
         for a in attrs:
             an = a.name
             attr_required = an in req_keys
@@ -294,23 +307,25 @@ def make_dict_structure_fn(
                 i = f"{i}  "
             lines.append(f"{i}try:")
             i = f"{i}  "
+            type_name = f"__c_type_{an}"
+            internal_arg_parts[type_name] = t
             if handler:
                 if handler == converter._structure_call:
                     internal_arg_parts[struct_handler_name] = t
                     lines.append(f"{i}res['{an}'] = {struct_handler_name}(o['{kn}'])")
                 else:
-                    type_name = f"__c_type_{an}"
-                    internal_arg_parts[type_name] = t
                     lines.append(
                         f"{i}res['{an}'] = {struct_handler_name}(o['{kn}'], {type_name})"
                     )
             else:
                 lines.append(f"{i}res['{an}'] = o['{kn}']")
+            if override.rename is not None:
+                lines.append(f"{i}del res['{kn}']")
             i = i[:-2]
             lines.append(f"{i}except Exception as e:")
             i = f"{i}  "
             lines.append(
-                f"{i}e.__notes__ = getattr(e, '__notes__', []) + [\"Structuring class {cl.__qualname__} @ attribute {an}\"]"
+                f'{i}e.__notes__ = getattr(e, \'__notes__\', []) + [__c_avn("Structuring typeddict {cl.__qualname__} @ attribute {an}", "{an}", __c_type_{an})]'
             )
             lines.append(f"{i}errors.append(e)")
 
@@ -365,18 +380,20 @@ def make_dict_structure_fn(
                 if handler == converter._structure_call:
                     internal_arg_parts[struct_handler_name] = t
                     invocation_line = (
-                        f"  res['{kn}'] = {struct_handler_name}(o['{kn}'])"
+                        f"  res['{an}'] = {struct_handler_name}(o['{kn}'])"
                     )
                 else:
                     type_name = f"__c_type_{an}"
                     internal_arg_parts[type_name] = t
                     invocation_line = (
-                        f"  res['{kn}'] = {struct_handler_name}(o['{kn}'], {type_name})"
+                        f"  res['{an}'] = {struct_handler_name}(o['{kn}'], {type_name})"
                     )
             else:
-                invocation_line = f"  res['{kn}'] = o['{kn}']"
+                invocation_line = f"  res['{an}'] = o['{kn}']"
 
             lines.append(invocation_line)
+            if override.rename is not None:
+                lines.append(f"  del res['{override.rename}']")
 
         # The second loop is for optional args.
         if non_required:
@@ -423,6 +440,8 @@ def make_dict_structure_fn(
                         )
                 else:
                     post_lines.append(f"    res['{ian}'] = o['{kn}']")
+                if override.rename is not None:
+                    lines.append(f"  res.pop('{override.rename}', None)")
 
         # if _cattrs_forbid_extra_keys:
         #     post_lines += [

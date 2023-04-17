@@ -185,7 +185,13 @@ def test_omit(cls_and_instance: tuple[type, dict], detailed_validation: bool) ->
     cls, instance = cls_and_instance
     key = next(iter(get_annot(cls)))
     c.register_unstructure_hook(
-        cls, make_dict_unstructure_fn(cls, c, **{key: override(omit=True)})
+        cls,
+        make_dict_unstructure_fn(
+            cls,
+            c,
+            _cattrs_detailed_validation=detailed_validation,
+            **{key: override(omit=True)}
+        ),
     )
 
     unstructured = c.unstructure(instance, unstructure_as=cls)
@@ -198,10 +204,52 @@ def test_omit(cls_and_instance: tuple[type, dict], detailed_validation: bool) ->
     assert restructured == instance
 
     c.register_structure_hook(
-        cls, make_dict_structure_fn(cls, c, **{key: override(omit=True)})
+        cls,
+        make_dict_structure_fn(
+            cls,
+            c,
+            _cattrs_detailed_validation=detailed_validation,
+            **{key: override(omit=True)}
+        ),
     )
     del unstructured[key]
     del instance[key]
+    restructured = c.structure(unstructured, cls)
+
+    assert restructured == instance
+
+
+@given(simple_typeddicts(min_attrs=1, total=True), booleans())
+def test_rename(cls_and_instance: tuple[type, dict], detailed_validation: bool) -> None:
+    """`override(rename=...)` works."""
+    c = mk_converter(detailed_validation=detailed_validation)
+
+    cls, instance = cls_and_instance
+    key = next(iter(get_annot(cls)))
+    c.register_unstructure_hook(
+        cls,
+        make_dict_unstructure_fn(
+            cls,
+            c,
+            _cattrs_detailed_validation=detailed_validation,
+            **{key: override(rename="renamed")}
+        ),
+    )
+
+    unstructured = c.unstructure(instance, unstructure_as=cls)
+
+    assert key not in unstructured
+    assert "renamed" in unstructured
+
+    c.register_structure_hook(
+        cls,
+        make_dict_structure_fn(
+            cls,
+            c,
+            _cattrs_detailed_validation=detailed_validation,
+            **{key: override(rename="renamed")}
+        ),
+    )
     restructured = c.structure(unstructured, cls)
 
     assert restructured == instance
