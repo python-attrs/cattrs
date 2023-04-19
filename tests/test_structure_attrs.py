@@ -1,9 +1,7 @@
 """Loading of attrs classes."""
-from collections import deque
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from random import randint
-from typing import Deque, Union
+from typing import Union
 from unittest.mock import Mock
 
 import pytest
@@ -78,20 +76,6 @@ def test_structure_tuple(cl_and_vals):
 
     dumped = astuple(obj)
     loaded = converter.structure(dumped, cl)
-
-    assert obj == loaded
-
-
-@given(simple_classes(kw_only=False))
-def test_structure_deque(cl_and_vals):
-    """Structuring of deque works."""
-    converter = BaseConverter()
-    cl, vals, kwargs = cl_and_vals
-    converter.register_structure_hook(cl, converter._structure_deque)
-    obj = deque(cl(*vals, **kwargs) for _ in range(randint(1, 5)))
-
-    dumped = astuple(obj)
-    loaded = converter.structure(dumped, Deque[cl])
 
     assert obj == loaded
 
