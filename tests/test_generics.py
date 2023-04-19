@@ -1,4 +1,5 @@
-from typing import Dict, Generic, List, Optional, TypeVar, Union
+from collections import deque
+from typing import Deque, Dict, Generic, List, Optional, TypeVar, Union
 
 import pytest
 from attr import asdict, attrs, define
@@ -141,6 +142,18 @@ def test_structure_list_of_generic_unions(converter):
     data = [TClass2(c="string"), TClass(1, 2)]
     res = converter.structure(
         [asdict(x) for x in data], List[Union[TClass[int, int], TClass2[str]]]
+    )
+    assert res == data
+
+
+def test_structure_deque_of_generic_unions(converter):
+    @attrs(auto_attribs=True)
+    class TClass2(Generic[T]):
+        c: T
+
+    data = deque((TClass2(c="string"), TClass(1, 2)))
+    res = converter.structure(
+        [asdict(x) for x in data], Deque[Union[TClass[int, int], TClass2[str]]]
     )
     assert res == data
 

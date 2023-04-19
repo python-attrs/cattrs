@@ -1,4 +1,4 @@
-from collections import Counter
+from collections import Counter, deque
 from collections.abc import MutableSet as AbcMutableSet
 from dataclasses import Field
 from enum import Enum
@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import (
     Any,
     Callable,
+    Deque,
     Dict,
     Iterable,
     List,
@@ -46,6 +47,7 @@ from ._compat import (
     is_annotated,
     is_bare,
     is_counter,
+    is_deque,
     is_frozenset,
     is_generic,
     is_generic_attrs,
@@ -193,6 +195,7 @@ class BaseConverter:
                 (is_literal, self._structure_simple_literal),
                 (is_literal_containing_enums, self._structure_enum_literal),
                 (is_sequence, self._structure_list),
+                (is_deque, self._structure_deque),
                 (is_mutable_set, self._structure_set),
                 (is_frozenset, self._structure_frozenset),
                 (is_tuple, self._structure_tuple),
@@ -326,7 +329,6 @@ class BaseConverter:
 
     def structure(self, obj: Any, cl: Type[T]) -> T:
         """Convert unstructured Python data structures to structured data."""
-
         return self._structure_func.dispatch(cl)(obj, cl)
 
     # Classes to Python primitives.
@@ -543,6 +545,36 @@ class BaseConverter:
                     )
             else:
                 res = [handler(e, elem_type) for e in obj]
+        return res
+
+    def _structure_deque(self, obj: Iterable[T], cl: Any) -> Deque[T]:
+        """Convert an iterable to a potentially generic deque."""
+        if is_bare(cl) or cl.__args__[0] is Any:
+            res = deque(e for e in obj)
+        else:
+            elem_type = cl.__args__[0]
+            handler = self._structure_func.dispatch(elem_type)
+            if self.detailed_validation:
+                errors = []
+                res = deque()
+                ix = 0  # Avoid `enumerate` for performance.
+                for e in obj:
+                    try:
+                        res.append(handler(e, elem_type))
+                    except Exception as e:
+                        msg = IterableValidationNote(
+                            f"Structuring {cl} @ index {ix}", ix, elem_type
+                        )
+                        e.__notes__ = getattr(e, "__notes__", []) + [msg]
+                        errors.append(e)
+                    finally:
+                        ix += 1
+                if errors:
+                    raise IterableValidationError(
+                        f"While structuring {cl!r}", errors, cl
+                    )
+            else:
+                res = deque(handler(e, elem_type) for e in obj)
         return res
 
     def _structure_set(
@@ -823,6 +855,8 @@ class Converter(BaseConverter):
         if MutableSequence in co:
             if list not in co:
                 co[list] = co[MutableSequence]
+            if deque not in co:
+                co[deque] = co[MutableSequence]
 
         # abc.Mapping overrides, if defined, can apply to MutableMappings
         if Mapping in co:

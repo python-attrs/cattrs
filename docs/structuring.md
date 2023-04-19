@@ -146,6 +146,29 @@ These generic types are composable with all other converters.
 ['1', None, '3']
 ```
 
+### Deques
+
+Deques can be produced from any iterable object. Types converting
+to deques are:
+
+- `Deque[T]`
+- `deque[T]`
+
+In all cases, a new unbounded deque (`maxlen=None`) will be returned, so this operation can be used to
+copy an iterable into a deque.
+
+```{doctest}
+>>> cattrs.structure((1, 2, 3), deque[int])
+[1, 2, 3]
+```
+
+These generic types are composable with all other converters.
+
+```{doctest}
+>>> cattrs.structure((1, None, 3), deque[Optional[str]])
+['1', None, '3']
+```
+
 ### Sets and Frozensets
 
 Sets and frozensets can be produced from any iterable object. Types converting
