@@ -178,6 +178,13 @@ if is_py37 or is_py38:
             or (type.__origin__ in (Tuple, tuple) and type.__args__[1] is ...)
         )
 
+    def is_deque(type: Any) -> bool:
+        return (
+            type in (deque, Deque)
+            or (type.__class__ is _GenericAlias and issubclass(type.__origin__, deque))
+            or type.__origin__ is deque
+        )
+
     def is_mutable_set(type):
         return type is set or (
             type.__class__ is _GenericAlias and issubclass(type.__origin__, MutableSet)
@@ -349,7 +356,7 @@ else:
     def is_deque(type):
         return (
             type in (deque, Deque)
-            or (type.__class__ is _GenericAlias and issubclass(type.__origin__, Deque))
+            or (type.__class__ is _GenericAlias and issubclass(type.__origin__, deque))
             or (getattr(type, "__origin__", None) is deque)
         )
 

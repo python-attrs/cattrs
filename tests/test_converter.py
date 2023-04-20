@@ -597,29 +597,24 @@ def test_seq_of_bare_classes_structure(seq_type_and_annotation):
     """Structure iterable of values to a sequence of primitives."""
     converter = Converter()
 
-    cls_and_vals = (
-        (int, (1,), {}),
-        (float, (1.0,), {}),
-        (str, ("test",), {}),
-        (bool, (True,), {}),
-    )
+    bare_classes = ((int, (1,)), (float, (1.0,)), (str, ("test",)), (bool, (True,)))
+    seq_type, annotation = seq_type_and_annotation
 
-    for cl, vals, kwargs in cls_and_vals:
+    for cl, vals in bare_classes:
 
         @define(frozen=True)
         class C:
             a: cl
+            b: cl
 
-        seq_type, annotation = seq_type_and_annotation
-
-        inputs = [{"a": cl(*vals, **kwargs)} for _ in range(20)]
+        inputs = [{"a": cl(*vals), "b": cl(*vals)} for _ in range(5)]
         outputs = converter.structure(
             inputs,
             cl=annotation[C]
             if annotation not in (Tuple, tuple)
             else annotation[C, ...],
         )
-        expected = seq_type(C(a=cl(*vals, **kwargs)) for _ in range(20))
+        expected = seq_type(C(a=cl(*vals), b=cl(*vals)) for _ in range(5))
 
         assert type(outputs) == seq_type
         assert outputs == expected
