@@ -42,15 +42,26 @@ def include_subclasses(
     overrides: Optional[Dict[str, AttributeOverride]] = None,
 ) -> None:
     """
-    Modify the given converter so that the attrs/dataclass `cl` is un/structured as if
-    it was a union of itself and all its subclasses that are defined at the time when
-    this strategy is applied.
+    Configure the converter so that the attrs/dataclass `cl` is un/structured as if it
+    was a union of itself and all its subclasses that are defined at the time when this
+    strategy is applied.
 
-    Subclasses are detected using the `__subclasses__` method, or they can be explicitly
-    provided.
+    :param cl: A base `attrs` or `dataclass` class.
+    :param converter: The `Converter` on which this strategy is applied. Do note that
+        the strategy does not work for a :class:`cattrs.BaseConverter`.
+    :param subclasses: A tuple of sublcasses whose ancestor is `cl`. If left as `None`,
+        subclasses are detected using recursively the `__subclasses__` method of `cl`
+        and its descendents.
+    :param union_strategy: A callable of two arguments passed by position
+        (`subclass_union`, `converter`) that defines the union strategy to use to
+        disambiguate the subclasses union. If `None` (the default), the automatic unique
+        field disambiguation is used which means that every single subclass
+        participating in the union must have an attribute name that does not exist in
+        any other sibling class.
+    :param overrides: a mapping of `cl` attribute names to overrides (instantiated with
+        :func:`cattrs.gen.override`) to customize un/structuring.
 
-    overrides is a mapping of some or all the parent class field names to attribute
-    overrides instantiated with :func:`cattrs.gen.override`
+    .. versionadded:: 23.1.0
     """
     # Due to https://github.com/python-attrs/attrs/issues/1047
     collect()

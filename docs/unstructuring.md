@@ -161,7 +161,7 @@ _attrs_ classes and dataclasses are supported out of the box.
 
 ## Mixing and Matching Strategies
 
-Converters publicly expose two helper metods, {meth}`Converter.unstructure_attrs_asdict() <cattrs.BaseConverter.unstructure_attrs_asdict>`
+Converters publicly expose two helper methods, {meth}`Converter.unstructure_attrs_asdict() <cattrs.BaseConverter.unstructure_attrs_asdict>`
 and {meth}`Converter.unstructure_attrs_astuple() <cattrs.BaseConverter.unstructure_attrs_astuple>`.
 These methods can be used with custom unstructuring hooks to selectively apply one strategy to instances of particular classes.
 
