@@ -4,9 +4,11 @@ from inspect import get_annotations
 
 from hypothesis import assume, given
 from hypothesis.strategies import booleans
+from pytest import raises
 
 from cattrs import Converter
 from cattrs._compat import is_generic
+from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import override
 from cattrs.gen._generics import generate_mapping
 from cattrs.gen.typeddicts import make_dict_structure_fn, make_dict_unstructure_fn
@@ -190,7 +192,7 @@ def test_omit(cls_and_instance: tuple[type, dict], detailed_validation: bool) ->
             cls,
             c,
             _cattrs_detailed_validation=detailed_validation,
-            **{key: override(omit=True)}
+            **{key: override(omit=True)},
         ),
     )
 
@@ -209,7 +211,7 @@ def test_omit(cls_and_instance: tuple[type, dict], detailed_validation: bool) ->
             cls,
             c,
             _cattrs_detailed_validation=detailed_validation,
-            **{key: override(omit=True)}
+            **{key: override(omit=True)},
         ),
     )
     del unstructured[key]
@@ -232,7 +234,7 @@ def test_rename(cls_and_instance: tuple[type, dict], detailed_validation: bool) 
             cls,
             c,
             _cattrs_detailed_validation=detailed_validation,
-            **{key: override(rename="renamed")}
+            **{key: override(rename="renamed")},
         ),
     )
 
@@ -247,9 +249,58 @@ def test_rename(cls_and_instance: tuple[type, dict], detailed_validation: bool) 
             cls,
             c,
             _cattrs_detailed_validation=detailed_validation,
-            **{key: override(rename="renamed")}
+            **{key: override(rename="renamed")},
         ),
     )
     restructured = c.structure(unstructured, cls)
 
     assert restructured == instance
+
+
+@given(simple_typeddicts(total=True), booleans())
+def test_forbid_extra_keys(
+    cls_and_instance: tuple[type, dict], detailed_validation: bool
+) -> None:
+    """Extra keys can be forbidden."""
+    c = mk_converter(detailed_validation)
+
+    cls, instance = cls_and_instance
+
+    c.register_structure_hook(
+        cls,
+        make_dict_structure_fn(
+            cls,
+            c,
+            _cattrs_detailed_validation=detailed_validation,
+            _cattrs_forbid_extra_keys=True,
+        ),
+    )
+
+    unstructured = c.unstructure(instance, unstructure_as=cls)
+
+    structured = c.structure(unstructured, cls)
+    assert structured == instance
+
+    # An extra key will trigger the appropriate error.
+    unstructured["test"] = 1
+
+    if not detailed_validation:
+        with raises(ForbiddenExtraKeysError):
+            c.structure(unstructured, cls)
+    else:
+        with raises(ClassValidationError) as ctx:
+            c.structure(unstructured, cls)
+
+        assert repr(ctx.value) == repr(
+            ClassValidationError(
+                f"While structuring {cls.__name__}",
+                [
+                    ForbiddenExtraKeysError(
+                        f"Extra fields in constructor for {cls.__name__}: test",
+                        cls,
+                        {"test"},
+                    )
+                ],
+                cls,
+            )
+        )

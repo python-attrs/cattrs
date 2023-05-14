@@ -209,6 +209,7 @@ def make_dict_unstructure_fn(
 def make_dict_structure_fn(
     cl: Any,
     converter: BaseConverter,
+    _cattrs_forbid_extra_keys: bool = False,
     _cattrs_use_linecache: bool = True,
     _cattrs_detailed_validation: bool = True,
     **kwargs: AttributeOverride,
@@ -261,9 +262,9 @@ def make_dict_structure_fn(
     attrs = adapted_fields(cl)
 
     allowed_fields = set()
-    # if _cattrs_forbid_extra_keys:
-    #     globs["__c_a"] = allowed_fields
-    #     globs["__c_feke"] = ForbiddenExtraKeysError
+    if _cattrs_forbid_extra_keys:
+        globs["__c_a"] = allowed_fields
+        globs["__c_feke"] = ForbiddenExtraKeysError
 
     lines.append("  res = o.copy()")
 
@@ -329,12 +330,12 @@ def make_dict_structure_fn(
             )
             lines.append(f"{i}errors.append(e)")
 
-        # if _cattrs_forbid_extra_keys:
-        #     post_lines += [
-        #         "  unknown_fields = set(o.keys()) - __c_a",
-        #         "  if unknown_fields:",
-        #         "    errors.append(__c_feke('', __cl, unknown_fields))",
-        #     ]
+        if _cattrs_forbid_extra_keys:
+            post_lines += [
+                "  unknown_fields = o.keys() - __c_a",
+                "  if unknown_fields:",
+                "    errors.append(__c_feke('', __cl, unknown_fields))",
+            ]
 
         post_lines.append(
             f"  if errors: raise __c_cve('While structuring ' + {cl.__name__!r}, errors, __cl)"
@@ -443,12 +444,12 @@ def make_dict_structure_fn(
                 if override.rename is not None:
                     lines.append(f"  res.pop('{override.rename}', None)")
 
-        # if _cattrs_forbid_extra_keys:
-        #     post_lines += [
-        #         "  unknown_fields = set(o.keys()) - __c_a",
-        #         "  if unknown_fields:",
-        #         "    raise __c_feke('', __cl, unknown_fields)",
-        #     ]
+        if _cattrs_forbid_extra_keys:
+            post_lines += [
+                "  unknown_fields = o.keys() - __c_a",
+                "  if unknown_fields:",
+                "    raise __c_feke('', __cl, unknown_fields)",
+            ]
 
     # At the end, we create the function header.
     internal_arg_line = ", ".join([f"{i}={i}" for i in internal_arg_parts])
