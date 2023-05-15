@@ -13,7 +13,7 @@ T = TypeVar("T")
 
 
 class PyyamlConverter(Converter):
-    def dumps(self, obj: Any, unstructure_as=None, **kwargs) -> str:
+    def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> str:
         return safe_dump(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
     def loads(self, data: str, cl: Type[T]) -> T:
@@ -33,7 +33,7 @@ def configure_converter(converter: BaseConverter):
     converter.register_structure_hook(datetime, validate_datetime)
 
 
-def make_converter(*args, **kwargs) -> PyyamlConverter:
+def make_converter(*args: Any, **kwargs: Any) -> PyyamlConverter:
     kwargs["unstruct_collection_overrides"] = {
         FrozenSetSubscriptable: list,
         **kwargs.get("unstruct_collection_overrides", {}),

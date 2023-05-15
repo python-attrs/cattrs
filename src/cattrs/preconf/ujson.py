@@ -13,10 +13,10 @@ T = TypeVar("T")
 
 
 class UjsonConverter(Converter):
-    def dumps(self, obj: Any, unstructure_as=None, **kwargs) -> str:
+    def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> str:
         return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
-    def loads(self, data: AnyStr, cl: Type[T], **kwargs) -> T:
+    def loads(self, data: AnyStr, cl: Type[T], **kwargs: Any) -> T:
         return self.structure(loads(data, **kwargs), cl)
 
 
@@ -37,7 +37,7 @@ def configure_converter(converter: BaseConverter):
     converter.register_structure_hook(datetime, lambda v, _: datetime.fromisoformat(v))
 
 
-def make_converter(*args, **kwargs) -> UjsonConverter:
+def make_converter(*args: Any, **kwargs: Any) -> UjsonConverter:
     kwargs["unstruct_collection_overrides"] = {
         AbstractSet: list,
         **kwargs.get("unstruct_collection_overrides", {}),
