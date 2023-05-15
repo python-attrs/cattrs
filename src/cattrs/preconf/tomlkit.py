@@ -17,7 +17,7 @@ _enum_value_getter = attrgetter("_value_")
 
 
 class TomlkitConverter(Converter):
-    def dumps(self, obj: Any, unstructure_as=None, **kwargs) -> str:
+    def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> str:
         return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
     def loads(self, data: str, cl: Type[T]) -> T:
@@ -65,7 +65,7 @@ def configure_converter(converter: BaseConverter):
     converter.register_structure_hook(datetime, validate_datetime)
 
 
-def make_converter(*args, **kwargs) -> TomlkitConverter:
+def make_converter(*args: Any, **kwargs: Any) -> TomlkitConverter:
     kwargs["unstruct_collection_overrides"] = {
         AbstractSet: list,
         tuple: list,

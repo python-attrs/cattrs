@@ -12,10 +12,10 @@ T = TypeVar("T")
 
 
 class JsonConverter(Converter):
-    def dumps(self, obj: Any, unstructure_as=None, **kwargs) -> str:
+    def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> str:
         return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
-    def loads(self, data: Union[bytes, str], cl: Type[T], **kwargs) -> T:
+    def loads(self, data: Union[bytes, str], cl: Type[T], **kwargs: Any) -> T:
         return self.structure(loads(data, **kwargs), cl)
 
 
@@ -36,7 +36,7 @@ def configure_converter(converter: BaseConverter):
     converter.register_structure_hook(datetime, lambda v, _: datetime.fromisoformat(v))
 
 
-def make_converter(*args, **kwargs) -> JsonConverter:
+def make_converter(*args: Any, **kwargs: Any) -> JsonConverter:
     kwargs["unstruct_collection_overrides"] = {
         AbstractSet: list,
         Counter: dict,

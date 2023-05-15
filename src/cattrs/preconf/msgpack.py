@@ -12,10 +12,10 @@ T = TypeVar("T")
 
 
 class MsgpackConverter(Converter):
-    def dumps(self, obj: Any, unstructure_as=None, **kwargs) -> bytes:
+    def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> bytes:
         return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
-    def loads(self, data: bytes, cl: Type[T], **kwargs) -> T:
+    def loads(self, data: bytes, cl: Type[T], **kwargs: Any) -> T:
         return self.structure(loads(data, **kwargs), cl)
 
 
@@ -32,7 +32,7 @@ def configure_converter(converter: BaseConverter):
     )
 
 
-def make_converter(*args, **kwargs) -> MsgpackConverter:
+def make_converter(*args: Any, **kwargs: Any) -> MsgpackConverter:
     kwargs["unstruct_collection_overrides"] = {
         AbstractSet: list,
         **kwargs.get("unstruct_collection_overrides", {}),

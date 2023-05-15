@@ -14,7 +14,7 @@ T = TypeVar("T")
 
 
 class OrjsonConverter(Converter):
-    def dumps(self, obj: Any, unstructure_as=None, **kwargs) -> bytes:
+    def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> bytes:
         return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
     def loads(self, data: bytes, cl: Type[T]) -> T:
@@ -66,7 +66,7 @@ def configure_converter(converter: BaseConverter):
     )
 
 
-def make_converter(*args, **kwargs) -> OrjsonConverter:
+def make_converter(*args: Any, **kwargs: Any) -> OrjsonConverter:
     kwargs["unstruct_collection_overrides"] = {
         AbstractSet: list,
         **kwargs.get("unstruct_collection_overrides", {}),

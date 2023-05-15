@@ -22,7 +22,7 @@ class BsonConverter(Converter):
     def dumps(
         self,
         obj: Any,
-        unstructure_as=None,
+        unstructure_as: Any = None,
         check_keys: bool = False,
         codec_options: CodecOptions = DEFAULT_CODEC_OPTIONS,
     ) -> bytes:
@@ -86,7 +86,7 @@ def configure_converter(converter: BaseConverter):
     converter.register_structure_hook(ObjectId, lambda v, _: ObjectId(v))
 
 
-def make_converter(*args, **kwargs) -> BsonConverter:
+def make_converter(*args: Any, **kwargs: Any) -> BsonConverter:
     kwargs["unstruct_collection_overrides"] = {
         AbstractSet: list,
         **kwargs.get("unstruct_collection_overrides", {}),
