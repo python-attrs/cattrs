@@ -74,7 +74,6 @@ def configure_tagged_union(
         _cl_to_tag=cl_to_tag,
         _tag_name=tag_name,
     ) -> Dict:
-
         res = _exact_cl_unstruct_hooks[val.__class__](val)
         res[_tag_name] = _cl_to_tag[val.__class__]
         return res
