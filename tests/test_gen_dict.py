@@ -8,7 +8,7 @@ from hypothesis import assume, given
 from hypothesis.strategies import data, just, one_of, sampled_from
 
 from cattrs import BaseConverter, Converter
-from cattrs._compat import adapted_fields, fields, is_py39_plus
+from cattrs._compat import _adapted_fields, fields, is_py39_plus
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
@@ -116,7 +116,7 @@ def test_individual_overrides(converter_cls, cl_and_vals):
     converter = converter_cls()
     cl, vals, kwargs = cl_and_vals
 
-    for attr, val in zip(adapted_fields(cl), vals):
+    for attr, val in zip(_adapted_fields(cl), vals):
         if attr.default is not NOTHING:
             break
     else:
@@ -140,7 +140,7 @@ def test_individual_overrides(converter_cls, cl_and_vals):
     assert "Hyp" not in repr(res)
     assert "Factory" not in repr(res)
 
-    for attr, val in zip(adapted_fields(cl), vals):
+    for attr, val in zip(_adapted_fields(cl), vals):
         if attr.name == chosen_name:
             assert attr.name in res
         elif attr.default is not NOTHING:

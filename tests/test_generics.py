@@ -4,7 +4,7 @@ import pytest
 from attr import asdict, attrs, define
 
 from cattrs import BaseConverter, Converter
-from cattrs._compat import Protocol, is_py39_plus, is_py310_plus
+from cattrs._compat import Protocol, is_py39_plus, is_py310_plus, is_py311_plus
 from cattrs._generics import deep_copy_with
 from cattrs.errors import StructureHandlerNotFoundError
 from cattrs.gen._generics import generate_mapping
@@ -267,6 +267,7 @@ def test_roundtrip_generic_with_union() -> None:
     assert c.structure(raw, Outer[A | B]) == Outer((A(1)))
 
 
+@pytest.mark.skipif(not is_py311_plus, reason="3.11+ only")
 def test_generate_typeddict_mapping() -> None:
     from typing import Generic, TypedDict, TypeVar
 

@@ -1,7 +1,7 @@
 """Strategies for typed dicts."""
 from datetime import datetime
 from string import ascii_lowercase
-from typing import Generic, List, NotRequired, Optional, Required, TypedDict, TypeVar
+from typing import Any, Dict, Generic, List, Optional, Set, Tuple, TypeVar
 
 from attr import NOTHING
 from hypothesis.strategies import (
@@ -17,6 +17,8 @@ from hypothesis.strategies import (
     text,
 )
 
+from cattrs._compat import ExtensionsTypedDict, NotRequired, Required, TypedDict
+
 from .untyped import gen_attr_names
 
 # Type aliases for readability
@@ -29,7 +31,7 @@ T3 = TypeVar("T3")
 @composite
 def int_attributes(
     draw: DrawFn, total: bool = True, not_required: bool = False
-) -> tuple[int, SearchStrategy, SearchStrategy]:
+) -> Tuple[int, SearchStrategy, SearchStrategy]:
     if total:
         if not_required and draw(booleans()):
             return (NotRequired[int], integers() | just(NOTHING), text(ascii_lowercase))
@@ -45,7 +47,7 @@ def int_attributes(
 @composite
 def datetime_attributes(
     draw: DrawFn, total: bool = True, not_required: bool = False
-) -> tuple[datetime, SearchStrategy, SearchStrategy]:
+) -> Tuple[datetime, SearchStrategy, SearchStrategy]:
     success_strat = datetimes().map(lambda dt: dt.replace(microsecond=0))
     type = datetime
     strat = success_strat if total else success_strat | just(NOTHING)
@@ -62,7 +64,7 @@ def datetime_attributes(
 @composite
 def list_of_int_attributes(
     draw: DrawFn, total: bool = True, not_required: bool = False
-) -> tuple[List[int], SearchStrategy, SearchStrategy]:
+) -> Tuple[List[int], SearchStrategy, SearchStrategy]:
     if total:
         if not_required and draw(booleans()):
             return (
@@ -97,7 +99,8 @@ def simple_typeddicts(
     total: Optional[bool] = None,
     not_required: bool = False,
     min_attrs: int = 0,
-) -> tuple[TypedDictType, dict]:
+    typeddict_cls: Optional[Any] = None,
+) -> Tuple[TypedDictType, dict]:
     """Generate simple typed dicts.
 
     :param total: Generate the given totality dicts (default = random)
@@ -121,7 +124,12 @@ def simple_typeddicts(
         if v is not NOTHING:
             success_payload[n] = v
 
-    cls = TypedDict("HypTypedDict", attrs_dict, total=total)
+    if typeddict_cls is None:
+        cls = (TypedDict if draw(booleans()) else ExtensionsTypedDict)(
+            "HypTypedDict", attrs_dict, total=total
+        )
+    else:
+        cls = typeddict_cls
 
     if draw(booleans()):
 
@@ -136,10 +144,10 @@ def simple_typeddicts(
 
 @composite
 def simple_typeddicts_with_extra_keys(
-    draw: DrawFn, total: Optional[bool] = None
-) -> tuple[TypedDictType, dict, set[str]]:
+    draw: DrawFn, total: Optional[bool] = None, typeddict_cls: Optional[Any] = None
+) -> Tuple[TypedDictType, dict, Set[str]]:
     """Generate TypedDicts, with the instances having extra keys."""
-    cls, success = draw(simple_typeddicts(total))
+    cls, success = draw(simple_typeddicts(total, typeddict_cls=typeddict_cls))
 
     # The normal attributes are 2 characters or less.
     extra_keys = draw(sets(text(ascii_lowercase, min_size=3, max_size=3)))
@@ -151,7 +159,7 @@ def simple_typeddicts_with_extra_keys(
 @composite
 def generic_typeddicts(
     draw: DrawFn, total: Optional[bool] = None
-) -> tuple[TypedDictType, dict]:
+) -> Tuple[TypedDictType, dict]:
     """Generate generic typed dicts.
 
     :param total: Generate the given totality dicts (default = random)
@@ -189,24 +197,24 @@ def generic_typeddicts(
             attrs_dict[attr_name] = typevar
 
     cls = make_typeddict(
-        "HypTypedDict", attrs_dict, total=total, bases=[Generic[*generics]]
+        "HypTypedDict", attrs_dict, total=total, bases=[Generic[Tuple(generics)]]
     )
 
     if draw(booleans()):
 
-        class InheritedTypedDict(cls[*actual_types]):
+        class InheritedTypedDict(cls[tuple(actual_types)]):
             inherited: int
 
         cls = InheritedTypedDict
         success_payload["inherited"] = draw(integers())
     else:
-        cls = cls[*actual_types]
+        cls = cls[tuple(actual_types)]
 
     return (cls, success_payload)
 
 
 def make_typeddict(
-    cls_name: str, attrs: dict[str, type], total: bool = True, bases: list = []
+    cls_name: str, attrs: Dict[str, type], total: bool = True, bases: List = []
 ) -> TypedDictType:
     globs = {"TypedDict": TypedDict}
     lines = []

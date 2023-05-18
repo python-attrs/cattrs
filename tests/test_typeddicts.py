@@ -1,17 +1,22 @@
 """Tests for TypedDict un/structuring."""
 from datetime import datetime
-from inspect import get_annotations
+from typing import Dict, Set, Tuple
 
+import pytest
 from hypothesis import assume, given
 from hypothesis.strategies import booleans
 from pytest import raises
 
 from cattrs import Converter
-from cattrs._compat import is_generic
+from cattrs._compat import ExtensionsTypedDict, is_generic, is_py38, is_py311_plus
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import override
 from cattrs.gen._generics import generate_mapping
-from cattrs.gen.typeddicts import make_dict_structure_fn, make_dict_unstructure_fn
+from cattrs.gen.typeddicts import (
+    get_annots,
+    make_dict_structure_fn,
+    make_dict_unstructure_fn,
+)
 
 from .typeddicts import (
     generic_typeddicts,
@@ -34,7 +39,7 @@ def get_annot(t) -> dict:
         # This will have typevars.
         origin = getattr(t, "__origin__", None)
         if origin is not None:
-            origin_annotations = get_annotations(origin)
+            origin_annotations = get_annots(origin)
             args = t.__args__
             params = origin.__parameters__
             param_to_args = dict(zip(params, args))
@@ -47,12 +52,12 @@ def get_annot(t) -> dict:
             mapping = generate_mapping(t)
             return {
                 k: mapping[v.__name__] if v.__name__ in mapping else v
-                for k, v in get_annotations(t).items()
+                for k, v in get_annots(t).items()
             }
-    return get_annotations(t)
+    return get_annots(t)
 
 
-@given(simple_typeddicts())
+@given(simple_typeddicts(typeddict_cls=None if not is_py38 else ExtensionsTypedDict))
 def test_simple_roundtrip(cls_and_instance) -> None:
     """Round-trips for simple classes work."""
     c = mk_converter()
@@ -72,7 +77,12 @@ def test_simple_roundtrip(cls_and_instance) -> None:
     assert restructured == instance
 
 
-@given(simple_typeddicts(total=False), booleans())
+@given(
+    simple_typeddicts(
+        total=False, typeddict_cls=None if not is_py38 else ExtensionsTypedDict
+    ),
+    booleans(),
+)
 def test_simple_nontotal(cls_and_instance, detailed_validation: bool) -> None:
     """Non-total dicts work."""
     c = mk_converter(detailed_validation=detailed_validation)
@@ -92,7 +102,7 @@ def test_simple_nontotal(cls_and_instance, detailed_validation: bool) -> None:
     assert restructured == instance
 
 
-@given(simple_typeddicts())
+@given(simple_typeddicts(typeddict_cls=None if not is_py38 else ExtensionsTypedDict))
 def test_int_override(cls_and_instance) -> None:
     """Overriding a base unstructure handler should work."""
     cls, instance = cls_and_instance
@@ -108,9 +118,14 @@ def test_int_override(cls_and_instance) -> None:
     assert unstructured == instance
 
 
-@given(simple_typeddicts_with_extra_keys(), booleans())
+@given(
+    simple_typeddicts_with_extra_keys(
+        typeddict_cls=None if not is_py38 else ExtensionsTypedDict
+    ),
+    booleans(),
+)
 def test_extra_keys(
-    cls_instance_extra: tuple[type, dict, set[str]], detailed_validation: bool
+    cls_instance_extra: Tuple[type, Dict, Set[str]], detailed_validation: bool
 ) -> None:
     """Extra keys are preserved."""
     cls, instance, extra = cls_instance_extra
@@ -129,9 +144,10 @@ def test_extra_keys(
     assert structured == instance
 
 
+@pytest.mark.skipif(not is_py311_plus, reason="3.11+ only")
 @given(generic_typeddicts(total=True), booleans())
 def test_generics(
-    cls_and_instance: tuple[type, dict], detailed_validation: bool
+    cls_and_instance: Tuple[type, Dict], detailed_validation: bool
 ) -> None:
     """Generic TypedDicts work."""
     c = mk_converter(detailed_validation=detailed_validation)
@@ -153,7 +169,7 @@ def test_generics(
 
 @given(simple_typeddicts(total=True, not_required=True), booleans())
 def test_not_required(
-    cls_and_instance: tuple[type, dict], detailed_validation: bool
+    cls_and_instance: Tuple[type, Dict], detailed_validation: bool
 ) -> None:
     """NotRequired[] keys are handled."""
     c = mk_converter(detailed_validation=detailed_validation)
@@ -165,9 +181,16 @@ def test_not_required(
     assert restructured == instance
 
 
-@given(simple_typeddicts(total=False, not_required=True), booleans())
+@given(
+    simple_typeddicts(
+        total=False,
+        not_required=True,
+        typeddict_cls=None if not is_py38 else ExtensionsTypedDict,
+    ),
+    booleans(),
+)
 def test_required(
-    cls_and_instance: tuple[type, dict], detailed_validation: bool
+    cls_and_instance: Tuple[type, Dict], detailed_validation: bool
 ) -> None:
     """Required[] keys are handled."""
     c = mk_converter(detailed_validation=detailed_validation)
@@ -180,7 +203,7 @@ def test_required(
 
 
 @given(simple_typeddicts(min_attrs=1, total=True), booleans())
-def test_omit(cls_and_instance: tuple[type, dict], detailed_validation: bool) -> None:
+def test_omit(cls_and_instance: Tuple[type, Dict], detailed_validation: bool) -> None:
     """`override(omit=True)` works."""
     c = mk_converter(detailed_validation=detailed_validation)
 
@@ -222,7 +245,7 @@ def test_omit(cls_and_instance: tuple[type, dict], detailed_validation: bool) ->
 
 
 @given(simple_typeddicts(min_attrs=1, total=True), booleans())
-def test_rename(cls_and_instance: tuple[type, dict], detailed_validation: bool) -> None:
+def test_rename(cls_and_instance: Tuple[type, Dict], detailed_validation: bool) -> None:
     """`override(rename=...)` works."""
     c = mk_converter(detailed_validation=detailed_validation)
 
@@ -259,7 +282,7 @@ def test_rename(cls_and_instance: tuple[type, dict], detailed_validation: bool) 
 
 @given(simple_typeddicts(total=True), booleans())
 def test_forbid_extra_keys(
-    cls_and_instance: tuple[type, dict], detailed_validation: bool
+    cls_and_instance: Tuple[type, Dict], detailed_validation: bool
 ) -> None:
     """Extra keys can be forbidden."""
     c = mk_converter(detailed_validation)

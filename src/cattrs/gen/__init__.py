@@ -20,7 +20,7 @@ import attr
 from attr import NOTHING, resolve_types
 
 from .._compat import (
-    adapted_fields,
+    _adapted_fields,
     get_args,
     get_origin,
     is_annotated,
@@ -71,7 +71,7 @@ def make_dict_unstructure_fn(
     dataclass.
     """
     origin = get_origin(cl)
-    attrs = adapted_fields(origin or cl)  # type: ignore
+    attrs = _adapted_fields(origin or cl)  # type: ignore
 
     if any(isinstance(a.type, str) for a in attrs):
         # PEP 563 annotations - need to be resolved.
@@ -272,7 +272,7 @@ def make_dict_structure_fn(
     post_lines = []
     invocation_lines = []
 
-    attrs = adapted_fields(cl)
+    attrs = _adapted_fields(cl)
     is_dc = is_dataclass(cl)
 
     if any(isinstance(a.type, str) for a in attrs):
