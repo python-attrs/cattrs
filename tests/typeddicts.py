@@ -197,7 +197,7 @@ def generic_typeddicts(
             attrs_dict[attr_name] = typevar
 
     cls = make_typeddict(
-        "HypTypedDict", attrs_dict, total=total, bases=[Generic[Tuple(generics)]]
+        "HypTypedDict", attrs_dict, total=total, bases=[Generic[tuple(generics)]]
     )
 
     if draw(booleans()):
