@@ -77,7 +77,7 @@ def lists_of_primitives(draw):
 def deques_of_primitives(draw):
     """Generate a strategy that yields tuples of list of primitives and types.
 
-    For example, a sample value might be ([1,2], List[int]).
+    For example, a sample value might be ([1,2], Deque[int]).
     """
     prim_strat, t = draw(primitive_strategies)
     deque_t = draw(deque_types.map(lambda deque_t: deque_t[t]) | deque_types)
