@@ -28,6 +28,7 @@ except ImportError:
     _TypedDictMeta = None
 
 from .._compat import (
+    TypedDict,
     get_notrequired_base,
     get_origin,
     is_annotated,
@@ -54,7 +55,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 __all__ = ["make_dict_unstructure_fn", "make_dict_structure_fn"]
 
-T = TypeVar("T")
+T = TypeVar("T", bound=TypedDict)
 
 
 def make_dict_unstructure_fn(
@@ -65,6 +66,11 @@ def make_dict_unstructure_fn(
 ) -> Callable[[T], Dict[str, Any]]:
     """
     Generate a specialized dict unstructuring function for a TypedDict.
+
+    :param cl: A `TypedDict` class.
+    :param converter: A Converter instance to use for unstructuring nested fields.
+    :param kwargs: A mapping of field names to an `AttributeOverride`, for customization.
+    :param _cattrs_detailed_validation: Whether to store the generated code in the _linecache_, for easier debugging and better stack traces.
     """
     origin = get_origin(cl)
     attrs = _adapted_fields(origin or cl)  # type: ignore
@@ -238,7 +244,15 @@ def make_dict_structure_fn(
     _cattrs_detailed_validation: bool = True,
     **kwargs: AttributeOverride,
 ) -> Callable[[Dict, Any], Any]:
-    """Generate a specialized dict structuring function for typed dicts."""
+    """Generate a specialized dict structuring function for typed dicts.
+
+    :param cl: A `TypedDict` class.
+    :param converter: A Converter instance to use for structuring nested fields.
+    :param kwargs: A mapping of field names to an `AttributeOverride`, for customization.
+    :param _cattrs_detailed_validation: Whether to use a slower mode that produces more detailed errors.
+    :param _cattrs_forbid_extra_keys: Whether the structuring function should raise a `ForbiddenExtraKeysError` if unknown keys are encountered.
+    :param _cattrs_detailed_validation: Whether to store the generated code in the _linecache_, for easier debugging and better stack traces.
+    """
 
     mapping = {}
     if is_generic(cl):
@@ -284,7 +298,6 @@ def make_dict_structure_fn(
 
     attrs = _adapted_fields(cl)
     req_keys = _required_keys(cl)
-    print(req_keys)
 
     allowed_fields = set()
     if _cattrs_forbid_extra_keys:
