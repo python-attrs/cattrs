@@ -146,6 +146,33 @@ These generic types are composable with all other converters.
 ['1', None, '3']
 ```
 
+### Deques
+
+Deques can be produced from any iterable object. Types converting
+to deques are:
+
+- `Deque[T]`
+- `deque[T]`
+
+In all cases, a new **unbounded** deque (`maxlen=None`) will be returned, 
+so this operation can be used to copy an iterable into a deque.
+If you want to convert into bounded `deque`, registering a custom structuring hook is a good approach.
+
+```{doctest}
+>>> cattrs.structure((1, 2, 3), deque[int])
+deque([1, 2, 3])
+```
+
+These generic types are composable with all other converters.
+
+```{doctest}
+>>> cattrs.structure((1, None, 3), deque[Optional[str]])
+deque(['1', None, '3'])
+```
+
+```{versionadded} 23.1.0
+```
+
 ### Sets and Frozensets
 
 Sets and frozensets can be produced from any iterable object. Types converting
@@ -209,6 +236,62 @@ and values can be converted.
 
 >>> cattrs.structure({1: None, 2: 2.0}, dict[str, Optional[int]])
 {'1': None, '2': 2}
+```
+
+### Typed Dicts
+
+[TypedDicts](https://peps.python.org/pep-0589/) can be produced from mapping objects, usually dictionaries.
+
+```{doctest}
+>>> from typing import TypedDict
+
+>>> class MyTypedDict(TypedDict):
+...    a: int
+
+>>> cattrs.structure({"a": "1"}, MyTypedDict)
+{'a': 1}
+```
+
+Both [_total_ and _non-total_](https://peps.python.org/pep-0589/#totality) TypedDicts are supported, and inheritance between any combination works (except on 3.8 when `typing.TypedDict` is used, see below).
+Generic TypedDicts work on Python 3.11 and later, since that is the first Python version that supports them in general.
+
+[`typing.Required` and `typing.NotRequired`](https://peps.python.org/pep-0655/) are supported.
+
+On Python 3.7, using `typing_extensions.TypedDict` is required since `typing.TypedDict` doesn't exist there.
+On Python 3.8, using `typing_extensions.TypedDict` is recommended since `typing.TypedDict` doesn't support all necessary features, so certain combinations of subclassing, totality and `typing.Required` won't work.
+
+[Similar to _attrs_ classes](customizing.md#using-cattrsgen-generators), structuring can be customized using {meth}`cattrs.gen.typeddicts.make_dict_structure_fn`.
+
+```{doctest}
+>>> from typing import TypedDict
+>>> from cattrs import Converter
+>>> from cattrs.gen import override
+>>> from cattrs.gen.typeddicts import make_dict_structure_fn
+
+>>> class MyTypedDict(TypedDict):
+...     a: int
+...     b: int
+
+>>> c = Converter()
+>>> c.register_structure_hook(
+...     MyTypedDict,
+...     make_dict_structure_fn(
+...         MyTypedDict,
+...         c,
+...         a=override(rename="a-with-dash")
+...     )
+... )
+
+>>> c.structure({"a-with-dash": 1, "b": 2}, MyTypedDict)
+{'b': 2, 'a': 1}
+```
+
+```{seealso} [Unstructuring TypedDicts.](unstructuring.md#typed-dicts)
+
+```
+
+```{versionadded} 23.1.0
+
 ```
 
 ### Homogeneous and Heterogeneous Tuples
@@ -436,7 +519,7 @@ annotations when using Python 3.6+, or by passing the appropriate type to
 ...     a: int
 
 >>> attr.fields(A).a
-Attribute(name='a', default=NOTHING, validator=None, repr=True, eq=True, eq_key=None, order=True, order_key=None, hash=None, init=True, metadata=mappingproxy({}), type=<class 'int'>, converter=None, kw_only=False, inherited=False, on_setattr=None)
+Attribute(name='a', default=NOTHING, validator=None, repr=True, eq=True, eq_key=None, order=True, order_key=None, hash=None, init=True, metadata=mappingproxy({}), type=<class 'int'>, converter=None, kw_only=False, inherited=False, on_setattr=None, alias='a')
 ```
 
 Type information, when provided, can be used for all attribute types, not only

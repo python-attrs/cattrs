@@ -4,6 +4,8 @@
 
 - Introduce the `tagged_union` strategy. ([#318](https://github.com/python-attrs/cattrs/pull/318) [#317](https://github.com/python-attrs/cattrs/issues/317))
 - Introduce the `cattrs.transform_error` helper function for formatting validation exceptions. ([258](https://github.com/python-attrs/cattrs/issues/258) [342](https://github.com/python-attrs/cattrs/pull/342))
+- Add support for [`typing.TypedDict` and `typing_extensions.TypedDict`](https://peps.python.org/pep-0589/).
+  ([#296](https://github.com/python-attrs/cattrs/issues/296) [#364](https://github.com/python-attrs/cattrs/pull/364))
 - Add support for `typing.Final`.
   ([#340](https://github.com/python-attrs/cattrs/issues/340) [#349](https://github.com/python-attrs/cattrs/pull/349))
 - Introduce `override.struct_hook` and `override.unstruct_hook`. Learn more [here](https://catt.rs/en/latest/customizing.html#struct-hook-and-unstruct-hook).
@@ -19,6 +21,8 @@
 - Subclasses structuring and unstructuring is now supported via a custom `include_subclasses` strategy.
   ([#312](https://github.com/python-attrs/cattrs/pull/312))
 - Adds support for `typing_extensions.Annotated` when the python version is less than `3.9`. ([#366](https://github.com/python-attrs/cattrs/pull/366))
+- Add unstructuring and structuring support to `deque` in standard lib.
+  ([#355](https://github.com/python-attrs/cattrs/issues/355))
 
 ## 22.2.0 (2022-10-03)
 

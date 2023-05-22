@@ -44,6 +44,12 @@ def format_exception(exc: BaseException, type: Union[Type, None]) -> str:
     ):
         # This was supposed to be a mapping (and have .items()) but it something else.
         res = "expected a mapping"
+    elif isinstance(exc, AttributeError) and exc.args[0].endswith(
+        "object has no attribute 'copy'"
+    ):
+        # This was supposed to be a mapping (and have .copy()) but it something else.
+        # Used for TypedDicts.
+        res = "expected a mapping"
     else:
         res = f"unknown error ({exc})"
 

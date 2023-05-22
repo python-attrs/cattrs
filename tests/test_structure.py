@@ -30,6 +30,7 @@ from .untyped import (
     lists_of_primitives,
     primitive_strategies,
     seqs_of_primitives,
+    deque_seqs_of_primitives,
 )
 
 NoneType = type(None)
@@ -77,6 +78,16 @@ def test_structuring_primitives(primitive_and_type):
 
 @given(seqs_of_primitives)
 def test_structuring_seqs(seq_and_type):
+    """Test structuring sequence generic types."""
+    converter = BaseConverter()
+    iterable, t = seq_and_type
+    converted = converter.structure(iterable, t)
+    for x, y in zip(iterable, converted):
+        assert x == y
+
+
+@given(deque_seqs_of_primitives)
+def test_structuring_seqs_to_deque(seq_and_type):
     """Test structuring sequence generic types."""
     converter = BaseConverter()
     iterable, t = seq_and_type
