@@ -1,6 +1,6 @@
 """Preconfigured converters for orjson."""
 from base64 import b85decode, b85encode
-from datetime import datetime
+from datetime import datetime, date, time
 from enum import Enum
 from typing import Any, Type, TypeVar
 
@@ -26,7 +26,7 @@ def configure_converter(converter: BaseConverter):
     Configure the converter for use with the orjson library.
 
     * bytes are serialized as base85 strings
-    * datetimes are serialized as ISO 8601
+    * datetimes, dates, times are serialized as ISO 8601
     * sets are serialized as lists
     * string enum mapping keys have special handling
     * mapping keys are coerced into strings when unstructuring
@@ -38,6 +38,12 @@ def configure_converter(converter: BaseConverter):
 
     converter.register_unstructure_hook(datetime, lambda v: v.isoformat())
     converter.register_structure_hook(datetime, lambda v, _: datetime.fromisoformat(v))
+
+    converter.register_unstructure_hook(date, lambda v: v.isoformat())
+    converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
+
+    converter.register_unstructure_hook(time, lambda v: v.isoformat())
+    converter.register_structure_hook(time, lambda v, _: time.fromisoformat(v))
 
     def gen_unstructure_mapping(cl: Any, unstructure_to=None):
         key_handler = str

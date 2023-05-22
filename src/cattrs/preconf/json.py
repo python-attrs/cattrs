@@ -1,6 +1,6 @@
 """Preconfigured converters for the stdlib json."""
 from base64 import b85decode, b85encode
-from datetime import datetime
+from datetime import datetime, date, time
 from json import dumps, loads
 from typing import Any, Type, TypeVar, Union
 
@@ -24,7 +24,7 @@ def configure_converter(converter: BaseConverter):
     Configure the converter for use with the stdlib json module.
 
     * bytes are serialized as base64 strings
-    * datetimes are serialized as ISO 8601
+    * datetimes, dates, times are serialized as ISO 8601
     * counters are serialized as dicts
     * sets are serialized as lists
     """
@@ -34,6 +34,12 @@ def configure_converter(converter: BaseConverter):
     converter.register_structure_hook(bytes, lambda v, _: b85decode(v))
     converter.register_unstructure_hook(datetime, lambda v: v.isoformat())
     converter.register_structure_hook(datetime, lambda v, _: datetime.fromisoformat(v))
+
+    converter.register_unstructure_hook(date, lambda v: v.isoformat())
+    converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
+
+    converter.register_unstructure_hook(time, lambda v: v.isoformat())
+    converter.register_structure_hook(time, lambda v, _: time.fromisoformat(v))
 
 
 def make_converter(*args: Any, **kwargs: Any) -> JsonConverter:
