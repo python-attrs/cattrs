@@ -5,9 +5,10 @@ import pytest
 from attr import asdict, attrs, define
 
 from cattrs import BaseConverter, Converter
-from cattrs._compat import Protocol, is_py39_plus, is_py310_plus
+from cattrs._compat import Protocol, is_py39_plus, is_py310_plus, is_py311_plus
 from cattrs._generics import deep_copy_with
 from cattrs.errors import StructureHandlerNotFoundError
+from cattrs.gen._generics import generate_mapping
 
 from ._compat import Dict_origin, List_origin
 
@@ -277,3 +278,25 @@ def test_roundtrip_generic_with_union() -> None:
 
     raw = c.unstructure(Outer(A(1)), unstructure_as=Outer[A | B])
     assert c.structure(raw, Outer[A | B]) == Outer((A(1)))
+
+
+@pytest.mark.skipif(not is_py311_plus, reason="3.11+ only")
+def test_generate_typeddict_mapping() -> None:
+    from typing import Generic, TypedDict, TypeVar
+
+    T = TypeVar("T")
+
+    class A(TypedDict):
+        pass
+
+    assert generate_mapping(A, {}) == {}
+
+    class A(TypedDict, Generic[T]):
+        a: T
+
+    assert generate_mapping(A[int], {}) == {T.__name__: int}
+
+    class B(A[int]):
+        pass
+
+    assert generate_mapping(B, {}) == {T.__name__: int}

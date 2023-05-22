@@ -21,11 +21,33 @@ from attr import NOTHING, Attribute, Factory
 from attr import fields as attrs_fields
 from attr import resolve_types
 
+try:
+    from typing_extensions import TypedDict as ExtensionsTypedDict
+except ImportError:
+    ExtensionsTypedDict = None
+
+try:
+    from typing_extensions import _TypedDictMeta as ExtensionsTypedDictMeta
+except ImportError:
+    ExtensionsTypedDictMeta = None
+
+__all__ = [
+    "ExtensionsTypedDict",
+    "is_py37",
+    "is_py38",
+    "is_py39_plus",
+    "is_py310_plus",
+    "is_py311_plus",
+    "is_typeddict",
+    "TypedDict",
+]
+
 version_info = sys.version_info[0:3]
 is_py37 = version_info[:2] == (3, 7)
 is_py38 = version_info[:2] == (3, 8)
 is_py39_plus = version_info[:2] >= (3, 9)
 is_py310_plus = version_info[:2] >= (3, 10)
+is_py311_plus = version_info[:2] >= (3, 11)
 
 if is_py37:
 
@@ -38,7 +60,7 @@ if is_py37:
     from typing_extensions import Final, Protocol
 
 else:
-    from typing import Final, Protocol, get_args, get_origin  # NOQA
+    from typing import Final, Protocol, get_args, get_origin
 
 if "ExceptionGroup" not in dir(builtins):
     from exceptiongroup import ExceptionGroup
@@ -65,7 +87,7 @@ def fields(type):
             raise Exception("Not an attrs or dataclass class.")
 
 
-def adapted_fields(cl) -> List[Attribute]:
+def _adapted_fields(cl) -> List[Attribute]:
     """Return the attrs format of `fields()` for attrs and dataclasses."""
     if is_dataclass(cl):
         attrs = dataclass_fields(cl)
@@ -102,6 +124,14 @@ def adapted_fields(cl) -> List[Attribute]:
             resolve_types(cl)
             attribs = attrs_fields(cl)
         return attribs
+
+
+def is_subclass(obj: type, bases) -> bool:
+    """A safe version of issubclass (won't raise)."""
+    try:
+        return issubclass(obj, bases)
+    except TypeError:
+        return False
 
 
 def is_hetero_tuple(type: Any) -> bool:
@@ -144,6 +174,14 @@ if is_py37 or is_py38:
 
     from collections import Counter as ColCounter
     from typing import Counter, Union, _GenericAlias
+
+    if is_py38:
+        from typing import TypedDict, _TypedDictMeta
+    else:
+        _TypedDictMeta = None
+        TypedDict = ExtensionsTypedDict
+
+    from typing_extensions import NotRequired, Required
 
     def is_annotated(_):
         return False
@@ -238,6 +276,25 @@ if is_py37 or is_py38:
         """Replace a generic type's arguments."""
         return type.copy_with(args)
 
+    def is_typeddict(cls) -> bool:
+        return (
+            cls.__class__ is _TypedDictMeta
+            or (is_generic(cls) and (cls.__origin__.__class__ is _TypedDictMeta))
+            or (
+                ExtensionsTypedDictMeta is not None
+                and cls.__class__ is ExtensionsTypedDictMeta
+                or (
+                    is_generic(cls)
+                    and (cls.__origin__.__class__ is ExtensionsTypedDictMeta)
+                )
+            )
+        )
+
+    def get_notrequired_base(type) -> "Union[Any, Literal[NOTHING]]":
+        if get_origin(type) in (NotRequired, Required):
+            return get_args(type)[0]
+        return NOTHING
+
 else:
     # 3.9+
     from collections import Counter
@@ -251,10 +308,13 @@ else:
     from typing import Annotated
     from typing import Counter as TypingCounter
     from typing import (
+        Generic,
+        TypedDict,
         Union,
         _AnnotatedAlias,
         _GenericAlias,
         _SpecialGenericAlias,
+        _TypedDictMeta,
         _UnionGenericAlias,
     )
 
@@ -306,7 +366,13 @@ else:
                 return typ.__supertype__
             return None
 
+        if is_py311_plus:
+            from typing import NotRequired, Required
+        else:
+            from typing_extensions import NotRequired, Required
+
     else:
+        from typing_extensions import NotRequired, Required
 
         def is_union_type(obj):
             return (
@@ -324,6 +390,25 @@ else:
             ):
                 return supertype
             return None
+
+    def is_typeddict(cls) -> bool:
+        return (
+            cls.__class__ is _TypedDictMeta
+            or (is_generic(cls) and (cls.__origin__.__class__ is _TypedDictMeta))
+            or (
+                ExtensionsTypedDictMeta is not None
+                and cls.__class__ is ExtensionsTypedDictMeta
+                or (
+                    is_generic(cls)
+                    and (cls.__origin__.__class__ is ExtensionsTypedDictMeta)
+                )
+            )
+        )
+
+    def get_notrequired_base(type) -> "Union[Any, Literal[NOTHING]]":
+        if get_origin(type) in (NotRequired, Required):
+            return get_args(type)[0]
+        return NOTHING
 
     def is_sequence(type: Any) -> bool:
         origin = getattr(type, "__origin__", None)
@@ -405,8 +490,12 @@ else:
             or getattr(type, "__origin__", None) is Counter
         )
 
-    def is_generic(obj):
-        return isinstance(obj, _GenericAlias) or isinstance(obj, GenericAlias)
+    def is_generic(obj) -> bool:
+        return (
+            isinstance(obj, _GenericAlias)
+            or isinstance(obj, GenericAlias)
+            or is_subclass(obj, Generic)
+        )
 
     def copy_with(type, args):
         """Replace a generic type's arguments."""

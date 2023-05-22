@@ -23,12 +23,6 @@ from attr import Attribute
 from attr import has as attrs_has
 from attr import resolve_types
 
-from cattrs.errors import (
-    IterableValidationError,
-    IterableValidationNote,
-    StructureHandlerNotFoundError,
-)
-
 from ._compat import (
     FrozenSetSubscriptable,
     Mapping,
@@ -58,10 +52,16 @@ from ._compat import (
     is_protocol,
     is_sequence,
     is_tuple,
+    is_typeddict,
     is_union_type,
 )
 from .disambiguators import create_uniq_field_dis_func
 from .dispatch import MultiStrategyDispatch
+from .errors import (
+    IterableValidationError,
+    IterableValidationNote,
+    StructureHandlerNotFoundError,
+)
 from .gen import (
     AttributeOverride,
     DictStructureFn,
@@ -76,6 +76,8 @@ from .gen import (
     make_mapping_structure_fn,
     make_mapping_unstructure_fn,
 )
+from .gen.typeddicts import make_dict_structure_fn as make_typeddict_dict_struct_fn
+from .gen.typeddicts import make_dict_unstructure_fn as make_typeddict_dict_unstruct_fn
 
 NoneType = type(None)
 T = TypeVar("T")
@@ -900,12 +902,16 @@ class Converter(BaseConverter):
             lambda cl: self.gen_unstructure_iterable(cl, unstructure_to=frozenset),
         )
         self.register_unstructure_hook_factory(
+            is_typeddict, self.gen_unstructure_typeddict
+        )
+        self.register_unstructure_hook_factory(
             lambda t: get_newtype_base(t) is not None,
             lambda t: self._unstructure_func.dispatch(get_newtype_base(t)),
         )
         self.register_structure_hook_factory(is_annotated, self.gen_structure_annotated)
         self.register_structure_hook_factory(is_mapping, self.gen_structure_mapping)
         self.register_structure_hook_factory(is_counter, self.gen_structure_counter)
+        self.register_structure_hook_factory(is_typeddict, self.gen_structure_typeddict)
         self.register_structure_hook_factory(
             lambda t: get_newtype_base(t) is not None, self.get_structure_newtype
         )
@@ -929,6 +935,13 @@ class Converter(BaseConverter):
         h = self._structure_func.dispatch(origin)
         return h
 
+    def gen_unstructure_typeddict(self, cl: Any) -> Callable[[Dict], Dict]:
+        """Generate a TypedDict unstructure function.
+
+        Also apply converter-scored modifications.
+        """
+        return make_typeddict_dict_unstruct_fn(cl, self)
+
     def gen_unstructure_attrs_fromdict(
         self, cl: Type[T]
     ) -> Callable[[T], Dict[str, Any]]:
@@ -948,10 +961,19 @@ class Converter(BaseConverter):
         )
         return h
 
+    def gen_structure_typeddict(self, cl: Any) -> Callable[[Dict], Dict]:
+        """Generate a TypedDict structure function.
+
+        Also apply converter-scored modifications.
+        """
+        return make_typeddict_dict_struct_fn(
+            cl, self, _cattrs_detailed_validation=self.detailed_validation
+        )
+
     def gen_structure_attrs_fromdict(
         self, cl: Type[T]
     ) -> Callable[[Mapping[str, Any], Any], T]:
-        attribs = fields(get_origin(cl) if is_generic(cl) else cl)
+        attribs = fields(get_origin(cl) or cl if is_generic(cl) else cl)
         if attrs_has(cl) and any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.
             resolve_types(cl)

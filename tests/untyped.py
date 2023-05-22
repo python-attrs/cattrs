@@ -7,6 +7,7 @@ from typing import (
     Any,
     Deque,
     Dict,
+    Iterable,
     List,
     Mapping,
     MutableMapping,
@@ -140,7 +141,7 @@ dicts_of_primitives = st.tuples(primitive_strategies, primitive_strategies).flat
 )
 
 
-def gen_attr_names():
+def gen_attr_names() -> Iterable[str]:
     """
     Generate names for attributes, 'a'...'z', then 'aa'...'zz'.
     ~702 different attribute names should be enough in practice.

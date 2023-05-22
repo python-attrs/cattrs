@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   cattrs.gen
    cattrs.preconf
    cattrs.strategies
 
@@ -41,14 +42,6 @@ cattrs.errors module
 --------------------
 
 .. automodule:: cattrs.errors
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-cattrs.gen module
------------------
-
-.. automodule:: cattrs.gen
    :members:
    :undoc-members:
    :show-inheritance:
