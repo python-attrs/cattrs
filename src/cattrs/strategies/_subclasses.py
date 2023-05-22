@@ -3,12 +3,8 @@ from gc import collect
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
 from ..converters import BaseConverter, Converter
-from ..gen import (
-    AttributeOverride,
-    _already_generating,
-    make_dict_structure_fn,
-    make_dict_unstructure_fn,
-)
+from ..gen import AttributeOverride, make_dict_structure_fn, make_dict_unstructure_fn
+from ..gen._consts import already_generating
 
 
 def _make_subclasses_tree(cl: Type) -> List[Type]:
@@ -181,12 +177,12 @@ def _include_subclasses_with_union_strategy(
         # the overrides.
         # We just generate the hooks, and do not register them. This allows us to manipulate
         # the _already_generating set to force runtime dispatch.
-        _already_generating.working_set = set(union_classes) - {cl}
+        already_generating.working_set = set(union_classes) - {cl}
         try:
             unstruct_hook = make_dict_unstructure_fn(cl, converter, **overrides)
             struct_hook = make_dict_structure_fn(cl, converter, **overrides)
         finally:
-            _already_generating.working_set = set()
+            already_generating.working_set = set()
         original_unstruct_hooks[cl] = unstruct_hook
         original_struct_hooks[cl] = struct_hook
 
