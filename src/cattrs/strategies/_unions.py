@@ -42,14 +42,21 @@ def configure_tagged_union(
     """
     args = union.__args__
     tag_to_hook = {}
+    exact_cl_unstruct_hooks = {}
     for cl in args:
         tag = tag_generator(cl)
-        handler = converter._structure_func.dispatch(cl)
+        struct_handler = converter._structure_func.dispatch(cl)
+        unstruct_handler = converter._unstructure_func.dispatch(cl)
 
-        def structure_union_member(val: dict, _cl=cl, _h=handler) -> cl:
+        def structure_union_member(val: dict, _cl=cl, _h=struct_handler) -> cl:
             return _h(val, _cl)
 
+        def unstructure_union_member(val: union, _h=unstruct_handler) -> dict:
+            return _h(val)
+
         tag_to_hook[tag] = structure_union_member
+        exact_cl_unstruct_hooks[cl] = unstructure_union_member
+
     cl_to_tag = {cl: tag_generator(cl) for cl in args}
 
     if default is not NOTHING:
@@ -62,9 +69,12 @@ def configure_tagged_union(
         cl_to_tag = defaultdict(lambda: default, cl_to_tag)
 
     def unstructure_tagged_union(
-        val: union, _c=converter, _cl_to_tag=cl_to_tag, _tag_name=tag_name
+        val: union,
+        _exact_cl_unstruct_hooks=exact_cl_unstruct_hooks,
+        _cl_to_tag=cl_to_tag,
+        _tag_name=tag_name,
     ) -> Dict:
-        res = _c.unstructure(val)
+        res = _exact_cl_unstruct_hooks[val.__class__](val)
         res[_tag_name] = _cl_to_tag[val.__class__]
         return res
 

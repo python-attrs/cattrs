@@ -9,7 +9,7 @@ converter customization (since there are many ways of handling unions).
 ## Unstructuring unions with extra metadata
 
 ```{note}
-_cattrs_ comes with the [tagged unions strategy](strategies.md#tagged-unions) for handling this exact use-case since version 22.3.
+_cattrs_ comes with the [tagged unions strategy](strategies.md#tagged-unions-strategy) for handling this exact use-case since version 23.1.
 The example below has been left here for educational purposes, but you should prefer the strategy.
 ```
 

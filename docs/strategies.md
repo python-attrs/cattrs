@@ -4,7 +4,7 @@ _cattrs_ ships with a number of _strategies_ for customizing un/structuring beha
 
 Strategies are prepackaged, high-level patterns for quickly and easily applying complex customizations to a converter.
 
-## Tagged Unions
+## Tagged Unions Strategy
 
 _Found at {py:func}`cattrs.strategies.configure_tagged_union`._
 
@@ -118,4 +118,135 @@ The converter is now ready to start structuring Apple notifications.
 ...     case OtherAppleNotification(not_type):
 ...         print("Can't handle this yet")
 
+```
+
+## Include Subclasses Strategy
+
+_Found at {py:func}`cattrs.strategies.include_subclasses`._
+
+The _include subclass_ strategy allows the un/structuring of a base class to an instance of itself or one of its descendants.
+Conceptually with this strategy, each time an un/structure operation for the base class is asked, `cattrs` machinery replaces that operation as if the union of the base class and its descendants had been asked instead.
+
+```{doctest} include_subclass
+
+>>> from attrs import define
+>>> from cattrs.strategies import include_subclasses
+>>> from cattrs import Converter
+
+>>> @define
+... class Parent:
+...     a: int
+
+>>> @define
+... class Child(Parent):
+...     b: str
+
+>>> converter = Converter()
+>>> include_subclasses(Parent, converter)
+
+>>> converter.unstructure(Child(a=1, b="foo"), unstructure_as=Parent)
+{'a': 1, 'b': 'foo'}
+
+>>> converter.structure({'a': 1, 'b': 'foo'}, Parent)
+Child(a=1, b='foo')
+```
+
+In the example above, we asked to unstructure then structure a `Child` instance as the `Parent` class and in both cases we correctly obtained back the unstructured and structured versions of the `Child` instance.
+If we did not apply the `include_subclasses` strategy, this is what we would have obtained:
+
+```python
+>>> converter_no_subclasses = Converter()
+
+>>> converter_no_subclasses.unstructure(Child(a=1, b="foo"), unstructure_as=Parent)
+{'a': 1}
+
+>>> converter_no_subclasses.structure({'a': 1, 'b': 'foo'}, Parent)
+Parent(a=1)
+```
+
+Without the application of the strategy, in both unstructure and structure operations, we received a `Parent` instance.
+
+```{note}
+The handling of subclasses is an opt-in feature for two main reasons:
+- Performance. While small and probably negligeable in most cases the subclass handling incurs more function calls and has a performance impact. 
+- Customization. The specific handling of subclasses can be different from one situation to the other. In particular there is not apparent universal good defaults for disambiguating the union type. Consequently The decision is left to the `cattrs` user.
+```
+
+```{warning}
+To work properly, all subclasses must be defined when the `include_subclasses` strategy is applied to a `converter`. If subclasses types are defined later, for instance in the context of a plug-in mechanism using inheritance, then those late defined subclasses will not be part of the subclasses union type and will not be un/structured as expected.
+```
+
+### Customization
+
+In the example shown in the previous section, the default options for `include_subclasses` work well because the `Child` class has an attribute that do not exist in the `Parent` class (the `b` attribute).
+The automatic union type disambiguation function which is based on finding unique fields for each type of the union works as intended.
+
+Sometimes, more disambiguation customization is required.
+For instance, the unstructuring operation would have failed if `Child` did not have an extra attribute or if a sibling of `Child` had also a `b` attribute.
+For those cases, a callable of 2 positional arguments (a union type and a converter) defining a [tagged union strategy](strategies.md#tagged-unions-strategy) can be passed to the `include_subclasses` strategy.
+{py:func}`configure_tagged_union()<cattrs.strategies.configure_tagged_union>` can be used as-is, but if you want to change its defaults, the [partial](https://docs.python.org/3/library/functools.html#functools.partial) function from the `functools` module in the standard library can come in handy.
+
+```python
+
+>>> from functools import partial
+>>> from attrs import define
+>>> from cattrs.strategies import include_subclasses, configure_tagged_union
+>>> from cattrs import Converter
+
+>>> @define
+... class Parent:
+...     a: int
+
+>>> @define
+... class Child1(Parent):
+...     b: str
+
+>>> @define
+... class Child2(Parent):
+...     b: int
+
+>>> converter = Converter()
+>>> union_strategy = partial(configure_tagged_union, tag_name="type_name")
+>>> include_subclasses(Parent, converter, union_strategy=union_strategy)
+
+>>> converter.unstructure(Child1(a=1, b="foo"), unstructure_as=Parent)
+{'a': 1, 'b': 'foo', 'type_name': 'Child1'}
+
+>>> converter.structure({'a': 1, 'b': 1, 'type_name': 'Child2'}, Parent)
+Child2(a=1, b=1)
+```
+
+Other customizations available see are (see {py:func}`include_subclasses()<cattrs.strategies.include_subclasses>`):
+- The exact list of subclasses that should participate to the union with the `subclasses` argument.
+- Attribute overrides that permit the customization of attributes un/structuring like renaming an attribute.
+
+Here is an example involving both customizations:
+
+```python
+
+>>> from attrs import define
+>>> from cattrs.strategies import include_subclasses
+>>> from cattrs import Converter, override
+
+>>> @define
+... class Parent:
+...     a: int
+
+>>> @define
+... class Child(Parent):
+...     b: str
+
+>>> converter = Converter()
+>>> include_subclasses(
+...     Parent,
+...     converter,
+...     subclasses=(Parent, Child),
+...     overrides={"b": override(rename="c")}
+... )
+
+>>> converter.unstructure(Child(a=1, b="foo"), unstructure_as=Parent)
+{'a': 1, 'c': 'foo'}
+
+>>> converter.structure({'a': 1, 'c': 'foo'}, Parent)
+Child(a=1, b='foo')
 ```

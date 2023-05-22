@@ -239,4 +239,11 @@ if "%1" == "pseudoxml" (
 	goto end
 )
 
+if "%1" == "apidoc" (
+	sphinx-apidoc -o . ../src/cattrs/ -f
+	if errorlevel 1 exit /b 1
+	echo.
+	goto end
+)
+
 :end

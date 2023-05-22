@@ -16,6 +16,8 @@
 - Add optional dependencies for `cattrs.preconf` third-party libraries. ([#337](https://github.com/python-attrs/cattrs/pull/337))
 - All preconf converters now allow overriding the default `unstruct_collection_overrides` in `make_converter`.
   ([#350](https://github.com/python-attrs/cattrs/issues/350) [#353](https://github.com/python-attrs/cattrs/pull/353))
+- Subclasses structuring and unstructuring is now supported via a custom `include_subclasses` strategy.
+  ([#312](https://github.com/python-attrs/cattrs/pull/312))
 
 ## 22.2.0 (2022-10-03)
 

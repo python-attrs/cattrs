@@ -280,7 +280,7 @@ the first time an appropriate union is structured.
 To support arbitrary unions, register a custom structuring hook for the union
 (see [Registering custom structuring hooks](structuring.md#registering-custom-structuring-hooks)).
 
-Another option is to use a custom tagged union strategy (see [Strategies - Tagged Unions](strategies.md#tagged-unions)).
+Another option is to use a custom tagged union strategy (see [Strategies - Tagged Unions](strategies.md#tagged-unions-strategy)).
 
 ### `typing.Final`
 
@@ -455,6 +455,8 @@ attributes holding `attrs` classes and dataclasses.
 >>> cattrs.structure({'b': {'a': '1'}}, B)
 B(b=A(a=1))
 ```
+
+Finally, if an `attrs` or `dataclass` class uses inheritance and as such has one or several subclasses, it can be structured automatically to its exact subtype by using the [include subclasses](strategies.md#include-subclasses-strategy) strategy.
 
 ## Registering Custom Structuring Hooks
 
