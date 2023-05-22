@@ -21,8 +21,8 @@
 - Subclasses structuring and unstructuring is now supported via a custom `include_subclasses` strategy.
   ([#312](https://github.com/python-attrs/cattrs/pull/312))
 - Adds support for `typing_extensions.Annotated` when the python version is less than `3.9`. ([#366](https://github.com/python-attrs/cattrs/pull/366))
-- Add unstructuring and structuring support to `deque` in standard lib.
-  ([#355](https://github.com/python-attrs/cattrs/issues/355))
+- Add unstructuring and structuring support for the standard library `deque`.
+  ([#355](https://github.com/python-attrs/cattrs/pull/355))
 
 ## 22.2.0 (2022-10-03)
 
