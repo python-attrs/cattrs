@@ -601,6 +601,7 @@ def test_annotated_attrs():
 def test_annotated_with_typing_extensions_attrs():
     """Annotation support works for attrs classes."""
     from typing_extensions import Annotated
+    from typing import List
 
     converter = Converter()
 
@@ -611,7 +612,7 @@ def test_annotated_with_typing_extensions_attrs():
     @attr.define
     class Outer:
         i: Annotated[Inner, "test"]  # noqa
-        j: list[Annotated[Inner, "test"]]  # noqa
+        j: List[Annotated[Inner, "test"]]  # noqa
 
     orig = Outer(Inner(1), [Inner(1)])
     raw = converter.unstructure(orig)
