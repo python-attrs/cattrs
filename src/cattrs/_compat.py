@@ -146,7 +146,7 @@ if is_py37 or is_py38:
     from typing_extensions import Annotated, get_origin
 
     def is_annotated(type) -> bool:
-        return get_origin(type) == Annotated
+        return get_origin(type) is Annotated
 
     def is_tuple(type):
         return type in (Tuple, tuple) or (
