@@ -143,9 +143,10 @@ if is_py37 or is_py38:
 
     from collections import Counter as ColCounter
     from typing import Counter, Union, _GenericAlias
+    from typing_extensions import Annotated, get_origin
 
-    def is_annotated(_):
-        return False
+    def is_annotated(type) -> bool:
+        return get_origin(type) == Annotated
 
     def is_tuple(type):
         return type in (Tuple, tuple) or (
