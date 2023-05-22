@@ -80,9 +80,9 @@ unstructure all sets into lists, try the following:
 Going even further, the Converter contains heuristics to support the
 following Python types, in order of decreasing generality:
 
-- `Sequence`, `MutableSequence`, `list`, `tuple`
+- `Sequence`, `MutableSequence`, `list`, `deque`, `tuple`
 - `Set`, `frozenset`, `MutableSet`, `set`
-- `Mapping`, `MutableMapping`, `dict`, `Counter`
+- `Mapping`, `MutableMapping`, `dict`, `defaultdict`, `OrderedDict`, `Counter`
 
 For example, if you override the unstructure type for `Sequence`, but not for
 `MutableSequence`, `list` or `tuple`, the override will also affect those

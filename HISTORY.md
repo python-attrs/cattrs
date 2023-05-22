@@ -18,6 +18,8 @@
   ([#350](https://github.com/python-attrs/cattrs/issues/350) [#353](https://github.com/python-attrs/cattrs/pull/353))
 - Subclasses structuring and unstructuring is now supported via a custom `include_subclasses` strategy.
   ([#312](https://github.com/python-attrs/cattrs/pull/312))
+- Add unstructuring and structuring support to `deque` in standard lib.
+  ([#355](https://github.com/python-attrs/cattrs/issues/355))
 
 ## 22.2.0 (2022-10-03)
 

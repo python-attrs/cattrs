@@ -1,12 +1,13 @@
 import builtins
 import sys
+from collections import deque
 from collections.abc import MutableSet as AbcMutableSet
 from collections.abc import Set as AbcSet
 from dataclasses import MISSING
 from dataclasses import fields as dataclass_fields
 from dataclasses import is_dataclass
 from typing import AbstractSet as TypingAbstractSet
-from typing import Any, Dict, FrozenSet, List
+from typing import Any, Deque, Dict, FrozenSet, List
 from typing import Mapping as TypingMapping
 from typing import MutableMapping as TypingMutableMapping
 from typing import MutableSequence as TypingMutableSequence
@@ -177,6 +178,13 @@ if is_py37 or is_py38:
             or (type.__origin__ in (Tuple, tuple) and type.__args__[1] is ...)
         )
 
+    def is_deque(type: Any) -> bool:
+        return (
+            type in (deque, Deque)
+            or (type.__class__ is _GenericAlias and issubclass(type.__origin__, deque))
+            or type.__origin__ is deque
+        )
+
     def is_mutable_set(type):
         return type is set or (
             type.__class__ is _GenericAlias and issubclass(type.__origin__, MutableSet)
@@ -327,8 +335,10 @@ else:
                 TypingSequence,
                 TypingMutableSequence,
                 AbcMutableSequence,
-                Tuple,
                 tuple,
+                Tuple,
+                deque,
+                Deque,
             )
             or (
                 type.__class__ is _GenericAlias
@@ -339,8 +349,15 @@ else:
                     and type.__args__[1] is ...
                 )
             )
-            or (origin in (list, AbcMutableSequence, AbcSequence))
+            or (origin in (list, deque, AbcMutableSequence, AbcSequence))
             or (origin is tuple and type.__args__[1] is ...)
+        )
+
+    def is_deque(type):
+        return (
+            type in (deque, Deque)
+            or (type.__class__ is _GenericAlias and issubclass(type.__origin__, deque))
+            or (getattr(type, "__origin__", None) is deque)
         )
 
     def is_mutable_set(type):
@@ -370,7 +387,7 @@ else:
 
     def is_mapping(type):
         return (
-            type in (TypingMapping, Dict, TypingMutableMapping, dict, AbcMutableMapping)
+            type in (dict, Dict, TypingMapping, TypingMutableMapping, AbcMutableMapping)
             or (
                 type.__class__ is _GenericAlias
                 and issubclass(type.__origin__, TypingMapping)

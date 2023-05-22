@@ -1,5 +1,7 @@
 """Test both structuring and unstructuring."""
+from collections import deque
 from typing import (
+    Deque,
     FrozenSet,
     List,
     MutableSequence,
@@ -524,20 +526,24 @@ def test_overriding_generated_structure_hook_func():
             (tuple, tuple),
             (list, list),
             (list, List),
+            (deque, Deque),
             (set, Set),
             (set, set),
             (frozenset, frozenset),
             (frozenset, FrozenSet),
             (list, MutableSequence),
+            (deque, MutableSequence),
             (tuple, Sequence),
         ]
         if is_py39_plus
         else [
             (tuple, Tuple),
             (list, List),
+            (deque, Deque),
             (set, Set),
             (frozenset, FrozenSet),
             (list, MutableSequence),
+            (deque, MutableSequence),
             (tuple, Sequence),
         ]
     ),
@@ -561,6 +567,57 @@ def test_seq_of_simple_classes_unstructure(cls_and_vals, seq_type_and_annotation
         else annotation[cl, ...],
     )
     assert all(e == test_val for e in outputs)
+
+
+@given(
+    sampled_from(
+        [
+            (tuple, Tuple),
+            (tuple, tuple),
+            (list, list),
+            (list, List),
+            (deque, deque),
+            (deque, Deque),
+            (set, Set),
+            (set, set),
+            (frozenset, frozenset),
+            (frozenset, FrozenSet),
+        ]
+        if is_py39_plus
+        else [
+            (tuple, Tuple),
+            (list, List),
+            (deque, Deque),
+            (set, Set),
+            (frozenset, FrozenSet),
+        ]
+    )
+)
+def test_seq_of_bare_classes_structure(seq_type_and_annotation):
+    """Structure iterable of values to a sequence of primitives."""
+    converter = Converter()
+
+    bare_classes = ((int, (1,)), (float, (1.0,)), (str, ("test",)), (bool, (True,)))
+    seq_type, annotation = seq_type_and_annotation
+
+    for cl, vals in bare_classes:
+
+        @define(frozen=True)
+        class C:
+            a: cl
+            b: cl
+
+        inputs = [{"a": cl(*vals), "b": cl(*vals)} for _ in range(5)]
+        outputs = converter.structure(
+            inputs,
+            cl=annotation[C]
+            if annotation not in (Tuple, tuple)
+            else annotation[C, ...],
+        )
+        expected = seq_type(C(a=cl(*vals), b=cl(*vals)) for _ in range(5))
+
+        assert type(outputs) == seq_type
+        assert outputs == expected
 
 
 @pytest.mark.skipif(not is_py39_plus, reason="3.9+ only")
