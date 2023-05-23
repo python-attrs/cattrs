@@ -175,6 +175,7 @@ if is_py37 or is_py38:
     from collections import Counter as ColCounter
     from typing import Counter, Union, _GenericAlias
     from typing_extensions import Annotated, NotRequired, Required
+    from typing_extensions import get_origin as te_get_origin
 
     if is_py38:
         from typing import TypedDict, _TypedDictMeta
@@ -183,7 +184,7 @@ if is_py37 or is_py38:
         TypedDict = ExtensionsTypedDict
 
     def is_annotated(type) -> bool:
-        return get_origin(type) is Annotated
+        return te_get_origin(type) is Annotated
 
     def is_tuple(type):
         return type in (Tuple, tuple) or (
