@@ -653,3 +653,38 @@ def test_annotated_attrs():
 
     structured = converter.structure(raw, Outer)
     assert structured == Outer(Inner(2), [Inner(2)])
+
+
+def test_annotated_with_typing_extensions_attrs():
+    """Annotation support works for attrs classes."""
+    from typing_extensions import Annotated
+    from typing import List
+
+    converter = Converter()
+
+    @attr.define
+    class Inner:
+        a: int
+
+    @attr.define
+    class Outer:
+        i: Annotated[Inner, "test"]  # noqa
+        j: List[Annotated[Inner, "test"]]  # noqa
+
+    orig = Outer(Inner(1), [Inner(1)])
+    raw = converter.unstructure(orig)
+
+    assert raw == {"i": {"a": 1}, "j": [{"a": 1}]}
+
+    structured = converter.structure(raw, Outer)
+    assert structured == orig
+
+    # Now register a hook and rerun the test.
+    converter.register_unstructure_hook(Inner, lambda v: {"a": 2})
+
+    raw = converter.unstructure(Outer(Inner(1), [Inner(1)]))
+
+    assert raw == {"i": {"a": 2}, "j": [{"a": 2}]}
+
+    structured = converter.structure(raw, Outer)
+    assert structured == Outer(Inner(2), [Inner(2)])

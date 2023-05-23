@@ -59,7 +59,7 @@ $ git clone git@github.com:your_name_here/cattrs.git
 
 ```shell
 $ cd cattrs/
-$ poetry install
+$ poetry install --all-extras
 ```
 
 4. Create a branch for local development::
