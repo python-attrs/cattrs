@@ -134,6 +134,6 @@ div.tab-set pre {
   padding: 1.25em;
 }
 
-body:not([data-theme="light"]) .highlight {
+body .highlight.only_dark {
   background: #18181a;
 }
