@@ -23,7 +23,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">= 3.7"
 attrs = ">= 20"
-typing_extensions = { version = "*", python = "< 3.10" }
+typing_extensions = { version = "*", python = "< 3.11" }
 exceptiongroup = { version = "*", python = "< 3.11" }
 ujson = { version = "^5.4.0", optional = true }
 orjson = { version = "^3.5.2", markers = "implementation_name == 'cpython'", optional = true }
