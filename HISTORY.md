@@ -1,6 +1,6 @@
 # History
 
-## 23.1.0 (UNRELEASED)
+## 23.1.0 (2023-05-30)
 
 - Introduce the `tagged_union` strategy. ([#318](https://github.com/python-attrs/cattrs/pull/318) [#317](https://github.com/python-attrs/cattrs/issues/317))
 - Introduce the `cattrs.transform_error` helper function for formatting validation exceptions. ([258](https://github.com/python-attrs/cattrs/issues/258) [342](https://github.com/python-attrs/cattrs/pull/342))
