@@ -5,8 +5,8 @@ skip-magic-trailing-comma = true
 profile = "black"
 known_first_party = ["cattr"]
 
-[tool.pdm.build]
-includes = ["src/cattr", "src/cattrs"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/cattr", "src/cattrs"]
 
 [build-system]
 requires = ["hatchling"]
