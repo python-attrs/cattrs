@@ -26,7 +26,7 @@ def test_snake_to_camel(converter_cls):
         return make_dict_unstructure_fn(
             type,
             converter,
-            **{a.name: override(rename=to_camel_case(a.name)) for a in fields(type)}
+            **{a.name: override(rename=to_camel_case(a.name)) for a in fields(type)},
         )
 
     converter.register_unstructure_hook_factory(has, unstructure_adapt_to_camel_case)
