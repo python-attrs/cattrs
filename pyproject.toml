@@ -24,8 +24,8 @@ authors = [
 ]
 dependencies = [
     "attrs>=23.1.0",
-    "typing-extensions>=4.6.2; python_version < \"3.11\"",
-    "exceptiongroup>=1.1.1; python_version < \"3.11\"",
+    "typing-extensions>=4.6.2; python_version < '3.11'",
+    "exceptiongroup>=1.1.1; python_version < '3.11'",
 ]
 requires-python = ">=3.7"
 readme = "README.md"
@@ -44,7 +44,7 @@ ujson = [
     "ujson>=5.7.0",
 ]
 orjson = [
-    "orjson>=3.8.14; implementation_name == \"cpython\"",
+    "orjson>=3.8.14; implementation_name == 'cpython'",
 ]
 msgpack = [
     "msgpack>=1.0.5",
