@@ -16,7 +16,8 @@ def format_exception(exc: BaseException, type: Union[Type, None]) -> str:
     The following exceptions are handled specially:
     * `KeyErrors` (`required field missing`)
     * `ValueErrors` (`invalid value for type, expected <type>` or just `invalid value`)
-    * `TypeErrors` (`invalid value for type, expected <type>` and a couple special cases for iterables)
+    * `TypeErrors` (`invalid value for type, expected <type>` and a couple special
+      cases for iterables)
     * `cattrs.ForbiddenExtraKeysError`
     * some `AttributeErrors` (special cased for structing mappings)
     """

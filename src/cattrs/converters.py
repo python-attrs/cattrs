@@ -411,7 +411,9 @@ class BaseConverter:
     def _gen_attrs_union_structure(
         self, cl: Any
     ) -> Callable[[Any, Type[T]], Optional[Type[T]]]:
-        """Generate a structuring function for a union of attrs classes (and maybe None)."""
+        """
+        Generate a structuring function for a union of attrs classes (and maybe None).
+        """
         dis_fn = self._get_dis_func(cl)
         has_none = NoneType in cl.__args__
 
@@ -482,9 +484,10 @@ class BaseConverter:
         type_ = a.type
         attrib_converter = getattr(a, "converter", None)
         if self._prefer_attrib_converters and attrib_converter:
-            # A attrib converter is defined on this attribute, and prefer_attrib_converters is set
-            # to give these priority over registered structure hooks. So, pass through the raw
-            # value, which attrs will flow into the converter
+            # A attrib converter is defined on this attribute, and
+            # prefer_attrib_converters is set to give these priority over registered
+            # structure hooks. So, pass through the raw value, which attrs will flow
+            # into the converter
             return value
         if type_ is None:
             # No type metadata.
@@ -846,7 +849,8 @@ class Converter(BaseConverter):
         if FrozenSetSubscriptable in co:
             co[frozenset] = co[FrozenSetSubscriptable]  # For 3.7/3.8 compatibility.
 
-        # abc.Sequence overrides, if defined, can apply to MutableSequences, lists and tuples
+        # abc.Sequence overrides, if defined, can apply to MutableSequences, lists and
+        # tuples
         if Sequence in co:
             if MutableSequence not in co:
                 co[MutableSequence] = co[Sequence]

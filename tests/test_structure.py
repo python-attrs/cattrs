@@ -25,12 +25,12 @@ from cattrs._compat import copy_with, is_bare, is_union_type
 from cattrs.errors import IterableValidationError, StructureHandlerNotFoundError
 
 from .untyped import (
+    deque_seqs_of_primitives,
     dicts_of_primitives,
     enums_of_primitives,
     lists_of_primitives,
     primitive_strategies,
     seqs_of_primitives,
-    deque_seqs_of_primitives,
 )
 
 NoneType = type(None)
@@ -236,9 +236,9 @@ def test_structuring_optional_primitives(primitive_and_type):
 def test_structuring_lists_of_opt(list_and_type, detailed_validation: bool) -> None:
     """Test structuring lists of Optional primitive types."""
     converter = BaseConverter(detailed_validation=detailed_validation)
-    l, t = list_and_type
+    lst, t = list_and_type
 
-    l.append(None)
+    lst.append(None)
     args = t.__args__
 
     is_optional = args[0] is Optional or (
@@ -253,16 +253,16 @@ def test_structuring_lists_of_opt(list_and_type, detailed_validation: bool) -> N
             if not detailed_validation
             else IterableValidationError
         ):
-            converter.structure(l, t)
+            converter.structure(lst, t)
 
     optional_t = Optional[args[0]]
     # We want to create a generic type annotation with an optional
     # type parameter.
     t = copy_with(t, optional_t)
 
-    converted = converter.structure(l, t)
+    converted = converter.structure(lst, t)
 
-    for x, y in zip(l, converted):
+    for x, y in zip(lst, converted):
         assert x == y
 
 
@@ -270,13 +270,13 @@ def test_structuring_lists_of_opt(list_and_type, detailed_validation: bool) -> N
 def test_stringifying_lists_of_opt(list_and_type):
     """Test structuring Optional primitive types into strings."""
     converter = BaseConverter()
-    l, t = list_and_type
+    lst, t = list_and_type
 
-    l.append(None)
+    lst.append(None)
 
-    converted = converter.structure(l, List[Optional[str]])
+    converted = converter.structure(lst, List[Optional[str]])
 
-    for x, y in zip(l, converted):
+    for x, y in zip(lst, converted):
         if x is None:
             assert x is y
         else:

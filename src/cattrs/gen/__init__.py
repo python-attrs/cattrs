@@ -251,12 +251,14 @@ def make_dict_structure_fn(
 
     # We have generic parameters and need to generate a unique name for the function
     for p in getattr(cl, "__parameters__", ()):
-        # This is nasty, I am not sure how best to handle `typing.List[str]` or `TClass[int, int]` as a parameter type here
+        # This is nasty, I am not sure how best to handle `typing.List[str]` or
+        # `TClass[int, int]` as a parameter type here
         try:
             name_base = mapping[p.__name__]
         except KeyError:
+            pn = p.__name__
             raise StructureHandlerNotFoundError(
-                f"Missing type for generic argument {p.__name__}, specify it when structuring.",
+                f"Missing type for generic argument {pn}, specify it when structuring.",
                 p,
             ) from None
         name = getattr(name_base, "__name__", None) or str(name_base)
@@ -331,10 +333,10 @@ def make_dict_structure_fn(
                     internal_arg_parts[struct_handler_name] = t
                     lines.append(f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'])")
                 else:
-                    type_name = f"__c_type_{an}"
-                    internal_arg_parts[type_name] = t
+                    tn = f"__c_type_{an}"
+                    internal_arg_parts[tn] = t
                     lines.append(
-                        f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'], {type_name})"
+                        f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'], {tn})"
                     )
             else:
                 lines.append(f"{i}res['{ian}'] = o['{kn}']")
@@ -342,7 +344,7 @@ def make_dict_structure_fn(
             lines.append(f"{i}except Exception as e:")
             i = f"{i}  "
             lines.append(
-                f'{i}e.__notes__ = getattr(e, \'__notes__\', []) + [__c_avn("Structuring class {cl.__qualname__} @ attribute {an}", "{an}", __c_type_{an})]'
+                f'{i}e.__notes__ = getattr(e, \'__notes__\', []) + [__c_avn("Structuring class {cl.__qualname__} @ attribute {an}", "{an}", __c_type_{an})]'  # noqa: E501
             )
             lines.append(f"{i}errors.append(e)")
 
@@ -354,7 +356,7 @@ def make_dict_structure_fn(
             ]
 
         post_lines.append(
-            f"  if errors: raise __c_cve('While structuring ' + {cl.__name__!r}, errors, __cl)"
+            f"  if errors: raise __c_cve('While structuring ' + {cl_name!r}, errors, __cl)"  # noqa: E501
         )
         instantiation_lines = (
             ["  try:"]
@@ -362,7 +364,7 @@ def make_dict_structure_fn(
             + [f"      {line}" for line in invocation_lines]
             + ["    )"]
             + [
-                f"  except Exception as exc: raise __c_cve('While structuring ' + {cl.__name__!r}, [exc], __cl)"
+                f"  except Exception as exc: raise __c_cve('While structuring ' + {cl_name!r}, [exc], __cl)"  # noqa: E501
             ]
         )
     else:
@@ -403,9 +405,9 @@ def make_dict_structure_fn(
                     internal_arg_parts[struct_handler_name] = t
                     invocation_line = f"{struct_handler_name}(o['{kn}']),"
                 else:
-                    type_name = f"__c_type_{an}"
-                    internal_arg_parts[type_name] = t
-                    invocation_line = f"{struct_handler_name}(o['{kn}'], {type_name}),"
+                    tn = f"__c_type_{an}"
+                    internal_arg_parts[tn] = t
+                    invocation_line = f"{struct_handler_name}(o['{kn}'], {tn}),"
             else:
                 invocation_line = f"o['{kn}'],"
 
@@ -453,10 +455,10 @@ def make_dict_structure_fn(
                             f"    res['{ian}'] = {struct_handler_name}(o['{kn}'])"
                         )
                     else:
-                        type_name = f"__c_type_{an}"
-                        internal_arg_parts[type_name] = t
+                        tn = f"__c_type_{an}"
+                        internal_arg_parts[tn] = t
                         post_lines.append(
-                            f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], {type_name})"
+                            f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], {tn})"
                         )
                 else:
                     post_lines.append(f"    res['{ian}'] = o['{kn}']")
@@ -718,7 +720,7 @@ def make_mapping_structure_fn(
             lines.append(f"      value = {v_s}")
             lines.append("    except Exception as e:")
             lines.append(
-                "      e.__notes__ = getattr(e, '__notes__', []) + [IterableValidationNote('Structuring mapping value @ key ' + repr(k), k, val_type)]"
+                "      e.__notes__ = getattr(e, '__notes__', []) + [IterableValidationNote('Structuring mapping value @ key ' + repr(k), k, val_type)]"  # noqa: E501
             )
             lines.append("      errors.append(e)")
             lines.append("      continue")
@@ -727,12 +729,12 @@ def make_mapping_structure_fn(
             lines.append("      res[key] = value")
             lines.append("    except Exception as e:")
             lines.append(
-                "      e.__notes__ = getattr(e, '__notes__', []) + [IterableValidationNote('Structuring mapping key @ key ' + repr(k), k, key_type)]"
+                "      e.__notes__ = getattr(e, '__notes__', []) + [IterableValidationNote('Structuring mapping key @ key ' + repr(k), k, key_type)]"  # noqa: E501
             )
             lines.append("      errors.append(e)")
             lines.append("  if errors:")
             lines.append(
-                f"    raise IterableValidationError('While structuring ' + {repr(cl)!r}, errors, __cattr_mapping_cl)"
+                f"    raise IterableValidationError('While structuring ' + {repr(cl)!r}, errors, __cattr_mapping_cl)"  # noqa: E501
             )
         else:
             lines.append(f"  res = {{{k_s}: {v_s} for k, v in mapping.items()}}")

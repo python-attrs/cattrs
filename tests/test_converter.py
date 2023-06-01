@@ -404,7 +404,9 @@ def test_type_overrides(cl_and_vals):
 
 
 def test_calling_back():
-    """Calling unstructure_attrs_asdict from a hook should not override a manual hook."""
+    """
+    Calling unstructure_attrs_asdict from a hook should not override a manual hook.
+    """
     converter = Converter()
 
     @attr.define
@@ -657,8 +659,9 @@ def test_annotated_attrs():
 
 def test_annotated_with_typing_extensions_attrs():
     """Annotation support works for attrs classes."""
-    from typing_extensions import Annotated
     from typing import List
+
+    from typing_extensions import Annotated
 
     converter = Converter()
 

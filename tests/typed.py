@@ -109,7 +109,9 @@ def lists_of_typed_attrs(
         min_size=min_size,
         max_size=50,
     ).map(
-        lambda l: sorted(l, key=lambda t: (t[0]._default is not NOTHING, t[0].kw_only))
+        lambda lst: sorted(
+            lst, key=lambda t: (t[0]._default is not NOTHING, t[0].kw_only)
+        )
     )
 
 
