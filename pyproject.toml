@@ -66,7 +66,7 @@ bson = [
 lint = [
     "isort>=5.11.5",
     "black>=23.3.0",
-    "flake8>=5.0.4",
+    "ruff>=0.0.270",
 ]
 test = [
     "hypothesis>=6.75.9",

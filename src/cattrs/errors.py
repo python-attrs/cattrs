@@ -4,7 +4,10 @@ from cattrs._compat import ExceptionGroup
 
 
 class StructureHandlerNotFoundError(Exception):
-    """Error raised when structuring cannot find a handler for converting inputs into :attr:`type_`."""
+    """
+    Error raised when structuring cannot find a handler for converting inputs into
+    :attr:`type_`.
+    """
 
     def __init__(self, message: str, type_: Type) -> None:
         super().__init__(message)
@@ -98,10 +101,13 @@ class ClassValidationError(BaseValidationError):
 
 
 class ForbiddenExtraKeysError(Exception):
-    """Raised when `forbid_extra_keys` is activated and such extra keys are detected during structuring.
+    """
+    Raised when `forbid_extra_keys` is activated and such extra keys are detected
+    during structuring.
 
-    The attribute `extra_fields` is a sequence of those extra keys, which were the cause of this error,
-    and `cl` is the class which was structured with those extra keys.
+    The attribute `extra_fields` is a sequence of those extra keys, which were the
+    cause of this error, and `cl` is the class which was structured with those extra
+    keys.
     """
 
     def __init__(
@@ -109,11 +115,9 @@ class ForbiddenExtraKeysError(Exception):
     ) -> None:
         self.cl = cl
         self.extra_fields = extra_fields
+        cln = cl.__name__
 
-        msg = (
+        super().__init__(
             message
-            if message
-            else f"Extra fields in constructor for {cl.__name__}: {', '.join(extra_fields)}"
+            or f"Extra fields in constructor for {cln}: {', '.join(extra_fields)}"
         )
-
-        super().__init__(msg)

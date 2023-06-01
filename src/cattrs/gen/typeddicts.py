@@ -69,8 +69,10 @@ def make_dict_unstructure_fn(
 
     :param cl: A `TypedDict` class.
     :param converter: A Converter instance to use for unstructuring nested fields.
-    :param kwargs: A mapping of field names to an `AttributeOverride`, for customization.
-    :param _cattrs_detailed_validation: Whether to store the generated code in the _linecache_, for easier debugging and better stack traces.
+    :param kwargs: A mapping of field names to an `AttributeOverride`, for
+        customization.
+    :param _cattrs_detailed_validation: Whether to store the generated code in the
+        _linecache_, for easier debugging and better stack traces.
     """
     origin = get_origin(cl)
     attrs = _adapted_fields(origin or cl)  # type: ignore
@@ -248,10 +250,14 @@ def make_dict_structure_fn(
 
     :param cl: A `TypedDict` class.
     :param converter: A Converter instance to use for structuring nested fields.
-    :param kwargs: A mapping of field names to an `AttributeOverride`, for customization.
-    :param _cattrs_detailed_validation: Whether to use a slower mode that produces more detailed errors.
-    :param _cattrs_forbid_extra_keys: Whether the structuring function should raise a `ForbiddenExtraKeysError` if unknown keys are encountered.
-    :param _cattrs_detailed_validation: Whether to store the generated code in the _linecache_, for easier debugging and better stack traces.
+    :param kwargs: A mapping of field names to an `AttributeOverride`, for
+        customization.
+    :param _cattrs_detailed_validation: Whether to use a slower mode that produces
+        more detailed errors.
+    :param _cattrs_forbid_extra_keys: Whether the structuring function should raise a
+        `ForbiddenExtraKeysError` if unknown keys are encountered.
+    :param _cattrs_detailed_validation: Whether to store the generated code in the
+        _linecache_, for easier debugging and better stack traces.
     """
 
     mapping = {}
@@ -276,12 +282,12 @@ def make_dict_structure_fn(
 
     # We have generic parameters and need to generate a unique name for the function
     for p in getattr(cl, "__parameters__", ()):
-        # This is nasty, I am not sure how best to handle `typing.List[str]` or `TClass[int, int]` as a parameter type here
         try:
             name_base = mapping[p.__name__]
         except KeyError:
+            pn = p.__name__
             raise StructureHandlerNotFoundError(
-                f"Missing type for generic argument {p.__name__}, specify it when structuring.",
+                f"Missing type for generic argument {pn}, specify it when structuring.",
                 p,
             ) from None
         name = getattr(name_base, "__name__", None) or str(name_base)
@@ -354,7 +360,7 @@ def make_dict_structure_fn(
                     lines.append(f"{i}res['{an}'] = {struct_handler_name}(o['{kn}'])")
                 else:
                     lines.append(
-                        f"{i}res['{an}'] = {struct_handler_name}(o['{kn}'], {type_name})"
+                        f"{i}res['{an}'] = {struct_handler_name}(o['{kn}'], {type_name})"  # noqa: E501
                     )
             else:
                 lines.append(f"{i}res['{an}'] = o['{kn}']")
@@ -364,7 +370,7 @@ def make_dict_structure_fn(
             lines.append(f"{i}except Exception as e:")
             i = f"{i}  "
             lines.append(
-                f'{i}e.__notes__ = getattr(e, \'__notes__\', []) + [__c_avn("Structuring typeddict {cl.__qualname__} @ attribute {an}", "{an}", __c_type_{an})]'
+                f'{i}e.__notes__ = getattr(e, \'__notes__\', []) + [__c_avn("Structuring typeddict {cl.__qualname__} @ attribute {an}", "{an}", __c_type_{an})]'  # noqa: E501
             )
             lines.append(f"{i}errors.append(e)")
 
@@ -376,7 +382,7 @@ def make_dict_structure_fn(
             ]
 
         post_lines.append(
-            f"  if errors: raise __c_cve('While structuring ' + {cl.__name__!r}, errors, __cl)"
+            f"  if errors: raise __c_cve('While structuring ' + {cl.__name__!r}, errors, __cl)"  # noqa: E501
         )
     else:
         non_required = []
@@ -472,10 +478,10 @@ def make_dict_structure_fn(
                             f"    res['{ian}'] = {struct_handler_name}(o['{kn}'])"
                         )
                     else:
-                        type_name = f"__c_type_{an}"
-                        internal_arg_parts[type_name] = t
+                        tn = f"__c_type_{an}"
+                        internal_arg_parts[tn] = t
                         post_lines.append(
-                            f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], {type_name})"
+                            f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], {tn})"
                         )
                 else:
                     post_lines.append(f"    res['{ian}'] = o['{kn}']")

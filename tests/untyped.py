@@ -413,7 +413,7 @@ def lists_of_attrs(defaults=None, min_size=0, kw_only=None):
     # Python functions support up to 255 arguments.
     return st.lists(
         simple_attrs(defaults, kw_only), min_size=min_size, max_size=10
-    ).map(lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING))
+    ).map(lambda lst: sorted(lst, key=lambda t: t[0]._default is not NOTHING))
 
 
 def simple_classes(defaults=None, min_attrs=0, frozen=None, kw_only=None):
