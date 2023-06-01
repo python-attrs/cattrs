@@ -48,21 +48,21 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr htmlcov/
 
 lint: ## check style with flake8
-	poetry run flake8 src/ tests
-	poetry run black --check src tests docs/conf.py
+	pdm run flake8 src/ tests
+	pdm run black --check src tests docs/conf.py
 
 test: ## run tests quickly with the default Python
-	poetry run pytest -x --ff tests
+	pdm run pytest -x --ff tests
 
 
 test-all: ## run tests on every Python version with tox
 	tox
 
 coverage: ## check code coverage quickly with the default Python
-	poetry run coverage run --source cattrs -m pytest
+	pdm run coverage run --source cattrs -m pytest
 
-	poetry run coverage report -m
-	poetry run coverage html
+	pdm run coverage report -m
+	pdm run coverage html
 	$(BROWSER) htmlcov/index.html
 
 docs: ## generate Sphinx HTML documentation, including API docs

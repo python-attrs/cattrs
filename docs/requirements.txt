@@ -1,4 +1,4 @@
-furo==2022.9.29
-poetry==1.2.0
-sphinx-copybutton==0.5.0
-myst-parser==0.18.1
+furo==2023.3.27
+pdm==2.7.0
+sphinx-copybutton==0.5.2
+myst-parser==1.0.0

@@ -1,5 +1,8 @@
 # History
 
+## 23.2.0 (UNRELEASED)
+- Use [PDM](https://pdm.fming.dev/latest/) instead of Poetry.
+
 ## 23.1.1 (2023-05-30)
 - Add `typing_extensions` as a direct dependency on 3.10. ([#369](https://github.com/python-attrs/cattrs/issues/369) [#370](https://github.com/python-attrs/cattrs/pull/370))
 

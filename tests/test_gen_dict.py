@@ -130,7 +130,7 @@ def test_individual_overrides(converter_cls, cl_and_vals):
             cl,
             converter,
             _cattrs_omit_if_default=True,
-            **{attr.name: override(omit_if_default=False)}
+            **{attr.name: override(omit_if_default=False)},
         ),
     )
 
