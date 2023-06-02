@@ -1,6 +1,6 @@
 # History
 
-## 23.1.2 (UNRELEASED)
+## 23.1.2 (2023-06-02)
 - Improve `typing_extensions` version bound. ([#372](https://github.com/python-attrs/cattrs/issues/372))
 
 ## 23.1.1 (2023-05-30)
