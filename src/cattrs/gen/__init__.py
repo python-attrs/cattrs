@@ -333,7 +333,7 @@ def make_dict_structure_fn(
             lines.append(f"{i}except Exception as e:")
             i = f"{i}  "
             lines.append(
-                f'{i}e.__notes__ = getattr(e, \'__notes__\', []) + [__c_avn("Structuring class {cl.__qualname__} @ attribute {an}", "{an}", __c_type_{an})]'  # noqa: E501
+                f'{i}e.__notes__ = getattr(e, \'__notes__\', []) + [__c_avn("Structuring class {cl.__qualname__} @ attribute {an}", "{an}", __c_type_{an})]'
             )
             lines.append(f"{i}errors.append(e)")
 
@@ -345,7 +345,7 @@ def make_dict_structure_fn(
             ]
 
         post_lines.append(
-            f"  if errors: raise __c_cve('While structuring ' + {cl_name!r}, errors, __cl)"  # noqa: E501
+            f"  if errors: raise __c_cve('While structuring ' + {cl_name!r}, errors, __cl)"
         )
         instantiation_lines = (
             ["  try:"]
@@ -353,7 +353,7 @@ def make_dict_structure_fn(
             + [f"      {line}" for line in invocation_lines]
             + ["    )"]
             + [
-                f"  except Exception as exc: raise __c_cve('While structuring ' + {cl_name!r}, [exc], __cl)"  # noqa: E501
+                f"  except Exception as exc: raise __c_cve('While structuring ' + {cl_name!r}, [exc], __cl)"
             ]
         )
     else:
@@ -703,7 +703,7 @@ def make_mapping_structure_fn(
             lines.append(f"      value = {v_s}")
             lines.append("    except Exception as e:")
             lines.append(
-                "      e.__notes__ = getattr(e, '__notes__', []) + [IterableValidationNote('Structuring mapping value @ key ' + repr(k), k, val_type)]"  # noqa: E501
+                "      e.__notes__ = getattr(e, '__notes__', []) + [IterableValidationNote('Structuring mapping value @ key ' + repr(k), k, val_type)]"
             )
             lines.append("      errors.append(e)")
             lines.append("      continue")
@@ -712,12 +712,12 @@ def make_mapping_structure_fn(
             lines.append("      res[key] = value")
             lines.append("    except Exception as e:")
             lines.append(
-                "      e.__notes__ = getattr(e, '__notes__', []) + [IterableValidationNote('Structuring mapping key @ key ' + repr(k), k, key_type)]"  # noqa: E501
+                "      e.__notes__ = getattr(e, '__notes__', []) + [IterableValidationNote('Structuring mapping key @ key ' + repr(k), k, key_type)]"
             )
             lines.append("      errors.append(e)")
             lines.append("  if errors:")
             lines.append(
-                f"    raise IterableValidationError('While structuring ' + {repr(cl)!r}, errors, __cattr_mapping_cl)"  # noqa: E501
+                f"    raise IterableValidationError('While structuring ' + {repr(cl)!r}, errors, __cattr_mapping_cl)"
             )
         else:
             lines.append(f"  res = {{{k_s}: {v_s} for k, v in mapping.items()}}")

@@ -166,7 +166,7 @@ def test_raises_if_no_generic_params_supplied(
 
     with pytest.raises(
         StructureHandlerNotFoundError,
-        match="Unsupported type: ~T. Register a structure hook for it.|Missing type for generic argument T, specify it when structuring.",  # noqa: E501
+        match="Unsupported type: ~T. Register a structure hook for it.|Missing type for generic argument T, specify it when structuring.",
     ) as exc:
         converter.structure(asdict(data), TClass)
 

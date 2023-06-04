@@ -359,7 +359,7 @@ def make_dict_structure_fn(
                     lines.append(f"{i}res['{an}'] = {struct_handler_name}(o['{kn}'])")
                 else:
                     lines.append(
-                        f"{i}res['{an}'] = {struct_handler_name}(o['{kn}'], {type_name})"  # noqa: E501
+                        f"{i}res['{an}'] = {struct_handler_name}(o['{kn}'], {type_name})"
                     )
             else:
                 lines.append(f"{i}res['{an}'] = o['{kn}']")
@@ -369,7 +369,7 @@ def make_dict_structure_fn(
             lines.append(f"{i}except Exception as e:")
             i = f"{i}  "
             lines.append(
-                f'{i}e.__notes__ = getattr(e, \'__notes__\', []) + [__c_avn("Structuring typeddict {cl.__qualname__} @ attribute {an}", "{an}", __c_type_{an})]'  # noqa: E501
+                f'{i}e.__notes__ = getattr(e, \'__notes__\', []) + [__c_avn("Structuring typeddict {cl.__qualname__} @ attribute {an}", "{an}", __c_type_{an})]'
             )
             lines.append(f"{i}errors.append(e)")
 
@@ -381,7 +381,7 @@ def make_dict_structure_fn(
             ]
 
         post_lines.append(
-            f"  if errors: raise __c_cve('While structuring ' + {cl.__name__!r}, errors, __cl)"  # noqa: E501
+            f"  if errors: raise __c_cve('While structuring ' + {cl.__name__!r}, errors, __cl)"
         )
     else:
         non_required = []

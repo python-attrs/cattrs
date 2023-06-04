@@ -123,6 +123,7 @@ select = [
     "RUF", # ruff
 ]
 ignore = [
+    "E501",   # line length is handled by black
     "RUF001", # leave my smart characters alone
     "S101",   # assert
     "SIM300", # Yoda rocks in asserts
@@ -131,5 +132,4 @@ ignore = [
     "B006",   # mutable argument defaults
     "DTZ001", # datetimes in tests
     "DTZ006", # datetimes in tests
-
 ]
