@@ -1,8 +1,6 @@
 """Test un/structuring recursive class graphs."""
 from __future__ import annotations
 
-from typing import List
-
 from attr import define
 
 from cattr import Converter
@@ -10,7 +8,7 @@ from cattr import Converter
 
 @define
 class A:
-    inner: List[A]
+    inner: list[A]
 
 
 def test_simple_recursive():

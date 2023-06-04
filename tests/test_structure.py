@@ -139,10 +139,7 @@ def test_structuring_hetero_tuples(list_of_vals_and_types, detailed_validation):
     converter = BaseConverter(detailed_validation=detailed_validation)
     types = tuple(e[1] for e in list_of_vals_and_types)
     vals = [e[0] for e in list_of_vals_and_types]
-    if types:
-        t = Tuple[types]
-    else:
-        t = Tuple
+    t = Tuple[types] if types else Tuple
 
     converted = converter.structure(vals, t)
 
@@ -154,8 +151,8 @@ def test_structuring_hetero_tuples(list_of_vals_and_types, detailed_validation):
     for x, y in zip(types, converted):
         assert isinstance(y, x)
 
-    t2 = Tuple[types + (str,)]  # one longer
-    vals2 = vals + [None]  # one longer
+    t2 = Tuple[(*types, str)]  # one longer
+    vals2 = [*vals, None]  # one longer
     expected_exception = IterableValidationError if detailed_validation else ValueError
     with raises(expected_exception):
         converter.structure(vals, t2)
@@ -313,10 +310,10 @@ def test_structure_hook_func():
     def handle(obj, cls):
         return "hi"
 
-    class Foo(object):
+    class Foo:
         pass
 
-    class Bar(object):
+    class Bar:
         pass
 
     converter.register_structure_hook_func(can_handle, handle)
@@ -358,7 +355,7 @@ def test_subclass_registration_is_honored():
     """
     converter = BaseConverter()
 
-    class Foo(object):
+    class Foo:
         def __init__(self, value):
             self.value = value
 

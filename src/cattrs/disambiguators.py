@@ -18,7 +18,7 @@ def create_uniq_field_dis_func(
     if len(classes) < 2:
         raise ValueError("At least two classes required.")
     cls_and_attrs = [
-        (cl, set(at.name for at in fields(get_origin(cl) or cl))) for cl in classes
+        (cl, {at.name for at in fields(get_origin(cl) or cl)}) for cl in classes
     ]
     if len([attrs for _, attrs in cls_and_attrs if len(attrs) == 0]) > 1:
         raise ValueError("At least two classes have no attributes.")
@@ -35,7 +35,7 @@ def create_uniq_field_dis_func(
             other_reqs = reduce(or_, (c_a[1] for c_a in other_classes))
             uniq = cl_reqs - other_reqs
             if not uniq:
-                m = "{} has no usable unique attributes.".format(cl)
+                m = f"{cl} has no usable unique attributes."
                 raise ValueError(m)
             # We need a unique attribute with no default.
             cl_fields = fields(get_origin(cl) or cl)

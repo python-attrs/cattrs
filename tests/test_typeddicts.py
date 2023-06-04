@@ -47,13 +47,13 @@ def get_annot(t) -> dict:
                 k: param_to_args[v] if v in param_to_args else v
                 for k, v in origin_annotations.items()
             }
-        else:
-            # Origin is `None`, so this is a subclass for a generic typeddict.
-            mapping = generate_mapping(t)
-            return {
-                k: mapping[v.__name__] if v.__name__ in mapping else v
-                for k, v in get_annots(t).items()
-            }
+
+        # Origin is `None`, so this is a subclass for a generic typeddict.
+        mapping = generate_mapping(t)
+        return {
+            k: mapping[v.__name__] if v.__name__ in mapping else v
+            for k, v in get_annots(t).items()
+        }
     return get_annots(t)
 
 

@@ -8,8 +8,6 @@ import attr
 class _DispatchNotFound:
     """A dummy object to help signify a dispatch not found."""
 
-    pass
-
 
 class MultiStrategyDispatch:
     """
@@ -38,7 +36,7 @@ class MultiStrategyDispatch:
             dispatch = self._single_dispatch.dispatch(typ)
             if dispatch is not _DispatchNotFound:
                 return dispatch
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
         direct_dispatch = self._direct_dispatch.get(typ)
@@ -126,13 +124,13 @@ class FunctionDispatch:
             # it's easier to just ignore that case.
             try:
                 ch = can_handle(typ)
-            except Exception:
+            except Exception:  # noqa: S112
                 continue
             if ch:
                 if is_generator:
                     return handler(typ)
-                else:
-                    return handler
+
+                return handler
         return None
 
     def get_num_fns(self) -> int:

@@ -77,14 +77,11 @@ test = [
     "coverage>=7.2.7",
 ]
 docs = [
-    "sphinx>=4.3.2",
-    "furo>=2022.9.29",
+    "sphinx>=5.3.0",
+    "furo>=2023.3.27",
     "sphinx-copybutton>=0.5.2",
-    "myst-parser>=0.18.1",
+    "myst-parser>=1.0.0",
 ]
-
-[tool.pdm.resolution.overrides]
-importlib_metadata = ">=4.8"
 
 [tool.pytest.ini_options]
 addopts = "-l --benchmark-sort=fullname --benchmark-warmup=true --benchmark-warmup-iterations=5  --benchmark-group-by=fullname"
@@ -103,3 +100,36 @@ source = [
    ".tox/pypy*/site-packages/cattr",
 ]
 
+[tool.ruff]
+src = ["src", "tests"]
+select = [
+    "E",   # pycodestyle
+    "W",   # pycodestyle
+    "F",   # Pyflakes
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "YTT", # flake8-2020
+    "S",   # flake8-bandit
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "T10", # flake8-debugger
+    "ISC", # flake8-implicit-str-concat
+    "RET", # flake8-return
+    "SIM", # flake8-simplify
+    "DTZ", # flake8-datetimez
+    "PGH", # pygrep-hooks
+    "PLC", # Pylint
+    "PIE", # flake8-pie
+    "RUF", # ruff
+]
+ignore = [
+    "RUF001", # leave my smart characters alone
+    "S101",   # assert
+    "SIM300", # Yoda rocks in asserts
+    "PGH001", # No eval lol?
+    "PGH003", # leave my type: ignores alone
+    "B006",   # mutable argument defaults
+    "DTZ001", # datetimes in tests
+    "DTZ006", # datetimes in tests
+
+]

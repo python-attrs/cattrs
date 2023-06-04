@@ -40,7 +40,7 @@ def format_exception(exc: BaseException, type: Union[Type, None]) -> str:
             res = f"invalid value for type, expected {tn}"
     elif isinstance(exc, ForbiddenExtraKeysError):
         res = f"extra fields found ({', '.join(exc.extra_fields)})"
-    elif isinstance(exc, AttributeError) and exc.args[0].endswith(
+    elif isinstance(exc, AttributeError) and exc.args[0].endswith(  # noqa: SIM114
         "object has no attribute 'items'"
     ):
         # This was supposed to be a mapping (and have .items()) but it something else.

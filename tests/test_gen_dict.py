@@ -69,7 +69,7 @@ def test_nodefs_generated_unstructuring_cl(
     converter = converter_cls()
     cl, vals, kwargs = cl_and_vals
 
-    for attr, val in zip(cl.__attrs_attrs__, vals):
+    for attr in cl.__attrs_attrs__:
         if attr.default is not NOTHING:
             break
     else:
@@ -116,7 +116,7 @@ def test_individual_overrides(converter_cls, cl_and_vals):
     converter = converter_cls()
     cl, vals, kwargs = cl_and_vals
 
-    for attr, val in zip(_adapted_fields(cl), vals):
+    for attr in _adapted_fields(cl):
         if attr.default is not NOTHING:
             break
     else:

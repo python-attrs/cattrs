@@ -3,18 +3,7 @@ from __future__ import annotations
 import linecache
 import re
 from dataclasses import is_dataclass
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Mapping,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Tuple, TypeVar
 
 import attr
 from attr import NOTHING, resolve_types
@@ -47,11 +36,11 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def override(
-    omit_if_default: Optional[bool] = None,
-    rename: Optional[str] = None,
+    omit_if_default: bool | None = None,
+    rename: str | None = None,
     omit: bool = False,
-    struct_hook: Optional[Callable[[Any, Any], Any]] = None,
-    unstruct_hook: Optional[Callable[[Any], Any]] = None,
+    struct_hook: Callable[[Any, Any], Any] | None = None,
+    unstruct_hook: Callable[[Any], Any] | None = None,
 ):
     return AttributeOverride(omit_if_default, rename, omit, struct_hook, unstruct_hook)
 
@@ -60,12 +49,12 @@ T = TypeVar("T")
 
 
 def make_dict_unstructure_fn(
-    cl: Type[T],
-    converter: "BaseConverter",
+    cl: type[T],
+    converter: BaseConverter,
     _cattrs_omit_if_default: bool = False,
     _cattrs_use_linecache: bool = True,
     **kwargs: AttributeOverride,
-) -> Callable[[T], Dict[str, Any]]:
+) -> Callable[[T], dict[str, Any]]:
     """
     Generate a specialized dict unstructuring function for an attrs class or a
     dataclass.
@@ -104,8 +93,8 @@ def make_dict_unstructure_fn(
         already_generating.working_set = working_set
     if cl in working_set:
         raise RecursionError()
-    else:
-        working_set.add(cl)
+
+    working_set.add(cl)
 
     try:
         for a in attrs:
@@ -221,8 +210,8 @@ DictStructureFn = Callable[[Mapping[str, Any], Any], T]
 
 
 def make_dict_structure_fn(
-    cl: Type[T],
-    converter: "BaseConverter",
+    cl: type[T],
+    converter: BaseConverter,
     _cattrs_forbid_extra_keys: bool = False,
     _cattrs_use_linecache: bool = True,
     _cattrs_prefer_attrib_converters: bool = False,
@@ -478,12 +467,12 @@ def make_dict_structure_fn(
     for k, v in internal_arg_parts.items():
         globs[k] = v
 
-    total_lines = (
-        [f"def {fn_name}(o, _, *, {internal_arg_line}):"]
-        + lines
-        + post_lines
-        + instantiation_lines
-    )
+    total_lines = [
+        f"def {fn_name}(o, _, *, {internal_arg_line}):",
+        *lines,
+        *post_lines,
+        *instantiation_lines,
+    ]
 
     fname = generate_unique_filename(cl, "structure", reserve=_cattrs_use_linecache)
     script = "\n".join(total_lines)
@@ -498,7 +487,7 @@ IterableUnstructureFn = Callable[[Iterable[Any]], Any]
 
 
 def make_iterable_unstructure_fn(
-    cl: Any, converter: "BaseConverter", unstructure_to: Any = None
+    cl: Any, converter: BaseConverter, unstructure_to: Any = None
 ) -> IterableUnstructureFn:
     """Generate a specialized unstructure function for an iterable."""
     handler = converter.unstructure
@@ -521,20 +510,18 @@ def make_iterable_unstructure_fn(
     lines.append(f"def {fn_name}(iterable):")
     lines.append("    res = __cattr_seq_cl(__cattr_u(i) for i in iterable)")
 
-    total_lines = lines + ["    return res"]
+    total_lines = [*lines, "    return res"]
 
     eval(compile("\n".join(total_lines), "", "exec"), globs)
 
-    fn = globs[fn_name]
-
-    return fn
+    return globs[fn_name]
 
 
 HeteroTupleUnstructureFn = Callable[[Tuple[Any, ...]], Any]
 
 
 def make_hetero_tuple_unstructure_fn(
-    cl: Any, converter: "BaseConverter", unstructure_to: Any = None
+    cl: Any, converter: BaseConverter, unstructure_to: Any = None
 ) -> HeteroTupleUnstructureFn:
     """Generate a specialized unstructure function for a heterogenous tuple."""
     fn_name = "unstructure_tuple"
@@ -567,13 +554,11 @@ def make_hetero_tuple_unstructure_fn(
     else:
         lines.append("    )")
 
-    total_lines = lines + ["    return res"]
+    total_lines = [*lines, "    return res"]
 
     eval(compile("\n".join(total_lines), "", "exec"), globs)
 
-    fn = globs[fn_name]
-
-    return fn
+    return globs[fn_name]
 
 
 MappingUnstructureFn = Callable[[Mapping[Any, Any]], Any]
@@ -581,9 +566,9 @@ MappingUnstructureFn = Callable[[Mapping[Any, Any]], Any]
 
 def make_mapping_unstructure_fn(
     cl: Any,
-    converter: "BaseConverter",
+    converter: BaseConverter,
     unstructure_to: Any = None,
-    key_handler: Optional[Callable[[Any, Optional[Any]], Any]] = None,
+    key_handler: Callable[[Any, Any | None], Any] | None = None,
 ) -> MappingUnstructureFn:
     """Generate a specialized unstructure function for a mapping."""
     kh = key_handler or converter.unstructure
@@ -624,22 +609,20 @@ def make_mapping_unstructure_fn(
         f"    res = __cattr_mapping_cl(({k_u}, {v_u}) for k, v in mapping.items())"
     )
 
-    total_lines = lines + ["    return res"]
+    total_lines = [*lines, "    return res"]
 
     eval(compile("\n".join(total_lines), "", "exec"), globs)
 
-    fn = globs[fn_name]
-
-    return fn
+    return globs[fn_name]
 
 
 MappingStructureFn = Callable[[Mapping[Any, Any], Any], T]
 
 
 def make_mapping_structure_fn(
-    cl: Type[T],
-    converter: "BaseConverter",
-    structure_to: Type = dict,
+    cl: type[T],
+    converter: BaseConverter,
+    structure_to: type = dict,
     key_type=NOTHING,
     val_type=NOTHING,
     detailed_validation: bool = True,
@@ -647,7 +630,7 @@ def make_mapping_structure_fn(
     """Generate a specialized unstructure function for a mapping."""
     fn_name = "structure_mapping"
 
-    globs: Dict[str, Type] = {"__cattr_mapping_cl": structure_to}
+    globs: dict[str, type] = {"__cattr_mapping_cl": structure_to}
 
     lines = []
     internal_arg_parts = {}
@@ -748,11 +731,9 @@ def make_mapping_structure_fn(
         globs[k] = v
 
     def_line = f"def {fn_name}(mapping, _{internal_arg_line}):"
-    total_lines = [def_line] + lines + ["  return res"]
+    total_lines = [def_line, *lines, "  return res"]
     script = "\n".join(total_lines)
 
     eval(compile(script, "", "exec"), globs)
 
-    fn = globs[fn_name]
-
-    return fn
+    return globs[fn_name]

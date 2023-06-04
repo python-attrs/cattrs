@@ -97,8 +97,7 @@ def configure_tagged_union(
         ) -> union:
             if _tag_name in val:
                 return _tag_to_hook[val[_tag_name]](val)
-            else:
-                return _dh(val, _default)
+            return _dh(val, _default)
 
     converter.register_unstructure_hook(union, unstructure_tagged_union)
     converter.register_structure_hook(union, structure_tagged_union)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import linecache
 import re
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 from attr import NOTHING, Attribute
 
@@ -59,11 +59,11 @@ T = TypeVar("T", bound=TypedDict)
 
 
 def make_dict_unstructure_fn(
-    cl: Type[T],
+    cl: type[T],
     converter: BaseConverter,
     _cattrs_use_linecache: bool = True,
     **kwargs: AttributeOverride,
-) -> Callable[[T], Dict[str, Any]]:
+) -> Callable[[T], dict[str, Any]]:
     """
     Generate a specialized dict unstructuring function for a TypedDict.
 
@@ -107,8 +107,7 @@ def make_dict_unstructure_fn(
         already_generating.working_set = working_set
     if cl in working_set:
         raise RecursionError()
-    else:
-        working_set.add(cl)
+    working_set.add(cl)
 
     try:
         # We want to short-circuit in certain cases and return the identity
@@ -215,12 +214,12 @@ def make_dict_unstructure_fn(
         for k, v in internal_arg_parts.items():
             globs[k] = v
 
-        total_lines = (
-            [f"def {fn_name}(instance{internal_arg_line}):"]
-            + ["  res = instance.copy()"]
-            + lines
-            + ["  return res"]
-        )
+        total_lines = [
+            f"def {fn_name}(instance{internal_arg_line}):",
+            "  res = instance.copy()",
+            *lines,
+            "  return res",
+        ]
         script = "\n".join(total_lines)
 
         fname = generate_unique_filename(
@@ -245,7 +244,7 @@ def make_dict_structure_fn(
     _cattrs_use_linecache: bool = True,
     _cattrs_detailed_validation: bool = True,
     **kwargs: AttributeOverride,
-) -> Callable[[Dict, Any], Any]:
+) -> Callable[[dict, Any], Any]:
     """Generate a specialized dict structuring function for typed dicts.
 
     :param cl: A `TypedDict` class.
@@ -500,12 +499,12 @@ def make_dict_structure_fn(
     for k, v in internal_arg_parts.items():
         globs[k] = v
 
-    total_lines = (
-        [f"def {fn_name}(o, _, *, {internal_arg_line}):"]
-        + lines
-        + post_lines
-        + ["  return res"]
-    )
+    total_lines = [
+        f"def {fn_name}(o, _, *, {internal_arg_line}):",
+        *lines,
+        *post_lines,
+        "  return res",
+    ]
 
     fname = generate_unique_filename(cl, "structure", reserve=_cattrs_use_linecache)
     script = "\n".join(total_lines)
@@ -516,7 +515,7 @@ def make_dict_structure_fn(
     return globs[fn_name]
 
 
-def _adapted_fields(cls: Any) -> List[Attribute]:
+def _adapted_fields(cls: Any) -> list[Attribute]:
     annotations = get_annots(cls)
     return [
         Attribute(n, NOTHING, None, False, False, False, False, False, type=a)
@@ -534,69 +533,69 @@ def _is_extensions_typeddict(cls) -> bool:
 
 if is_py311_plus:
 
-    def _required_keys(cls: Type) -> set[str]:
+    def _required_keys(cls: type) -> set[str]:
         return cls.__required_keys__
 
 elif is_py39_plus:
     from typing_extensions import Annotated, NotRequired, Required, get_args
 
-    def _required_keys(cls: Type) -> set[str]:
+    def _required_keys(cls: type) -> set[str]:
         if _is_extensions_typeddict(cls):
             return cls.__required_keys__
-        else:
-            # We vendor a part of the typing_extensions logic for
-            # gathering required keys. *sigh*
-            own_annotations = cls.__dict__.get("__annotations__", {})
-            required_keys = set()
-            for base in cls.__mro__[1:]:
-                required_keys |= _required_keys(base)
-            for key in getattr(cls, "__required_keys__", []):
-                annotation_type = own_annotations[key]
-                annotation_origin = get_origin(annotation_type)
-                if annotation_origin is Annotated:
-                    annotation_args = get_args(annotation_type)
-                    if annotation_args:
-                        annotation_type = annotation_args[0]
-                        annotation_origin = get_origin(annotation_type)
 
-                if annotation_origin is Required:
-                    required_keys.add(key)
-                elif annotation_origin is NotRequired:
-                    pass
-                elif getattr(cls, "__total__"):
-                    required_keys.add(key)
-            return required_keys
+        # We vendor a part of the typing_extensions logic for
+        # gathering required keys. *sigh*
+        own_annotations = cls.__dict__.get("__annotations__", {})
+        required_keys = set()
+        for base in cls.__mro__[1:]:
+            required_keys |= _required_keys(base)
+        for key in getattr(cls, "__required_keys__", []):
+            annotation_type = own_annotations[key]
+            annotation_origin = get_origin(annotation_type)
+            if annotation_origin is Annotated:
+                annotation_args = get_args(annotation_type)
+                if annotation_args:
+                    annotation_type = annotation_args[0]
+                    annotation_origin = get_origin(annotation_type)
+
+            if annotation_origin is Required:
+                required_keys.add(key)
+            elif annotation_origin is NotRequired:
+                pass
+            elif cls.__total__:
+                required_keys.add(key)
+        return required_keys
 
 else:
     from typing_extensions import Annotated, NotRequired, Required, get_args
 
     # On 3.8, typing.TypedDicts do not have __required_keys__.
 
-    def _required_keys(cls: Type) -> set[str]:
+    def _required_keys(cls: type) -> set[str]:
         if _is_extensions_typeddict(cls):
             return cls.__required_keys__
-        else:
-            own_annotations = cls.__dict__.get("__annotations__", {})
-            required_keys = set()
-            superclass_keys = set()
-            for base in cls.__mro__[1:]:
-                required_keys |= _required_keys(base)
-                superclass_keys |= base.__dict__.get("__annotations__", {}).keys()
-            for key in own_annotations:
-                if key in superclass_keys:
-                    continue
-                annotation_type = own_annotations[key]
-                annotation_origin = get_origin(annotation_type)
-                if annotation_origin is Annotated:
-                    annotation_args = get_args(annotation_type)
-                    if annotation_args:
-                        annotation_type = annotation_args[0]
-                        annotation_origin = get_origin(annotation_type)
 
-                if annotation_origin is Required:
-                    required_keys.add(key)
-                elif annotation_origin is NotRequired:
-                    pass
-                elif getattr(cls, "__total__"):
-                    required_keys.add(key)
-            return required_keys
+        own_annotations = cls.__dict__.get("__annotations__", {})
+        required_keys = set()
+        superclass_keys = set()
+        for base in cls.__mro__[1:]:
+            required_keys |= _required_keys(base)
+            superclass_keys |= base.__dict__.get("__annotations__", {}).keys()
+        for key in own_annotations:
+            if key in superclass_keys:
+                continue
+            annotation_type = own_annotations[key]
+            annotation_origin = get_origin(annotation_type)
+            if annotation_origin is Annotated:
+                annotation_args = get_args(annotation_type)
+                if annotation_args:
+                    annotation_type = annotation_args[0]
+                    annotation_origin = get_origin(annotation_type)
+
+            if annotation_origin is Required:
+                required_keys.add(key)
+            elif annotation_origin is NotRequired:
+                pass
+            elif cls.__total__:
+                required_keys.add(key)
+        return required_keys

@@ -23,11 +23,7 @@ def _has_subclasses(cl: Type, given_subclasses: Tuple[Type, ...]) -> bool:
 def _get_union_type(cl: Type, given_subclasses_tree: Tuple[Type]) -> Optional[Type]:
     actual_subclass_tree = tuple(_make_subclasses_tree(cl))
     class_tree = tuple(set(actual_subclass_tree) & set(given_subclasses_tree))
-    if len(class_tree) >= 2:
-        union_type = Union[class_tree]
-    else:
-        union_type = None
-    return union_type
+    return Union[class_tree] if len(class_tree) >= 2 else None
 
 
 def include_subclasses(
@@ -62,7 +58,7 @@ def include_subclasses(
     # Due to https://github.com/python-attrs/attrs/issues/1047
     collect()
     if subclasses is not None:
-        parent_subclass_tree = (cl,) + subclasses
+        parent_subclass_tree = (cl, *subclasses)
     else:
         parent_subclass_tree = tuple(_make_subclasses_tree(cl))
 
