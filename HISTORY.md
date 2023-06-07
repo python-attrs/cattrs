@@ -4,7 +4,8 @@
 
 - Use [PDM](https://pdm.fming.dev/latest/) instead of Poetry.
 - _cattrs_ is now linted with [Ruff](https://beta.ruff.rs/docs/).
-- Fix TypedDicts with periods in their field names. ([#376](https://github.com/python-attrs/cattrs/issues/376))
+- Fix TypedDicts with periods in their field names.
+  ([#376](https://github.com/python-attrs/cattrs/issues/376) [#377](https://github.com/python-attrs/cattrs/pull/377))
 
 ## 23.1.2 (2023-06-02)
 

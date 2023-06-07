@@ -396,7 +396,7 @@ def make_dict_structure_fn(
             if override.omit:
                 continue
             if not attr_required:
-                non_required.append(a)
+                non_required.append((ix, a))
                 continue
 
             t = a.type
@@ -443,7 +443,7 @@ def make_dict_structure_fn(
 
         # The second loop is for optional args.
         if non_required:
-            for ix, a in enumerate(non_required, start=ix + 1):
+            for ix, a in non_required:
                 an = a.name
                 override = kwargs.get(an, neutral)
                 t = a.type
