@@ -147,7 +147,7 @@ def make_dict_unstructure_fn(
             # We've not broken the loop.
             return converter._unstructure_identity
 
-        for a in attrs:
+        for ix, a in enumerate(attrs):
             attr_name = a.name
             override = kwargs.get(attr_name, neutral)
             if override.omit:
@@ -190,7 +190,7 @@ def make_dict_unstructure_fn(
             is_identity = handler == converter._unstructure_identity
 
             if not is_identity:
-                unstruct_handler_name = f"__c_unstr_{attr_name}"
+                unstruct_handler_name = f"__c_unstr_{ix}"
                 globs[unstruct_handler_name] = handler
                 internal_arg_parts[unstruct_handler_name] = handler
                 invoke = f"{unstruct_handler_name}(instance['{attr_name}'])"
@@ -315,7 +315,7 @@ def make_dict_structure_fn(
         lines.append("  errors = []")
         internal_arg_parts["__c_cve"] = ClassValidationError
         internal_arg_parts["__c_avn"] = AttributeValidationNote
-        for a in attrs:
+        for ix, a in enumerate(attrs):
             an = a.name
             attr_required = an in req_keys
             override = kwargs.get(an, neutral)
@@ -340,7 +340,7 @@ def make_dict_structure_fn(
             else:
                 handler = find_structure_handler(a, t, converter)
 
-            struct_handler_name = f"__c_structure_{an}"
+            struct_handler_name = f"__c_structure_{ix}"
             internal_arg_parts[struct_handler_name] = handler
 
             kn = an if override.rename is None else override.rename
@@ -351,15 +351,17 @@ def make_dict_structure_fn(
                 i = f"{i}  "
             lines.append(f"{i}try:")
             i = f"{i}  "
-            type_name = f"__c_type_{an}"
-            internal_arg_parts[type_name] = t
+
+            tn = f"__c_type_{ix}"
+            internal_arg_parts[tn] = t
+
             if handler:
                 if handler == converter._structure_call:
                     internal_arg_parts[struct_handler_name] = t
                     lines.append(f"{i}res['{an}'] = {struct_handler_name}(o['{kn}'])")
                 else:
                     lines.append(
-                        f"{i}res['{an}'] = {struct_handler_name}(o['{kn}'], {type_name})"
+                        f"{i}res['{an}'] = {struct_handler_name}(o['{kn}'], {tn})"
                     )
             else:
                 lines.append(f"{i}res['{an}'] = o['{kn}']")
@@ -369,7 +371,7 @@ def make_dict_structure_fn(
             lines.append(f"{i}except Exception as e:")
             i = f"{i}  "
             lines.append(
-                f'{i}e.__notes__ = getattr(e, \'__notes__\', []) + [__c_avn("Structuring typeddict {cl.__qualname__} @ attribute {an}", "{an}", __c_type_{an})]'
+                f'{i}e.__notes__ = [*getattr(e, \'__notes__\', []), __c_avn("Structuring typeddict {cl.__qualname__} @ attribute {an}", "{an}", {tn})]'
             )
             lines.append(f"{i}errors.append(e)")
 
@@ -387,7 +389,7 @@ def make_dict_structure_fn(
         non_required = []
 
         # The first loop deals with required args.
-        for a in attrs:
+        for ix, a in enumerate(attrs):
             an = a.name
             attr_required = an in req_keys
             override = kwargs.get(an, neutral)
@@ -419,7 +421,7 @@ def make_dict_structure_fn(
             allowed_fields.add(kn)
 
             if handler:
-                struct_handler_name = f"__c_structure_{an}"
+                struct_handler_name = f"__c_structure_{ix}"
                 internal_arg_parts[struct_handler_name] = handler
                 if handler == converter._structure_call:
                     internal_arg_parts[struct_handler_name] = t
@@ -427,10 +429,10 @@ def make_dict_structure_fn(
                         f"  res['{an}'] = {struct_handler_name}(o['{kn}'])"
                     )
                 else:
-                    type_name = f"__c_type_{an}"
-                    internal_arg_parts[type_name] = t
+                    tn = f"__c_type_{ix}"
+                    internal_arg_parts[tn] = t
                     invocation_line = (
-                        f"  res['{an}'] = {struct_handler_name}(o['{kn}'], {type_name})"
+                        f"  res['{an}'] = {struct_handler_name}(o['{kn}'], {tn})"
                     )
             else:
                 invocation_line = f"  res['{an}'] = o['{kn}']"
@@ -441,7 +443,7 @@ def make_dict_structure_fn(
 
         # The second loop is for optional args.
         if non_required:
-            for a in non_required:
+            for ix, a in enumerate(non_required, start=ix + 1):
                 an = a.name
                 override = kwargs.get(an, neutral)
                 t = a.type
@@ -463,7 +465,7 @@ def make_dict_structure_fn(
                 else:
                     handler = converter.structure
 
-                struct_handler_name = f"__c_structure_{an}"
+                struct_handler_name = f"__c_structure_{ix}"
                 internal_arg_parts[struct_handler_name] = handler
 
                 ian = an
@@ -477,7 +479,7 @@ def make_dict_structure_fn(
                             f"    res['{ian}'] = {struct_handler_name}(o['{kn}'])"
                         )
                     else:
-                        tn = f"__c_type_{an}"
+                        tn = f"__c_type_{ix}"
                         internal_arg_parts[tn] = t
                         post_lines.append(
                             f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], {tn})"
