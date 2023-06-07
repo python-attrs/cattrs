@@ -28,6 +28,18 @@ T2 = TypeVar("T2")
 T3 = TypeVar("T3")
 
 
+def gen_typeddict_attr_names():
+    """Typed dicts can have periods in their field names."""
+    counter = 0
+    for n in gen_attr_names():
+        counter += 1
+
+        if counter % 2 == 0:
+            n = f"{n}.suffix"
+
+        yield n
+
+
 @composite
 def int_attributes(
     draw: DrawFn, total: bool = True, not_required: bool = False
@@ -112,7 +124,7 @@ def simple_typeddicts(
         )
     )
 
-    attrs_dict = {n: attr[0] for n, attr in zip(gen_attr_names(), attrs)}
+    attrs_dict = {n: attr[0] for n, attr in zip(gen_typeddict_attr_names(), attrs)}
     success_payload = {}
     for n, a in zip(attrs_dict, attrs):
         v = draw(a[1])
