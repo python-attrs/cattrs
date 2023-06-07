@@ -46,10 +46,7 @@ def configure_converter(converter: BaseConverter):
             # so we paper over it here.
             # https://github.com/sdispater/tomlkit/issues/237
             if issubclass(args[0], str):
-                if issubclass(args[0], Enum):
-                    key_handler = _enum_value_getter
-                else:
-                    key_handler = None
+                key_handler = _enum_value_getter if issubclass(args[0], Enum) else None
             elif issubclass(args[0], bytes):
 
                 def key_handler(k: bytes):

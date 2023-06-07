@@ -13,7 +13,7 @@ def generate_unique_filename(cls: Any, func_name: str, reserve: bool = True) -> 
     count = 1
 
     while True:
-        unique_filename = "<cattrs generated {0} {1}.{2}{3}>".format(
+        unique_filename = "<cattrs generated {} {}.{}{}>".format(
             func_name, cls.__module__, getattr(cls, "__qualname__", cls.__name__), extra
         )
         if not reserve:
@@ -27,4 +27,4 @@ def generate_unique_filename(cls: Any, func_name: str, reserve: bool = True) -> 
 
         # Looks like this spot is taken. Try again.
         count += 1
-        extra = "-{0}".format(count)
+        extra = f"-{count}"

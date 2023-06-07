@@ -249,7 +249,7 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     assume(len(a_field_names) > len(common_names))
 
     @attr.s
-    class C(object):
+    class C:
         a = attr.ib(type=Union[cl_a, cl_b])
 
     inst = C(a=cl_a(*vals_a, **kwargs_a))
@@ -324,7 +324,7 @@ def test_optional_field_roundtrip(cl_and_vals):
     cl, vals, kwargs = cl_and_vals
 
     @attr.s
-    class C(object):
+    class C:
         a = attr.ib(type=Optional[cl])
 
     inst = C(a=cl(*vals, **kwargs))
@@ -367,7 +367,7 @@ def test_omit_default_roundtrip(cl_and_vals):
     cl, vals, kwargs = cl_and_vals
 
     @attr.s
-    class C(object):
+    class C:
         a: int = attr.ib(default=1)
         b: cl = attr.ib(factory=lambda: cl(*vals, **kwargs))
 
@@ -394,13 +394,12 @@ def test_type_overrides(cl_and_vals):
     unstructured = converter.unstructure(inst)
 
     for field, val in zip(fields(cl), vals):
-        if field.type is int:
-            if field.default is not None:
-                if isinstance(field.default, Factory):
-                    if not field.default.takes_self and field.default() == val:
-                        assert field.name not in unstructured
-                elif field.default == val:
+        if field.type is int and field.default is not None:
+            if isinstance(field.default, Factory):
+                if not field.default.takes_self and field.default() == val:
                     assert field.name not in unstructured
+            elif field.default == val:
+                assert field.name not in unstructured
 
 
 def test_calling_back():
@@ -635,8 +634,8 @@ def test_annotated_attrs():
 
     @attr.define
     class Outer:
-        i: Annotated[Inner, "test"]  # noqa
-        j: list[Annotated[Inner, "test"]]  # noqa
+        i: Annotated[Inner, "test"]
+        j: list[Annotated[Inner, "test"]]
 
     orig = Outer(Inner(1), [Inner(1)])
     raw = converter.unstructure(orig)
@@ -671,8 +670,8 @@ def test_annotated_with_typing_extensions_attrs():
 
     @attr.define
     class Outer:
-        i: Annotated[Inner, "test"]  # noqa
-        j: List[Annotated[Inner, "test"]]  # noqa
+        i: Annotated[Inner, "test"]
+        j: List[Annotated[Inner, "test"]]
 
     orig = Outer(Inner(1), [Inner(1)])
     raw = converter.unstructure(orig)

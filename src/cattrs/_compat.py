@@ -84,7 +84,7 @@ def fields(type):
         try:
             return dataclass_fields(type)
         except AttributeError:
-            raise Exception("Not an attrs or dataclass class.")
+            raise Exception("Not an attrs or dataclass class.") from None
 
 
 def _adapted_fields(cl) -> List[Attribute]:
@@ -117,13 +117,12 @@ def _adapted_fields(cl) -> List[Attribute]:
             )
             for attr in attrs
         ]
-    else:
+    attribs = attrs_fields(cl)
+    if any(isinstance(a.type, str) for a in attribs):
+        # PEP 563 annotations - need to be resolved.
+        resolve_types(cl)
         attribs = attrs_fields(cl)
-        if any(isinstance(a.type, str) for a in attribs):
-            # PEP 563 annotations - need to be resolved.
-            resolve_types(cl)
-            attribs = attrs_fields(cl)
-        return attribs
+    return attribs
 
 
 def is_subclass(obj: type, bases) -> bool:
@@ -151,10 +150,9 @@ def get_final_base(type) -> Optional[type]:
     """Return the base of the Final annotation, if it is Final."""
     if type is Final:
         return Any
-    elif type.__class__ is _GenericAlias and type.__origin__ is Final:
+    if type.__class__ is _GenericAlias and type.__origin__ is Final:
         return type.__args__[0]
-    else:
-        return None
+    return None
 
 
 OriginAbstractSet = AbcSet
@@ -174,6 +172,7 @@ if is_py37 or is_py38:
 
     from collections import Counter as ColCounter
     from typing import Counter, Union, _GenericAlias
+
     from typing_extensions import Annotated, NotRequired, Required
     from typing_extensions import get_origin as te_get_origin
 
@@ -491,17 +490,15 @@ else:
         )
 
     def is_generic(obj) -> bool:
-        return (
-            isinstance(obj, _GenericAlias)
-            or isinstance(obj, GenericAlias)
-            or is_subclass(obj, Generic)
+        return isinstance(obj, (_GenericAlias, GenericAlias)) or is_subclass(
+            obj, Generic
         )
 
     def copy_with(type, args):
         """Replace a generic type's arguments."""
         if is_annotated(type):
             # typing.Annotated requires a special case.
-            return Annotated[args]  # type: ignore
+            return Annotated[args]
         return type.__origin__[args]
 
 

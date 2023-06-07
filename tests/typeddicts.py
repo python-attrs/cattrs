@@ -35,13 +35,12 @@ def int_attributes(
     if total:
         if not_required and draw(booleans()):
             return (NotRequired[int], integers() | just(NOTHING), text(ascii_lowercase))
-        else:
-            return int, integers(), text(ascii_lowercase)
-    else:
-        if not_required and draw(booleans()):
-            return Required[int], integers(), text(ascii_lowercase)
-        else:
-            return int, integers() | just(NOTHING), text(ascii_lowercase)
+        return int, integers(), text(ascii_lowercase)
+
+    if not_required and draw(booleans()):
+        return Required[int], integers(), text(ascii_lowercase)
+
+    return int, integers() | just(NOTHING), text(ascii_lowercase)
 
 
 @composite
@@ -72,25 +71,21 @@ def list_of_int_attributes(
                 lists(integers()) | just(NOTHING),
                 text(ascii_lowercase).map(lambda v: [v]),
             )
-        else:
-            return (
-                List[int],
-                lists(integers()),
-                text(ascii_lowercase).map(lambda v: [v]),
-            )
-    else:
-        if not_required and draw(booleans()):
-            return (
-                Required[List[int]],
-                lists(integers()),
-                text(ascii_lowercase).map(lambda v: [v]),
-            )
-        else:
-            return (
-                List[int],
-                lists(integers()) | just(NOTHING),
-                text(ascii_lowercase).map(lambda v: [v]),
-            )
+
+        return (List[int], lists(integers()), text(ascii_lowercase).map(lambda v: [v]))
+
+    if not_required and draw(booleans()):
+        return (
+            Required[List[int]],
+            lists(integers()),
+            text(ascii_lowercase).map(lambda v: [v]),
+        )
+
+    return (
+        List[int],
+        lists(integers()) | just(NOTHING),
+        text(ascii_lowercase).map(lambda v: [v]),
+    )
 
 
 @composite
@@ -235,6 +230,4 @@ def make_typeddict(
     script = "\n".join(lines)
     eval(compile(script, "name", "exec"), globs)
 
-    cls = globs[cls_name]
-
-    return cls
+    return globs[cls_name]

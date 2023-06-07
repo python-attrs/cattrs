@@ -166,7 +166,7 @@ def test_raises_if_no_generic_params_supplied(
 
     with pytest.raises(
         StructureHandlerNotFoundError,
-        match="Unsupported type: ~T. Register a structure hook for it.|Missing type for generic argument T, specify it when structuring.",  # noqa: E501
+        match="Unsupported type: ~T. Register a structure hook for it.|Missing type for generic argument T, specify it when structuring.",
     ) as exc:
         converter.structure(asdict(data), TClass)
 
@@ -277,7 +277,7 @@ def test_roundtrip_generic_with_union() -> None:
         member: T
 
     raw = c.unstructure(Outer(A(1)), unstructure_as=Outer[A | B])
-    assert c.structure(raw, Outer[A | B]) == Outer((A(1)))
+    assert c.structure(raw, Outer[A | B]) == Outer(A(1))
 
 
 @pytest.mark.skipif(not is_py311_plus, reason="3.11+ only")

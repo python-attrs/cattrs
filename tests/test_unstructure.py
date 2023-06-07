@@ -111,10 +111,10 @@ def test_unstructure_hook_func(converter):
     def handle(_):
         return "hi"
 
-    class Foo(object):
+    class Foo:
         pass
 
-    class Bar(object):
+    class Bar:
         pass
 
     converter.register_unstructure_hook_func(can_handle, handle)

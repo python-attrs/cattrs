@@ -76,54 +76,54 @@ def _remove_type_name(unstructured: typing.Union[typing.Dict, typing.List]):
 
 
 IDS_TO_STRUCT_UNSTRUCT = {
-    "parent-only": (Parent(1), dict(p=1, type_name="Parent")),
-    "child1-only": (Child1(1, 2), dict(p=1, c1=2, type_name="Child1")),
-    "child2-only": (Child2(1, 2), dict(p=1, c2=2, type_name="Child2")),
+    "parent-only": (Parent(1), {"p": 1, "type_name": "Parent"}),
+    "child1-only": (Child1(1, 2), {"p": 1, "c1": 2, "type_name": "Child1"}),
+    "child2-only": (Child2(1, 2), {"p": 1, "c2": 2, "type_name": "Child2"}),
     "grandchild-only": (
         GrandChild(1, 2, 3),
-        dict(p=1, c1=2, g=3, type_name="GrandChild"),
+        {"p": 1, "c1": 2, "g": 3, "type_name": "GrandChild"},
     ),
     "union-compose-parent": (
         UnionCompose(Parent(1)),
-        dict(a=dict(p=1, type_name="Parent")),
+        {"a": {"p": 1, "type_name": "Parent"}},
     ),
     "union-compose-child": (
         UnionCompose(Child1(1, 2)),
-        dict(a=dict(p=1, c1=2, type_name="Child1")),
+        {"a": {"p": 1, "c1": 2, "type_name": "Child1"}},
     ),
     "union-compose-grandchild": (
         UnionCompose(GrandChild(1, 2, 3)),
-        dict(a=(dict(p=1, c1=2, g=3, type_name="GrandChild"))),
+        {"a": ({"p": 1, "c1": 2, "g": 3, "type_name": "GrandChild"})},
     ),
     "non-union-compose-parent": (
         NonUnionCompose(Parent(1)),
-        dict(a=dict(p=1, type_name="Parent")),
+        {"a": {"p": 1, "type_name": "Parent"}},
     ),
     "non-union-compose-child": (
         NonUnionCompose(Child1(1, 2)),
-        dict(a=dict(p=1, c1=2, type_name="Child1")),
+        {"a": {"p": 1, "c1": 2, "type_name": "Child1"}},
     ),
     "non-union-compose-grandchild": (
         NonUnionCompose(GrandChild(1, 2, 3)),
-        dict(a=(dict(p=1, c1=2, g=3, type_name="GrandChild"))),
+        {"a": ({"p": 1, "c1": 2, "g": 3, "type_name": "GrandChild"})},
     ),
     "union-container": (
         UnionContainer([Parent(1), GrandChild(1, 2, 3)]),
-        dict(
-            a=[
-                dict(p=1, type_name="Parent"),
-                dict(p=1, c1=2, g=3, type_name="GrandChild"),
+        {
+            "a": [
+                {"p": 1, "type_name": "Parent"},
+                {"p": 1, "c1": 2, "g": 3, "type_name": "GrandChild"},
             ]
-        ),
+        },
     ),
     "non-union-container": (
         NonUnionContainer([Parent(1), GrandChild(1, 2, 3)]),
-        dict(
-            a=[
-                dict(p=1, type_name="Parent"),
-                dict(p=1, c1=2, g=3, type_name="GrandChild"),
+        {
+            "a": [
+                {"p": 1, "type_name": "Parent"},
+                {"p": 1, "c1": 2, "g": 3, "type_name": "GrandChild"},
             ]
-        ),
+        },
     ),
 }
 
@@ -182,7 +182,7 @@ def test_structuring_with_inheritance(
 def test_structure_as_union():
     converter = Converter()
     include_subclasses(Parent, converter)
-    the_list = [dict(p=1, c1=2)]
+    the_list = [{"p": 1, "c1": 2}]
     res = converter.structure(the_list, typing.List[typing.Union[Parent, Child1]])
     assert res == [Child1(1, 2)]
 
@@ -191,12 +191,12 @@ def test_circular_reference(conv_w_subclasses):
     c, included_subclasses_param = conv_w_subclasses
 
     struct = CircularB(a=1, other=[CircularB(a=2, other=[], b=3)], b=4)
-    unstruct = dict(
-        a=1,
-        other=[dict(a=2, other=[], b=3, type_name="CircularB")],
-        b=4,
-        type_name="CircularB",
-    )
+    unstruct = {
+        "a": 1,
+        "other": [{"a": 2, "other": [], "b": 3, "type_name": "CircularB"}],
+        "b": 4,
+        "type_name": "CircularB",
+    }
 
     if included_subclasses_param != "with-subclasses-and-tagged-union":
         unstruct = _remove_type_name(unstruct)
@@ -224,9 +224,10 @@ def test_unstructuring_with_inheritance(
     structured, unstructured = struct_unstruct
     converter, included_subclasses_param = conv_w_subclasses
 
-    if "wo-subclasses" in included_subclasses_param:
-        if isinstance(structured, (NonUnionContainer, NonUnionCompose)):
-            pytest.xfail("Cannot succeed if include_subclasses strategy is not used")
+    if "wo-subclasses" in included_subclasses_param and isinstance(
+        structured, (NonUnionContainer, NonUnionCompose)
+    ):
+        pytest.xfail("Cannot succeed if include_subclasses strategy is not used")
 
     if included_subclasses_param != "with-subclasses-and-tagged-union":
         unstructured = _remove_type_name(deepcopy(unstructured))
@@ -260,7 +261,11 @@ def test_structuring_unstructuring_unknown_subclass():
         a2: int
 
     # Even if A2 did not exist, unstructuring_as A works:
-    assert converter.unstructure(A2(1, 2, 3), unstructure_as=A) == dict(a=1, a1=2, a2=3)
+    assert converter.unstructure(A2(1, 2, 3), unstructure_as=A) == {
+        "a": 1,
+        "a1": 2,
+        "a2": 3,
+    }
 
     # As well as when unstructuring as A1, in other words, unstructuring works for
     # unknown classes.
@@ -272,7 +277,7 @@ def test_structuring_unstructuring_unknown_subclass():
 
     # But as expected, structuring unknown classes as their parent fails to give the
     # correct answer. This is a documented drawback, we just confirm it.
-    assert converter.structure(dict(a=1, a1=2, a2=3), A) == A1(1, 2)
+    assert converter.structure({"a": 1, "a1": 2, "a2": 3}, A) == A1(1, 2)
 
 
 def test_structuring_with_subclasses_argument():

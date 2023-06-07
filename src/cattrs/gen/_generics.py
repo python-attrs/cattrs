@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-from typing import Dict, Type, TypeVar
+from typing import TypeVar
 
 from .._compat import get_args, get_origin, is_generic
 
 
-def generate_mapping(cl: Type, old_mapping: Dict[str, type] = {}) -> Dict[str, type]:
+def generate_mapping(cl: type, old_mapping: dict[str, type] = {}) -> dict[str, type]:
     mapping = {}
 
     origin = get_origin(cl)
 
     if origin is not None:
         # To handle the cases where classes in the typing module are using
-        # the GenericAlias structure but aren’t a Generic and hence
+        # the GenericAlias structure but aren't a Generic and hence
         # end up in this function but do not have an `__parameters__`
         # attribute. These classes are interface types, for example
         # `typing.Hashable`.

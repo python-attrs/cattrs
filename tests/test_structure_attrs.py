@@ -223,7 +223,7 @@ def test_structure_literal_error(converter_cls):
     class ClassWithLiteral:
         literal_field: Literal[4] = 4
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):  # noqa: B017
         converter.structure({"literal_field": 3}, ClassWithLiteral)
 
 
@@ -239,7 +239,7 @@ def test_structure_literal_multiple_error(converter_cls):
     class ClassWithLiteral:
         literal_field: Literal[4, 5] = 4
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):  # noqa: B017
         converter.structure({"literal_field": 3}, ClassWithLiteral)
 
 
@@ -268,7 +268,7 @@ def test_structure_fallback_to_attrib_converters(converter_type):
         },
     )
 
-    inst = converter.structure(dict(ip="10.0.0.0", x=1, z="3"), cl)
+    inst = converter.structure({"ip": "10.0.0.0", "x": 1, "z": "3"}, cl)
 
     assert inst.ip == IPv4Address("10.0.0.0")
     assert inst.x == "1"
@@ -296,7 +296,7 @@ def test_structure_prefers_attrib_converters(converter_type):
         },
     )
 
-    inst = converter.structure(dict(ip="10.0.0.0", x=1, y=3), cl)
+    inst = converter.structure({"ip": "10.0.0.0", "x": 1, "y": 3}, cl)
 
     assert inst.ip == IPv4Address("10.0.0.0")
 
