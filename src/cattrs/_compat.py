@@ -1,4 +1,3 @@
-import builtins
 import sys
 from collections import deque
 from collections.abc import MutableSet as AbcMutableSet
@@ -62,10 +61,10 @@ if is_py37:
 else:
     from typing import Final, Protocol, get_args, get_origin
 
-if "ExceptionGroup" not in dir(builtins):
-    from exceptiongroup import ExceptionGroup
-else:
+if is_py311_plus:
     ExceptionGroup = ExceptionGroup
+else:
+    from exceptiongroup import ExceptionGroup
 
 
 def has(cls):
