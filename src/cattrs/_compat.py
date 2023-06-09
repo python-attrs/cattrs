@@ -64,7 +64,7 @@ else:
 if is_py311_plus:
     ExceptionGroup = ExceptionGroup
 else:
-    from exceptiongroup import ExceptionGroup
+    from exceptiongroup import ExceptionGroup as ExceptionGroup  # noqa: PLC0414
 
 
 def has(cls):
