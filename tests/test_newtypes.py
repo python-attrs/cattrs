@@ -3,13 +3,13 @@ from typing import NewType
 
 import pytest
 
-from cattrs import BaseConverter
+from cattrs import Converter
 
 PositiveIntNewType = NewType("PositiveIntNewType", int)
 BigPositiveIntNewType = NewType("BigPositiveIntNewType", PositiveIntNewType)
 
 
-def test_newtype_structure_hooks(genconverter: BaseConverter):
+def test_newtype_structure_hooks(genconverter: Converter):
     """NewTypes should work with `register_structure_hook`."""
 
     assert genconverter.structure("0", int) == 0
@@ -39,7 +39,7 @@ def test_newtype_structure_hooks(genconverter: BaseConverter):
     assert genconverter.structure("51", BigPositiveIntNewType) == 51
 
 
-def test_newtype_unstructure_hooks(genconverter: BaseConverter):
+def test_newtype_unstructure_hooks(genconverter: Converter):
     """NewTypes should work with `register_unstructure_hook`."""
 
     assert genconverter.unstructure(0, int) == 0
