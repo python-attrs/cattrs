@@ -7,7 +7,7 @@
 - Fix TypedDicts with periods in their field names.
   ([#376](https://github.com/python-attrs/cattrs/issues/376) [#377](https://github.com/python-attrs/cattrs/pull/377))
 - Optimize and improve unstructuring of `Optional` (unions of one type and `None`).
-  ([#380](https://github.com/python-attrs/cattrs/issues/380))
+  ([#380](https://github.com/python-attrs/cattrs/issues/380) [#381](https://github.com/python-attrs/cattrs/pull/381))
 - Fix `format_exception` and `transform_error` type annotations.
 
 ## 23.1.2 (2023-06-02)
