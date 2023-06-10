@@ -882,12 +882,16 @@ class Converter(BaseConverter):
             lambda cl: self.gen_unstructure_iterable(cl, unstructure_to=frozenset),
         )
         self.register_unstructure_hook_factory(
+            is_optional, self.gen_unstructure_optional
+        )
+        self.register_unstructure_hook_factory(
             is_typeddict, self.gen_unstructure_typeddict
         )
         self.register_unstructure_hook_factory(
             lambda t: get_newtype_base(t) is not None,
             lambda t: self._unstructure_func.dispatch(get_newtype_base(t)),
         )
+
         self.register_structure_hook_factory(is_annotated, self.gen_structure_annotated)
         self.register_structure_hook_factory(is_mapping, self.gen_structure_mapping)
         self.register_structure_hook_factory(is_counter, self.gen_structure_counter)
@@ -937,6 +941,17 @@ class Converter(BaseConverter):
         return make_dict_unstructure_fn(
             cl, self, _cattrs_omit_if_default=self.omit_if_default, **attrib_overrides
         )
+
+    def gen_unstructure_optional(self, cl: Type[T]) -> Callable[[T], Any]:
+        """Generate an unstructuring hook for optional types."""
+        union_params = cl.__args__
+        other = union_params[0] if union_params[1] is NoneType else union_params[1]
+        handler = self._unstructure_func.dispatch(other)
+
+        def unstructure_optional(val, _handler=handler):
+            return None if val is None else _handler(val)
+
+        return unstructure_optional
 
     def gen_structure_typeddict(self, cl: Any) -> Callable[[Dict], Dict]:
         """Generate a TypedDict structure function.
