@@ -5,12 +5,18 @@ import pytest
 from attr import asdict, attrs, define
 
 from cattrs import BaseConverter, Converter
-from cattrs._compat import Protocol, is_py39_plus, is_py310_plus, is_py311_plus
+from cattrs._compat import Protocol
 from cattrs._generics import deep_copy_with
 from cattrs.errors import StructureHandlerNotFoundError
 from cattrs.gen._generics import generate_mapping
 
-from ._compat import Dict_origin, List_origin
+from ._compat import (
+    Dict_origin,
+    List_origin,
+    is_py39_plus,
+    is_py310_plus,
+    is_py311_plus,
+)
 
 T = TypeVar("T")
 T2 = TypeVar("T2")

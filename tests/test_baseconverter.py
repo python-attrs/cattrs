@@ -8,8 +8,8 @@ from hypothesis import HealthCheck, assume, given, settings
 from hypothesis.strategies import just, one_of
 
 from cattrs import BaseConverter, UnstructureStrategy
-from cattrs._compat import is_py310_plus
 
+from ._compat import is_py310_plus
 from .typed import nested_typed_classes, simple_typed_attrs, simple_typed_classes
 
 unstructure_strats = one_of(just(s) for s in UnstructureStrategy)

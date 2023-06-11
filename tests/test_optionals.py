@@ -3,7 +3,7 @@ from typing import NewType, Optional
 import pytest
 from attrs import define
 
-from cattrs._compat import is_py310_plus
+from ._compat import is_py310_plus
 
 
 def test_newtype_optionals(genconverter):
