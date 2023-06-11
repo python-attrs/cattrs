@@ -20,15 +20,18 @@ from attr import NOTHING, Attribute, Factory
 from attr import fields as attrs_fields
 from attr import resolve_types
 
+__all__ = ["ExtensionsTypedDict", "is_typeddict", "TypedDict"]
+
 try:
     from typing_extensions import TypedDict as ExtensionsTypedDict
 except ImportError:
     ExtensionsTypedDict = None
 
 try:
-    from typing_extensions import _TypedDictMeta as ExtensionsTypedDictMeta
+    from typing_extensions import is_typeddict
 except ImportError:
-    ExtensionsTypedDictMeta = None
+    assert sys.version_info >= (3, 10)
+    from typing import is_typeddict
 
 if sys.version_info >= (3, 8):
     from typing import Final, Protocol, get_args, get_origin
@@ -157,7 +160,6 @@ if sys.version_info >= (3, 9):
         _AnnotatedAlias,
         _GenericAlias,
         _SpecialGenericAlias,
-        _TypedDictMeta,
         _UnionGenericAlias,
     )
 
@@ -233,20 +235,6 @@ if sys.version_info >= (3, 9):
             ):
                 return supertype
             return None
-
-    def is_typeddict(cls) -> bool:
-        return (
-            cls.__class__ is _TypedDictMeta
-            or (is_generic(cls) and (cls.__origin__.__class__ is _TypedDictMeta))
-            or (
-                ExtensionsTypedDictMeta is not None
-                and cls.__class__ is ExtensionsTypedDictMeta
-                or (
-                    is_generic(cls)
-                    and (cls.__origin__.__class__ is ExtensionsTypedDictMeta)
-                )
-            )
-        )
 
     def get_notrequired_base(type) -> "Union[Any, Literal[NOTHING]]":
         if get_origin(type) in (NotRequired, Required):
@@ -461,20 +449,6 @@ else:
     def copy_with(type, args):
         """Replace a generic type's arguments."""
         return type.copy_with(args)
-
-    def is_typeddict(cls) -> bool:
-        return (
-            cls.__class__ is _TypedDictMeta
-            or (is_generic(cls) and (cls.__origin__.__class__ is _TypedDictMeta))
-            or (
-                ExtensionsTypedDictMeta is not None
-                and cls.__class__ is ExtensionsTypedDictMeta
-                or (
-                    is_generic(cls)
-                    and (cls.__origin__.__class__ is ExtensionsTypedDictMeta)
-                )
-            )
-        )
 
     def get_notrequired_base(type) -> "Union[Any, Literal[NOTHING]]":
         if get_origin(type) in (NotRequired, Required):
