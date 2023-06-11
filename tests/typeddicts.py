@@ -131,12 +131,11 @@ def simple_typeddicts(
         if v is not NOTHING:
             success_payload[n] = v
 
-    if typeddict_cls is None:
-        cls = (TypedDict if draw(booleans()) else ExtensionsTypedDict)(
-            "HypTypedDict", attrs_dict, total=total
-        )
-    else:
-        cls = typeddict_cls
+    cls = (
+        (TypedDict if draw(booleans()) else ExtensionsTypedDict)
+        if typeddict_cls is None
+        else typeddict_cls
+    )("HypTypedDict", attrs_dict, total=total)
 
     if draw(booleans()):
 
