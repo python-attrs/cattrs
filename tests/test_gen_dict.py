@@ -8,10 +8,11 @@ from hypothesis import assume, given
 from hypothesis.strategies import data, just, one_of, sampled_from
 
 from cattrs import BaseConverter, Converter
-from cattrs._compat import _adapted_fields, fields, is_py39_plus
+from cattrs._compat import _adapted_fields, fields
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
+from ._compat import is_py39_plus
 from .typed import nested_typed_classes, simple_typed_classes, simple_typed_dataclasses
 from .untyped import nested_classes, simple_classes
 

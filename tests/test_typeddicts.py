@@ -8,7 +8,7 @@ from hypothesis.strategies import booleans
 from pytest import raises
 
 from cattrs import Converter
-from cattrs._compat import ExtensionsTypedDict, is_generic, is_py38, is_py311_plus
+from cattrs._compat import ExtensionsTypedDict, is_generic
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import override
 from cattrs.gen._generics import generate_mapping
@@ -18,6 +18,7 @@ from cattrs.gen.typeddicts import (
     make_dict_unstructure_fn,
 )
 
+from ._compat import is_py38, is_py311_plus
 from .typeddicts import (
     generic_typeddicts,
     simple_typeddicts,

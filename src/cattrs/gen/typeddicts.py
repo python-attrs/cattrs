@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import linecache
 import re
+import sys
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 from attr import NOTHING, Attribute
@@ -34,8 +35,6 @@ from .._compat import (
     is_annotated,
     is_bare,
     is_generic,
-    is_py39_plus,
-    is_py311_plus,
 )
 from .._generics import deep_copy_with
 from ..errors import (
@@ -533,12 +532,12 @@ def _is_extensions_typeddict(cls) -> bool:
     )
 
 
-if is_py311_plus:
+if sys.version_info >= (3, 11):
 
     def _required_keys(cls: type) -> set[str]:
         return cls.__required_keys__
 
-elif is_py39_plus:
+elif sys.version_info >= (3, 9):
     from typing_extensions import Annotated, NotRequired, Required, get_args
 
     def _required_keys(cls: type) -> set[str]:
