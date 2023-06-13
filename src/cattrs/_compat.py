@@ -20,7 +20,7 @@ from attr import NOTHING, Attribute, Factory
 from attr import fields as attrs_fields
 from attr import resolve_types
 
-__all__ = ["ExtensionsTypedDict", "is_typeddict", "TypedDict"]
+__all__ = ["ExceptionGroup", "ExtensionsTypedDict", "is_typeddict", "TypedDict"]
 
 try:
     from typing_extensions import TypedDict as ExtensionsTypedDict
@@ -47,9 +47,9 @@ else:
     from typing_extensions import Final, Protocol
 
 if sys.version_info >= (3, 11):
-    ExceptionGroup = ExceptionGroup
+    from builtins import ExceptionGroup
 else:
-    from exceptiongroup import ExceptionGroup as ExceptionGroup  # noqa: PLC0414
+    from exceptiongroup import ExceptionGroup
 
 
 def has(cls):
