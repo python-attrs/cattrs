@@ -357,9 +357,8 @@ else:
     from typing_extensions import get_origin as te_get_origin
 
     if sys.version_info >= (3, 8):
-        from typing import TypedDict, _TypedDictMeta
+        from typing import TypedDict
     else:
-        _TypedDictMeta = None
         TypedDict = ExtensionsTypedDict
 
     def is_annotated(type) -> bool:
