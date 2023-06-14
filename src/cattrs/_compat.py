@@ -20,18 +20,12 @@ from attr import NOTHING, Attribute, Factory
 from attr import fields as attrs_fields
 from attr import resolve_types
 
-__all__ = ["ExceptionGroup", "ExtensionsTypedDict", "is_typeddict", "TypedDict"]
+__all__ = ["ExceptionGroup", "ExtensionsTypedDict", "TypedDict", "is_typeddict"]
 
 try:
     from typing_extensions import TypedDict as ExtensionsTypedDict
 except ImportError:
     ExtensionsTypedDict = None
-
-try:
-    from typing_extensions import is_typeddict
-except ImportError:
-    assert sys.version_info >= (3, 10)
-    from typing import is_typeddict
 
 if sys.version_info >= (3, 8):
     from typing import Final, Protocol, get_args, get_origin
@@ -50,6 +44,17 @@ if sys.version_info >= (3, 11):
     from builtins import ExceptionGroup
 else:
     from exceptiongroup import ExceptionGroup
+
+try:
+    from typing_extensions import is_typeddict as _is_typeddict
+except ImportError:
+    assert sys.version_info >= (3, 10)
+    from typing import is_typeddict as _is_typeddict
+
+
+def is_typeddict(cls):
+    """Thin wrapper around typing(_extensions).is_typeddict"""
+    return _is_typeddict(getattr(cls, "__origin__", cls))
 
 
 def has(cls):
