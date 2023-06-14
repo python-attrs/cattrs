@@ -20,15 +20,12 @@ from attr import NOTHING, Attribute, Factory
 from attr import fields as attrs_fields
 from attr import resolve_types
 
+__all__ = ["ExceptionGroup", "ExtensionsTypedDict", "TypedDict", "is_typeddict"]
+
 try:
     from typing_extensions import TypedDict as ExtensionsTypedDict
 except ImportError:
     ExtensionsTypedDict = None
-
-try:
-    from typing_extensions import _TypedDictMeta as ExtensionsTypedDictMeta
-except ImportError:
-    ExtensionsTypedDictMeta = None
 
 if sys.version_info >= (3, 8):
     from typing import Final, Protocol, get_args, get_origin
@@ -44,9 +41,20 @@ else:
     from typing_extensions import Final, Protocol
 
 if sys.version_info >= (3, 11):
-    ExceptionGroup = ExceptionGroup
+    from builtins import ExceptionGroup
 else:
-    from exceptiongroup import ExceptionGroup as ExceptionGroup  # noqa: PLC0414
+    from exceptiongroup import ExceptionGroup
+
+try:
+    from typing_extensions import is_typeddict as _is_typeddict
+except ImportError:
+    assert sys.version_info >= (3, 10)
+    from typing import is_typeddict as _is_typeddict
+
+
+def is_typeddict(cls):
+    """Thin wrapper around typing(_extensions).is_typeddict"""
+    return _is_typeddict(getattr(cls, "__origin__", cls))
 
 
 def has(cls):
@@ -157,7 +165,6 @@ if sys.version_info >= (3, 9):
         _AnnotatedAlias,
         _GenericAlias,
         _SpecialGenericAlias,
-        _TypedDictMeta,
         _UnionGenericAlias,
     )
 
@@ -233,20 +240,6 @@ if sys.version_info >= (3, 9):
             ):
                 return supertype
             return None
-
-    def is_typeddict(cls) -> bool:
-        return (
-            cls.__class__ is _TypedDictMeta
-            or (is_generic(cls) and (cls.__origin__.__class__ is _TypedDictMeta))
-            or (
-                ExtensionsTypedDictMeta is not None
-                and cls.__class__ is ExtensionsTypedDictMeta
-                or (
-                    is_generic(cls)
-                    and (cls.__origin__.__class__ is ExtensionsTypedDictMeta)
-                )
-            )
-        )
 
     def get_notrequired_base(type) -> "Union[Any, Literal[NOTHING]]":
         if get_origin(type) in (NotRequired, Required):
@@ -364,9 +357,8 @@ else:
     from typing_extensions import get_origin as te_get_origin
 
     if sys.version_info >= (3, 8):
-        from typing import TypedDict, _TypedDictMeta
+        from typing import TypedDict
     else:
-        _TypedDictMeta = None
         TypedDict = ExtensionsTypedDict
 
     def is_annotated(type) -> bool:
@@ -461,20 +453,6 @@ else:
     def copy_with(type, args):
         """Replace a generic type's arguments."""
         return type.copy_with(args)
-
-    def is_typeddict(cls) -> bool:
-        return (
-            cls.__class__ is _TypedDictMeta
-            or (is_generic(cls) and (cls.__origin__.__class__ is _TypedDictMeta))
-            or (
-                ExtensionsTypedDictMeta is not None
-                and cls.__class__ is ExtensionsTypedDictMeta
-                or (
-                    is_generic(cls)
-                    and (cls.__origin__.__class__ is ExtensionsTypedDictMeta)
-                )
-            )
-        )
 
     def get_notrequired_base(type) -> "Union[Any, Literal[NOTHING]]":
         if get_origin(type) in (NotRequired, Required):
