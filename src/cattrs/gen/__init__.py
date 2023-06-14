@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import linecache
 import re
-from dataclasses import is_dataclass
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Tuple, TypeVar
 
 import attr
 from attr import NOTHING, resolve_types
 
 from .._compat import (
-    _adapted_fields,
+    adapted_fields,
     get_args,
     get_origin,
     is_annotated,
@@ -53,14 +52,18 @@ def make_dict_unstructure_fn(
     converter: BaseConverter,
     _cattrs_omit_if_default: bool = False,
     _cattrs_use_linecache: bool = True,
+    _cattrs_use_alias: bool = False,
     **kwargs: AttributeOverride,
 ) -> Callable[[T], dict[str, Any]]:
     """
     Generate a specialized dict unstructuring function for an attrs class or a
     dataclass.
+
+    :param _cattrs_use_alias: If true, the attribute alias will be used as the
+        dictionary key by default.
     """
     origin = get_origin(cl)
-    attrs = _adapted_fields(origin or cl)  # type: ignore
+    attrs = adapted_fields(origin or cl)  # type: ignore
 
     if any(isinstance(a.type, str) for a in attrs):
         # PEP 563 annotations - need to be resolved.
@@ -102,7 +105,10 @@ def make_dict_unstructure_fn(
             override = kwargs.pop(attr_name, neutral)
             if override.omit:
                 continue
-            kn = attr_name if override.rename is None else override.rename
+            if override.rename is None:
+                kn = attr_name if not _cattrs_use_alias else a.alias
+            else:
+                kn = override.rename
             d = a.default
 
             # For each attribute, we try resolving the type here and now.
@@ -265,8 +271,7 @@ def make_dict_structure_fn(
     post_lines = []
     invocation_lines = []
 
-    attrs = _adapted_fields(cl)
-    is_dc = is_dataclass(cl)
+    attrs = adapted_fields(cl)
 
     if any(isinstance(a.type, str) for a in attrs):
         # PEP 563 annotations - need to be resolved.
@@ -308,7 +313,7 @@ def make_dict_structure_fn(
             struct_handler_name = f"__c_structure_{an}"
             internal_arg_parts[struct_handler_name] = handler
 
-            ian = an if (is_dc or an[0] != "_") else an[1:]
+            ian = a.alias
             kn = an if override.rename is None else override.rename
             allowed_fields.add(kn)
             i = "  "
@@ -403,8 +408,7 @@ def make_dict_structure_fn(
                 invocation_line = f"o['{kn}'],"
 
             if a.kw_only:
-                ian = an if (is_dc or an[0] != "_") else an[1:]
-                invocation_line = f"{ian}={invocation_line}"
+                invocation_line = f"{a.alias}={invocation_line}"
             invocation_lines.append(invocation_line)
 
         # The second loop is for optional args.
@@ -435,7 +439,6 @@ def make_dict_structure_fn(
                 struct_handler_name = f"__c_structure_{an}"
                 internal_arg_parts[struct_handler_name] = handler
 
-                ian = an if (is_dc or an[0] != "_") else an[1:]
                 kn = an if override.rename is None else override.rename
                 allowed_fields.add(kn)
                 post_lines.append(f"  if '{kn}' in o:")
@@ -443,16 +446,16 @@ def make_dict_structure_fn(
                     if handler == converter._structure_call:
                         internal_arg_parts[struct_handler_name] = t
                         post_lines.append(
-                            f"    res['{ian}'] = {struct_handler_name}(o['{kn}'])"
+                            f"    res['{a.alias}'] = {struct_handler_name}(o['{kn}'])"
                         )
                     else:
                         tn = f"__c_type_{an}"
                         internal_arg_parts[tn] = t
                         post_lines.append(
-                            f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], {tn})"
+                            f"    res['{a.alias}'] = {struct_handler_name}(o['{kn}'], {tn})"
                         )
                 else:
-                    post_lines.append(f"    res['{ian}'] = o['{kn}']")
+                    post_lines.append(f"    res['{a.alias}'] = o['{kn}']")
         instantiation_lines = (
             ["  return __cl("] + [f"    {line}" for line in invocation_lines] + ["  )"]
         )

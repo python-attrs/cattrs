@@ -76,7 +76,7 @@ def fields(type):
             raise Exception("Not an attrs or dataclass class.") from None
 
 
-def _adapted_fields(cl) -> List[Attribute]:
+def adapted_fields(cl) -> List[Attribute]:
     """Return the attrs format of `fields()` for attrs and dataclasses."""
     if is_dataclass(cl):
         attrs = dataclass_fields(cl)
@@ -103,6 +103,7 @@ def _adapted_fields(cl) -> List[Attribute]:
                 attr.init,
                 True,
                 type=type_hints.get(attr.name, attr.type),
+                alias=attr.name,
             )
             for attr in attrs
         ]
