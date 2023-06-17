@@ -4,7 +4,7 @@
 <a href="https://github.com/python-attrs/cattrs/actions?workflow=CI"><img src="https://github.com/python-attrs/cattrs/workflows/CI/badge.svg"/></a>
 <a href="https://catt.rs/en/latest/?badge=latest"><img src="https://readthedocs.org/projects/cattrs/badge/?version=latest" alt="Documentation Status"/></a>
 <a href="https://github.com/python-attrs/cattrs"><img src="https://img.shields.io/pypi/pyversions/cattrs.svg" alt="Supported Python versions"/></a>
-<a href="https://codecov.io/gh/python-attrs/cattrs/"><img src="https://codecov.io/gh/python-attrs/cattrs/branch/master/graph/badge.svg"/></a>
+<a href="https://github.com/python-attrs/cattrs/actions/workflows/main.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Tinche/22405310d6a663164d894a2beab4d44d/raw/covbadge.json"/></a>
 <a href="https://github.com/psf/black"><img src="https://img.shields.io/badge/code%20style-black-000000.svg"/></a>
 
 ---
