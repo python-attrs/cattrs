@@ -25,12 +25,13 @@ jobs:
         with:
           python-version: "${{ matrix.python-version }}"
 
-      - name: "Install dependencies"
+      - name: "Run Tox"
         run: |
           python -Im pip install --upgrade pip wheel pdm
-          python -Im pip install --upgrade coverage[toml] virtualenv tox tox-gh-actions
+          python -Im pip install --upgrade tox tox-gh-actions
 
           python -Im tox
+
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
         with:
