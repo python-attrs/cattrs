@@ -52,6 +52,7 @@ jobs:
       - uses: "actions/setup-python@v4"
         with:
           cache: "pip"
+          python-version: "3.11"
 
       - run: "python -Im pip install --upgrade coverage[toml]"
 
@@ -67,11 +68,27 @@ jobs:
           # Report and write to summary.
           python -Im coverage report | sed 's/^/    /' >> $GITHUB_STEP_SUMMARY
 
+          export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
+          echo "total=$TOTAL" >> $GITHUB_ENV
+
       - name: "Upload HTML report."
         uses: "actions/upload-artifact@v3"
         with:
           name: "html-report"
           path: "htmlcov"
+      
+      - name: "Make badge"
+        uses: "schneegans/dynamic-badges-action@v1.4.0"
+        with:
+          # GIST_TOKEN is a GitHub personal access token with scope "gist".
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: 22405310d6a663164d894a2beab4d44d
+          filename: covbadge.json
+          label: Coverage
+          message: ${{ env.total }}%
+          minColorRange: 50
+          maxColorRange: 90
+          valColorRange: ${{ env.total }}
 
   package:
     name: "Build & verify package"
