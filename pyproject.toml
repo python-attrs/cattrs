@@ -87,11 +87,8 @@ docs = [
 addopts = "-l --benchmark-sort=fullname --benchmark-warmup=true --benchmark-warmup-iterations=5  --benchmark-group-by=fullname"
 
 [tool.coverage.run]
-omit = [
-    "cattr/_compat.py",
-    "cattr/vendor/typing.py",
-    "cattr/vendor/python3/typing.py",
-]
+parallel = true
+source_pkgs = ["cattr", "cattrs"]
 
 [tool.coverage.paths]
 source = [
