@@ -28,10 +28,9 @@ jobs:
       - name: "Install dependencies"
         run: |
           python -Im pip install --upgrade pip wheel pdm
-          python -Im pip install --upgrade coverage[toml] virtualenv tox
+          python -Im pip install --upgrade coverage[toml] virtualenv tox tox-gh-actions
 
-          python -Im tox run -f py$(echo ${{ matrix.python-version }} | tr -d .)
-
+          python -Im tox
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
         with:
