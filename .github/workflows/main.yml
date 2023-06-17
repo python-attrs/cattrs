@@ -62,6 +62,7 @@ jobs:
         run: |
           python -Im coverage combine
           python -Im coverage html --skip-covered --skip-empty
+          python -Im coverage json
 
           # Report and write to summary.
           python -Im coverage report | sed 's/^/    /' >> $GITHUB_STEP_SUMMARY
