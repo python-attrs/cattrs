@@ -95,9 +95,9 @@ omit = [
 
 [tool.coverage.paths]
 source = [
-   "src/cattr",
-   ".tox/*/lib/python*/site-packages/cattr",
-   ".tox/pypy*/site-packages/cattr",
+   "src",
+   ".tox/*/lib/python*/site-packages",
+   ".tox/pypy*/site-packages",
 ]
 
 [tool.ruff]
