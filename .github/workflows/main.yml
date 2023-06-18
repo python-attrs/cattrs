@@ -32,12 +32,12 @@ jobs:
 
           python -Im tox
 
-      - name: Upload coverage data
-        uses: actions/upload-artifact@v3
+      - name: "Upload coverage data"
+        uses: "actions/upload-artifact@v3"
         with:
-          name: coverage-data
-          path: .coverage.*
-          if-no-files-found: ignore
+          name: "coverage-data"
+          path: ".coverage.*"
+          if-no-files-found: "ignore"
 
   coverage:
     name: "Combine & check coverage."

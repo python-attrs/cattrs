@@ -10,7 +10,7 @@ from pytest import raises
 from cattrs import Converter
 from cattrs._compat import ExtensionsTypedDict, is_generic
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
-from cattrs.gen import override
+from cattrs.gen import already_generating, override
 from cattrs.gen._generics import generate_mapping
 from cattrs.gen.typeddicts import (
     get_annots,
@@ -328,3 +328,32 @@ def test_forbid_extra_keys(
                 cls,
             )
         )
+
+
+class TypedDictA(ExtensionsTypedDict):
+    b: "TypedDictB"
+
+
+class TypedDictB(ExtensionsTypedDict):
+    a: "TypedDictA"
+
+
+@given(...)
+def test_recursive_generation(detailed_validation: bool) -> None:
+    """Generating recursive hooks works."""
+    assert not hasattr(already_generating, "working_set")
+
+    c = mk_converter(detailed_validation)
+
+    assert c.unstructure({"a": {"b": {"a": {}}}}, TypedDictB) == {"a": {"b": {"a": {}}}}
+
+
+def test_forwardref(genconverter: Converter):
+    """TypedDicts have no resolve_class, so they're good candidate for forwardrefs."""
+
+    class A(ExtensionsTypedDict):
+        a: "int"
+
+    genconverter.register_unstructure_hook(int, lambda v: v + 1)
+
+    assert genconverter.unstructure({"a": 1}, A) == {"a": 2}

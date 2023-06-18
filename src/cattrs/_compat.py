@@ -338,6 +338,9 @@ if sys.version_info >= (3, 9):
             return Annotated[args]
         return type.__origin__[args]
 
+    def get_full_type_hints(obj, globalns=None, localns=None):
+        return get_type_hints(obj, globalns, localns, include_extras=True)
+
 else:
     Set = TypingSet
     AbstractSet = TypingAbstractSet
@@ -458,6 +461,9 @@ else:
         if get_origin(type) in (NotRequired, Required):
             return get_args(type)[0]
         return NOTHING
+
+    def get_full_type_hints(obj, globalns=None, localns=None):
+        return get_type_hints(obj, globalns, localns)
 
 
 def is_generic_attrs(type):

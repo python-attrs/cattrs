@@ -9,7 +9,9 @@
 - Optimize and improve unstructuring of `Optional` (unions of one type and `None`).
   ([#380](https://github.com/python-attrs/cattrs/issues/380) [#381](https://github.com/python-attrs/cattrs/pull/381))
 - Fix `format_exception` and `transform_error` type annotations.
-- Improve the implementation of `cattrs._compat.is_typeddict`. The implementation is now simpler, and relies on fewer private implementation details from `typing` and typing_extensions. ([#384](https://github.com/python-attrs/cattrs/pull/384))
+- Improve the implementation of `cattrs._compat.is_typeddict`. The implementation is now simpler, and relies on fewer private implementation details from `typing` and typing_extensions.
+  ([#384](https://github.com/python-attrs/cattrs/pull/384))
+- Improve handling of TypedDicts with forward references.
 
 ## 23.1.2 (2023-06-02)
 

@@ -202,6 +202,8 @@ def make_dict_unstructure_fn(
             linecache.cache[fname] = len(script), None, total_lines, fname
     finally:
         working_set.remove(cl)
+        if not working_set:
+            del already_generating.working_set
 
     return fn
 
