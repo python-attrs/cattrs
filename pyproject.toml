@@ -88,7 +88,7 @@ addopts = "-l --benchmark-sort=fullname --benchmark-warmup=true --benchmark-warm
 
 [tool.coverage.run]
 parallel = true
-source_pkgs = ["cattr", "cattrs"]
+source_pkgs = ["cattrs"]
 
 [tool.coverage.paths]
 source = [

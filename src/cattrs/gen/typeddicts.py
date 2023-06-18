@@ -10,12 +10,12 @@ from attr import NOTHING, Attribute
 try:
     from inspect import get_annotations
 
-    def get_annots(cl):
+    def get_annots(cl) -> dict[str, Any]:
         return get_annotations(cl, eval_str=True)
 
 except ImportError:
     # https://docs.python.org/3/howto/annotations.html#accessing-the-annotations-dict-of-an-object-in-python-3-9-and-older
-    def get_annots(cl):
+    def get_annots(cl) -> dict[str, Any]:
         if isinstance(cl, type):
             ann = cl.__dict__.get("__annotations__", {})
         else:
@@ -30,6 +30,7 @@ except ImportError:
 
 from .._compat import (
     TypedDict,
+    get_full_type_hints,
     get_notrequired_base,
     get_origin,
     is_annotated,
@@ -232,6 +233,8 @@ def make_dict_unstructure_fn(
             linecache.cache[fname] = len(script), None, total_lines, fname
     finally:
         working_set.remove(cl)
+        if not working_set:
+            del already_generating.working_set
 
     return fn
 
@@ -518,8 +521,19 @@ def make_dict_structure_fn(
 
 def _adapted_fields(cls: Any) -> list[Attribute]:
     annotations = get_annots(cls)
+    hints = get_full_type_hints(cls)
     return [
-        Attribute(n, NOTHING, None, False, False, False, False, False, type=a)
+        Attribute(
+            n,
+            NOTHING,
+            None,
+            False,
+            False,
+            False,
+            False,
+            False,
+            type=hints[n] if n in hints else annotations[n],
+        )
         for n, a in annotations.items()
     ]
 
