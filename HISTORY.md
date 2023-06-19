@@ -12,6 +12,7 @@
 - Improve the implementation of `cattrs._compat.is_typeddict`. The implementation is now simpler, and relies on fewer private implementation details from `typing` and typing_extensions.
   ([#384](https://github.com/python-attrs/cattrs/pull/384))
 - Improve handling of TypedDicts with forward references.
+- Speed up generated _attrs_ and TypedDict structuring functions by changing their signature slightly.
 
 ## 23.1.2 (2023-06-02)
 

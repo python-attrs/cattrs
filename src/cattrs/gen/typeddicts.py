@@ -504,7 +504,7 @@ def make_dict_structure_fn(
         globs[k] = v
 
     total_lines = [
-        f"def {fn_name}(o, _, *, {internal_arg_line}):",
+        f"def {fn_name}(o, _, {internal_arg_line}):",
         *lines,
         *post_lines,
         "  return res",
