@@ -12,6 +12,8 @@
 - Improve the implementation of `cattrs._compat.is_typeddict`. The implementation is now simpler, and relies on fewer private implementation details from `typing` and typing_extensions.
   ([#384](https://github.com/python-attrs/cattrs/pull/384))
 - Improve handling of TypedDicts with forward references.
+- Speed up generated _attrs_ and TypedDict structuring functions by changing their signature slightly.
+  ([#388](https://github.com/python-attrs/cattrs/pull/388))
 
 ## 23.1.2 (2023-06-02)
 
@@ -19,7 +21,8 @@
 
 ## 23.1.1 (2023-05-30)
 
-- Add `typing_extensions` as a direct dependency on 3.10. ([#369](https://github.com/python-attrs/cattrs/issues/369) [#370](https://github.com/python-attrs/cattrs/pull/370))
+- Add `typing_extensions` as a direct dependency on 3.10.
+  ([#369](https://github.com/python-attrs/cattrs/issues/369) [#370](https://github.com/python-attrs/cattrs/pull/370))
 
 ## 23.1.0 (2023-05-30)
 
