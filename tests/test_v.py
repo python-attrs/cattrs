@@ -227,6 +227,25 @@ def test_custom_error_fn(c: Converter) -> None:
         ]
 
 
+def test_custom_error_fn_nested(c: Converter) -> None:
+    def my_format(exc, type):
+        if isinstance(exc, TypeError):
+            return "Must be correct type"
+        return format_exception(exc, type)
+
+    @define
+    class C:
+        a: Dict[str, int]
+
+    try:
+        c.structure({"a": {"a": "str", "b": 1, "c": None}}, C)
+    except Exception as exc:
+        assert transform_error(exc, format_exception=my_format) == [
+            "invalid value for type, expected int @ $.a['a']",
+            "Must be correct type @ $.a['c']",
+        ]
+
+
 def test_typeddict_attribute_errors(c: Converter) -> None:
     """TypedDict errors are correctly generated."""
 

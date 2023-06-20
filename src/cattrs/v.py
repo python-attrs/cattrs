@@ -89,7 +89,7 @@ def transform_error(
         for exc, note in with_notes:
             p = f"{path}[{note.index!r}]"
             if isinstance(exc, (ClassValidationError, IterableValidationError)):
-                errors.extend(transform_error(exc, p))
+                errors.extend(transform_error(exc, p, format_exception))
             else:
                 errors.append(f"{format_exception(exc, note.type)} @ {p}")
         for exc in without:
@@ -99,7 +99,7 @@ def transform_error(
         for exc, note in with_notes:
             p = f"{path}.{note.name}"
             if isinstance(exc, (ClassValidationError, IterableValidationError)):
-                errors.extend(transform_error(exc, p))
+                errors.extend(transform_error(exc, p, format_exception))
             else:
                 errors.append(f"{format_exception(exc, note.type)} @ {p}")
         for exc in without:

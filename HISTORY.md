@@ -2,6 +2,8 @@
 
 ## 23.2.0 (UNRELEASED)
 
+- Fix `format_exception` parameter working for recursive calls to `transform_error`
+  ([#389](https://github.com/python-attrs/cattrs/issues/389)
 - Use [PDM](https://pdm.fming.dev/latest/) instead of Poetry.
 - _cattrs_ is now linted with [Ruff](https://beta.ruff.rs/docs/).
 - Fix TypedDicts with periods in their field names.
