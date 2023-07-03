@@ -1,5 +1,7 @@
 """Test both structuring and unstructuring."""
+from collections import deque
 from typing import (
+    Deque,
     FrozenSet,
     List,
     MutableSequence,
@@ -17,10 +19,10 @@ from hypothesis import HealthCheck, assume, given, settings
 from hypothesis.strategies import booleans, just, lists, one_of, sampled_from
 
 from cattrs import Converter, UnstructureStrategy
-from cattrs._compat import is_py39_plus, is_py310_plus
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import make_dict_structure_fn, override
 
+from ._compat import is_py39_plus, is_py310_plus
 from .typed import (
     nested_typed_classes,
     simple_typed_attrs,
@@ -247,7 +249,7 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     assume(len(a_field_names) > len(common_names))
 
     @attr.s
-    class C(object):
+    class C:
         a = attr.ib(type=Union[cl_a, cl_b])
 
     inst = C(a=cl_a(*vals_a, **kwargs_a))
@@ -322,7 +324,7 @@ def test_optional_field_roundtrip(cl_and_vals):
     cl, vals, kwargs = cl_and_vals
 
     @attr.s
-    class C(object):
+    class C:
         a = attr.ib(type=Optional[cl])
 
     inst = C(a=cl(*vals, **kwargs))
@@ -365,7 +367,7 @@ def test_omit_default_roundtrip(cl_and_vals):
     cl, vals, kwargs = cl_and_vals
 
     @attr.s
-    class C(object):
+    class C:
         a: int = attr.ib(default=1)
         b: cl = attr.ib(factory=lambda: cl(*vals, **kwargs))
 
@@ -392,17 +394,18 @@ def test_type_overrides(cl_and_vals):
     unstructured = converter.unstructure(inst)
 
     for field, val in zip(fields(cl), vals):
-        if field.type is int:
-            if field.default is not None:
-                if isinstance(field.default, Factory):
-                    if not field.default.takes_self and field.default() == val:
-                        assert field.name not in unstructured
-                elif field.default == val:
+        if field.type is int and field.default is not None:
+            if isinstance(field.default, Factory):
+                if not field.default.takes_self and field.default() == val:
                     assert field.name not in unstructured
+            elif field.default == val:
+                assert field.name not in unstructured
 
 
 def test_calling_back():
-    """Calling unstructure_attrs_asdict from a hook should not override a manual hook."""
+    """
+    Calling unstructure_attrs_asdict from a hook should not override a manual hook.
+    """
     converter = Converter()
 
     @attr.define
@@ -524,20 +527,24 @@ def test_overriding_generated_structure_hook_func():
             (tuple, tuple),
             (list, list),
             (list, List),
+            (deque, Deque),
             (set, Set),
             (set, set),
             (frozenset, frozenset),
             (frozenset, FrozenSet),
             (list, MutableSequence),
+            (deque, MutableSequence),
             (tuple, Sequence),
         ]
         if is_py39_plus
         else [
             (tuple, Tuple),
             (list, List),
+            (deque, Deque),
             (set, Set),
             (frozenset, FrozenSet),
             (list, MutableSequence),
+            (deque, MutableSequence),
             (tuple, Sequence),
         ]
     ),
@@ -563,6 +570,57 @@ def test_seq_of_simple_classes_unstructure(cls_and_vals, seq_type_and_annotation
     assert all(e == test_val for e in outputs)
 
 
+@given(
+    sampled_from(
+        [
+            (tuple, Tuple),
+            (tuple, tuple),
+            (list, list),
+            (list, List),
+            (deque, deque),
+            (deque, Deque),
+            (set, Set),
+            (set, set),
+            (frozenset, frozenset),
+            (frozenset, FrozenSet),
+        ]
+        if is_py39_plus
+        else [
+            (tuple, Tuple),
+            (list, List),
+            (deque, Deque),
+            (set, Set),
+            (frozenset, FrozenSet),
+        ]
+    )
+)
+def test_seq_of_bare_classes_structure(seq_type_and_annotation):
+    """Structure iterable of values to a sequence of primitives."""
+    converter = Converter()
+
+    bare_classes = ((int, (1,)), (float, (1.0,)), (str, ("test",)), (bool, (True,)))
+    seq_type, annotation = seq_type_and_annotation
+
+    for cl, vals in bare_classes:
+
+        @define(frozen=True)
+        class C:
+            a: cl
+            b: cl
+
+        inputs = [{"a": cl(*vals), "b": cl(*vals)} for _ in range(5)]
+        outputs = converter.structure(
+            inputs,
+            cl=annotation[C]
+            if annotation not in (Tuple, tuple)
+            else annotation[C, ...],
+        )
+        expected = seq_type(C(a=cl(*vals), b=cl(*vals)) for _ in range(5))
+
+        assert type(outputs) == seq_type
+        assert outputs == expected
+
+
 @pytest.mark.skipif(not is_py39_plus, reason="3.9+ only")
 def test_annotated_attrs():
     """Annotation support works for attrs classes."""
@@ -576,8 +634,44 @@ def test_annotated_attrs():
 
     @attr.define
     class Outer:
-        i: Annotated[Inner, "test"]  # noqa
-        j: list[Annotated[Inner, "test"]]  # noqa
+        i: Annotated[Inner, "test"]
+        j: list[Annotated[Inner, "test"]]
+
+    orig = Outer(Inner(1), [Inner(1)])
+    raw = converter.unstructure(orig)
+
+    assert raw == {"i": {"a": 1}, "j": [{"a": 1}]}
+
+    structured = converter.structure(raw, Outer)
+    assert structured == orig
+
+    # Now register a hook and rerun the test.
+    converter.register_unstructure_hook(Inner, lambda v: {"a": 2})
+
+    raw = converter.unstructure(Outer(Inner(1), [Inner(1)]))
+
+    assert raw == {"i": {"a": 2}, "j": [{"a": 2}]}
+
+    structured = converter.structure(raw, Outer)
+    assert structured == Outer(Inner(2), [Inner(2)])
+
+
+def test_annotated_with_typing_extensions_attrs():
+    """Annotation support works for attrs classes."""
+    from typing import List
+
+    from typing_extensions import Annotated
+
+    converter = Converter()
+
+    @attr.define
+    class Inner:
+        a: int
+
+    @attr.define
+    class Outer:
+        i: Annotated[Inner, "test"]
+        j: List[Annotated[Inner, "test"]]
 
     orig = Outer(Inner(1), [Inner(1)])
     raw = converter.unstructure(orig)

@@ -1,4 +1,4 @@
-from collections import Counter
+from collections import Counter, deque
 from collections.abc import MutableSet as AbcMutableSet
 from dataclasses import Field
 from enum import Enum
@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import (
     Any,
     Callable,
+    Deque,
     Dict,
     Iterable,
     List,
@@ -21,12 +22,6 @@ from typing import (
 from attr import Attribute
 from attr import has as attrs_has
 from attr import resolve_types
-
-from cattrs.errors import (
-    IterableValidationError,
-    IterableValidationNote,
-    StructureHandlerNotFoundError,
-)
 
 from ._compat import (
     FrozenSetSubscriptable,
@@ -46,6 +41,7 @@ from ._compat import (
     is_annotated,
     is_bare,
     is_counter,
+    is_deque,
     is_frozenset,
     is_generic,
     is_generic_attrs,
@@ -56,10 +52,16 @@ from ._compat import (
     is_protocol,
     is_sequence,
     is_tuple,
+    is_typeddict,
     is_union_type,
 )
 from .disambiguators import create_uniq_field_dis_func
 from .dispatch import MultiStrategyDispatch
+from .errors import (
+    IterableValidationError,
+    IterableValidationNote,
+    StructureHandlerNotFoundError,
+)
 from .gen import (
     AttributeOverride,
     DictStructureFn,
@@ -74,6 +76,8 @@ from .gen import (
     make_mapping_structure_fn,
     make_mapping_unstructure_fn,
 )
+from .gen.typeddicts import make_dict_structure_fn as make_typeddict_dict_struct_fn
+from .gen.typeddicts import make_dict_unstructure_fn as make_typeddict_dict_unstruct_fn
 
 NoneType = type(None)
 T = TypeVar("T")
@@ -193,6 +197,7 @@ class BaseConverter:
                 (is_literal, self._structure_simple_literal),
                 (is_literal_containing_enums, self._structure_enum_literal),
                 (is_sequence, self._structure_list),
+                (is_deque, self._structure_deque),
                 (is_mutable_set, self._structure_set),
                 (is_frozenset, self._structure_frozenset),
                 (is_tuple, self._structure_tuple),
@@ -326,7 +331,6 @@ class BaseConverter:
 
     def structure(self, obj: Any, cl: Type[T]) -> T:
         """Convert unstructured Python data structures to structured data."""
-
         return self._structure_func.dispatch(cl)(obj, cl)
 
     # Classes to Python primitives.
@@ -345,7 +349,7 @@ class BaseConverter:
         """Our version of `attrs.astuple`, so we can call back to us."""
         attrs = fields(obj.__class__)
         dispatch = self._unstructure_func.dispatch
-        res = list()
+        res = []
         for a in attrs:
             name = a.name
             v = getattr(obj, name)
@@ -394,20 +398,21 @@ class BaseConverter:
     @staticmethod
     def _structure_error(_, cl: Type) -> NoReturn:
         """At the bottom of the condition stack, we explode if we can't handle it."""
-        msg = "Unsupported type: {0!r}. Register a structure hook for " "it.".format(cl)
+        msg = f"Unsupported type: {cl!r}. Register a structure hook for it."
         raise StructureHandlerNotFoundError(msg, type_=cl)
 
     def _gen_structure_generic(self, cl: Type[T]) -> DictStructureFn[T]:
         """Create and return a hook for structuring generics."""
-        fn = make_dict_structure_fn(
+        return make_dict_structure_fn(
             cl, self, _cattrs_prefer_attrib_converters=self._prefer_attrib_converters
         )
-        return fn
 
     def _gen_attrs_union_structure(
         self, cl: Any
     ) -> Callable[[Any, Type[T]], Optional[Type[T]]]:
-        """Generate a structuring function for a union of attrs classes (and maybe None)."""
+        """
+        Generate a structuring function for a union of attrs classes (and maybe None).
+        """
         dis_fn = self._get_dis_func(cl)
         has_none = NoneType in cl.__args__
 
@@ -478,9 +483,10 @@ class BaseConverter:
         type_ = a.type
         attrib_converter = getattr(a, "converter", None)
         if self._prefer_attrib_converters and attrib_converter:
-            # A attrib converter is defined on this attribute, and prefer_attrib_converters is set
-            # to give these priority over registered structure hooks. So, pass through the raw
-            # value, which attrs will flow into the converter
+            # A attrib converter is defined on this attribute, and
+            # prefer_attrib_converters is set to give these priority over registered
+            # structure hooks. So, pass through the raw value, which attrs will flow
+            # into the converter
             return value
         if type_ is None:
             # No type metadata.
@@ -492,8 +498,7 @@ class BaseConverter:
             if attrib_converter:
                 # Return the original value and fallback to using an attrib converter.
                 return value
-            else:
-                raise
+            raise
 
     def structure_attrs_fromdict(self, obj: Mapping[str, Any], cl: Type[T]) -> T:
         """Instantiate an attrs class from a mapping (dict)."""
@@ -518,7 +523,7 @@ class BaseConverter:
     def _structure_list(self, obj: Iterable[T], cl: Any) -> List[T]:
         """Convert an iterable to a potentially generic list."""
         if is_bare(cl) or cl.__args__[0] is Any:
-            res = [e for e in obj]
+            res = list(obj)
         else:
             elem_type = cl.__args__[0]
             handler = self._structure_func.dispatch(elem_type)
@@ -533,7 +538,7 @@ class BaseConverter:
                         msg = IterableValidationNote(
                             f"Structuring {cl} @ index {ix}", ix, elem_type
                         )
-                        e.__notes__ = getattr(e, "__notes__", []) + [msg]
+                        e.__notes__ = [*getattr(e, "__notes__", []), msg]
                         errors.append(e)
                     finally:
                         ix += 1
@@ -543,6 +548,36 @@ class BaseConverter:
                     )
             else:
                 res = [handler(e, elem_type) for e in obj]
+        return res
+
+    def _structure_deque(self, obj: Iterable[T], cl: Any) -> Deque[T]:
+        """Convert an iterable to a potentially generic deque."""
+        if is_bare(cl) or cl.__args__[0] is Any:
+            res = deque(e for e in obj)
+        else:
+            elem_type = cl.__args__[0]
+            handler = self._structure_func.dispatch(elem_type)
+            if self.detailed_validation:
+                errors = []
+                res = deque()
+                ix = 0  # Avoid `enumerate` for performance.
+                for e in obj:
+                    try:
+                        res.append(handler(e, elem_type))
+                    except Exception as e:
+                        msg = IterableValidationNote(
+                            f"Structuring {cl} @ index {ix}", ix, elem_type
+                        )
+                        e.__notes__ = [*getattr(e, "__notes__", []), msg]
+                        errors.append(e)
+                    finally:
+                        ix += 1
+                if errors:
+                    raise IterableValidationError(
+                        f"While structuring {cl!r}", errors, cl
+                    )
+            else:
+                res = deque(handler(e, elem_type) for e in obj)
         return res
 
     def _structure_set(
@@ -566,17 +601,16 @@ class BaseConverter:
                         ix,
                         elem_type,
                     )
-                    exc.__notes__ = getattr(e, "__notes__", []) + [msg]
+                    exc.__notes__ = [*getattr(e, "__notes__", []), msg]
                     errors.append(exc)
                 finally:
                     ix += 1
             if errors:
                 raise IterableValidationError(f"While structuring {cl!r}", errors, cl)
             return res if structure_to is set else structure_to(res)
-        elif structure_to is set:
+        if structure_to is set:
             return {handler(e, elem_type) for e in obj}
-        else:
-            return structure_to([handler(e, elem_type) for e in obj])
+        return structure_to([handler(e, elem_type) for e in obj])
 
     def _structure_frozenset(
         self, obj: Iterable[T], cl: Any
@@ -588,20 +622,16 @@ class BaseConverter:
         """Convert a mapping into a potentially generic dict."""
         if is_bare(cl) or cl.__args__ == (Any, Any):
             return dict(obj)
-        else:
-            key_type, val_type = cl.__args__
-            if key_type is Any:
-                val_conv = self._structure_func.dispatch(val_type)
-                return {k: val_conv(v, val_type) for k, v in obj.items()}
-            elif val_type is Any:
-                key_conv = self._structure_func.dispatch(key_type)
-                return {key_conv(k, key_type): v for k, v in obj.items()}
-            else:
-                key_conv = self._structure_func.dispatch(key_type)
-                val_conv = self._structure_func.dispatch(val_type)
-                return {
-                    key_conv(k, key_type): val_conv(v, val_type) for k, v in obj.items()
-                }
+        key_type, val_type = cl.__args__
+        if key_type is Any:
+            val_conv = self._structure_func.dispatch(val_type)
+            return {k: val_conv(v, val_type) for k, v in obj.items()}
+        if val_type is Any:
+            key_conv = self._structure_func.dispatch(key_type)
+            return {key_conv(k, key_type): v for k, v in obj.items()}
+        key_conv = self._structure_func.dispatch(key_type)
+        val_conv = self._structure_func.dispatch(val_type)
+        return {key_conv(k, key_type): val_conv(v, val_type) for k, v in obj.items()}
 
     def _structure_optional(self, obj, union):
         if obj is None:
@@ -618,10 +648,7 @@ class BaseConverter:
 
     def _structure_tuple(self, obj: Any, tup: Type[T]) -> T:
         """Deal with structuring into a tuple."""
-        if tup in (Tuple, tuple):
-            tup_params = None
-        else:
-            tup_params = tup.__args__
+        tup_params = None if tup in (Tuple, tuple) else tup.__args__
         has_ellipsis = tup_params and tup_params[-1] is Ellipsis
         if tup_params is None or (has_ellipsis and tup_params[0] is Any):
             # Just a Tuple. (No generic information.)
@@ -641,7 +668,7 @@ class BaseConverter:
                         msg = IterableValidationNote(
                             f"Structuring {tup} @ index {ix}", ix, tup_type
                         )
-                        exc.__notes__ = getattr(e, "__notes__", []) + [msg]
+                        exc.__notes__ = [*getattr(e, "__notes__", []), msg]
                         errors.append(exc)
                     finally:
                         ix += 1
@@ -650,57 +677,47 @@ class BaseConverter:
                         f"While structuring {tup!r}", errors, tup
                     )
                 return tuple(res)
-            else:
-                return tuple(conv(e, tup_type) for e in obj)
+            return tuple(conv(e, tup_type) for e in obj)
+
+        # We're dealing with a heterogenous tuple.
+        exp_len = len(tup_params)
+        try:
+            len_obj = len(obj)
+        except TypeError:
+            pass  # most likely an unsized iterator, eg generator
         else:
-            # We're dealing with a heterogenous tuple.
-            exp_len = len(tup_params)
-            try:
-                len_obj = len(obj)
-            except TypeError:
-                pass  # most likely an unsized iterator, eg generator
-            else:
-                if len_obj > exp_len:
-                    exp_len = len_obj
-            if self.detailed_validation:
-                errors = []
-                res = []
-                for ix, (t, e) in enumerate(zip(tup_params, obj)):
-                    try:
-                        conv = self._structure_func.dispatch(t)
-                        res.append(conv(e, t))
-                    except Exception as exc:
-                        msg = IterableValidationNote(
-                            f"Structuring {tup} @ index {ix}", ix, t
-                        )
-                        exc.__notes__ = getattr(e, "__notes__", []) + [msg]
-                        errors.append(exc)
-                if len(res) < exp_len:
-                    problem = "Not enough" if len(res) < len(tup_params) else "Too many"
-                    exc = ValueError(
-                        f"{problem} values in {obj!r} to structure as {tup!r}"
+            if len_obj > exp_len:
+                exp_len = len_obj
+        if self.detailed_validation:
+            errors = []
+            res = []
+            for ix, (t, e) in enumerate(zip(tup_params, obj)):
+                try:
+                    conv = self._structure_func.dispatch(t)
+                    res.append(conv(e, t))
+                except Exception as exc:
+                    msg = IterableValidationNote(
+                        f"Structuring {tup} @ index {ix}", ix, t
                     )
-                    msg = f"Structuring {tup}"
-                    exc.__notes__ = getattr(e, "__notes__", []) + [msg]
+                    exc.__notes__ = [*getattr(e, "__notes__", []), msg]
                     errors.append(exc)
-                if errors:
-                    raise IterableValidationError(
-                        f"While structuring {tup!r}", errors, tup
-                    )
-                return tuple(res)
-            else:
-                res = tuple(
-                    [
-                        self._structure_func.dispatch(t)(e, t)
-                        for t, e in zip(tup_params, obj)
-                    ]
-                )
-                if len(res) < exp_len:
-                    problem = "Not enough" if len(res) < len(tup_params) else "Too many"
-                    raise ValueError(
-                        f"{problem} values in {obj!r} to structure as {tup!r}"
-                    )
-                return res
+            if len(res) < exp_len:
+                problem = "Not enough" if len(res) < len(tup_params) else "Too many"
+                exc = ValueError(f"{problem} values in {obj!r} to structure as {tup!r}")
+                msg = f"Structuring {tup}"
+                exc.__notes__ = [*getattr(e, "__notes__", []), msg]
+                errors.append(exc)
+            if errors:
+                raise IterableValidationError(f"While structuring {tup!r}", errors, tup)
+            return tuple(res)
+
+        res = tuple(
+            [self._structure_func.dispatch(t)(e, t) for t, e in zip(tup_params, obj)]
+        )
+        if len(res) < exp_len:
+            problem = "Not enough" if len(res) < len(tup_params) else "Too many"
+            raise ValueError(f"{problem} values in {obj!r} to structure as {tup!r}")
+        return res
 
     @staticmethod
     def _get_dis_func(union: Any) -> Callable[[Any], Type]:
@@ -805,14 +822,14 @@ class Converter(BaseConverter):
                 co[FrozenSetSubscriptable] = co[OriginAbstractSet]
 
         # abc.MutableSet overrrides, if defined, apply to sets
-        if OriginMutableSet in co:
-            if set not in co:
-                co[set] = co[OriginMutableSet]
+        if OriginMutableSet in co and set not in co:
+            co[set] = co[OriginMutableSet]
 
         if FrozenSetSubscriptable in co:
             co[frozenset] = co[FrozenSetSubscriptable]  # For 3.7/3.8 compatibility.
 
-        # abc.Sequence overrides, if defined, can apply to MutableSequences, lists and tuples
+        # abc.Sequence overrides, if defined, can apply to MutableSequences, lists and
+        # tuples
         if Sequence in co:
             if MutableSequence not in co:
                 co[MutableSequence] = co[Sequence]
@@ -823,21 +840,20 @@ class Converter(BaseConverter):
         if MutableSequence in co:
             if list not in co:
                 co[list] = co[MutableSequence]
+            if deque not in co:
+                co[deque] = co[MutableSequence]
 
         # abc.Mapping overrides, if defined, can apply to MutableMappings
-        if Mapping in co:
-            if MutableMapping not in co:
-                co[MutableMapping] = co[Mapping]
+        if Mapping in co and MutableMapping not in co:
+            co[MutableMapping] = co[Mapping]
 
         # abc.MutableMapping overrides, if defined, can apply to dicts
-        if MutableMapping in co:
-            if dict not in co:
-                co[dict] = co[MutableMapping]
+        if MutableMapping in co and dict not in co:
+            co[dict] = co[MutableMapping]
 
         # builtins.dict overrides, if defined, can apply to counters
-        if dict in co:
-            if Counter not in co:
-                co[Counter] = co[dict]
+        if dict in co and Counter not in co:
+            co[Counter] = co[dict]
 
         if unstruct_strat is UnstructureStrategy.AS_DICT:
             # Override the attrs handler.
@@ -866,12 +882,20 @@ class Converter(BaseConverter):
             lambda cl: self.gen_unstructure_iterable(cl, unstructure_to=frozenset),
         )
         self.register_unstructure_hook_factory(
+            is_optional, self.gen_unstructure_optional
+        )
+        self.register_unstructure_hook_factory(
+            is_typeddict, self.gen_unstructure_typeddict
+        )
+        self.register_unstructure_hook_factory(
             lambda t: get_newtype_base(t) is not None,
             lambda t: self._unstructure_func.dispatch(get_newtype_base(t)),
         )
+
         self.register_structure_hook_factory(is_annotated, self.gen_structure_annotated)
         self.register_structure_hook_factory(is_mapping, self.gen_structure_mapping)
         self.register_structure_hook_factory(is_counter, self.gen_structure_counter)
+        self.register_structure_hook_factory(is_typeddict, self.gen_structure_typeddict)
         self.register_structure_hook_factory(
             lambda t: get_newtype_base(t) is not None, self.get_structure_newtype
         )
@@ -887,13 +911,18 @@ class Converter(BaseConverter):
 
     def gen_unstructure_annotated(self, type):
         origin = type.__origin__
-        h = self._unstructure_func.dispatch(origin)
-        return h
+        return self._unstructure_func.dispatch(origin)
 
     def gen_structure_annotated(self, type):
         origin = type.__origin__
-        h = self._structure_func.dispatch(origin)
-        return h
+        return self._structure_func.dispatch(origin)
+
+    def gen_unstructure_typeddict(self, cl: Any) -> Callable[[Dict], Dict]:
+        """Generate a TypedDict unstructure function.
+
+        Also apply converter-scored modifications.
+        """
+        return make_typeddict_dict_unstruct_fn(cl, self)
 
     def gen_unstructure_attrs_fromdict(
         self, cl: Type[T]
@@ -909,15 +938,34 @@ class Converter(BaseConverter):
             if a.type in self.type_overrides
         }
 
-        h = make_dict_unstructure_fn(
+        return make_dict_unstructure_fn(
             cl, self, _cattrs_omit_if_default=self.omit_if_default, **attrib_overrides
         )
-        return h
+
+    def gen_unstructure_optional(self, cl: Type[T]) -> Callable[[T], Any]:
+        """Generate an unstructuring hook for optional types."""
+        union_params = cl.__args__
+        other = union_params[0] if union_params[1] is NoneType else union_params[1]
+        handler = self._unstructure_func.dispatch(other)
+
+        def unstructure_optional(val, _handler=handler):
+            return None if val is None else _handler(val)
+
+        return unstructure_optional
+
+    def gen_structure_typeddict(self, cl: Any) -> Callable[[Dict], Dict]:
+        """Generate a TypedDict structure function.
+
+        Also apply converter-scored modifications.
+        """
+        return make_typeddict_dict_struct_fn(
+            cl, self, _cattrs_detailed_validation=self.detailed_validation
+        )
 
     def gen_structure_attrs_fromdict(
         self, cl: Type[T]
     ) -> Callable[[Mapping[str, Any], Any], T]:
-        attribs = fields(get_origin(cl) if is_generic(cl) else cl)
+        attribs = fields(get_origin(cl) or cl if is_generic(cl) else cl)
         if attrs_has(cl) and any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.
             resolve_types(cl)
@@ -926,7 +974,7 @@ class Converter(BaseConverter):
             for a in attribs
             if a.type in self.type_overrides
         }
-        h = make_dict_structure_fn(
+        return make_dict_structure_fn(
             cl,
             self,
             _cattrs_forbid_extra_keys=self.forbid_extra_keys,
@@ -934,8 +982,6 @@ class Converter(BaseConverter):
             _cattrs_detailed_validation=self.detailed_validation,
             **attrib_overrides,
         )
-        # only direct dispatch so that subclasses get separately generated
-        return h
 
     def gen_unstructure_iterable(
         self, cl: Any, unstructure_to: Any = None

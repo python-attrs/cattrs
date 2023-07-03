@@ -109,7 +109,9 @@ def lists_of_typed_attrs(
         min_size=min_size,
         max_size=50,
     ).map(
-        lambda l: sorted(l, key=lambda t: (t[0]._default is not NOTHING, t[0].kw_only))
+        lambda lst: sorted(
+            lst, key=lambda t: (t[0]._default is not NOTHING, t[0].kw_only)
+        )
     )
 
 
@@ -835,16 +837,12 @@ def nested_classes(
             )
             | just_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
         )
-    else:
-        return draw(
-            list_of_class(
-                (attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs)
-            )
-            | dict_of_class(
-                (attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs)
-            )
-            | just_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
-        )
+
+    return draw(
+        list_of_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
+        | dict_of_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
+        | just_class((attrs, (cls, init_vals, init_kwargs)), (pos_defs, kwarg_defs))
+    )
 
 
 def nested_typed_classes_and_strat(

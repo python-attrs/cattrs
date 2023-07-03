@@ -1,9 +1,37 @@
 # History
 
-## 23.1.0 (UNRELEASED)
+## 23.2.0 (UNRELEASED)
+
+- Fix `format_exception` parameter working for recursive calls to `transform_error`
+  ([#389](https://github.com/python-attrs/cattrs/issues/389)
+- Use [PDM](https://pdm.fming.dev/latest/) instead of Poetry.
+- _cattrs_ is now linted with [Ruff](https://beta.ruff.rs/docs/).
+- Fix TypedDicts with periods in their field names.
+  ([#376](https://github.com/python-attrs/cattrs/issues/376) [#377](https://github.com/python-attrs/cattrs/pull/377))
+- Optimize and improve unstructuring of `Optional` (unions of one type and `None`).
+  ([#380](https://github.com/python-attrs/cattrs/issues/380) [#381](https://github.com/python-attrs/cattrs/pull/381))
+- Fix `format_exception` and `transform_error` type annotations.
+- Improve the implementation of `cattrs._compat.is_typeddict`. The implementation is now simpler, and relies on fewer private implementation details from `typing` and typing_extensions.
+  ([#384](https://github.com/python-attrs/cattrs/pull/384))
+- Improve handling of TypedDicts with forward references.
+- Speed up generated _attrs_ and TypedDict structuring functions by changing their signature slightly.
+  ([#388](https://github.com/python-attrs/cattrs/pull/388))
+
+## 23.1.2 (2023-06-02)
+
+- Improve `typing_extensions` version bound. ([#372](https://github.com/python-attrs/cattrs/issues/372))
+
+## 23.1.1 (2023-05-30)
+
+- Add `typing_extensions` as a direct dependency on 3.10.
+  ([#369](https://github.com/python-attrs/cattrs/issues/369) [#370](https://github.com/python-attrs/cattrs/pull/370))
+
+## 23.1.0 (2023-05-30)
 
 - Introduce the `tagged_union` strategy. ([#318](https://github.com/python-attrs/cattrs/pull/318) [#317](https://github.com/python-attrs/cattrs/issues/317))
 - Introduce the `cattrs.transform_error` helper function for formatting validation exceptions. ([258](https://github.com/python-attrs/cattrs/issues/258) [342](https://github.com/python-attrs/cattrs/pull/342))
+- Add support for [`typing.TypedDict` and `typing_extensions.TypedDict`](https://peps.python.org/pep-0589/).
+  ([#296](https://github.com/python-attrs/cattrs/issues/296) [#364](https://github.com/python-attrs/cattrs/pull/364))
 - Add support for `typing.Final`.
   ([#340](https://github.com/python-attrs/cattrs/issues/340) [#349](https://github.com/python-attrs/cattrs/pull/349))
 - Introduce `override.struct_hook` and `override.unstruct_hook`. Learn more [here](https://catt.rs/en/latest/customizing.html#struct-hook-and-unstruct-hook).
@@ -16,6 +44,11 @@
 - Add optional dependencies for `cattrs.preconf` third-party libraries. ([#337](https://github.com/python-attrs/cattrs/pull/337))
 - All preconf converters now allow overriding the default `unstruct_collection_overrides` in `make_converter`.
   ([#350](https://github.com/python-attrs/cattrs/issues/350) [#353](https://github.com/python-attrs/cattrs/pull/353))
+- Subclasses structuring and unstructuring is now supported via a custom `include_subclasses` strategy.
+  ([#312](https://github.com/python-attrs/cattrs/pull/312))
+- Add support for `typing_extensions.Annotated` when the python version is less than `3.9`. ([#366](https://github.com/python-attrs/cattrs/pull/366))
+- Add unstructuring and structuring support for the standard library `deque`.
+  ([#355](https://github.com/python-attrs/cattrs/pull/355))
 
 ## 22.2.0 (2022-10-03)
 

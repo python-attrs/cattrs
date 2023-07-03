@@ -12,54 +12,98 @@ jobs:
   tests:
     name: "Python ${{ matrix.python-version }}"
     runs-on: "ubuntu-latest"
-    env:
-      USING_COVERAGE: "3.7,3.8,3.9,3.10,3.11,pypy-3.8"
 
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "pypy-3.8"]
+      fail-fast: false
 
     steps:
-      - uses: "actions/checkout@v2"
-      - uses: "actions/setup-python@v2"
+      - uses: "actions/checkout@v3"
+
+      - uses: "actions/setup-python@v4"
         with:
           python-version: "${{ matrix.python-version }}"
-      - name: "Install dependencies"
+
+      - name: "Run Tox"
         run: |
-          set -xe
-          python -VV
-          python -m site
-          python -m pip install --upgrade pip wheel poetry==1.3.2
-          python -m pip install --upgrade coverage[toml] virtualenv tox tox-gh-actions
-      - name: "Run tox targets for ${{ matrix.python-version }}"
-        run: "python -m tox"
+          python -Im pip install --upgrade pip wheel pdm
+          python -Im pip install --upgrade tox tox-gh-actions
 
-      # We always use a modern Python version for combining coverage to prevent
-      # parsing errors in older versions for modern code.
-      - uses: "actions/setup-python@v2"
-        with:
-          python-version: "3.9"
+          python -Im tox
 
-      - name: "Upload coverage to Codecov"
-        # if: "contains(env.USING_COVERAGE, matrix.python-version)"
-        uses: "codecov/codecov-action@v1"
+      - name: "Upload coverage data"
+        uses: "actions/upload-artifact@v3"
         with:
-          fail_ci_if_error: true
+          name: "coverage-data"
+          path: ".coverage.*"
+          if-no-files-found: "ignore"
+
+  coverage:
+    name: "Combine & check coverage."
+    needs: "tests"
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - uses: "actions/checkout@v3"
+      
+      - uses: "actions/setup-python@v4"
+        with:
+          cache: "pip"
+          python-version: "3.11"
+
+      - run: "python -Im pip install --upgrade coverage[toml]"
+
+      - uses: "actions/download-artifact@v3"
+        with:
+          name: "coverage-data"
+
+      - name: "Combine coverage"
+        run: |
+          python -Im coverage combine
+          python -Im coverage html --skip-covered --skip-empty
+          python -Im coverage json
+
+          # Report and write to summary.
+          python -Im coverage report | sed 's/^/    /' >> $GITHUB_STEP_SUMMARY
+
+          export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
+          echo "total=$TOTAL" >> $GITHUB_ENV
+
+      - name: "Upload HTML report."
+        uses: "actions/upload-artifact@v3"
+        with:
+          name: "html-report"
+          path: "htmlcov"
+      
+      - name: "Make badge"
+        if: github.ref == 'refs/heads/main'
+        uses: "schneegans/dynamic-badges-action@v1.4.0"
+        with:
+          # GIST_TOKEN is a GitHub personal access token with scope "gist".
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: 22405310d6a663164d894a2beab4d44d
+          filename: covbadge.json
+          label: Coverage
+          message: ${{ env.total }}%
+          minColorRange: 50
+          maxColorRange: 90
+          valColorRange: ${{ env.total }}
 
   package:
     name: "Build & verify package"
     runs-on: "ubuntu-latest"
 
     steps:
-      - uses: "actions/checkout@v2"
-      - uses: "actions/setup-python@v2"
+      - uses: "actions/checkout@v3"
+      - uses: "actions/setup-python@v4"
         with:
-          python-version: "3.9"
+          python-version: "3.11"
 
-      - name: "Install poetry, check-wheel-content, and twine"
-        run: "python -m pip install poetry==1.3.2 twine check-wheel-contents"
+      - name: "Install pdm, check-wheel-content, and twine"
+        run: "python -m pip install pdm twine check-wheel-contents"
       - name: "Build package"
-        run: "poetry build"
+        run: "pdm build"
       - name: "List result"
         run: "ls -l dist"
       - name: "Check wheel contents"

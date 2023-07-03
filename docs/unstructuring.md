@@ -31,6 +31,64 @@ True
 False
 ```
 
+### Typed Dicts
+
+[TypedDicts](https://peps.python.org/pep-0589/) unstructure into dictionaries, potentially unchanged (depending on the exact field types and registered hooks).
+
+```{doctest}
+>>> from typing import TypedDict
+>>> from datetime import datetime, timezone
+>>> from cattrs import Converter
+
+>>> class MyTypedDict(TypedDict):
+...    a: datetime
+
+>>> c = Converter()
+>>> c.register_unstructure_hook(datetime, lambda d: d.timestamp())
+
+>>> c.unstructure({"a": datetime(1970, 1, 1, tzinfo=timezone.utc)}, unstructure_as=MyTypedDict)
+{'a': 0.0}
+```
+
+Generic TypedDicts work on Python 3.11 and later, since that is the first Python version that supports them in general.
+
+On Python 3.7, using `typing_extensions.TypedDict` is required since `typing.TypedDict` doesn't exist there.
+On Python 3.8, using `typing_extensions.TypedDict` is recommended since `typing.TypedDict` doesn't support all necessary features, so certain combinations of subclassing, totality and `typing.Required` won't work.
+
+[Similar to _attrs_ classes](customizing.md#using-cattrsgen-generators), unstructuring can be customized using {meth}`cattrs.gen.typeddicts.make_dict_unstructure_fn`.
+
+```{doctest}
+>>> from typing import TypedDict
+>>> from cattrs import Converter
+>>> from cattrs.gen import override
+>>> from cattrs.gen.typeddicts import make_dict_unstructure_fn
+
+>>> class MyTypedDict(TypedDict):
+...     a: int
+...     b: int
+
+>>> c = Converter()
+>>> c.register_unstructure_hook(
+...     MyTypedDict,
+...     make_dict_unstructure_fn(
+...         MyTypedDict,
+...         c,
+...         a=override(omit=True)
+...     )
+... )
+
+>>> c.unstructure({"a": 1, "b": 2}, unstructure_as=MyTypedDict)
+{'b': 2}
+```
+
+```{seealso} [Structuring TypedDicts.](structuring.md#typed-dicts)
+
+```
+
+```{versionadded} 23.1.0
+
+```
+
 ## `pathlib.Path`
 
 [`pathlib.Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path) objects are unstructured into their string value.
@@ -57,7 +115,7 @@ generic way. A common example is using a JSON library that doesn't support
 sets, but expects lists and tuples instead.
 
 Using ordinary unstructuring hooks for this is unwieldy due to the semantics of
-{ref}`singledispatch <https://docs.python.org/3/library/functools.html#functools.singledispatch>`;
+[singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch);
 in other words, you'd need to register hooks for all specific types of set you're using (`set[int]`, `set[float]`,
 `set[str]`...), which is not useful.
 
@@ -80,9 +138,9 @@ unstructure all sets into lists, try the following:
 Going even further, the Converter contains heuristics to support the
 following Python types, in order of decreasing generality:
 
-- `Sequence`, `MutableSequence`, `list`, `tuple`
+- `Sequence`, `MutableSequence`, `list`, `deque`, `tuple`
 - `Set`, `frozenset`, `MutableSet`, `set`
-- `Mapping`, `MutableMapping`, `dict`, `Counter`
+- `Mapping`, `MutableMapping`, `dict`, `defaultdict`, `OrderedDict`, `Counter`
 
 For example, if you override the unstructure type for `Sequence`, but not for
 `MutableSequence`, `list` or `tuple`, the override will also affect those
@@ -161,7 +219,7 @@ _attrs_ classes and dataclasses are supported out of the box.
 
 ## Mixing and Matching Strategies
 
-Converters publicly expose two helper metods, {meth}`Converter.unstructure_attrs_asdict() <cattrs.BaseConverter.unstructure_attrs_asdict>`
+Converters publicly expose two helper methods, {meth}`Converter.unstructure_attrs_asdict() <cattrs.BaseConverter.unstructure_attrs_asdict>`
 and {meth}`Converter.unstructure_attrs_astuple() <cattrs.BaseConverter.unstructure_attrs_astuple>`.
 These methods can be used with custom unstructuring hooks to selectively apply one strategy to instances of particular classes.
 

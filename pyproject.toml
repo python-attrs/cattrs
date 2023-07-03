@@ -5,86 +5,128 @@ skip-magic-trailing-comma = true
 profile = "black"
 known_first_party = ["cattr"]
 
-[tool.poetry]
+[tool.hatch.build.targets.wheel]
+packages = ["src/cattr", "src/cattrs"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.mypy]
+strict = true
+
+[project]
 name = "cattrs"
-version = "23.1.0.dev0"
+version = "23.2.0.dev0"
 description = "Composable complex class support for attrs and dataclasses."
-authors = ["Tin Tvrtkovic <tinchester@gmail.com>"]
-license = "MIT"
-repository = "https://github.com/python-attrs/cattrs"
-documentation = "https://catt.rs/en/stable/"
-keywords = ["attrs", "serialization", "dataclasses"]
-packages = [
-    { include = "cattr", from = "src" },
-    { include = "cattrs", from = "src" },
+authors = [
+    {name = "Tin Tvrtkovic", email = "tinchester@gmail.com"},
 ]
+dependencies = [
+    "attrs>=23.1.0",
+    "typing-extensions>=4.1.0, !=4.6.3; python_version < '3.11'",
+    "exceptiongroup>=1.1.1; python_version < '3.11'",
+]
+requires-python = ">=3.7"
 readme = "README.md"
+license = {text = "MIT"}
+keywords = ["attrs", "serialization", "dataclasses"]
 
-[tool.poetry.dependencies]
-python = ">= 3.7"
-attrs = ">= 20"
-typing_extensions = { version = "*", python = "< 3.8" }
-exceptiongroup = { version = "*", python = "< 3.11" }
-ujson = { version = "^5.4.0", optional = true }
-orjson = { version = "^3.5.2", markers = "implementation_name == 'cpython'", optional = true }
-msgpack = { version = "^1.0.2", optional = true }
-PyYAML = { version = "^6.0", optional = true }
-tomlkit = { version = "^0.11.4", python = "<4", optional = true }
-cbor2 = { version = "^5.4.6", optional = true }
-pymongo = { version = "^4.2.0", optional = true }
-
-[tool.poetry.extras]
-ujson = ["ujson"]
-orjson = ["orjson"]
-msgpack = ["msgpack"]
-pyyaml = ["PyYAML"]
-tomlkit = ["tomlkit"]
-cbor2 = ["cbor2"]
-bson = ["pymongo"]
-
-[tool.poetry.group.dev.dependencies]
-flake8 = {version = "^5.0.4", python = "^3.8"}
-tox = "^3.26.0"
-Sphinx = "^5.3.0"
-pytest = "^7.1.3"
-pytest-benchmark = "^3.2.3"
-hypothesis = "^6.54.5"
-pendulum = "^2.1.2"
-isort = { version = "5.10.1", python = "<4" }
-black = "^23.1.0"
-immutables = "^0.18"
-furo = "^2023.3.27"
-coverage = "^6.2"
-urllib3 = { version = "^1.26.12", python = "<4" }
-sphinx-copybutton = "^0.5.0"
-myst-parser = "^0.18.1"
-cbor2 = "^5.4.6"
-pyperf = "^2.6.0"
-
-[tool.poetry.urls]
-"Changelog" = "https://catt.rs/en/latest/history.html"
+[project.urls]
+Homepage = "https://catt.rs"
+Changelog = "https://catt.rs/en/latest/history.html"
 "Bug Tracker" = "https://github.com/python-attrs/cattrs/issues"
+Repository = "https://github.com/python-attrs/cattrs"
+Documentation = "https://catt.rs/en/stable/"
+
+[project.optional-dependencies]
+ujson = [
+    "ujson>=5.7.0",
+]
+orjson = [
+    "orjson>=3.8.14; implementation_name == 'cpython'",
+]
+msgpack = [
+    "msgpack>=1.0.5",
+]
+pyyaml = [
+    "PyYAML>=6.0",
+]
+tomlkit = [
+    "tomlkit>=0.11.8",
+]
+cbor2 = [
+    "cbor2>=5.4.6",
+]
+bson = [
+    "pymongo>=4.3.3",
+]
+
+[tool.pdm.dev-dependencies]
+lint = [
+    "isort>=5.11.5",
+    "black>=23.3.0",
+    "ruff>=0.0.270",
+]
+test = [
+    "hypothesis>=6.75.9",
+    "pytest>=7.3.1",
+    "pytest-benchmark>=4.0.0",
+    "immutables>=0.19",
+    "typing-extensions>=4.6.2",
+    "coverage>=7.2.7",
+]
+docs = [
+    "sphinx>=5.3.0",
+    "furo>=2023.3.27",
+    "sphinx-copybutton>=0.5.2",
+    "myst-parser>=1.0.0",
+]
 
 [tool.pytest.ini_options]
 addopts = "-l --benchmark-sort=fullname --benchmark-warmup=true --benchmark-warmup-iterations=5  --benchmark-group-by=fullname"
 
 [tool.coverage.run]
-omit = [
-    "cattr/_compat.py",
-    "cattr/vendor/typing.py",
-    "cattr/vendor/python3/typing.py",
-]
+parallel = true
+source_pkgs = ["cattrs"]
 
 [tool.coverage.paths]
 source = [
-   "src/cattr",
-   ".tox/*/lib/python*/site-packages/cattr",
-   ".tox/pypy*/site-packages/cattr",
+   "src",
+   ".tox/*/lib/python*/site-packages",
+   ".tox/pypy*/site-packages",
 ]
 
-[build-system]
-requires = ["poetry-core>=1.1.0"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.mypy]
-strict = true
+[tool.ruff]
+src = ["src", "tests"]
+select = [
+    "E",   # pycodestyle
+    "W",   # pycodestyle
+    "F",   # Pyflakes
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "YTT", # flake8-2020
+    "S",   # flake8-bandit
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "T10", # flake8-debugger
+    "ISC", # flake8-implicit-str-concat
+    "RET", # flake8-return
+    "SIM", # flake8-simplify
+    "DTZ", # flake8-datetimez
+    "PGH", # pygrep-hooks
+    "PLC", # Pylint
+    "PIE", # flake8-pie
+    "RUF", # ruff
+]
+ignore = [
+    "E501",   # line length is handled by black
+    "RUF001", # leave my smart characters alone
+    "S101",   # assert
+    "SIM300", # Yoda rocks in asserts
+    "PGH001", # No eval lol?
+    "PGH003", # leave my type: ignores alone
+    "B006",   # mutable argument defaults
+    "DTZ001", # datetimes in tests
+    "DTZ006", # datetimes in tests
+]

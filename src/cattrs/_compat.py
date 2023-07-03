@@ -1,12 +1,12 @@
-import builtins
 import sys
+from collections import deque
 from collections.abc import MutableSet as AbcMutableSet
 from collections.abc import Set as AbcSet
 from dataclasses import MISSING
 from dataclasses import fields as dataclass_fields
 from dataclasses import is_dataclass
 from typing import AbstractSet as TypingAbstractSet
-from typing import Any, Dict, FrozenSet, List
+from typing import Any, Deque, Dict, FrozenSet, List
 from typing import Mapping as TypingMapping
 from typing import MutableMapping as TypingMutableMapping
 from typing import MutableSequence as TypingMutableSequence
@@ -20,13 +20,17 @@ from attr import NOTHING, Attribute, Factory
 from attr import fields as attrs_fields
 from attr import resolve_types
 
-version_info = sys.version_info[0:3]
-is_py37 = version_info[:2] == (3, 7)
-is_py38 = version_info[:2] == (3, 8)
-is_py39_plus = version_info[:2] >= (3, 9)
-is_py310_plus = version_info[:2] >= (3, 10)
+__all__ = ["ExceptionGroup", "ExtensionsTypedDict", "TypedDict", "is_typeddict"]
 
-if is_py37:
+try:
+    from typing_extensions import TypedDict as ExtensionsTypedDict
+except ImportError:
+    ExtensionsTypedDict = None
+
+if sys.version_info >= (3, 8):
+    from typing import Final, Protocol, get_args, get_origin
+
+else:
 
     def get_args(cl):
         return cl.__args__
@@ -36,13 +40,21 @@ if is_py37:
 
     from typing_extensions import Final, Protocol
 
+if sys.version_info >= (3, 11):
+    from builtins import ExceptionGroup
 else:
-    from typing import Final, Protocol, get_args, get_origin  # NOQA
-
-if "ExceptionGroup" not in dir(builtins):
     from exceptiongroup import ExceptionGroup
-else:
-    ExceptionGroup = ExceptionGroup
+
+try:
+    from typing_extensions import is_typeddict as _is_typeddict
+except ImportError:
+    assert sys.version_info >= (3, 10)
+    from typing import is_typeddict as _is_typeddict
+
+
+def is_typeddict(cls):
+    """Thin wrapper around typing(_extensions).is_typeddict"""
+    return _is_typeddict(getattr(cls, "__origin__", cls))
 
 
 def has(cls):
@@ -61,10 +73,10 @@ def fields(type):
         try:
             return dataclass_fields(type)
         except AttributeError:
-            raise Exception("Not an attrs or dataclass class.")
+            raise Exception("Not an attrs or dataclass class.") from None
 
 
-def adapted_fields(cl) -> List[Attribute]:
+def _adapted_fields(cl) -> List[Attribute]:
     """Return the attrs format of `fields()` for attrs and dataclasses."""
     if is_dataclass(cl):
         attrs = dataclass_fields(cl)
@@ -94,13 +106,20 @@ def adapted_fields(cl) -> List[Attribute]:
             )
             for attr in attrs
         ]
-    else:
+    attribs = attrs_fields(cl)
+    if any(isinstance(a.type, str) for a in attribs):
+        # PEP 563 annotations - need to be resolved.
+        resolve_types(cl)
         attribs = attrs_fields(cl)
-        if any(isinstance(a.type, str) for a in attribs):
-            # PEP 563 annotations - need to be resolved.
-            resolve_types(cl)
-            attribs = attrs_fields(cl)
-        return attribs
+    return attribs
+
+
+def is_subclass(obj: type, bases) -> bool:
+    """A safe version of issubclass (won't raise)."""
+    try:
+        return issubclass(obj, bases)
+    except TypeError:
+        return False
 
 
 def is_hetero_tuple(type: Any) -> bool:
@@ -120,118 +139,15 @@ def get_final_base(type) -> Optional[type]:
     """Return the base of the Final annotation, if it is Final."""
     if type is Final:
         return Any
-    elif type.__class__ is _GenericAlias and type.__origin__ is Final:
+    if type.__class__ is _GenericAlias and type.__origin__ is Final:
         return type.__args__[0]
-    else:
-        return None
+    return None
 
 
 OriginAbstractSet = AbcSet
 OriginMutableSet = AbcMutableSet
 
-if is_py37 or is_py38:
-    Set = TypingSet
-    AbstractSet = TypingAbstractSet
-    MutableSet = TypingMutableSet
-
-    Sequence = TypingSequence
-    MutableSequence = TypingMutableSequence
-    MutableMapping = TypingMutableMapping
-    Mapping = TypingMapping
-    FrozenSetSubscriptable = FrozenSet
-    TupleSubscriptable = Tuple
-
-    from collections import Counter as ColCounter
-    from typing import Counter, Union, _GenericAlias
-
-    def is_annotated(_):
-        return False
-
-    def is_tuple(type):
-        return type in (Tuple, tuple) or (
-            type.__class__ is _GenericAlias and issubclass(type.__origin__, Tuple)
-        )
-
-    def is_union_type(obj):
-        return (
-            obj is Union or isinstance(obj, _GenericAlias) and obj.__origin__ is Union
-        )
-
-    def get_newtype_base(typ: Any) -> Optional[type]:
-        supertype = getattr(typ, "__supertype__", None)
-        if (
-            supertype is not None
-            and getattr(typ, "__qualname__", "") == "NewType.<locals>.new_type"
-            and typ.__module__ in ("typing", "typing_extensions")
-        ):
-            return supertype
-        return None
-
-    def is_sequence(type: Any) -> bool:
-        return type in (List, list, Tuple, tuple) or (
-            type.__class__ is _GenericAlias
-            and (
-                type.__origin__ not in (Union, Tuple, tuple)
-                and issubclass(type.__origin__, TypingSequence)
-            )
-            or (type.__origin__ in (Tuple, tuple) and type.__args__[1] is ...)
-        )
-
-    def is_mutable_set(type):
-        return type is set or (
-            type.__class__ is _GenericAlias and issubclass(type.__origin__, MutableSet)
-        )
-
-    def is_frozenset(type):
-        return type is frozenset or (
-            type.__class__ is _GenericAlias and issubclass(type.__origin__, FrozenSet)
-        )
-
-    def is_mapping(type):
-        return type in (TypingMapping, dict) or (
-            type.__class__ is _GenericAlias
-            and issubclass(type.__origin__, TypingMapping)
-        )
-
-    bare_generic_args = {
-        List.__args__,
-        TypingSequence.__args__,
-        TypingMapping.__args__,
-        Dict.__args__,
-        TypingMutableSequence.__args__,
-        Tuple.__args__,
-        None,  # non-parametrized containers do not have `__args__ attribute in py3.7-8
-    }
-
-    def is_bare(type):
-        return getattr(type, "__args__", None) in bare_generic_args
-
-    def is_counter(type):
-        return (
-            type in (Counter, ColCounter)
-            or getattr(type, "__origin__", None) is ColCounter
-        )
-
-    if is_py38:
-        from typing import Literal
-
-        def is_literal(type) -> bool:
-            return type.__class__ is _GenericAlias and type.__origin__ is Literal
-
-    else:
-        # No literals in 3.7.
-        def is_literal(_) -> bool:
-            return False
-
-    def is_generic(obj):
-        return isinstance(obj, _GenericAlias)
-
-    def copy_with(type, args):
-        """Replace a generic type's arguments."""
-        return type.copy_with(args)
-
-else:
-    # 3.9+
+if sys.version_info >= (3, 9):
     from collections import Counter
     from collections.abc import Mapping as AbcMapping
     from collections.abc import MutableMapping as AbcMutableMapping
@@ -243,6 +159,8 @@ else:
     from typing import Annotated
     from typing import Counter as TypingCounter
     from typing import (
+        Generic,
+        TypedDict,
         Union,
         _AnnotatedAlias,
         _GenericAlias,
@@ -282,7 +200,7 @@ else:
             or (getattr(type, "__origin__", None) is tuple)
         )
 
-    if is_py310_plus:
+    if sys.version_info >= (3, 10):
 
         def is_union_type(obj):
             from types import UnionType
@@ -298,7 +216,13 @@ else:
                 return typ.__supertype__
             return None
 
+        if sys.version_info >= (3, 11):
+            from typing import NotRequired, Required
+        else:
+            from typing_extensions import NotRequired, Required
+
     else:
+        from typing_extensions import NotRequired, Required
 
         def is_union_type(obj):
             return (
@@ -317,6 +241,11 @@ else:
                 return supertype
             return None
 
+    def get_notrequired_base(type) -> "Union[Any, Literal[NOTHING]]":
+        if get_origin(type) in (NotRequired, Required):
+            return get_args(type)[0]
+        return NOTHING
+
     def is_sequence(type: Any) -> bool:
         origin = getattr(type, "__origin__", None)
         return (
@@ -327,8 +256,10 @@ else:
                 TypingSequence,
                 TypingMutableSequence,
                 AbcMutableSequence,
-                Tuple,
                 tuple,
+                Tuple,
+                deque,
+                Deque,
             )
             or (
                 type.__class__ is _GenericAlias
@@ -339,8 +270,15 @@ else:
                     and type.__args__[1] is ...
                 )
             )
-            or (origin in (list, AbcMutableSequence, AbcSequence))
+            or (origin in (list, deque, AbcMutableSequence, AbcSequence))
             or (origin is tuple and type.__args__[1] is ...)
+        )
+
+    def is_deque(type):
+        return (
+            type in (deque, Deque)
+            or (type.__class__ is _GenericAlias and issubclass(type.__origin__, deque))
+            or (getattr(type, "__origin__", None) is deque)
         )
 
     def is_mutable_set(type):
@@ -370,7 +308,7 @@ else:
 
     def is_mapping(type):
         return (
-            type in (TypingMapping, Dict, TypingMutableMapping, dict, AbcMutableMapping)
+            type in (dict, Dict, TypingMapping, TypingMutableMapping, AbcMutableMapping)
             or (
                 type.__class__ is _GenericAlias
                 and issubclass(type.__origin__, TypingMapping)
@@ -388,15 +326,144 @@ else:
             or getattr(type, "__origin__", None) is Counter
         )
 
-    def is_generic(obj):
-        return isinstance(obj, _GenericAlias) or isinstance(obj, GenericAlias)
+    def is_generic(obj) -> bool:
+        return isinstance(obj, (_GenericAlias, GenericAlias)) or is_subclass(
+            obj, Generic
+        )
 
     def copy_with(type, args):
         """Replace a generic type's arguments."""
         if is_annotated(type):
             # typing.Annotated requires a special case.
-            return Annotated[args]  # type: ignore
+            return Annotated[args]
         return type.__origin__[args]
+
+    def get_full_type_hints(obj, globalns=None, localns=None):
+        return get_type_hints(obj, globalns, localns, include_extras=True)
+
+else:
+    Set = TypingSet
+    AbstractSet = TypingAbstractSet
+    MutableSet = TypingMutableSet
+
+    Sequence = TypingSequence
+    MutableSequence = TypingMutableSequence
+    MutableMapping = TypingMutableMapping
+    Mapping = TypingMapping
+    FrozenSetSubscriptable = FrozenSet
+    TupleSubscriptable = Tuple
+
+    from collections import Counter as ColCounter
+    from typing import Counter, Union, _GenericAlias
+
+    from typing_extensions import Annotated, NotRequired, Required
+    from typing_extensions import get_origin as te_get_origin
+
+    if sys.version_info >= (3, 8):
+        from typing import TypedDict
+    else:
+        TypedDict = ExtensionsTypedDict
+
+    def is_annotated(type) -> bool:
+        return te_get_origin(type) is Annotated
+
+    def is_tuple(type):
+        return type in (Tuple, tuple) or (
+            type.__class__ is _GenericAlias and issubclass(type.__origin__, Tuple)
+        )
+
+    def is_union_type(obj):
+        return (
+            obj is Union or isinstance(obj, _GenericAlias) and obj.__origin__ is Union
+        )
+
+    def get_newtype_base(typ: Any) -> Optional[type]:
+        supertype = getattr(typ, "__supertype__", None)
+        if (
+            supertype is not None
+            and getattr(typ, "__qualname__", "") == "NewType.<locals>.new_type"
+            and typ.__module__ in ("typing", "typing_extensions")
+        ):
+            return supertype
+        return None
+
+    def is_sequence(type: Any) -> bool:
+        return type in (List, list, Tuple, tuple) or (
+            type.__class__ is _GenericAlias
+            and (
+                type.__origin__ not in (Union, Tuple, tuple)
+                and issubclass(type.__origin__, TypingSequence)
+            )
+            or (type.__origin__ in (Tuple, tuple) and type.__args__[1] is ...)
+        )
+
+    def is_deque(type: Any) -> bool:
+        return (
+            type in (deque, Deque)
+            or (type.__class__ is _GenericAlias and issubclass(type.__origin__, deque))
+            or type.__origin__ is deque
+        )
+
+    def is_mutable_set(type):
+        return type is set or (
+            type.__class__ is _GenericAlias and issubclass(type.__origin__, MutableSet)
+        )
+
+    def is_frozenset(type):
+        return type is frozenset or (
+            type.__class__ is _GenericAlias and issubclass(type.__origin__, FrozenSet)
+        )
+
+    def is_mapping(type):
+        return type in (TypingMapping, dict) or (
+            type.__class__ is _GenericAlias
+            and issubclass(type.__origin__, TypingMapping)
+        )
+
+    bare_generic_args = {
+        List.__args__,
+        TypingSequence.__args__,
+        TypingMapping.__args__,
+        Dict.__args__,
+        TypingMutableSequence.__args__,
+        Tuple.__args__,
+        None,  # non-parametrized containers do not have `__args__ attribute in py3.7-8
+    }
+
+    def is_bare(type):
+        return getattr(type, "__args__", None) in bare_generic_args
+
+    def is_counter(type):
+        return (
+            type in (Counter, ColCounter)
+            or getattr(type, "__origin__", None) is ColCounter
+        )
+
+    if sys.version_info >= (3, 8):
+        from typing import Literal
+
+        def is_literal(type) -> bool:
+            return type.__class__ is _GenericAlias and type.__origin__ is Literal
+
+    else:
+        # No literals in 3.7.
+        def is_literal(_) -> bool:
+            return False
+
+    def is_generic(obj):
+        return isinstance(obj, _GenericAlias)
+
+    def copy_with(type, args):
+        """Replace a generic type's arguments."""
+        return type.copy_with(args)
+
+    def get_notrequired_base(type) -> "Union[Any, Literal[NOTHING]]":
+        if get_origin(type) in (NotRequired, Required):
+            return get_args(type)[0]
+        return NOTHING
+
+    def get_full_type_hints(obj, globalns=None, localns=None):
+        return get_type_hints(obj, globalns, localns)
 
 
 def is_generic_attrs(type):

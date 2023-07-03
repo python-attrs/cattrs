@@ -1,7 +1,7 @@
 from cattrs.dispatch import MultiStrategyDispatch
 
 
-class Foo(object):
+class Foo:
     pass
 
 

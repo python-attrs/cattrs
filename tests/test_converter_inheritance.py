@@ -16,8 +16,8 @@ def test_inheritance(converter):
     class B(A):
         j: int
 
-    assert A(1) == converter.structure(dict(i=1), A)
-    assert B(1, 2) == converter.structure(dict(i=1, j=2), B)
+    assert A(1) == converter.structure({"i": 1}, A)
+    assert B(1, 2) == converter.structure({"i": 1, "j": 2}, B)
 
 
 def test_gen_hook_priority(converter: BaseConverter):
@@ -35,7 +35,7 @@ def test_gen_hook_priority(converter: BaseConverter):
     assert converter.structure({"i": 1}, B) == B(1)
 
     # Now we register a manual hook for the superclass.
-    converter.register_structure_hook(A, lambda o, T: T(o["i"] + 1))
+    converter.register_structure_hook(A, lambda o, t: t(o["i"] + 1))
 
     # This should still work, but using the new hook instead.
     assert converter.structure({"i": 1}, B) == B(2)

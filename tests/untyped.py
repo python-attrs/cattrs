@@ -5,7 +5,9 @@ from collections import OrderedDict
 from enum import Enum
 from typing import (
     Any,
+    Deque,
     Dict,
+    Iterable,
     List,
     Mapping,
     MutableMapping,
@@ -57,6 +59,7 @@ def enums_of_primitives(draw):
 
 
 list_types = st.sampled_from([List, Sequence, MutableSequence])
+deque_types = st.sampled_from([Deque, Sequence, MutableSequence])
 set_types = st.sampled_from([Set, MutableSet])
 
 
@@ -69,6 +72,17 @@ def lists_of_primitives(draw):
     prim_strat, t = draw(primitive_strategies)
     list_t = draw(list_types.map(lambda list_t: list_t[t]) | list_types)
     return draw(st.lists(prim_strat)), list_t
+
+
+@st.composite
+def deques_of_primitives(draw):
+    """Generate a strategy that yields tuples of list of primitives and types.
+
+    For example, a sample value might be ([1,2], Deque[int]).
+    """
+    prim_strat, t = draw(primitive_strategies)
+    deque_t = draw(deque_types.map(lambda deque_t: deque_t[t]) | deque_types)
+    return draw(st.lists(prim_strat)), deque_t
 
 
 @st.composite
@@ -98,7 +112,7 @@ h_tuples_of_primitives = primitive_strategies.flatmap(
 dict_types = st.sampled_from([Dict, MutableMapping, Mapping])
 
 seqs_of_primitives = st.one_of(lists_of_primitives(), h_tuples_of_primitives)
-
+deque_seqs_of_primitives = st.one_of(deques_of_primitives(), h_tuples_of_primitives)
 sets_of_primitives = st.one_of(mut_sets_of_primitives(), frozen_sets_of_primitives())
 
 
@@ -127,7 +141,7 @@ dicts_of_primitives = st.tuples(primitive_strategies, primitive_strategies).flat
 )
 
 
-def gen_attr_names():
+def gen_attr_names() -> Iterable[str]:
     """
     Generate names for attributes, 'a'...'z', then 'aa'...'zz'.
     ~702 different attribute names should be enough in practice.
@@ -399,7 +413,7 @@ def lists_of_attrs(defaults=None, min_size=0, kw_only=None):
     # Python functions support up to 255 arguments.
     return st.lists(
         simple_attrs(defaults, kw_only), min_size=min_size, max_size=10
-    ).map(lambda l: sorted(l, key=lambda t: t[0]._default is not NOTHING))
+    ).map(lambda lst: sorted(lst, key=lambda t: t[0]._default is not NOTHING))
 
 
 def simple_classes(defaults=None, min_attrs=0, frozen=None, kw_only=None):

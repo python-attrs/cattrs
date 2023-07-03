@@ -1,14 +1,22 @@
-from typing import Dict, Generic, List, Optional, TypeVar, Union
+from collections import deque
+from typing import Deque, Dict, Generic, List, Optional, TypeVar, Union
 
 import pytest
 from attr import asdict, attrs, define
 
 from cattrs import BaseConverter, Converter
-from cattrs._compat import Protocol, is_py39_plus, is_py310_plus
+from cattrs._compat import Protocol
 from cattrs._generics import deep_copy_with
 from cattrs.errors import StructureHandlerNotFoundError
+from cattrs.gen._generics import generate_mapping
 
-from ._compat import Dict_origin, List_origin
+from ._compat import (
+    Dict_origin,
+    List_origin,
+    is_py39_plus,
+    is_py310_plus,
+    is_py311_plus,
+)
 
 T = TypeVar("T")
 T2 = TypeVar("T2")
@@ -145,6 +153,18 @@ def test_structure_list_of_generic_unions(converter):
     assert res == data
 
 
+def test_structure_deque_of_generic_unions(converter):
+    @attrs(auto_attribs=True)
+    class TClass2(Generic[T]):
+        c: T
+
+    data = deque((TClass2(c="string"), TClass(1, 2)))
+    res = converter.structure(
+        [asdict(x) for x in data], Deque[Union[TClass[int, int], TClass2[str]]]
+    )
+    assert res == data
+
+
 def test_raises_if_no_generic_params_supplied(
     converter: Union[Converter, BaseConverter]
 ):
@@ -263,4 +283,26 @@ def test_roundtrip_generic_with_union() -> None:
         member: T
 
     raw = c.unstructure(Outer(A(1)), unstructure_as=Outer[A | B])
-    assert c.structure(raw, Outer[A | B]) == Outer((A(1)))
+    assert c.structure(raw, Outer[A | B]) == Outer(A(1))
+
+
+@pytest.mark.skipif(not is_py311_plus, reason="3.11+ only")
+def test_generate_typeddict_mapping() -> None:
+    from typing import Generic, TypedDict, TypeVar
+
+    T = TypeVar("T")
+
+    class A(TypedDict):
+        pass
+
+    assert generate_mapping(A, {}) == {}
+
+    class A(TypedDict, Generic[T]):
+        a: T
+
+    assert generate_mapping(A[int], {}) == {T.__name__: int}
+
+    class B(A[int]):
+        pass
+
+    assert generate_mapping(B, {}) == {T.__name__: int}

@@ -16,7 +16,7 @@ def test_function_dispatch():
 def test_function_clears_cache_after_function_added():
     dispatch = FunctionDispatch()
 
-    class Foo(object):
+    class Foo:
         pass
 
     Foo()

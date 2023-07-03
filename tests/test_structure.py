@@ -25,6 +25,7 @@ from cattrs._compat import copy_with, is_bare, is_union_type
 from cattrs.errors import IterableValidationError, StructureHandlerNotFoundError
 
 from .untyped import (
+    deque_seqs_of_primitives,
     dicts_of_primitives,
     enums_of_primitives,
     lists_of_primitives,
@@ -85,6 +86,16 @@ def test_structuring_seqs(seq_and_type):
         assert x == y
 
 
+@given(deque_seqs_of_primitives)
+def test_structuring_seqs_to_deque(seq_and_type):
+    """Test structuring sequence generic types."""
+    converter = BaseConverter()
+    iterable, t = seq_and_type
+    converted = converter.structure(iterable, t)
+    for x, y in zip(iterable, converted):
+        assert x == y
+
+
 @given(sets_of_primitives, set_types)
 def test_structuring_sets(set_and_type, set_type):
     """Test structuring generic sets."""
@@ -128,10 +139,7 @@ def test_structuring_hetero_tuples(list_of_vals_and_types, detailed_validation):
     converter = BaseConverter(detailed_validation=detailed_validation)
     types = tuple(e[1] for e in list_of_vals_and_types)
     vals = [e[0] for e in list_of_vals_and_types]
-    if types:
-        t = Tuple[types]
-    else:
-        t = Tuple
+    t = Tuple[types] if types else Tuple
 
     converted = converter.structure(vals, t)
 
@@ -143,8 +151,8 @@ def test_structuring_hetero_tuples(list_of_vals_and_types, detailed_validation):
     for x, y in zip(types, converted):
         assert isinstance(y, x)
 
-    t2 = Tuple[types + (str,)]  # one longer
-    vals2 = vals + [None]  # one longer
+    t2 = Tuple[(*types, str)]  # one longer
+    vals2 = [*vals, None]  # one longer
     expected_exception = IterableValidationError if detailed_validation else ValueError
     with raises(expected_exception):
         converter.structure(vals, t2)
@@ -225,9 +233,9 @@ def test_structuring_optional_primitives(primitive_and_type):
 def test_structuring_lists_of_opt(list_and_type, detailed_validation: bool) -> None:
     """Test structuring lists of Optional primitive types."""
     converter = BaseConverter(detailed_validation=detailed_validation)
-    l, t = list_and_type
+    lst, t = list_and_type
 
-    l.append(None)
+    lst.append(None)
     args = t.__args__
 
     is_optional = args[0] is Optional or (
@@ -242,16 +250,16 @@ def test_structuring_lists_of_opt(list_and_type, detailed_validation: bool) -> N
             if not detailed_validation
             else IterableValidationError
         ):
-            converter.structure(l, t)
+            converter.structure(lst, t)
 
     optional_t = Optional[args[0]]
     # We want to create a generic type annotation with an optional
     # type parameter.
     t = copy_with(t, optional_t)
 
-    converted = converter.structure(l, t)
+    converted = converter.structure(lst, t)
 
-    for x, y in zip(l, converted):
+    for x, y in zip(lst, converted):
         assert x == y
 
 
@@ -259,13 +267,13 @@ def test_structuring_lists_of_opt(list_and_type, detailed_validation: bool) -> N
 def test_stringifying_lists_of_opt(list_and_type):
     """Test structuring Optional primitive types into strings."""
     converter = BaseConverter()
-    l, t = list_and_type
+    lst, t = list_and_type
 
-    l.append(None)
+    lst.append(None)
 
-    converted = converter.structure(l, List[Optional[str]])
+    converted = converter.structure(lst, List[Optional[str]])
 
-    for x, y in zip(l, converted):
+    for x, y in zip(lst, converted):
         if x is None:
             assert x is y
         else:
@@ -302,10 +310,10 @@ def test_structure_hook_func():
     def handle(obj, cls):
         return "hi"
 
-    class Foo(object):
+    class Foo:
         pass
 
-    class Bar(object):
+    class Bar:
         pass
 
     converter.register_structure_hook_func(can_handle, handle)
@@ -347,7 +355,7 @@ def test_subclass_registration_is_honored():
     """
     converter = BaseConverter()
 
-    class Foo(object):
+    class Foo:
         def __init__(self, value):
             self.value = value
 

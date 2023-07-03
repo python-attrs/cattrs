@@ -13,7 +13,7 @@ from attrs import Factory, define
 from pytest import fixture, raises
 
 from cattrs import Converter, transform_error
-from cattrs._compat import Mapping
+from cattrs._compat import Mapping, TypedDict
 from cattrs.gen import make_dict_structure_fn
 from cattrs.v import format_exception
 
@@ -225,3 +225,93 @@ def test_custom_error_fn(c: Converter) -> None:
             "no key @ $.a",
             "invalid value for type, expected int @ $.b",
         ]
+
+
+def test_custom_error_fn_nested(c: Converter) -> None:
+    def my_format(exc, type):
+        if isinstance(exc, TypeError):
+            return "Must be correct type"
+        return format_exception(exc, type)
+
+    @define
+    class C:
+        a: Dict[str, int]
+
+    try:
+        c.structure({"a": {"a": "str", "b": 1, "c": None}}, C)
+    except Exception as exc:
+        assert transform_error(exc, format_exception=my_format) == [
+            "invalid value for type, expected int @ $.a['a']",
+            "Must be correct type @ $.a['c']",
+        ]
+
+
+def test_typeddict_attribute_errors(c: Converter) -> None:
+    """TypedDict errors are correctly generated."""
+
+    class C(TypedDict):
+        a: int
+        b: int
+
+    try:
+        c.structure({}, C)
+    except Exception as exc:
+        assert transform_error(exc) == [
+            "required field missing @ $.a",
+            "required field missing @ $.b",
+        ]
+
+    try:
+        c.structure({"b": 1}, C)
+    except Exception as exc:
+        assert transform_error(exc) == ["required field missing @ $.a"]
+
+    try:
+        c.structure({"a": 1, "b": "str"}, C)
+    except Exception as exc:
+        assert transform_error(exc) == ["invalid value for type, expected int @ $.b"]
+
+    class D(TypedDict):
+        c: C
+
+    try:
+        c.structure({}, D)
+    except Exception as exc:
+        assert transform_error(exc) == ["required field missing @ $.c"]
+
+    try:
+        c.structure({"c": {}}, D)
+    except Exception as exc:
+        assert transform_error(exc) == [
+            "required field missing @ $.c.a",
+            "required field missing @ $.c.b",
+        ]
+
+    try:
+        c.structure({"c": 1}, D)
+    except Exception as exc:
+        assert transform_error(exc) == ["expected a mapping @ $.c"]
+
+    try:
+        c.structure({"c": {"a": "str"}}, D)
+    except Exception as exc:
+        assert transform_error(exc) == [
+            "invalid value for type, expected int @ $.c.a",
+            "required field missing @ $.c.b",
+        ]
+
+    class E(TypedDict):
+        a: Optional[int]
+
+    with raises(Exception) as exc:
+        c.structure({"a": "str"}, E)
+
+    # Complicated due to various Python versions.
+    tn = (
+        Optional[int].__name__
+        if hasattr(Optional[int], "__name__")
+        else repr(Optional[int])
+    )
+    assert transform_error(exc.value) == [
+        f"invalid value for type, expected {tn} @ $.a"
+    ]

@@ -15,7 +15,7 @@ def test_edge_errors():
     """Edge input cases cause errors."""
 
     @attr.s
-    class A(object):
+    class A:
         pass
 
     with pytest.raises(ValueError):
@@ -23,7 +23,7 @@ def test_edge_errors():
         create_uniq_field_dis_func(A)
 
     @attr.s
-    class B(object):
+    class B:
         pass
 
     with pytest.raises(ValueError):
@@ -31,11 +31,11 @@ def test_edge_errors():
         create_uniq_field_dis_func(A, B)
 
     @attr.s
-    class C(object):
+    class C:
         a = attr.ib()
 
     @attr.s
-    class D(object):
+    class D:
         a = attr.ib()
 
     with pytest.raises(ValueError):
@@ -63,7 +63,7 @@ def test_fallback(cl_and_vals):
     assume(attr.fields(cl))  # At least one field.
 
     @attr.s
-    class A(object):
+    class A:
         pass
 
     fn = create_uniq_field_dis_func(A, cl)
@@ -74,7 +74,7 @@ def test_fallback(cl_and_vals):
     attr_names = {a.name for a in attr.fields(cl)}
 
     if "xyz" not in attr_names:
-        fn({"xyz": 1}) is A  # Uses the fallback.
+        assert fn({"xyz": 1}) is A  # Uses the fallback.
 
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])

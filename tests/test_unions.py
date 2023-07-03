@@ -3,8 +3,9 @@ from typing import Type, Union
 import attr
 import pytest
 
-from cattrs._compat import is_py310_plus
 from cattrs.converters import BaseConverter, Converter
+
+from ._compat import is_py310_plus
 
 
 @pytest.mark.parametrize("cls", (BaseConverter, Converter))

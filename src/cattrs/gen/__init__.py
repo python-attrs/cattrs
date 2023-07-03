@@ -2,36 +2,14 @@ from __future__ import annotations
 
 import linecache
 import re
-import uuid
 from dataclasses import is_dataclass
-from threading import local
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Mapping,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Tuple, TypeVar
 
 import attr
-from attr import NOTHING, Attribute, frozen, resolve_types
+from attr import NOTHING, resolve_types
 
-from cattrs.errors import (
-    AttributeValidationNote,
-    ClassValidationError,
-    ForbiddenExtraKeysError,
-    IterableValidationError,
-    IterableValidationNote,
-    StructureHandlerNotFoundError,
-)
-
-from ._compat import (
-    adapted_fields,
+from .._compat import (
+    _adapted_fields,
     get_args,
     get_origin,
     is_annotated,
@@ -39,49 +17,50 @@ from ._compat import (
     is_bare_final,
     is_generic,
 )
-from ._generics import deep_copy_with
+from .._generics import deep_copy_with
+from ..errors import (
+    AttributeValidationNote,
+    ClassValidationError,
+    ForbiddenExtraKeysError,
+    IterableValidationError,
+    IterableValidationNote,
+    StructureHandlerNotFoundError,
+)
+from ._consts import AttributeOverride, already_generating, neutral
+from ._generics import generate_mapping
+from ._lc import generate_unique_filename
+from ._shared import find_structure_handler
 
 if TYPE_CHECKING:  # pragma: no cover
     from cattr.converters import BaseConverter
 
 
-@frozen
-class AttributeOverride:
-    omit_if_default: Optional[bool] = None
-    rename: Optional[str] = None
-    omit: bool = False  # Omit the field completely.
-    struct_hook: Optional[Callable[[Any, Any], Any]] = None  # Structure hook to use.
-    unstruct_hook: Optional[Callable[[Any], Any]] = None  # Structure hook to use.
-
-
 def override(
-    omit_if_default: Optional[bool] = None,
-    rename: Optional[str] = None,
+    omit_if_default: bool | None = None,
+    rename: str | None = None,
     omit: bool = False,
-    struct_hook: Optional[Callable[[Any, Any], Any]] = None,
-    unstruct_hook: Optional[Callable[[Any], Any]] = None,
+    struct_hook: Callable[[Any, Any], Any] | None = None,
+    unstruct_hook: Callable[[Any], Any] | None = None,
 ):
     return AttributeOverride(omit_if_default, rename, omit, struct_hook, unstruct_hook)
 
 
-_neutral = AttributeOverride()
-_already_generating = local()
 T = TypeVar("T")
 
 
 def make_dict_unstructure_fn(
-    cl: Type[T],
-    converter: "BaseConverter",
+    cl: type[T],
+    converter: BaseConverter,
     _cattrs_omit_if_default: bool = False,
     _cattrs_use_linecache: bool = True,
     **kwargs: AttributeOverride,
-) -> Callable[[T], Dict[str, Any]]:
+) -> Callable[[T], dict[str, Any]]:
     """
     Generate a specialized dict unstructuring function for an attrs class or a
     dataclass.
     """
     origin = get_origin(cl)
-    attrs = adapted_fields(origin or cl)  # type: ignore
+    attrs = _adapted_fields(origin or cl)  # type: ignore
 
     if any(isinstance(a.type, str) for a in attrs):
         # PEP 563 annotations - need to be resolved.
@@ -89,13 +68,14 @@ def make_dict_unstructure_fn(
 
     mapping = {}
     if is_generic(cl):
-        mapping = _generate_mapping(cl, mapping)
+        mapping = generate_mapping(cl, mapping)
 
         for base in getattr(origin, "__orig_bases__", ()):
             if is_generic(base) and not str(base).startswith("typing.Generic"):
-                mapping = _generate_mapping(base, mapping)
+                mapping = generate_mapping(base, mapping)
                 break
-        cl = origin
+        if origin is not None:
+            cl = origin
 
     cl_name = cl.__name__
     fn_name = "unstructure_" + cl_name
@@ -107,19 +87,19 @@ def make_dict_unstructure_fn(
     # We keep track of what we're generating to help with recursive
     # class graphs.
     try:
-        working_set = _already_generating.working_set
+        working_set = already_generating.working_set
     except AttributeError:
         working_set = set()
-        _already_generating.working_set = working_set
+        already_generating.working_set = working_set
     if cl in working_set:
         raise RecursionError()
-    else:
-        working_set.add(cl)
+
+    working_set.add(cl)
 
     try:
         for a in attrs:
             attr_name = a.name
-            override = kwargs.pop(attr_name, _neutral)
+            override = kwargs.pop(attr_name, neutral)
             if override.omit:
                 continue
             kn = attr_name if override.rename is None else override.rename
@@ -211,7 +191,7 @@ def make_dict_unstructure_fn(
         )
         script = "\n".join(total_lines)
 
-        fname = _generate_unique_filename(
+        fname = generate_unique_filename(
             cl, "unstructure", reserve=_cattrs_use_linecache
         )
 
@@ -222,79 +202,18 @@ def make_dict_unstructure_fn(
             linecache.cache[fname] = len(script), None, total_lines, fname
     finally:
         working_set.remove(cl)
+        if not working_set:
+            del already_generating.working_set
 
     return fn
-
-
-def _generate_mapping(cl: Type, old_mapping: Dict[str, type]) -> Dict[str, type]:
-    mapping = {}
-
-    # To handle the cases where classes in the typing module are using
-    # the GenericAlias structure but aren’t a Generic and hence
-    # end up in this function but do not have an `__parameters__`
-    # attribute. These classes are interface types, for example
-    # `typing.Hashable`.
-    parameters = getattr(get_origin(cl), "__parameters__", None)
-    if parameters is None:
-        return old_mapping
-
-    for p, t in zip(parameters, get_args(cl)):
-        if isinstance(t, TypeVar):
-            continue
-        mapping[p.__name__] = t
-
-    if not mapping:
-        return old_mapping
-
-    return mapping
-
-
-def find_structure_handler(
-    a: Attribute, type: Any, c: BaseConverter, prefer_attrs_converters: bool = False
-) -> Optional[Callable[[Any, Any], Any]]:
-    """Find the appropriate structure handler to use.
-
-    Return `None` if no handler should be used.
-    """
-    if a.converter is not None and prefer_attrs_converters:
-        # If the user as requested to use attrib converters, use nothing
-        # so it falls back to that.
-        handler = None
-    elif a.converter is not None and not prefer_attrs_converters and type is not None:
-        handler = c._structure_func.dispatch(type)
-        if handler == c._structure_error:
-            handler = None
-    elif type is not None:
-        if (
-            is_bare_final(type)
-            and a.default is not NOTHING
-            and not isinstance(a.default, attr.Factory)
-        ):
-            # This is a special case where we can use the
-            # type of the default to dispatch on.
-            type = a.default.__class__
-            handler = c._structure_func.dispatch(type)
-            if handler == c._structure_call:
-                # Finals can't really be used with _structure_call, so
-                # we wrap it so the rest of the toolchain doesn't get
-                # confused.
-
-                def handler(v, _, _h=handler):
-                    return _h(v, type)
-
-        else:
-            handler = c._structure_func.dispatch(type)
-    else:
-        handler = c.structure
-    return handler
 
 
 DictStructureFn = Callable[[Mapping[str, Any], Any], T]
 
 
 def make_dict_structure_fn(
-    cl: Type[T],
-    converter: "BaseConverter",
+    cl: type[T],
+    converter: BaseConverter,
     _cattrs_forbid_extra_keys: bool = False,
     _cattrs_use_linecache: bool = True,
     _cattrs_prefer_attrib_converters: bool = False,
@@ -306,12 +225,13 @@ def make_dict_structure_fn(
     mapping = {}
     if is_generic(cl):
         base = get_origin(cl)
-        mapping = _generate_mapping(cl, mapping)
-        cl = base
+        mapping = generate_mapping(cl, mapping)
+        if base is not None:
+            cl = base
 
     for base in getattr(cl, "__orig_bases__", ()):
         if is_generic(base) and not str(base).startswith("typing.Generic"):
-            mapping = _generate_mapping(base, mapping)
+            mapping = generate_mapping(base, mapping)
             break
 
     if isinstance(cl, TypeVar):
@@ -322,12 +242,14 @@ def make_dict_structure_fn(
 
     # We have generic parameters and need to generate a unique name for the function
     for p in getattr(cl, "__parameters__", ()):
-        # This is nasty, I am not sure how best to handle `typing.List[str]` or `TClass[int, int]` as a parameter type here
+        # This is nasty, I am not sure how best to handle `typing.List[str]` or
+        # `TClass[int, int]` as a parameter type here
         try:
             name_base = mapping[p.__name__]
         except KeyError:
+            pn = p.__name__
             raise StructureHandlerNotFoundError(
-                f"Missing type for generic argument {p.__name__}, specify it when structuring.",
+                f"Missing type for generic argument {pn}, specify it when structuring.",
                 p,
             ) from None
         name = getattr(name_base, "__name__", None) or str(name_base)
@@ -343,7 +265,7 @@ def make_dict_structure_fn(
     post_lines = []
     invocation_lines = []
 
-    attrs = adapted_fields(cl)
+    attrs = _adapted_fields(cl)
     is_dc = is_dataclass(cl)
 
     if any(isinstance(a.type, str) for a in attrs):
@@ -363,7 +285,7 @@ def make_dict_structure_fn(
         internal_arg_parts["__c_avn"] = AttributeValidationNote
         for a in attrs:
             an = a.name
-            override = kwargs.get(an, _neutral)
+            override = kwargs.get(an, neutral)
             if override.omit:
                 continue
             t = a.type
@@ -402,10 +324,10 @@ def make_dict_structure_fn(
                     internal_arg_parts[struct_handler_name] = t
                     lines.append(f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'])")
                 else:
-                    type_name = f"__c_type_{an}"
-                    internal_arg_parts[type_name] = t
+                    tn = f"__c_type_{an}"
+                    internal_arg_parts[tn] = t
                     lines.append(
-                        f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'], {type_name})"
+                        f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'], {tn})"
                     )
             else:
                 lines.append(f"{i}res['{ian}'] = o['{kn}']")
@@ -425,7 +347,7 @@ def make_dict_structure_fn(
             ]
 
         post_lines.append(
-            f"  if errors: raise __c_cve('While structuring ' + {cl.__name__!r}, errors, __cl)"
+            f"  if errors: raise __c_cve('While structuring ' + {cl_name!r}, errors, __cl)"
         )
         instantiation_lines = (
             ["  try:"]
@@ -433,7 +355,7 @@ def make_dict_structure_fn(
             + [f"      {line}" for line in invocation_lines]
             + ["    )"]
             + [
-                f"  except Exception as exc: raise __c_cve('While structuring ' + {cl.__name__!r}, [exc], __cl)"
+                f"  except Exception as exc: raise __c_cve('While structuring ' + {cl_name!r}, [exc], __cl)"
             ]
         )
     else:
@@ -441,7 +363,7 @@ def make_dict_structure_fn(
         # The first loop deals with required args.
         for a in attrs:
             an = a.name
-            override = kwargs.get(an, _neutral)
+            override = kwargs.get(an, neutral)
             if override.omit:
                 continue
             if a.default is not NOTHING:
@@ -474,9 +396,9 @@ def make_dict_structure_fn(
                     internal_arg_parts[struct_handler_name] = t
                     invocation_line = f"{struct_handler_name}(o['{kn}']),"
                 else:
-                    type_name = f"__c_type_{an}"
-                    internal_arg_parts[type_name] = t
-                    invocation_line = f"{struct_handler_name}(o['{kn}'], {type_name}),"
+                    tn = f"__c_type_{an}"
+                    internal_arg_parts[tn] = t
+                    invocation_line = f"{struct_handler_name}(o['{kn}'], {tn}),"
             else:
                 invocation_line = f"o['{kn}'],"
 
@@ -492,7 +414,7 @@ def make_dict_structure_fn(
 
             for a in non_required:
                 an = a.name
-                override = kwargs.get(an, _neutral)
+                override = kwargs.get(an, neutral)
                 t = a.type
                 if isinstance(t, TypeVar):
                     t = mapping.get(t.__name__, t)
@@ -524,10 +446,10 @@ def make_dict_structure_fn(
                             f"    res['{ian}'] = {struct_handler_name}(o['{kn}'])"
                         )
                     else:
-                        type_name = f"__c_type_{an}"
-                        internal_arg_parts[type_name] = t
+                        tn = f"__c_type_{an}"
+                        internal_arg_parts[tn] = t
                         post_lines.append(
-                            f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], {type_name})"
+                            f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], {tn})"
                         )
                 else:
                     post_lines.append(f"    res['{ian}'] = o['{kn}']")
@@ -547,14 +469,14 @@ def make_dict_structure_fn(
     for k, v in internal_arg_parts.items():
         globs[k] = v
 
-    total_lines = (
-        [f"def {fn_name}(o, _, *, {internal_arg_line}):"]
-        + lines
-        + post_lines
-        + instantiation_lines
-    )
+    total_lines = [
+        f"def {fn_name}(o, _, {internal_arg_line}):",
+        *lines,
+        *post_lines,
+        *instantiation_lines,
+    ]
 
-    fname = _generate_unique_filename(cl, "structure", reserve=_cattrs_use_linecache)
+    fname = generate_unique_filename(cl, "structure", reserve=_cattrs_use_linecache)
     script = "\n".join(total_lines)
     eval(compile(script, fname, "exec"), globs)
     if _cattrs_use_linecache:
@@ -567,7 +489,7 @@ IterableUnstructureFn = Callable[[Iterable[Any]], Any]
 
 
 def make_iterable_unstructure_fn(
-    cl: Any, converter: "BaseConverter", unstructure_to: Any = None
+    cl: Any, converter: BaseConverter, unstructure_to: Any = None
 ) -> IterableUnstructureFn:
     """Generate a specialized unstructure function for an iterable."""
     handler = converter.unstructure
@@ -590,20 +512,18 @@ def make_iterable_unstructure_fn(
     lines.append(f"def {fn_name}(iterable):")
     lines.append("    res = __cattr_seq_cl(__cattr_u(i) for i in iterable)")
 
-    total_lines = lines + ["    return res"]
+    total_lines = [*lines, "    return res"]
 
     eval(compile("\n".join(total_lines), "", "exec"), globs)
 
-    fn = globs[fn_name]
-
-    return fn
+    return globs[fn_name]
 
 
 HeteroTupleUnstructureFn = Callable[[Tuple[Any, ...]], Any]
 
 
 def make_hetero_tuple_unstructure_fn(
-    cl: Any, converter: "BaseConverter", unstructure_to: Any = None
+    cl: Any, converter: BaseConverter, unstructure_to: Any = None
 ) -> HeteroTupleUnstructureFn:
     """Generate a specialized unstructure function for a heterogenous tuple."""
     fn_name = "unstructure_tuple"
@@ -636,13 +556,11 @@ def make_hetero_tuple_unstructure_fn(
     else:
         lines.append("    )")
 
-    total_lines = lines + ["    return res"]
+    total_lines = [*lines, "    return res"]
 
     eval(compile("\n".join(total_lines), "", "exec"), globs)
 
-    fn = globs[fn_name]
-
-    return fn
+    return globs[fn_name]
 
 
 MappingUnstructureFn = Callable[[Mapping[Any, Any]], Any]
@@ -650,9 +568,9 @@ MappingUnstructureFn = Callable[[Mapping[Any, Any]], Any]
 
 def make_mapping_unstructure_fn(
     cl: Any,
-    converter: "BaseConverter",
+    converter: BaseConverter,
     unstructure_to: Any = None,
-    key_handler: Optional[Callable[[Any, Optional[Any]], Any]] = None,
+    key_handler: Callable[[Any, Any | None], Any] | None = None,
 ) -> MappingUnstructureFn:
     """Generate a specialized unstructure function for a mapping."""
     kh = key_handler or converter.unstructure
@@ -693,22 +611,20 @@ def make_mapping_unstructure_fn(
         f"    res = __cattr_mapping_cl(({k_u}, {v_u}) for k, v in mapping.items())"
     )
 
-    total_lines = lines + ["    return res"]
+    total_lines = [*lines, "    return res"]
 
     eval(compile("\n".join(total_lines), "", "exec"), globs)
 
-    fn = globs[fn_name]
-
-    return fn
+    return globs[fn_name]
 
 
 MappingStructureFn = Callable[[Mapping[Any, Any], Any], T]
 
 
 def make_mapping_structure_fn(
-    cl: Type[T],
-    converter: "BaseConverter",
-    structure_to: Type = dict,
+    cl: type[T],
+    converter: BaseConverter,
+    structure_to: type = dict,
     key_type=NOTHING,
     val_type=NOTHING,
     detailed_validation: bool = True,
@@ -716,7 +632,7 @@ def make_mapping_structure_fn(
     """Generate a specialized unstructure function for a mapping."""
     fn_name = "structure_mapping"
 
-    globs: Dict[str, Type] = {"__cattr_mapping_cl": structure_to}
+    globs: dict[str, type] = {"__cattr_mapping_cl": structure_to}
 
     lines = []
     internal_arg_parts = {}
@@ -817,37 +733,9 @@ def make_mapping_structure_fn(
         globs[k] = v
 
     def_line = f"def {fn_name}(mapping, _{internal_arg_line}):"
-    total_lines = [def_line] + lines + ["  return res"]
+    total_lines = [def_line, *lines, "  return res"]
     script = "\n".join(total_lines)
 
     eval(compile(script, "", "exec"), globs)
 
-    fn = globs[fn_name]
-
-    return fn
-
-
-def _generate_unique_filename(cls: Any, func_name: str, reserve: bool = True) -> str:
-    """
-    Create a "filename" suitable for a function being generated.
-    """
-    unique_id = uuid.uuid4()
-    extra = ""
-    count = 1
-
-    while True:
-        unique_filename = "<cattrs generated {0} {1}.{2}{3}>".format(
-            func_name, cls.__module__, getattr(cls, "__qualname__", cls.__name__), extra
-        )
-        if not reserve:
-            return unique_filename
-        # To handle concurrency we essentially "reserve" our spot in
-        # the linecache with a dummy line.  The caller can then
-        # set this value correctly.
-        cache_line = (1, None, (str(unique_id),), unique_filename)
-        if linecache.cache.setdefault(unique_filename, cache_line) == cache_line:
-            return unique_filename
-
-        # Looks like this spot is taken. Try again.
-        count += 1
-        extra = "-{0}".format(count)
+    return globs[fn_name]

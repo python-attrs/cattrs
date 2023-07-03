@@ -1,5 +1,5 @@
 """Cattrs validation."""
-from typing import Callable, List, Type, Union
+from typing import Callable, List, Union
 
 from .errors import (
     ClassValidationError,
@@ -10,13 +10,14 @@ from .errors import (
 __all__ = ["format_exception", "transform_error"]
 
 
-def format_exception(exc: BaseException, type: Union[Type, None]) -> str:
+def format_exception(exc: BaseException, type: Union[type, None]) -> str:
     """The default exception formatter, handling the most common exceptions.
 
     The following exceptions are handled specially:
     * `KeyErrors` (`required field missing`)
     * `ValueErrors` (`invalid value for type, expected <type>` or just `invalid value`)
-    * `TypeErrors` (`invalid value for type, expected <type>` and a couple special cases for iterables)
+    * `TypeErrors` (`invalid value for type, expected <type>` and a couple special
+      cases for iterables)
     * `cattrs.ForbiddenExtraKeysError`
     * some `AttributeErrors` (special cased for structing mappings)
     """
@@ -39,10 +40,16 @@ def format_exception(exc: BaseException, type: Union[Type, None]) -> str:
             res = f"invalid value for type, expected {tn}"
     elif isinstance(exc, ForbiddenExtraKeysError):
         res = f"extra fields found ({', '.join(exc.extra_fields)})"
-    elif isinstance(exc, AttributeError) and exc.args[0].endswith(
+    elif isinstance(exc, AttributeError) and exc.args[0].endswith(  # noqa: SIM114
         "object has no attribute 'items'"
     ):
         # This was supposed to be a mapping (and have .items()) but it something else.
+        res = "expected a mapping"
+    elif isinstance(exc, AttributeError) and exc.args[0].endswith(
+        "object has no attribute 'copy'"
+    ):
+        # This was supposed to be a mapping (and have .copy()) but it something else.
+        # Used for TypedDicts.
         res = "expected a mapping"
     else:
         res = f"unknown error ({exc})"
@@ -54,7 +61,7 @@ def transform_error(
     exc: Union[ClassValidationError, IterableValidationError, BaseException],
     path: str = "$",
     format_exception: Callable[
-        [BaseException, Union[Type, None]], str
+        [BaseException, Union[type, None]], str
     ] = format_exception,
 ) -> List[str]:
     """Transform an exception into a list of error messages.
@@ -82,7 +89,7 @@ def transform_error(
         for exc, note in with_notes:
             p = f"{path}[{note.index!r}]"
             if isinstance(exc, (ClassValidationError, IterableValidationError)):
-                errors.extend(transform_error(exc, p))
+                errors.extend(transform_error(exc, p, format_exception))
             else:
                 errors.append(f"{format_exception(exc, note.type)} @ {p}")
         for exc in without:
@@ -92,7 +99,7 @@ def transform_error(
         for exc, note in with_notes:
             p = f"{path}.{note.name}"
             if isinstance(exc, (ClassValidationError, IterableValidationError)):
-                errors.extend(transform_error(exc, p))
+                errors.extend(transform_error(exc, p, format_exception))
             else:
                 errors.append(f"{format_exception(exc, note.type)} @ {p}")
         for exc in without:

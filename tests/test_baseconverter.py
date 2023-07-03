@@ -8,8 +8,8 @@ from hypothesis import HealthCheck, assume, given, settings
 from hypothesis.strategies import just, one_of
 
 from cattrs import BaseConverter, UnstructureStrategy
-from cattrs._compat import is_py310_plus
 
+from ._compat import is_py310_plus
 from .typed import nested_typed_classes, simple_typed_attrs, simple_typed_classes
 
 unstructure_strats = one_of(just(s) for s in UnstructureStrategy)
@@ -91,7 +91,7 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     assume(len(a_field_names) > len(common_names))
 
     @attr.s
-    class C(object):
+    class C:
         a = attr.ib(type=Union[cl_a, cl_b])
 
     inst = C(a=cl_a(*vals_a, **kwargs_a))
@@ -162,7 +162,7 @@ def test_optional_field_roundtrip(cl_and_vals):
     cl, vals, kwargs = cl_and_vals
 
     @attr.s
-    class C(object):
+    class C:
         a = attr.ib(type=Optional[cl])
 
     inst = C(a=cl(*vals, **kwargs))
