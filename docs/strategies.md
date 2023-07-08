@@ -120,6 +120,10 @@ The converter is now ready to start structuring Apple notifications.
 
 ```
 
+```{versionadded} 23.1.0
+
+```
+
 ## Include Subclasses Strategy
 
 _Found at {py:func}`cattrs.strategies.include_subclasses`._
@@ -249,4 +253,8 @@ Here is an example involving both customizations:
 
 >>> converter.structure({'a': 1, 'c': 'foo'}, Parent)
 Child(a=1, b='foo')
+```
+
+```{versionadded} 23.1.0
+
 ```

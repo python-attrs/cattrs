@@ -1,33 +1,27 @@
-# Customizing class un/structuring
+# Customizing Class Un/structuring
 
-This section deals with customizing the unstructuring and structuring processes in `cattrs`.
+This section deals with customizing the unstructuring and structuring processes in _cattrs_.
 
-## Using `cattr.Converter`
+## Using `cattrs.Converter`
 
-The default `Converter`, upon first encountering an `attrs` class, will use
-the generation functions mentioned here to generate the specialized hooks for it,
-register the hooks and use them.
+The default {class}`Converter <cattrs.Converter>`, upon first encountering an _attrs_ class, will use the generation functions mentioned here to generate the specialized hooks for it, register the hooks and use them.
 
 ## Manual un/structuring hooks
 
 You can write your own structuring and unstructuring functions and register
-them for types using {meth}`Converter.register_structure_hook <cattrs.BaseConverter.register_structure_hook>` and
-{meth}`Converter.register_unstructure_hook <cattrs.BaseConverter.register_unstructure_hook>`. This approach is the most
+them for types using {meth}`Converter.register_structure_hook() <cattrs.BaseConverter.register_structure_hook>` and
+{meth}`Converter.register_unstructure_hook() <cattrs.BaseConverter.register_unstructure_hook>`. This approach is the most
 flexible but also requires the most amount of boilerplate.
 
 ## Using `cattrs.gen` generators
 
-`cattrs` includes a module, {mod}`cattrs.gen`, which allows for generating and
-compiling specialized functions for unstructuring `attrs` classes.
+_cattrs_ includes a module, {mod}`cattrs.gen`, which allows for generating and compiling specialized functions for unstructuring _attrs_ classes.
 
-One reason for generating these functions in advance is that they can bypass
-a lot of `cattrs` machinery and be significantly faster than normal `cattrs`.
+One reason for generating these functions in advance is that they can bypass a lot of _cattrs_ machinery and be significantly faster than normal _cattrs_.
 
 Another reason is that it's possible to override behavior on a per-attribute basis.
 
-Currently, the overrides only support generating dictionary un/structuring functions
-(as opposed to tuples), and support `omit_if_default`, `forbid_extra_keys`,
-`rename` and `omit`.
+Currently, the overrides only support generating dictionary un/structuring functions (as opposed to tuples), and support `omit_if_default`, `forbid_extra_keys`, `rename` and `omit`.
 
 ### `omit_if_default`
 
@@ -82,13 +76,10 @@ This override has no effect when generating structuring functions.
 
 ### `forbid_extra_keys`
 
-By default `cattrs` is lenient in accepting unstructured input. If extra
-keys are present in a dictionary, they will be ignored when generating a
-structured object. Sometimes it may be desirable to enforce a stricter
-contract, and to raise an error when unknown keys are present - in particular
-when fields have default values this may help with catching typos.
-`forbid_extra_keys` can also be enabled (or disabled) on a per-class basis when
-creating structure hooks with `make_dict_structure_fn`.
+By default _cattrs_ is lenient in accepting unstructured input.
+If extra keys are present in a dictionary, they will be ignored when generating a structured object.
+Sometimes it may be desirable to enforce a stricter contract, and to raise an error when unknown keys are present - in particular when fields have default values this may help with catching typos.
+`forbid_extra_keys` can also be enabled (or disabled) on a per-class basis when creating structure hooks with {py:func}`make_dict_structure_fn() <cattrs.gen.make_dict_structure_fn>`.
 
 ```{doctest}
     :options: +SKIP
@@ -110,8 +101,7 @@ ForbiddenExtraKeyError: Extra fields in constructor for TestClass: nummber
 TestClass(number=1)
 ```
 
-This behavior can only be applied to classes or to the default for the
-`Converter`, and has no effect when generating unstructuring functions.
+This behavior can only be applied to classes or to the default for the {class}`Converter <cattrs.Converter>`, and has no effect when generating unstructuring functions.
 
 ### `rename`
 
@@ -182,4 +172,29 @@ This process can be overriden by passing in the desired un/structure manually.
 
 >>> c.structure({"an_int": 1}, ExampleClass)
 ExampleClass(an_int=2)
+```
+
+### `use_alias`
+
+By default, fields are un/structured to and from dictionary keys exactly matching the field names.
+_attrs_ classes support field aliases, which override the `__init__` parameter name for a given field.
+By generating your un/structure function with `_cattrs_use_alias=True`, _cattrs_ will use the field alias instead of the field name as the un/structured dictionary key.
+
+```{doctest}
+
+>>> from cattrs.gen import make_dict_structure_fn
+>>>
+>>> @define
+... class AliasClass:
+...    number: int = field(default=1, alias="count")
+>>>
+>>> c = cattrs.Converter()
+>>> hook = make_dict_structure_fn(AliasClass, c, _cattrs_use_alias=True)
+>>> c.register_structure_hook(AliasClass, hook)
+>>> c.structure({"count": 2}, AliasClass)
+AliasClass(number=2)
+```
+
+```{versionadded} 23.2.0
+
 ```

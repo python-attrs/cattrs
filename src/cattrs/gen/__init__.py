@@ -61,6 +61,8 @@ def make_dict_unstructure_fn(
 
     :param _cattrs_use_alias: If true, the attribute alias will be used as the
         dictionary key by default.
+
+    ..  versionadded:: 23.2.0 *_cattrs_use_alias*
     """
     origin = get_origin(cl)
     attrs = adapted_fields(origin or cl)  # type: ignore
@@ -224,9 +226,18 @@ def make_dict_structure_fn(
     _cattrs_use_linecache: bool = True,
     _cattrs_prefer_attrib_converters: bool = False,
     _cattrs_detailed_validation: bool = True,
+    _cattrs_use_alias: bool = False,
     **kwargs: AttributeOverride,
 ) -> DictStructureFn[T]:
-    """Generate a specialized dict structuring function for an attrs class."""
+    """
+    Generate a specialized dict structuring function for an attrs class or
+    dataclass.
+
+    :param _cattrs_use_alias: If true, the attribute alias will be used as the
+        dictionary key by default.
+
+    ..  versionadded:: 23.2.0 *_cattrs_use_alias*
+    """
 
     mapping = {}
     if is_generic(cl):
@@ -314,7 +325,10 @@ def make_dict_structure_fn(
             internal_arg_parts[struct_handler_name] = handler
 
             ian = a.alias
-            kn = an if override.rename is None else override.rename
+            if override.rename is None:
+                kn = an if not _cattrs_use_alias else a.alias
+            else:
+                kn = override.rename
             allowed_fields.add(kn)
             i = "  "
             if a.default is not NOTHING:
@@ -391,7 +405,10 @@ def make_dict_structure_fn(
                     a, t, converter, _cattrs_prefer_attrib_converters
                 )
 
-            kn = an if override.rename is None else override.rename
+            if override.rename is None:
+                kn = an if not _cattrs_use_alias else a.alias
+            else:
+                kn = override.rename
             allowed_fields.add(kn)
 
             if handler:
@@ -439,7 +456,10 @@ def make_dict_structure_fn(
                 struct_handler_name = f"__c_structure_{an}"
                 internal_arg_parts[struct_handler_name] = handler
 
-                kn = an if override.rename is None else override.rename
+                if override.rename is None:
+                    kn = an if not _cattrs_use_alias else a.alias
+                else:
+                    kn = override.rename
                 allowed_fields.add(kn)
                 post_lines.append(f"  if '{kn}' in o:")
                 if handler:
