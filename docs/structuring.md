@@ -159,6 +159,8 @@ so this operation can be used to copy an iterable into a deque.
 If you want to convert into bounded `deque`, registering a custom structuring hook is a good approach.
 
 ```{doctest}
+
+>>> from collections import deque
 >>> cattrs.structure((1, 2, 3), deque[int])
 deque([1, 2, 3])
 ```
@@ -202,7 +204,7 @@ These generic types are composable with all other converters.
 ```{doctest}
 
 >>> cattrs.structure([[1, 2], [3, 4]], set[frozenset[str]])
-{frozenset({'1', '2'}), frozenset({'4', '3'})}
+{frozenset({'2', '1'}), frozenset({'4', '3'})}
 ```
 
 ### Dictionaries

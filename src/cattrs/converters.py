@@ -516,7 +516,7 @@ class BaseConverter:
             if name[0] == "_":
                 name = name[1:]
 
-            conv_obj[name] = self._structure_attribute(a, val)
+            conv_obj[getattr(a, "alias", a.name)] = self._structure_attribute(a, val)
 
         return cl(**conv_obj)
 

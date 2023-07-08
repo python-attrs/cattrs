@@ -220,13 +220,27 @@ def _create_hyp_class(
         a.counter = i
     vals = tuple((a[1]) for a in attrs_and_strat if not a[0].kw_only)
     note(f"Class fields: {attrs}")
-    attrs_dict = OrderedDict(zip(gen_attr_names(), attrs))
+    attrs_dict = {}
+
+    names = gen_attr_names()
     kwarg_strats = {}
-    for attr_name, attr_and_strat in zip(gen_attr_names(), attrs_and_strat):
-        if attr_and_strat[0].kw_only:
-            if attr_name.startswith("_"):
-                attr_name = attr_name[1:]
-            kwarg_strats[attr_name] = attr_and_strat[1]
+
+    for ix, (attribute, strat) in enumerate(attrs_and_strat):
+        name = next(names)
+        attrs_dict[name] = attribute
+        if ix % 2 == 1:
+            # Every third attribute gets an alias, the next attribute name.
+            alias = next(names)
+            attribute.alias = alias
+            name = alias
+        else:
+            # No alias.
+            if name[0] == "_":
+                name = name[1:]
+
+        if attribute.kw_only:
+            kwarg_strats[name] = strat
+    note(f"Attributes: {attrs_dict}")
 
     return tuples(
         just(make_class("HypAttrsClass", attrs_dict, frozen=frozen)),
@@ -668,10 +682,10 @@ def newtype_int_typed_attrs(draw: DrawFn, defaults=None, kw_only=None):
     default = attr.NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(integers())
-    type = NewType("NewInt", int)
+    NewInt = NewType("NewInt", int)
     return (
         attr.ib(
-            type=type,
+            type=NewInt,
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
         ),
@@ -694,10 +708,10 @@ def newtype_attrs_typed_attrs(draw: DrawFn, defaults=None, kw_only=None):
     if defaults is True or (defaults is None and draw(booleans())):
         default = NewTypeAttrs(draw(integers()))
 
-    type = NewType("NewAttrs", NewTypeAttrs)
+    NewAttrs = NewType("NewAttrs", NewTypeAttrs)
     return (
         attr.ib(
-            type=type,
+            type=NewAttrs,
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
         ),

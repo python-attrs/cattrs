@@ -8,7 +8,7 @@ from hypothesis import assume, given
 from hypothesis.strategies import data, just, one_of, sampled_from
 
 from cattrs import BaseConverter, Converter
-from cattrs._compat import _adapted_fields, fields
+from cattrs._compat import adapted_fields, fields
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
@@ -117,7 +117,7 @@ def test_individual_overrides(converter_cls, cl_and_vals):
     converter = converter_cls()
     cl, vals, kwargs = cl_and_vals
 
-    for attr in _adapted_fields(cl):
+    for attr in adapted_fields(cl):
         if attr.default is not NOTHING:
             break
     else:
@@ -141,7 +141,7 @@ def test_individual_overrides(converter_cls, cl_and_vals):
     assert "Hyp" not in repr(res)
     assert "Factory" not in repr(res)
 
-    for attr, val in zip(_adapted_fields(cl), vals):
+    for attr, val in zip(adapted_fields(cl), vals):
         if attr.name == chosen_name:
             assert attr.name in res
         elif attr.default is not NOTHING:
@@ -261,8 +261,8 @@ def test_omitting():
     assert converter.unstructure(A(1)) == {"a": 1}
 
 
-@pytest.mark.parametrize("extended_validation", [True, False])
-def test_omitting_structure(extended_validation: bool):
+@pytest.mark.parametrize("detailed_validation", [True, False])
+def test_omitting_structure(detailed_validation: bool):
     """Omitting fields works with generated structuring functions."""
     converter = BaseConverter()
 
@@ -279,7 +279,7 @@ def test_omitting_structure(extended_validation: bool):
             converter,
             b=override(omit=True),
             c=override(omit=True),
-            _cattrs_extended_validation=extended_validation,
+            _cattrs_detailed_validation=detailed_validation,
         ),
     )
 
@@ -340,11 +340,53 @@ def test_overriding_unstruct_hook(converter: BaseConverter) -> None:
     converter.register_unstructure_hook(
         A,
         make_dict_unstructure_fn(
-            A,
-            converter,
-            a=override(unstruct_hook=lambda v: v + 1),
-            _cattrs_detailed_validation=converter.detailed_validation,
+            A, converter, a=override(unstruct_hook=lambda v: v + 1)
         ),
     )
 
     assert converter.unstructure(A(1, "")) == {"a": 2, "b": ""}
+
+
+@pytest.mark.parametrize("detailed_validation", [True, False])
+def test_alias_keys(converter: BaseConverter, detailed_validation: bool) -> None:
+    """Alias keys work."""
+
+    @define
+    class A:
+        _a: int
+        b: int = field(alias="aliased")
+        c: int = field(alias="also_aliased", default=3)
+        d: int = field(alias="d_aliased", default=5)
+
+    converter.register_unstructure_hook(
+        A,
+        make_dict_unstructure_fn(
+            A,
+            converter,
+            _cattrs_use_alias=True,
+            c=override(omit=True),
+            d=override(rename="d_renamed"),
+        ),
+    )
+
+    assert converter.unstructure(A(1, 2, 3, 4)) == {
+        "a": 1,
+        "aliased": 2,
+        "d_renamed": 4,
+    }
+
+    converter.register_structure_hook(
+        A,
+        make_dict_structure_fn(
+            A,
+            converter,
+            _cattrs_use_alias=True,
+            _cattrs_detailed_validation=detailed_validation,
+            c=override(omit=True),
+            d=override(rename="d_renamed"),
+        ),
+    )
+
+    assert converter.structure({"a": 1, "aliased": 2, "d_renamed": 4}, A) == A(
+        1, 2, 3, 4
+    )

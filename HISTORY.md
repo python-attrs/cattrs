@@ -4,6 +4,8 @@
 
 - Fix `format_exception` parameter working for recursive calls to `transform_error`
   ([#389](https://github.com/python-attrs/cattrs/issues/389)
+- [_attrs_ aliases](https://www.attrs.org/en/stable/init.html#private-attributes-and-aliases) are now supported, although aliased fields still map to their attribute name instead of their alias by default when un/structuring.
+  ([#322](https://github.com/python-attrs/cattrs/issues/322) [#391](https://github.com/python-attrs/cattrs/pull/391))
 - Use [PDM](https://pdm.fming.dev/latest/) instead of Poetry.
 - _cattrs_ is now linted with [Ruff](https://beta.ruff.rs/docs/).
 - Fix TypedDicts with periods in their field names.
