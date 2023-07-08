@@ -682,10 +682,10 @@ def newtype_int_typed_attrs(draw: DrawFn, defaults=None, kw_only=None):
     default = attr.NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(integers())
-    type = NewType("NewInt", int)
+    NewInt = NewType("NewInt", int)
     return (
         attr.ib(
-            type=type,
+            type=NewInt,
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
         ),
@@ -708,10 +708,10 @@ def newtype_attrs_typed_attrs(draw: DrawFn, defaults=None, kw_only=None):
     if defaults is True or (defaults is None and draw(booleans())):
         default = NewTypeAttrs(draw(integers()))
 
-    type = NewType("NewAttrs", NewTypeAttrs)
+    NewAttrs = NewType("NewAttrs", NewTypeAttrs)
     return (
         attr.ib(
-            type=type,
+            type=NewAttrs,
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
         ),

@@ -124,6 +124,7 @@ ignore = [
     "E501",   # line length is handled by black
     "RUF001", # leave my smart characters alone
     "S101",   # assert
+    "S307",   # hands off my eval
     "SIM300", # Yoda rocks in asserts
     "PGH001", # No eval lol?
     "PGH003", # leave my type: ignores alone
