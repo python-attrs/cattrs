@@ -44,7 +44,7 @@ ujson = [
     "ujson>=5.7.0",
 ]
 orjson = [
-    "orjson>=3.8.14; implementation_name == 'cpython'",
+    "orjson>=3.9.2; implementation_name == \"cpython\"",
 ]
 msgpack = [
     "msgpack>=1.0.5",
@@ -59,21 +59,21 @@ cbor2 = [
     "cbor2>=5.4.6",
 ]
 bson = [
-    "pymongo>=4.3.3",
+    "pymongo>=4.4.0",
 ]
 
 [tool.pdm.dev-dependencies]
 lint = [
     "isort>=5.11.5",
     "black>=23.3.0",
-    "ruff>=0.0.270",
+    "ruff>=0.0.277",
 ]
 test = [
-    "hypothesis>=6.75.9",
-    "pytest>=7.3.1",
+    "hypothesis>=6.79.4",
+    "pytest>=7.4.0",
     "pytest-benchmark>=4.0.0",
     "immutables>=0.19",
-    "typing-extensions>=4.6.2",
+    "typing-extensions>=4.7.1",
     "coverage>=7.2.7",
 ]
 docs = [
