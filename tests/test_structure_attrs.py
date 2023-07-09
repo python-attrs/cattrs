@@ -308,3 +308,31 @@ def test_structure_prefers_attrib_converters(converter_type):
 
     attrib_converter.assert_any_call(5)
     assert inst.z == "5"
+
+
+@pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
+@pytest.mark.parametrize("converter_type", [BaseConverter, Converter])
+def test_structure_multitier_discriminator_union(converter_type):
+    from typing import Literal
+
+    converter = converter_type()
+
+    @define()
+    class E:
+        op: Literal[1]
+
+    @define()
+    class F:
+        op: Literal[0]
+        t: Literal["MESSAGE_CREATE"]
+
+    @define()
+    class G:
+        op: Literal[0]
+        t: Literal["MESSAGE_UPDATE"]
+
+    inst = converter.structure({"op": 1}, Union[E, F, G])
+    assert isinstance(inst, E)
+
+    inst = converter.structure({"op": 0, "t": "MESSAGE_CREATE"}, Union[E, F, G])
+    assert isinstance(inst, F)

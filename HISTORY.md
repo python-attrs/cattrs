@@ -18,6 +18,8 @@
 - Improve handling of TypedDicts with forward references.
 - Speed up generated _attrs_ and TypedDict structuring functions by changing their signature slightly.
   ([#388](https://github.com/python-attrs/cattrs/pull/388))
+- Disambiguate a union of attrs classes where there's a `typing.Literal` tag of some sort.
+  ([#391](https://github.com/python-attrs/cattrs/pull/391))
 
 ## 23.1.2 (2023-06-02)
 

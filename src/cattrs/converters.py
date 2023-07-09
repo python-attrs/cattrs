@@ -55,7 +55,7 @@ from ._compat import (
     is_typeddict,
     is_union_type,
 )
-from .disambiguators import create_uniq_field_dis_func
+from .disambiguators import create_discriminated_dis_func, create_uniq_field_dis_func
 from .dispatch import MultiStrategyDispatch
 from .errors import (
     IterableValidationError,
@@ -730,12 +730,20 @@ class BaseConverter:
                 e for e in union_types if e is not NoneType  # type: ignore
             )
 
+        # TODO: technically both disambiguators could support TypedDicts and
+        # dataclasses...
         if not all(has(get_origin(e) or e) for e in union_types):
             raise StructureHandlerNotFoundError(
                 "Only unions of attrs classes supported "
                 "currently. Register a loads hook manually.",
                 type_=union,
             )
+
+        try:
+            return create_discriminated_dis_func(*union_types)
+        except ValueError:
+            pass
+
         return create_uniq_field_dis_func(*union_types)
 
     def __deepcopy__(self, _) -> "BaseConverter":
