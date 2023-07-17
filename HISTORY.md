@@ -2,6 +2,10 @@
 
 ## 23.2.0 (UNRELEASED)
 
+- **Potentially breaking**: skip _attrs_ fields marked as `init=False` by default. This change is potentially breaking for unstructuring.
+  See [here](https://catt.rs/en/latest/customizing.html#include_init_false) for instructions on how to restore the old behavior.
+  ([#40](https://github.com/python-attrs/cattrs/issues/40) [#395](https://github.com/python-attrs/cattrs/pull/395))
+- The `omit` parameter of `cattrs.override()` is now of type `bool | None` (from `bool`). `None` is the new default and means to apply default `cattrs` handling to the attribute.
 - Fix `format_exception` parameter working for recursive calls to `transform_error`
   ([#389](https://github.com/python-attrs/cattrs/issues/389)
 - [_attrs_ aliases](https://www.attrs.org/en/stable/init.html#private-attributes-and-aliases) are now supported, although aliased fields still map to their attribute name instead of their alias by default when un/structuring.
@@ -42,7 +46,7 @@
   ([#319](https://github.com/python-attrs/cattrs/issues/319) [#327](https://github.com/python-attrs/cattrs/pull/327>))
 - `pathlib.Path` is now supported by default.
   ([#81](https://github.com/python-attrs/cattrs/issues/81))
-- Add `cbor2` serialization library to the `cattr.preconf` package.
+- Add `cbor2` serialization library to the `cattrs.preconf` package.
 - Add optional dependencies for `cattrs.preconf` third-party libraries. ([#337](https://github.com/python-attrs/cattrs/pull/337))
 - All preconf converters now allow overriding the default `unstruct_collection_overrides` in `make_converter`.
   ([#350](https://github.com/python-attrs/cattrs/issues/350) [#353](https://github.com/python-attrs/cattrs/pull/353))

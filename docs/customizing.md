@@ -13,7 +13,7 @@ them for types using {meth}`Converter.register_structure_hook() <cattrs.BaseConv
 {meth}`Converter.register_unstructure_hook() <cattrs.BaseConverter.register_unstructure_hook>`. This approach is the most
 flexible but also requires the most amount of boilerplate.
 
-## Using `cattrs.gen` generators
+## Using `cattrs.gen` Generators
 
 _cattrs_ includes a module, {mod}`cattrs.gen`, which allows for generating and compiling specialized functions for unstructuring _attrs_ classes.
 
@@ -25,9 +25,8 @@ Currently, the overrides only support generating dictionary un/structuring funct
 
 ### `omit_if_default`
 
-This override can be applied on a per-class or per-attribute basis. The generated
-unstructuring function will skip unstructuring values that are equal to their
-default or factory values.
+This override can be applied on a per-class or per-attribute basis.
+The generated unstructuring function will skip unstructuring values that are equal to their default or factory values.
 
 ```{doctest}
 
@@ -131,9 +130,8 @@ ExampleClass(klass=1)
 
 ### `omit`
 
-This override can only be applied to individual attributes. Using the `omit`
-override will simply skip the attribute completely when generating a structuring
-or unstructuring function.
+This override can only be applied to individual attributes. 
+Using the `omit` override will simply skip the attribute completely when generating a structuring or unstructuring function.
 
 ```{doctest}
 
@@ -193,6 +191,41 @@ By generating your un/structure function with `_cattrs_use_alias=True`, _cattrs_
 >>> c.register_structure_hook(AliasClass, hook)
 >>> c.structure({"count": 2}, AliasClass)
 AliasClass(number=2)
+```
+
+```{versionadded} 23.2.0
+
+```
+
+### `include_init_false`
+
+By default, _attrs_ fields defined as `init=False` are skipped when un/structuring.
+By generating your un/structure function with `_cattrs_include_init_false=True`, all `init=False` fields will be included for un/structuring.
+
+```{doctest}
+
+>>> from cattrs.gen import make_dict_structure_fn
+>>>
+>>> @define
+... class ClassWithInitFalse:
+...    number: int = field(default=1, init=False)
+>>>
+>>> c = cattrs.Converter()
+>>> hook = make_dict_structure_fn(ClassWithInitFalse, c, _cattrs_include_init_false=True)
+>>> c.register_structure_hook(ClassWithInitFalse, hook)
+>>> c.structure({"number": 2}, ClassWithInitFalse)
+ClassWithInitFalse(number=2)
+```
+
+A single attribute can be included by overriding it with `omit=False`.
+
+```{doctest}
+
+>>> c = cattrs.Converter()
+>>> hook = make_dict_structure_fn(ClassWithInitFalse, c, number=override(omit=False))
+>>> c.register_structure_hook(ClassWithInitFalse, hook)
+>>> c.structure({"number": 2}, ClassWithInitFalse)
+ClassWithInitFalse(number=2)
 ```
 
 ```{versionadded} 23.2.0

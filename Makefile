@@ -1,4 +1,4 @@
-.PHONY: clean clean-test clean-pyc clean-build docs help bench bench-cmp
+.PHONY: clean clean-test clean-pyc clean-build docs help bench bench-cmp test
 .DEFAULT_GOAL := help
 define BROWSER_PYSCRIPT
 import os, webbrowser, sys

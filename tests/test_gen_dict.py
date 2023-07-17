@@ -2,8 +2,7 @@
 from typing import Dict, Type
 
 import pytest
-from attr import Factory, define, field
-from attr._make import NOTHING
+from attrs import NOTHING, Factory, define, field
 from hypothesis import assume, given
 from hypothesis.strategies import data, just, one_of, sampled_from
 
@@ -246,8 +245,8 @@ def test_renaming_forbid_extra_keys():
     assert cve.value.exceptions[1].extra_fields == {"c"}
 
 
-def test_omitting():
-    converter = BaseConverter()
+def test_omitting(converter: BaseConverter):
+    """Omitting works."""
 
     @define
     class A:
@@ -259,6 +258,28 @@ def test_omitting():
     )
 
     assert converter.unstructure(A(1)) == {"a": 1}
+
+
+def test_omitting_none(converter: BaseConverter):
+    """Omitting works properly with None."""
+
+    @define
+    class A:
+        a: int
+        b: int = field(init=False)
+
+    converter.register_unstructure_hook(
+        A, make_dict_unstructure_fn(A, converter, a=override(), b=override())
+    )
+
+    assert converter.unstructure(A(1)) == {"a": 1}
+
+    converter.register_structure_hook(
+        A, make_dict_structure_fn(A, converter, a=override(), b=override())
+    )
+
+    assert converter.structure({"a": 2}, A).a == 2
+    assert not hasattr(converter.structure({"a": 2}, A), "b")
 
 
 @pytest.mark.parametrize("detailed_validation", [True, False])
@@ -347,8 +368,7 @@ def test_overriding_unstruct_hook(converter: BaseConverter) -> None:
     assert converter.unstructure(A(1, "")) == {"a": 2, "b": ""}
 
 
-@pytest.mark.parametrize("detailed_validation", [True, False])
-def test_alias_keys(converter: BaseConverter, detailed_validation: bool) -> None:
+def test_alias_keys(converter: BaseConverter) -> None:
     """Alias keys work."""
 
     @define
@@ -381,7 +401,7 @@ def test_alias_keys(converter: BaseConverter, detailed_validation: bool) -> None
             A,
             converter,
             _cattrs_use_alias=True,
-            _cattrs_detailed_validation=detailed_validation,
+            _cattrs_detailed_validation=converter.detailed_validation,
             c=override(omit=True),
             d=override(rename="d_renamed"),
         ),
@@ -390,3 +410,127 @@ def test_alias_keys(converter: BaseConverter, detailed_validation: bool) -> None
     assert converter.structure({"a": 1, "aliased": 2, "d_renamed": 4}, A) == A(
         1, 2, 3, 4
     )
+
+
+def test_init_false(converter: BaseConverter) -> None:
+    """By default init=False keys are ignored."""
+
+    @define
+    class A:
+        a: int
+        b: int = field(init=False)
+        _c: int = field(init=False)
+        d: int = field(init=False, default=4)
+
+    converter.register_unstructure_hook(A, make_dict_unstructure_fn(A, converter))
+
+    a = A(1)
+    a.b = 2
+    a._c = 3
+
+    assert converter.unstructure(a) == {"a": 1}
+
+    converter.register_structure_hook(
+        A,
+        make_dict_structure_fn(
+            A, converter, _cattrs_detailed_validation=converter.detailed_validation
+        ),
+    )
+
+    structured = converter.structure({"a": 1}, A)
+
+    assert not hasattr(structured, "b")
+    assert not hasattr(structured, "_c")
+    assert structured.d == 4
+    assert structured.a == 1
+
+
+def test_init_false_overridden(converter: BaseConverter) -> None:
+    """init=False handling can be overriden."""
+
+    @define
+    class A:
+        a: int
+        b: int = field(init=False)
+        _c: int = field(init=False)
+        d: int = field(init=False, default=4)
+
+    converter.register_unstructure_hook(
+        A, make_dict_unstructure_fn(A, converter, _cattrs_include_init_false=True)
+    )
+
+    a = A(1)
+    a.b = 2
+    a._c = 3
+
+    assert converter.unstructure(a) == {"a": 1, "b": 2, "_c": 3, "d": 4}
+
+    converter.register_structure_hook(
+        A,
+        make_dict_structure_fn(
+            A,
+            converter,
+            _cattrs_include_init_false=True,
+            _cattrs_detailed_validation=converter.detailed_validation,
+        ),
+    )
+
+    structured = converter.structure({"a": 1, "b": 2, "_c": 3}, A)
+    assert structured.b == 2
+    assert structured._c == 3
+    assert structured.d == 4
+
+    structured = converter.structure({"a": 1, "b": 2, "_c": 3, "d": -4}, A)
+    assert structured.b == 2
+    assert structured._c == 3
+    assert structured.d == -4
+
+
+def test_init_false_field_override(converter: BaseConverter) -> None:
+    """init=False handling can be overriden on a per-field basis."""
+
+    @define
+    class A:
+        a: int
+        b: int = field(init=False)
+        _c: int = field(init=False)
+        d: int = field(init=False, default=4)
+
+    converter.register_unstructure_hook(
+        A,
+        make_dict_unstructure_fn(
+            A,
+            converter,
+            b=override(omit=False),
+            _c=override(omit=False),
+            d=override(omit=False),
+        ),
+    )
+
+    a = A(1)
+    a.b = 2
+    a._c = 3
+
+    assert converter.unstructure(a) == {"a": 1, "b": 2, "_c": 3, "d": 4}
+
+    converter.register_structure_hook(
+        A,
+        make_dict_structure_fn(
+            A,
+            converter,
+            b=override(omit=False),
+            _c=override(omit=False),
+            d=override(omit=False),
+            _cattrs_detailed_validation=converter.detailed_validation,
+        ),
+    )
+
+    structured = converter.structure({"a": 1, "b": 2, "_c": 3}, A)
+    assert structured.b == 2
+    assert structured._c == 3
+    assert structured.d == 4
+
+    structured = converter.structure({"a": 1, "b": 2, "_c": 3, "d": -4}, A)
+    assert structured.b == 2
+    assert structured._c == 3
+    assert structured.d == -4

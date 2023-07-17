@@ -6,7 +6,7 @@ global converter. Changes done to this global converter, such as registering new
 structure and unstructure hooks, affect all code using the global
 functions.
 
-## Global converter
+## Global Converter
 
 A global converter is provided for convenience as `cattrs.global_converter`.
 The following functions implicitly use this global converter:
@@ -21,7 +21,7 @@ Changes made to the global converter will affect the behavior of these functions
 Larger applications are strongly encouraged to create and customize a different,
 private instance of {class}`cattrs.Converter`.
 
-## Converter objects
+## Converter Objects
 
 To create a private converter, simply instantiate a {class}`cattrs.Converter`.
 Currently, a converter contains the following state:
