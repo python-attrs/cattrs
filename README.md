@@ -141,7 +141,7 @@ destructure them.
   - Custom converters for any type can be registered using `register_structure_hook`.
 
 _cattrs_ comes with preconfigured converters for a number of serialization libraries, including json, msgpack, cbor2, bson, yaml and toml.
-For details, see the [cattr.preconf package](https://catt.rs/en/stable/preconf.html).
+For details, see the [cattrs.preconf package](https://catt.rs/en/stable/preconf.html).
 
 ## Design Decisions
 

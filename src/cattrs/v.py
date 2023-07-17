@@ -14,6 +14,7 @@ def format_exception(exc: BaseException, type: Union[type, None]) -> str:
     """The default exception formatter, handling the most common exceptions.
 
     The following exceptions are handled specially:
+
     * `KeyErrors` (`required field missing`)
     * `ValueErrors` (`invalid value for type, expected <type>` or just `invalid value`)
     * `TypeErrors` (`invalid value for type, expected <type>` and a couple special
@@ -72,6 +73,7 @@ def transform_error(
     By default, the error messages are in the form of `{description} @ {path}`.
 
     While traversing the exception and subexceptions, the path is formed:
+
     * by appending `.{field_name}` for fields in classes
     * by appending `[{int}]` for indices in iterables, like lists
     * by appending `[{str}]` for keys in mappings, like dictionaries

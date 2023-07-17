@@ -5,6 +5,7 @@
 - **Potentially breaking**: skip _attrs_ fields marked as `init=False` by default. This change is potentially breaking for unstructuring.
   See [here](https://catt.rs/en/latest/customizing.html#include_init_false) for instructions on how to restore the old behavior.
   ([[#40](https://github.com/python-attrs/cattrs/issues/40)])
+- The `omit` parameter of `cattrs.override()` is now of type `bool | None` (from `bool`). `None` is the new default and means to apply default `cattrs` handling to the attribute.
 - Fix `format_exception` parameter working for recursive calls to `transform_error`
   ([#389](https://github.com/python-attrs/cattrs/issues/389)
 - [_attrs_ aliases](https://www.attrs.org/en/stable/init.html#private-attributes-and-aliases) are now supported, although aliased fields still map to their attribute name instead of their alias by default when un/structuring.

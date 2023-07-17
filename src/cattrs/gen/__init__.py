@@ -4,8 +4,7 @@ import linecache
 import re
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Tuple, TypeVar
 
-import attr
-from attr import NOTHING, resolve_types
+from attrs import NOTHING, Factory, resolve_types
 
 from .._compat import (
     adapted_fields,
@@ -37,10 +36,14 @@ if TYPE_CHECKING:  # pragma: no cover
 def override(
     omit_if_default: bool | None = None,
     rename: str | None = None,
-    omit: bool = False,
+    omit: bool | None = None,
     struct_hook: Callable[[Any, Any], Any] | None = None,
     unstruct_hook: Callable[[Any], Any] | None = None,
-):
+) -> AttributeOverride:
+    """Override how a particular field is handled.
+
+    :param omit: Whether to skip the field or not. `None` means apply default handling.
+    """
     return AttributeOverride(omit_if_default, rename, omit, struct_hook, unstruct_hook)
 
 
@@ -113,7 +116,7 @@ def make_dict_unstructure_fn(
             override = kwargs.pop(attr_name, neutral)
             if override.omit:
                 continue
-            if not a.init and not _cattrs_include_init_false:
+            if override.omit is None and not a.init and not _cattrs_include_init_false:
                 continue
             if override.rename is None:
                 kn = attr_name if not _cattrs_use_alias else a.alias
@@ -142,7 +145,7 @@ def make_dict_unstructure_fn(
                         if (
                             is_bare_final(t)
                             and a.default is not NOTHING
-                            and not isinstance(a.default, attr.Factory)
+                            and not isinstance(a.default, Factory)
                         ):
                             # This is a special case where we can use the
                             # type of the default to dispatch on.
@@ -165,13 +168,13 @@ def make_dict_unstructure_fn(
             else:
                 invoke = f"instance.{attr_name}"
 
-            if d is not attr.NOTHING and (
+            if d is not NOTHING and (
                 (_cattrs_omit_if_default and override.omit_if_default is not False)
                 or override.omit_if_default
             ):
                 def_name = f"__c_def_{attr_name}"
 
-                if isinstance(d, attr.Factory):
+                if isinstance(d, Factory):
                     globs[def_name] = d.factory
                     internal_arg_parts[def_name] = d.factory
                     if d.takes_self:
@@ -317,7 +320,7 @@ def make_dict_structure_fn(
             override = kwargs.get(an, neutral)
             if override.omit:
                 continue
-            if not a.init and not _cattrs_include_init_false:
+            if override.omit is None and not a.init and not _cattrs_include_init_false:
                 continue
             t = a.type
             if isinstance(t, TypeVar):
@@ -447,7 +450,7 @@ def make_dict_structure_fn(
             override = kwargs.get(an, neutral)
             if override.omit:
                 continue
-            if not a.init and not _cattrs_include_init_false:
+            if override.omit is None and not a.init and not _cattrs_include_init_false:
                 continue
             if a.default is not NOTHING:
                 non_required.append(a)

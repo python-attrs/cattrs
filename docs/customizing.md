@@ -130,9 +130,8 @@ ExampleClass(klass=1)
 
 ### `omit`
 
-This override can only be applied to individual attributes. Using the `omit`
-override will simply skip the attribute completely when generating a structuring
-or unstructuring function.
+This override can only be applied to individual attributes. 
+Using the `omit` override will simply skip the attribute completely when generating a structuring or unstructuring function.
 
 ```{doctest}
 
@@ -213,6 +212,17 @@ By generating your un/structure function with `_cattrs_include_init_false=True`,
 >>>
 >>> c = cattrs.Converter()
 >>> hook = make_dict_structure_fn(ClassWithInitFalse, c, _cattrs_include_init_false=True)
+>>> c.register_structure_hook(ClassWithInitFalse, hook)
+>>> c.structure({"number": 2}, ClassWithInitFalse)
+ClassWithInitFalse(number=2)
+```
+
+A single attribute can be included by overriding it with `omit=False`.
+
+```{doctest}
+
+>>> c = cattrs.Converter()
+>>> hook = make_dict_structure_fn(ClassWithInitFalse, c, number=override(omit=False))
 >>> c.register_structure_hook(ClassWithInitFalse, hook)
 >>> c.structure({"number": 2}, ClassWithInitFalse)
 ClassWithInitFalse(number=2)
