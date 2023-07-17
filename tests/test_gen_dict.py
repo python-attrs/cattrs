@@ -2,7 +2,6 @@
 from typing import Dict, Type
 
 import pytest
-from attr import evolve
 from attrs import NOTHING, Factory, define, field
 from hypothesis import assume, given
 from hypothesis.strategies import data, just, one_of, sampled_from
