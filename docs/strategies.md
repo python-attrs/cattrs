@@ -258,3 +258,34 @@ Child(a=1, b='foo')
 ```{versionadded} 23.1.0
 
 ```
+
+### Using Dedicated Structure and Unstructure Methods
+
+The following strategy can be applied to both structuring and unstructuring (also simultaneously), but for
+simplicity sake, only structuring is described here.
+
+If a class requires special handling for structuring, you can add a dedicated structuring method:
+
+```python
+>>> from attrs import define
+>>> from cattrs import Converter
+
+>>> @define
+... class MyClass:
+...     a: int
+
+>>> @classmethod
+... def structure(cls, data: dict):
+...     return cls(data["b"])  # Not a
+
+>>> c = Converter()
+>>> c.register_structure_hook_func(lambda t: hasattr(t, "structure"), lambda v, t: t.structure(v))
+
+>>> print(c.structure({"b": 1}, MyClass))  # the input dictionary uses "b", but 'structure()' will take care of that
+MyClass(a=1)
+```
+
+The {py:func}`register_structure_hook_func()<cattrs.converters.BaseConverter.register_structure_hook_func>`
+function checks the availability of a `structure` method (feel free to pick a different name).
+Only if available, this method is used for structuring the given data into the target class.
+Any other class without a `structure` method will use the default strategy for structuring.
