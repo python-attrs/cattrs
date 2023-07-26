@@ -1,10 +1,10 @@
 from functools import lru_cache, singledispatch
 from typing import Any, Callable, List, Optional, Tuple, Union
 
-import attr
+from attrs import Factory, define
 
 
-@attr.s
+@define
 class _DispatchNotFound:
     """A dummy object to help signify a dispatch not found."""
 
@@ -95,9 +95,10 @@ class MultiStrategyDispatch:
         self._function_dispatch.copy_to(other._function_dispatch, skip=skip)
         for cls, fn in self._single_dispatch.registry.items():
             other._single_dispatch.register(cls, fn)
+        other.clear_cache()
 
 
-@attr.s(slots=True)
+@define
 class FunctionDispatch:
     """
     FunctionDispatch is similar to functools.singledispatch, but
@@ -109,14 +110,16 @@ class FunctionDispatch:
 
     _handler_pairs: List[
         Tuple[Callable[[Any], bool], Callable[[Any, Any], Any], bool]
-    ] = attr.ib(factory=list)
+    ] = Factory(list)
 
-    def register(self, can_handle: Callable[[Any], bool], func, is_generator=False):
+    def register(
+        self, can_handle: Callable[[Any], bool], func, is_generator=False
+    ) -> None:
         self._handler_pairs.insert(0, (can_handle, func, is_generator))
 
     def dispatch(self, typ: Any) -> Optional[Callable[[Any, Any], Any]]:
         """
-        returns the appropriate handler, for the object passed.
+        Return the appropriate handler for the object passed.
         """
         for can_handle, handler, is_generator in self._handler_pairs:
             # can handle could raise an exception here
@@ -136,5 +139,5 @@ class FunctionDispatch:
     def get_num_fns(self) -> int:
         return len(self._handler_pairs)
 
-    def copy_to(self, other: "FunctionDispatch", skip: int = 0):
-        other._handler_pairs.extend(self._handler_pairs[skip:])
+    def copy_to(self, other: "FunctionDispatch", skip: int = 0) -> None:
+        other._handler_pairs = self._handler_pairs[:-skip] + other._handler_pairs

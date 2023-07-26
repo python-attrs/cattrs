@@ -127,6 +127,8 @@ class BaseConverter:
         "_structure_func",
         "_prefer_attrib_converters",
         "detailed_validation",
+        "_struct_copy_skip",
+        "_unstruct_copy_skip",
     )
 
     def __init__(
@@ -227,6 +229,9 @@ class BaseConverter:
 
         # Unions are instances now, not classes. We use different registries.
         self._union_struct_registry: Dict[Any, Callable[[Any, Type[T]], T]] = {}
+
+        self._unstruct_copy_skip = self._unstructure_func.get_num_fns()
+        self._struct_copy_skip = self._structure_func.get_num_fns()
 
     def unstructure(self, obj: Any, unstructure_as: Any = None) -> Any:
         return self._unstructure_func.dispatch(
@@ -748,6 +753,7 @@ class BaseConverter:
         prefer_attrib_converters: Optional[bool] = None,
         detailed_validation: Optional[bool] = None,
     ) -> "BaseConverter":
+        """Create a copy of the converter, keeping all existing custom hooks."""
         res = self.__class__(
             dict_factory if dict_factory is not None else self._dict_factory,
             unstruct_strat
@@ -765,8 +771,8 @@ class BaseConverter:
             else self.detailed_validation,
         )
 
-        self._unstructure_func.copy_to(res._unstructure_func)
-        self._structure_func.copy_to(res._structure_func)
+        self._unstructure_func.copy_to(res._unstructure_func, self._unstruct_copy_skip)
+        self._structure_func.copy_to(res._structure_func, self._struct_copy_skip)
 
         return res
 
@@ -779,8 +785,6 @@ class Converter(BaseConverter):
         "forbid_extra_keys",
         "type_overrides",
         "_unstruct_collection_overrides",
-        "_struct_copy_skip",
-        "_unstruct_copy_skip",
     )
 
     def __init__(
@@ -1047,6 +1051,7 @@ class Converter(BaseConverter):
         prefer_attrib_converters: Optional[bool] = None,
         detailed_validation: Optional[bool] = None,
     ) -> "Converter":
+        """Create a copy of the converter, keeping all existing custom hooks."""
         res = self.__class__(
             dict_factory if dict_factory is not None else self._dict_factory,
             unstruct_strat
