@@ -23,7 +23,7 @@
 - Speed up generated _attrs_ and TypedDict structuring functions by changing their signature slightly.
   ([#388](https://github.com/python-attrs/cattrs/pull/388))
 - Fix copying of converters using function hooks.
-  ([[#398](https://github.com/python-attrs/cattrs/issues/398)])
+  ([#398](https://github.com/python-attrs/cattrs/issues/398) [#399](https://github.com/python-attrs/cattrs/pull/399))
 
 ## 23.1.2 (2023-06-02)
 
