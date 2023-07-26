@@ -84,7 +84,7 @@ def test_copy_converter(
     dict_factory: Callable,
     omit_if_default: bool,
 ):
-    """cattrs.Converter can be copied, and keeps its attributs."""
+    """cattrs.Converter can be copied, and keeps its attributes."""
     c = Converter(
         unstruct_strat=strat,
         prefer_attrib_converters=prefer_attrib,
@@ -129,7 +129,7 @@ def test_copy_hooks(
     )
 
     c.register_unstructure_hook(Simple, lambda s: s.a)
-    c.register_structure_hook(Simple, lambda v, t: Simple(v))
+    c.register_structure_hook(Simple, lambda v, _: Simple(v))
 
     assert c.unstructure(Simple(1)) == 1
     assert c.structure(1, Simple) == Simple(1)
@@ -139,6 +139,44 @@ def test_copy_hooks(
     assert c is not copy
 
     assert c.unstructure(Simple(1)) == copy.unstructure(Simple(1))
+    assert copy.structure(copy.unstructure(Simple(1)), Simple) == Simple(1)
+    assert c.detailed_validation == copy.detailed_validation
+    assert c._prefer_attrib_converters == copy._prefer_attrib_converters
+    assert c._dict_factory == copy._dict_factory
+
+
+@given(
+    strat=unstructure_strats,
+    detailed_validation=...,
+    prefer_attrib=...,
+    dict_factory=one_of(just(dict), just(OrderedDict)),
+)
+def test_copy_func_hooks(
+    converter_cls: Type[BaseConverter],
+    strat: UnstructureStrategy,
+    prefer_attrib: bool,
+    detailed_validation: bool,
+    dict_factory: Callable,
+):
+    """Un/structure function hooks are copied over."""
+    c = converter_cls(
+        unstruct_strat=strat,
+        prefer_attrib_converters=prefer_attrib,
+        detailed_validation=detailed_validation,
+        dict_factory=dict_factory,
+    )
+
+    c.register_unstructure_hook_func(lambda t: t is Simple, lambda s: s.a)
+    c.register_structure_hook_func(lambda t: t is Simple, lambda v, _: Simple(v))
+
+    assert c.unstructure(Simple(1)) == 1
+    assert c.structure(1, Simple) == Simple(1)
+
+    copy = c.copy()
+
+    assert c is not copy
+
+    assert copy.unstructure(Simple(1)) == 1
     assert copy.structure(copy.unstructure(Simple(1)), Simple) == Simple(1)
     assert c.detailed_validation == copy.detailed_validation
     assert c._prefer_attrib_converters == copy._prefer_attrib_converters
