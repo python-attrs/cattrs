@@ -12,9 +12,8 @@ from typing import (
     Union,
 )
 
-import attr
 import pytest
-from attr import Factory, define, fields, make_class
+from attrs import Factory, define, fields, make_class
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis.strategies import booleans, just, lists, one_of, sampled_from
 
@@ -155,14 +154,14 @@ def test_forbid_extra_keys_defaults(attr_and_vals):
 
 
 def test_forbid_extra_keys_nested_override():
-    @attr.s
+    @define
     class C:
-        a = attr.ib(type=int, default=1)
+        a: int = 1
 
-    @attr.s
+    @define
     class A:
-        c = attr.ib(type=C)
-        a = attr.ib(type=int, default=2)
+        c: C
+        a: int = 2
 
     converter = Converter(forbid_extra_keys=True)
     unstructured = {"a": 3, "c": {"a": 4}}
@@ -248,9 +247,9 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     common_names = a_field_names & b_field_names
     assume(len(a_field_names) > len(common_names))
 
-    @attr.s
+    @define
     class C:
-        a = attr.ib(type=Union[cl_a, cl_b])
+        a: Union[cl_a, cl_b]
 
     inst = C(a=cl_a(*vals_a, **kwargs_a))
 
@@ -323,9 +322,9 @@ def test_optional_field_roundtrip(cl_and_vals):
     converter = Converter()
     cl, vals, kwargs = cl_and_vals
 
-    @attr.s
+    @define
     class C:
-        a = attr.ib(type=Optional[cl])
+        a: Optional[cl]
 
     inst = C(a=cl(*vals, **kwargs))
     assert inst == converter.structure(converter.unstructure(inst), C)
@@ -366,10 +365,10 @@ def test_omit_default_roundtrip(cl_and_vals):
     converter = Converter(omit_if_default=True)
     cl, vals, kwargs = cl_and_vals
 
-    @attr.s
+    @define
     class C:
-        a: int = attr.ib(default=1)
-        b: cl = attr.ib(factory=lambda: cl(*vals, **kwargs))
+        a: int = 1
+        b: cl = Factory(lambda: cl(*vals, **kwargs))
 
     inst = C()
     unstructured = converter.unstructure(inst)
@@ -408,9 +407,9 @@ def test_calling_back():
     """
     converter = Converter()
 
-    @attr.define
+    @define
     class C:
-        a: int = attr.ib(default=1)
+        a: int = 1
 
     def handler(obj):
         return {
@@ -435,11 +434,11 @@ def test_overriding_generated_unstructure():
     """Test overriding a generated unstructure hook works."""
     converter = Converter()
 
-    @attr.define
+    @define
     class Inner:
         a: int
 
-    @attr.define
+    @define
     class Outer:
         i: Inner
 
@@ -456,11 +455,11 @@ def test_overriding_generated_unstructure_hook_func():
     """Test overriding a generated unstructure hook works."""
     converter = Converter()
 
-    @attr.define
+    @define
     class Inner:
         a: int
 
-    @attr.define
+    @define
     class Outer:
         i: Inner
 
@@ -477,11 +476,11 @@ def test_overriding_generated_structure():
     """Test overriding a generated structure hook works."""
     converter = Converter()
 
-    @attr.define
+    @define
     class Inner:
         a: int
 
-    @attr.define
+    @define
     class Outer:
         i: Inner
 
@@ -499,11 +498,11 @@ def test_overriding_generated_structure_hook_func():
     """Test overriding a generated structure hook works."""
     converter = Converter()
 
-    @attr.define
+    @define
     class Inner:
         a: int
 
-    @attr.define
+    @define
     class Outer:
         i: Inner
 
@@ -628,11 +627,11 @@ def test_annotated_attrs():
 
     converter = Converter()
 
-    @attr.define
+    @define
     class Inner:
         a: int
 
-    @attr.define
+    @define
     class Outer:
         i: Annotated[Inner, "test"]
         j: list[Annotated[Inner, "test"]]
@@ -664,11 +663,11 @@ def test_annotated_with_typing_extensions_attrs():
 
     converter = Converter()
 
-    @attr.define
+    @define
     class Inner:
         a: int
 
-    @attr.define
+    @define
     class Outer:
         i: Annotated[Inner, "test"]
         j: List[Annotated[Inner, "test"]]

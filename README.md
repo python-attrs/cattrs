@@ -129,6 +129,7 @@ destructure them.
   - `typing.MutableSet[T]`, `typing.Set[T]` (converts to a set).
   - `typing.FrozenSet[T]` (converts to a frozenset).
   - `typing.Dict[K, V]`, `typing.MutableMapping[K, V]`, `typing.Mapping[K, V]` (converts to a dict).
+  - `typing.TypedDict`.
   - _attrs_ classes with simple attributes and the usual `__init__`.
 
     - Simple attributes are attributes that can be assigned unstructured data,
@@ -140,7 +141,21 @@ destructure them.
   - Custom converters for any type can be registered using `register_structure_hook`.
 
 _cattrs_ comes with preconfigured converters for a number of serialization libraries, including json, msgpack, cbor2, bson, yaml and toml.
-For details, see the [cattr.preconf package](https://catt.rs/en/stable/preconf.html).
+For details, see the [cattrs.preconf package](https://catt.rs/en/stable/preconf.html).
+
+## Design Decisions
+
+_cattrs_ is based on a few fundamental design decisions.
+
+- Un/structuring rules are separate from the models.
+  This allows models to have a one-to-many relationship with un/structuring rules, and to create un/structuring rules for models which you do not own and you cannot change.
+- Invent as little as possible; reuse existing ordinary Python instead.
+  For example, _cattrs_ did not have a custom exception type to group exceptions until the sanctioned Python [`exceptiongroups`](https://docs.python.org/3/library/exceptions.html#ExceptionGroup).
+  A side-effect of this design decision is that, in a lot of cases, when you're solving _cattrs_ problems you're actually learning Python instead of learning _cattrs_.
+- Refuse the temptation to guess.
+  If there are two ways of solving a problem, _cattrs_ should refuse to guess and let the user configure it themselves.
+
+A foolish consistency is the hobgoblin of little minds so these decisions can and are sometimes broken, but they have proven to be a good foundation.
 
 ## Additional documentation and talks
 
@@ -151,8 +166,7 @@ For details, see the [cattr.preconf package](https://catt.rs/en/stable/preconf.h
 
 ## Credits
 
-Major credits to Hynek Schlawack for creating [attrs](https://attrs.org) and its predecessor,
-[characteristic](https://github.com/hynek/characteristic).
+Major credits to Hynek Schlawack for creating [attrs](https://attrs.org) and its predecessor, [characteristic](https://github.com/hynek/characteristic).
 
 _cattrs_ is tested with [Hypothesis](http://hypothesis.readthedocs.io/en/latest/), by David R. MacIver.
 

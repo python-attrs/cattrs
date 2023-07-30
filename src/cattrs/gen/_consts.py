@@ -1,16 +1,18 @@
-from threading import local
-from typing import Any, Callable, Optional
+from __future__ import annotations
 
-from attr import frozen
+from threading import local
+from typing import Any, Callable
+
+from attrs import frozen
 
 
 @frozen
 class AttributeOverride:
-    omit_if_default: Optional[bool] = None
-    rename: Optional[str] = None
-    omit: bool = False  # Omit the field completely.
-    struct_hook: Optional[Callable[[Any, Any], Any]] = None  # Structure hook to use.
-    unstruct_hook: Optional[Callable[[Any], Any]] = None  # Structure hook to use.
+    omit_if_default: bool | None = None
+    rename: str | None = None
+    omit: bool | None = None  # Omit the field completely.
+    struct_hook: Callable[[Any, Any], Any] | None = None  # Structure hook to use.
+    unstruct_hook: Callable[[Any], Any] | None = None  # Structure hook to use.
 
 
 neutral = AttributeOverride()
