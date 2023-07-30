@@ -6,10 +6,7 @@ import pytest
 from attrs import NOTHING, define
 from hypothesis import HealthCheck, assume, given, settings
 
-from cattrs.disambiguators import (
-    create_discriminated_dis_func,
-    create_uniq_field_dis_func,
-)
+from cattrs.disambiguators import create_default_dis_func, create_uniq_field_dis_func
 
 from ._compat import is_py37
 from .untyped import simple_classes
@@ -30,7 +27,7 @@ def test_edge_errors():
         create_uniq_field_dis_func(A)
 
     with pytest.raises(ValueError):
-        create_discriminated_dis_func(A)
+        create_default_dis_func(A)
 
     @attr.s
     class B:
@@ -41,7 +38,7 @@ def test_edge_errors():
         create_uniq_field_dis_func(A, B)
 
     with pytest.raises(ValueError):
-        create_discriminated_dis_func(A, B)
+        create_default_dis_func(A, B)
 
     @attr.s
     class C:
@@ -57,7 +54,7 @@ def test_edge_errors():
 
     with pytest.raises(ValueError):
         # No discriminator candidates
-        create_discriminated_dis_func(C, D)
+        create_default_dis_func(C, D)
 
     @attr.s
     class E:
@@ -81,7 +78,7 @@ def test_edge_errors():
 
     with pytest.raises(ValueError):
         # The discriminator chosen does not actually help
-        create_discriminated_dis_func(C, D)
+        create_default_dis_func(C, D)
 
 
 @given(simple_classes(defaults=False))
@@ -130,7 +127,7 @@ def test_disambiguation(cl_and_vals_a, cl_and_vals_b):
     assert fn(attr.asdict(cl_a(*vals_a, **kwargs_a))) is cl_a
 
 
-# not too sure of properties of `create_discriminated_dis_func`
+# not too sure of properties of `create_default_dis_func`
 @pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
 def test_disambiguate_from_discriminated_enum():
     from typing import Literal
@@ -144,7 +141,7 @@ def test_disambiguate_from_discriminated_enum():
     class B:
         a: Literal[1]
 
-    fn = create_discriminated_dis_func(A, B)
+    fn = create_default_dis_func(A, B)
     assert fn({"a": 0}) is A
     assert fn({"a": 1}) is B
 
@@ -159,7 +156,7 @@ def test_disambiguate_from_discriminated_enum():
         a: Literal[0]
         b: Literal[0]
 
-    fn = create_discriminated_dis_func(C, D)
+    fn = create_default_dis_func(C, D)
     assert fn({"a": 0, "b": 1}) is C
     assert fn({"a": 0, "b": 0}) is D
 
@@ -179,7 +176,7 @@ def test_disambiguate_from_discriminated_enum():
         op: Literal[0]
         t: Literal["MESSAGE_UPDATE"]
 
-    fn = create_discriminated_dis_func(E, F, G)
+    fn = create_default_dis_func(E, F, G)
     assert fn({"op": 1}) is E
     assert fn({"op": 0, "t": "MESSAGE_CREATE"}) is Union[F, G]
 
@@ -196,6 +193,6 @@ def test_disambiguate_from_discriminated_enum():
     class K:
         a: Literal[0]
 
-    fn = create_discriminated_dis_func(H, J, K)
+    fn = create_default_dis_func(H, J, K)
     assert fn({"a": 1}) is Union[H, J]
     assert fn({"a": 0}) is Union[J, K]

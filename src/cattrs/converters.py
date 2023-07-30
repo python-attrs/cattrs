@@ -55,7 +55,7 @@ from ._compat import (
     is_typeddict,
     is_union_type,
 )
-from .disambiguators import create_discriminated_dis_func, create_uniq_field_dis_func
+from .disambiguators import create_default_dis_func
 from .dispatch import MultiStrategyDispatch
 from .errors import (
     IterableValidationError,
@@ -739,12 +739,7 @@ class BaseConverter:
                 type_=union,
             )
 
-        try:
-            return create_discriminated_dis_func(*union_types)
-        except ValueError:
-            pass
-
-        return create_uniq_field_dis_func(*union_types)
+        return create_default_dis_func(*union_types)
 
     def __deepcopy__(self, _) -> "BaseConverter":
         return self.copy()
