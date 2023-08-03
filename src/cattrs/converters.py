@@ -606,7 +606,7 @@ class BaseConverter:
                         ix,
                         elem_type,
                     )
-                    exc.__notes__ = [*getattr(e, "__notes__", []), msg]
+                    exc.__notes__ = [*getattr(exc, "__notes__", []), msg]
                     errors.append(exc)
                 finally:
                     ix += 1
@@ -673,7 +673,7 @@ class BaseConverter:
                         msg = IterableValidationNote(
                             f"Structuring {tup} @ index {ix}", ix, tup_type
                         )
-                        exc.__notes__ = [*getattr(e, "__notes__", []), msg]
+                        exc.__notes__ = [*getattr(exc, "__notes__", []), msg]
                         errors.append(exc)
                     finally:
                         ix += 1
@@ -704,13 +704,13 @@ class BaseConverter:
                     msg = IterableValidationNote(
                         f"Structuring {tup} @ index {ix}", ix, t
                     )
-                    exc.__notes__ = [*getattr(e, "__notes__", []), msg]
+                    exc.__notes__ = [*getattr(exc, "__notes__", []), msg]
                     errors.append(exc)
             if len(res) < exp_len:
                 problem = "Not enough" if len(res) < len(tup_params) else "Too many"
                 exc = ValueError(f"{problem} values in {obj!r} to structure as {tup!r}")
                 msg = f"Structuring {tup}"
-                exc.__notes__ = [*getattr(e, "__notes__", []), msg]
+                exc.__notes__ = [*getattr(exc, "__notes__", []), msg]
                 errors.append(exc)
             if errors:
                 raise IterableValidationError(f"While structuring {tup!r}", errors, tup)
