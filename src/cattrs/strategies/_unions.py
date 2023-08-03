@@ -1,5 +1,4 @@
 from collections import defaultdict
-from types import NoneType
 from typing import Any, Callable, Dict, Optional, Type
 
 from attrs import NOTHING
@@ -160,7 +159,7 @@ def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
             type_args = set(type.__args__)
             # We special case optionals, since they are very common
             # and are handled a little more efficiently by default.
-            if len(type_args) == 2 and NoneType in type_args:
+            if len(type_args) == 2 and type(None) in type_args:
                 return False
 
             literal_classes = {
