@@ -1,9 +1,11 @@
-from typing import Literal, Optional, Union
+from typing import Optional, Union
 
 import pytest
 
 from cattrs import BaseConverter
 from cattrs.strategies import configure_union_passthrough
+
+from .._compat import is_py37
 
 
 def test_only_primitives(converter: BaseConverter) -> None:
@@ -22,8 +24,11 @@ def test_only_primitives(converter: BaseConverter) -> None:
         converter.structure((), union)
 
 
+@pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
 def test_literals(converter: BaseConverter) -> None:
     """A union with primitives and literals works."""
+    from typing import Literal
+
     union = Union[int, str, None]
     exact_type = Union[int, Literal["test"], None]
     configure_union_passthrough(union, converter)
