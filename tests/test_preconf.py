@@ -1,9 +1,9 @@
-from datetime import datetime, timezone, date
+from datetime import date, datetime, timezone
 from enum import Enum, IntEnum, unique
 from json import dumps as json_dumps
 from json import loads as json_loads
 from platform import python_implementation
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import pytest
 from attr import define
@@ -14,14 +14,15 @@ from hypothesis.strategies import (
     booleans,
     characters,
     composite,
-    datetimes,
     dates,
+    datetimes,
     dictionaries,
     floats,
     frozensets,
     integers,
     just,
     lists,
+    one_of,
     sets,
     text,
 )
@@ -80,6 +81,7 @@ class Everything:
     a_date: date
     a_string_enum_dict: Dict[AStringEnum, int]
     a_bytes_dict: Dict[bytes, bytes]
+    native_union: Union[int, float, str]
 
 
 @composite
@@ -119,33 +121,25 @@ def everythings(
                 d.year, d.month, d.day, d.hour, d.minute, d.second, tzinfo=d.tzinfo
             )
         )
+    fs = floats(allow_nan=False, allow_infinity=allow_inf)
+    ints = integers(min_value=min_int, max_value=max_int)
+
     return Everything(
         draw(strings),
         draw(binary()),
-        draw(integers(min_value=min_int, max_value=max_int)),
-        draw(floats(allow_nan=False, allow_infinity=allow_inf)),
-        draw(dictionaries(key_text, integers(min_value=min_int, max_value=max_int))),
-        draw(lists(integers(min_value=min_int, max_value=max_int))),
-        tuple(draw(lists(integers(min_value=min_int, max_value=max_int)))),
-        (
-            draw(strings),
-            draw(integers(min_value=min_int, max_value=max_int)),
-            draw(floats(allow_nan=False, allow_infinity=allow_inf)),
-        ),
-        Counter(
-            draw(dictionaries(key_text, integers(min_value=min_int, max_value=max_int)))
-        ),
-        draw(
-            dictionaries(
-                integers(min_value=min_int, max_value=max_int),
-                floats(allow_nan=False, allow_infinity=allow_inf),
-            )
-        ),
-        draw(dictionaries(floats(allow_nan=False, allow_infinity=allow_inf), strings)),
-        draw(lists(floats(allow_nan=False, allow_infinity=allow_inf))),
+        draw(ints),
+        draw(fs),
+        draw(dictionaries(key_text, ints)),
+        draw(lists(ints)),
+        tuple(draw(lists(ints))),
+        (draw(strings), draw(ints), draw(fs)),
+        Counter(draw(dictionaries(key_text, ints))),
+        draw(dictionaries(ints, fs)),
+        draw(dictionaries(fs, strings)),
+        draw(lists(fs)),
         draw(lists(strings)),
-        draw(sets(floats(allow_nan=False, allow_infinity=allow_inf))),
-        draw(sets(integers(min_value=min_int, max_value=max_int))),
+        draw(sets(fs)),
+        draw(sets(ints)),
         draw(frozensets(strings)),
         Everything.AnIntEnum.A,
         Everything.AStringEnum.A,
@@ -157,7 +151,9 @@ def everythings(
                 integers(min_value=min_int, max_value=max_int),
             )
         ),
+        draw(dictionaries(just(Everything.AStringEnum.A), ints)),
         draw(dictionaries(binary(min_size=min_key_length), binary())),
+        draw(one_of(ints, fs, strings)),
     )
 
 

@@ -1,12 +1,13 @@
 """Preconfigured converters for cbor2."""
-from datetime import datetime, timezone, date
-from typing import Any, Type, TypeVar
+from datetime import date, datetime, timezone
+from typing import Any, Type, TypeVar, Union
 
 from cbor2 import dumps, loads
 
 from cattrs._compat import AbstractSet
 
 from ..converters import BaseConverter, Converter
+from ..strategies import configure_union_passthrough
 
 T = TypeVar("T")
 
@@ -32,6 +33,7 @@ def configure_converter(converter: BaseConverter):
     )
     converter.register_unstructure_hook(date, lambda v: v.isoformat())
     converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
+    configure_union_passthrough(Union[str, int, float, None, bytes], converter)
 
 
 def make_converter(*args: Any, **kwargs: Any) -> Cbor2Converter:

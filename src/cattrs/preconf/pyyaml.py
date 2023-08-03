@@ -1,12 +1,13 @@
 """Preconfigured converters for pyyaml."""
-from datetime import datetime, date
-from typing import Any, Type, TypeVar
+from datetime import date, datetime
+from typing import Any, Type, TypeVar, Union
 
 from yaml import safe_dump, safe_load
 
 from cattrs._compat import FrozenSetSubscriptable
 
 from ..converters import BaseConverter, Converter
+from ..strategies import configure_union_passthrough
 from . import validate_datetime
 
 T = TypeVar("T")
@@ -37,6 +38,9 @@ def configure_converter(converter: BaseConverter):
     converter.register_structure_hook(datetime, validate_datetime)
     converter.register_unstructure_hook(date, lambda v: v.isoformat())
     converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
+    configure_union_passthrough(
+        Union[str, int, float, None, bytes, datetime], converter
+    )
 
 
 def make_converter(*args: Any, **kwargs: Any) -> PyyamlConverter:
