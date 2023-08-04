@@ -92,7 +92,7 @@ class Everything:
     a_string_enum_dict: Dict[AStringEnum, int]
     a_bytes_dict: Dict[bytes, bytes]
     native_union: Union[int, float, str]
-    native_union_with_spillover: Union[int, str, set[str]]
+    native_union_with_spillover: Union[int, str, Set[str]]
     native_union_with_union_spillover: Union[int, str, A, B]
 
 
