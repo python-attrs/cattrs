@@ -90,6 +90,20 @@ In case the conversion isn't possible, the resulting exception is propagated out
 
 ```
 
+### `NoneType`
+
+[`NoneType`](https://docs.python.org/3/library/types.html#types.NoneType) is
+the type of `None`. Prior to Python 3.10, `NoneType` is just `type(None)`.
+
+```python
+>>> cattrs.structure(None, NoneType)
+>>> cattrs.structure(1, NoneType)
+Traceback (most recent call last):
+...
+ValueError: 1 is not None
+```
+
+
 ## Collections and Other Generics
 
 ### Optionals

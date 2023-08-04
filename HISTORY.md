@@ -26,6 +26,8 @@
   ([#398](https://github.com/python-attrs/cattrs/issues/398) [#399](https://github.com/python-attrs/cattrs/pull/399))
 - Broaden loads' type definition for the preconf orjson converter.
   ([#400](https://github.com/python-attrs/cattrs/pull/400))
+- Implement structuring for `NoneType`.
+  ([#406](https://github.com/python-attrs/cattrs/pull/408))
 
 ## 23.1.2 (2023-06-02)
 

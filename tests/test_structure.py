@@ -387,3 +387,11 @@ def test_structure_union_edge_case():
         A("foo"),
         B("bar"),
     ]
+
+
+def test_structuring_nonetype():
+    converter = BaseConverter()
+
+    assert converter.structure(None, NoneType) is None
+    with raises(ValueError):
+        converter.structure(1, NoneType)

@@ -222,6 +222,7 @@ class BaseConverter:
                 (float, self._structure_call),
                 (Enum, self._structure_call),
                 (Path, self._structure_call),
+                (NoneType, self._structure_nonetype),
             ]
         )
 
@@ -444,6 +445,12 @@ class BaseConverter:
         etc.
         """
         return cl(obj)
+
+    @staticmethod
+    def _structure_nonetype(val, cl):
+        if val is not None:
+            raise ValueError(f"{val} is not None")
+        return val
 
     @staticmethod
     def _structure_simple_literal(val, type):
