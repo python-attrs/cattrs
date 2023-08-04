@@ -6,7 +6,7 @@ from platform import python_implementation
 from typing import Dict, List, Union
 
 import pytest
-from attr import define
+from attrs import define
 from bson import CodecOptions, ObjectId
 from hypothesis import given
 from hypothesis.strategies import (
@@ -50,6 +50,16 @@ from cattrs.preconf.ujson import make_converter as ujson_make_converter
 
 
 @define
+class A:
+    a: int
+
+
+@define
+class B:
+    b: str
+
+
+@define
 class Everything:
     @unique
     class AnIntEnum(IntEnum):
@@ -82,6 +92,8 @@ class Everything:
     a_string_enum_dict: Dict[AStringEnum, int]
     a_bytes_dict: Dict[bytes, bytes]
     native_union: Union[int, float, str]
+    native_union_with_spillover: Union[int, str, set[str]]
+    native_union_with_union_spillover: Union[int, str, A, B]
 
 
 @composite
@@ -154,6 +166,8 @@ def everythings(
         draw(dictionaries(just(Everything.AStringEnum.A), ints)),
         draw(dictionaries(binary(min_size=min_key_length), binary())),
         draw(one_of(ints, fs, strings)),
+        draw(one_of(ints, strings, sets(strings))),
+        draw(one_of(ints, strings, ints.map(A), strings.map(B))),
     )
 
 

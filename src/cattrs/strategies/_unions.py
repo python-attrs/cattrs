@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Callable, Dict, Optional, Type
+from typing import Any, Callable, Dict, Optional, Type, Union
 
 from attrs import NOTHING
 
@@ -123,6 +123,8 @@ def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
 
     Literals of native types are also supported, and are checked by value.
 
+    The strategy is designed to be O(1) in execution time.
+
     If the union contains a class and one or more of its subclasses, the subclasses
     will also be included when validating the superclass.
 
@@ -131,11 +133,19 @@ def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
     args = set(union.__args__)
 
     def make_structure_native_union(exact_type: Any) -> Callable:
-        # `exact_type` is likely to be a subset of the entire configured union.
+        # `exact_type` is likely to be a subset of the entire configured union (`args`).
         literal_values = {
             v for t in exact_type.__args__ if is_literal(t) for v in t.__args__
         }
-        non_literal_classes = {t for t in exact_type.__args__ if not is_literal(t)}
+
+        # We have no idea what the actual type of `val` will be, so we can't
+        # use it blindly with an `in` check since it might not be hashable.
+        # So we do an additional check when handling literals.
+        literal_classes = {lv.__class__ for lv in literal_values}
+
+        non_literal_classes = {
+            t for t in exact_type.__args__ if not is_literal(t) and t in args
+        }
 
         # We augment the set of allowed classes with any configured subclasses of
         # the exact subclasses.
@@ -143,20 +153,52 @@ def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
             a for a in args if any(is_subclass(a, c) for c in non_literal_classes)
         }
 
-        def structure_native_union(
-            val: Any, _: Any, classes=non_literal_classes, vals=literal_values
-        ) -> exact_type:
-            if val in vals:
-                return val
-            if val.__class__ in classes:
-                return val
-            raise TypeError(f"{val} ({val.__class__}) not part of {_}")
+        # We check for spillover - union types not handled by the strategy.
+        # If spillover exists and we fail to validate our types, we call
+        # further into the converter with the rest.
+        spillover = {
+            a
+            for a in exact_type.__args__
+            if a not in non_literal_classes and not is_literal(a)
+        }
+
+        if spillover:
+            spillover_type = (
+                Union[*tuple(spillover)]
+                if len(spillover) > 1
+                else next(iter(spillover))
+            )
+
+            def structure_native_union(
+                val: Any,
+                _: Any,
+                classes=non_literal_classes,
+                vals=literal_values,
+                converter=converter,
+                spillover=spillover_type,
+            ) -> exact_type:
+                if val.__class__ in literal_classes and val in vals:
+                    return val
+                if val.__class__ in classes:
+                    return val
+                return converter.structure(val, spillover)
+
+        else:
+
+            def structure_native_union(
+                val: Any, _: Any, classes=non_literal_classes, vals=literal_values
+            ) -> exact_type:
+                if val.__class__ in literal_classes and val in vals:
+                    return val
+                if val.__class__ in classes:
+                    return val
+                raise TypeError(f"{val} ({val.__class__}) not part of {_}")
 
         return structure_native_union
 
-    def is_native_union(type: Any) -> bool:
-        if is_union_type(type):
-            type_args = set(type.__args__)
+    def contains_native_union(exact_type: Any) -> bool:
+        if is_union_type(exact_type):
+            type_args = set(exact_type.__args__)
             # We special case optionals, since they are very common
             # and are handled a little more efficiently by default.
             if len(type_args) == 2 and type(None) in type_args:
@@ -170,9 +212,9 @@ def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
             }
             non_literals = {t for t in type_args if not is_literal(t)}
 
-            return (literal_classes | non_literals) <= args
+            return (literal_classes | non_literals) & args
         return False
 
     converter.register_structure_hook_factory(
-        is_native_union, make_structure_native_union
+        contains_native_union, make_structure_native_union
     )
