@@ -164,9 +164,7 @@ def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
 
         if spillover:
             spillover_type = (
-                Union[*tuple(spillover)]
-                if len(spillover) > 1
-                else next(iter(spillover))
+                Union[tuple(spillover)] if len(spillover) > 1 else next(iter(spillover))
             )
 
             def structure_native_union(
