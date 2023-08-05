@@ -40,6 +40,9 @@ class IterableValidationNote(str):
         instance.type = type
         return instance
 
+    def __getnewargs__(self) -> Tuple[str, Union[int, str], Any]:
+        return (str(self), self.index, self.type)
+
 
 class IterableValidationError(BaseValidationError):
     """Raised when structuring an iterable."""
@@ -75,6 +78,9 @@ class AttributeValidationNote(str):
         instance.name = name
         instance.type = type
         return instance
+
+    def __getnewargs__(self) -> Tuple[str, str, Any]:
+        return (str(self), self.name, self.type)
 
 
 class ClassValidationError(BaseValidationError):
