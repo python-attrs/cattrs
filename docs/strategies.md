@@ -323,3 +323,9 @@ Nested(m=MyClass(a=43))
 ```{versionadded} 23.2.0
 
 ```
+
+## Union Passthrough
+
+_Found at {py:func}`cattrs.strategies.configure_union_passthrough`._
+
+The _union passthrough_ strategy enables a Converter to structure unions of given types.
