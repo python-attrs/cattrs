@@ -28,6 +28,8 @@
   ([#400](https://github.com/python-attrs/cattrs/pull/400))
 - `AttributeValidationNote` and `IterableValidationNote` are now picklable.
   ([#408](https://github.com/python-attrs/cattrs/pull/408))
+- `cattrs.gen.make_dict_structure_fn` and `cattrs.gen.typeddict.make_dict_structure_fn` will use the values for `detailed_validation` and `forbid_extra_keys` parameters from the given converter by default now.
+  ([#410](https://github.com/python-attrs/cattrs/issues/410))
 
 ## 23.1.2 (2023-06-02)
 

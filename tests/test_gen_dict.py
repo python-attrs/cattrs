@@ -534,3 +534,64 @@ def test_init_false_field_override(converter: BaseConverter) -> None:
     assert structured.b == 2
     assert structured._c == 3
     assert structured.d == -4
+
+
+@given(forbid_extra_keys=..., detailed_validation=...)
+def test_forbid_extra_keys_from_converter(
+    forbid_extra_keys: bool, detailed_validation: bool
+):
+    """
+    `forbid_extra_keys` is taken from the converter by default.
+    """
+    c = Converter(
+        forbid_extra_keys=forbid_extra_keys, detailed_validation=detailed_validation
+    )
+
+    @define
+    class A:
+        a: int
+
+    c.register_structure_hook(A, make_dict_structure_fn(A, c))
+
+    if forbid_extra_keys:
+        with pytest.raises((ForbiddenExtraKeysError, ClassValidationError)):
+            c.structure({"a": 1, "b": 2}, A)
+    else:
+        c.structure({"a": 1, "b": 2}, A)
+
+
+@given(detailed_validation=...)
+def test_forbid_extra_keys_from_baseconverter(detailed_validation: bool):
+    """
+    `forbid_extra_keys` is taken from the converter by default.
+
+    BaseConverter should default to False.
+    """
+    c = BaseConverter(detailed_validation=detailed_validation)
+
+    @define
+    class A:
+        a: int
+
+    c.register_structure_hook(A, make_dict_structure_fn(A, c))
+
+    c.structure({"a": 1, "b": 2}, A)
+
+
+def test_detailed_validation_from_converter(converter: BaseConverter):
+    """
+    `detailed_validation` is taken from the converter by default.
+    """
+
+    @define
+    class A:
+        a: int
+
+    converter.register_structure_hook(A, make_dict_structure_fn(A, converter))
+
+    if converter.detailed_validation:
+        with pytest.raises(ClassValidationError):
+            converter.structure({"a": "a"}, A)
+    else:
+        with pytest.raises(ValueError):
+            converter.structure({"a": "a"}, A)

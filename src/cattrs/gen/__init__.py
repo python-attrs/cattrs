@@ -30,6 +30,8 @@ from ._lc import generate_unique_filename
 from ._shared import find_structure_handler
 
 if TYPE_CHECKING:  # pragma: no cover
+    from typing_extensions import Literal
+
     from cattr.converters import BaseConverter
 
 
@@ -233,10 +235,10 @@ DictStructureFn = Callable[[Mapping[str, Any], Any], T]
 def make_dict_structure_fn(
     cl: type[T],
     converter: BaseConverter,
-    _cattrs_forbid_extra_keys: bool = False,
+    _cattrs_forbid_extra_keys: bool | Literal["from_converter"] = "from_converter",
     _cattrs_use_linecache: bool = True,
     _cattrs_prefer_attrib_converters: bool = False,
-    _cattrs_detailed_validation: bool = True,
+    _cattrs_detailed_validation: bool | Literal["from_converter"] = "from_converter",
     _cattrs_use_alias: bool = False,
     _cattrs_include_init_false: bool = False,
     **kwargs: AttributeOverride,
@@ -245,6 +247,10 @@ def make_dict_structure_fn(
     Generate a specialized dict structuring function for an attrs class or
     dataclass.
 
+    :param _cattrs_forbid_extra_keys: Whether the structuring function should raise a
+        `ForbiddenExtraKeysError` if unknown keys are encountered.
+    :param _cattrs_detailed_validation: Whether to use a slower mode that produces
+        more detailed errors.
     :param _cattrs_use_alias: If true, the attribute alias will be used as the
         dictionary key by default.
     :param _cattrs_include_init_false: If true, _attrs_ fields marked as `init=False`
@@ -252,6 +258,9 @@ def make_dict_structure_fn(
 
     ..  versionadded:: 23.2.0 *_cattrs_use_alias*
     ..  versionadded:: 23.2.0 *_cattrs_include_init_false*
+    ..  versionchanged:: 23.2.0
+        The `_cattrs_forbid_extra_keys` and `_cattrs_detailed_validation` parameters
+        take their values from the given converter by default.
     """
 
     mapping = {}
@@ -305,6 +314,12 @@ def make_dict_structure_fn(
         resolve_types(cl)
 
     allowed_fields = set()
+    if _cattrs_forbid_extra_keys == "from_converter":
+        # BaseConverter doesn't have it so we're careful.
+        _cattrs_forbid_extra_keys = getattr(converter, "forbid_extra_keys", False)
+    if _cattrs_detailed_validation == "from_converter":
+        _cattrs_detailed_validation = converter.detailed_validation
+
     if _cattrs_forbid_extra_keys:
         globs["__c_a"] = allowed_fields
         globs["__c_feke"] = ForbiddenExtraKeysError
