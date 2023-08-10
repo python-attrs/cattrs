@@ -32,6 +32,8 @@
   ([#400](https://github.com/python-attrs/cattrs/pull/400))
 - {py:class}`AttributeValidationNote <cattrs.AttributeValidationNote>` and {py:class}`IterableValidationNote <cattrs.IterableValidationNote>` are now picklable.
   ([#408](https://github.com/python-attrs/cattrs/pull/408))
+- Fix structuring `Final` lists.
+  ([#412](https://github.com/python-attrs/cattrs/issues/412))
 
 
 ## 23.1.2 (2023-06-02)

@@ -469,7 +469,7 @@ class BaseConverter:
         if res == self._structure_call:
             # It's not really `structure_call` for Finals (can't call Final())
             return lambda v, _: self._structure_call(v, base)
-        return res
+        return lambda v, _: res(v, base)
 
     # Attrs classes.
 
