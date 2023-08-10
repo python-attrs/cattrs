@@ -102,6 +102,11 @@ TestClass(number=1)
 
 This behavior can only be applied to classes or to the default for the {class}`Converter <cattrs.Converter>`, and has no effect when generating unstructuring functions.
 
+```{versionchanged} 23.2.0
+The value for the `make_dict_structure_fn._cattrs_forbid_extra_keys` parameter is now taken from the given converter by default.
+```
+
+
 ### `rename`
 
 Using the rename override makes `cattrs` simply use the provided name instead

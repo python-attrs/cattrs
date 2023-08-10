@@ -7,7 +7,7 @@ from hypothesis import assume, given
 from hypothesis.strategies import booleans
 from pytest import raises
 
-from cattrs import Converter
+from cattrs import BaseConverter, Converter
 from cattrs._compat import ExtensionsTypedDict, is_generic
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import already_generating, override
@@ -357,3 +357,61 @@ def test_forwardref(genconverter: Converter):
     genconverter.register_unstructure_hook(int, lambda v: v + 1)
 
     assert genconverter.unstructure({"a": 1}, A) == {"a": 2}
+
+
+@given(forbid_extra_keys=..., detailed_validation=...)
+def test_forbid_extra_keys_from_converter(
+    forbid_extra_keys: bool, detailed_validation: bool
+):
+    """
+    `forbid_extra_keys` is taken from the converter by default.
+    """
+    c = Converter(
+        forbid_extra_keys=forbid_extra_keys, detailed_validation=detailed_validation
+    )
+
+    class A(ExtensionsTypedDict):
+        a: int
+
+    c.register_structure_hook(A, make_dict_structure_fn(A, c))
+
+    if forbid_extra_keys:
+        with pytest.raises((ForbiddenExtraKeysError, ClassValidationError)):
+            c.structure({"a": 1, "b": 2}, A)
+    else:
+        c.structure({"a": 1, "b": 2}, A)
+
+
+@given(detailed_validation=...)
+def test_forbid_extra_keys_from_baseconverter(detailed_validation: bool):
+    """
+    `forbid_extra_keys` is taken from the converter by default.
+
+    BaseConverter should default to False.
+    """
+    c = BaseConverter(detailed_validation=detailed_validation)
+
+    class A(ExtensionsTypedDict):
+        a: int
+
+    c.register_structure_hook(A, make_dict_structure_fn(A, c))
+
+    c.structure({"a": 1, "b": 2}, A)
+
+
+def test_detailed_validation_from_converter(converter: BaseConverter):
+    """
+    `detailed_validation` is taken from the converter by default.
+    """
+
+    class A(ExtensionsTypedDict):
+        a: int
+
+    converter.register_structure_hook(A, make_dict_structure_fn(A, converter))
+
+    if converter.detailed_validation:
+        with pytest.raises(ClassValidationError):
+            converter.structure({"a": "a"}, A)
+    else:
+        with pytest.raises(ValueError):
+            converter.structure({"a": "a"}, A)
