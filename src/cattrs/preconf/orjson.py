@@ -67,7 +67,7 @@ def configure_converter(converter: BaseConverter):
     converter._unstructure_func.register_func_list(
         [(is_mapping, gen_unstructure_mapping, True)]
     )
-    configure_union_passthrough(Union[str, int, float, None], converter)
+    configure_union_passthrough(Union[str, bool, int, float, None], converter)
 
 
 def make_converter(*args: Any, **kwargs: Any) -> OrjsonConverter:

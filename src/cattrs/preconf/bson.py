@@ -85,7 +85,7 @@ def configure_converter(converter: BaseConverter):
 
     converter.register_structure_hook(ObjectId, lambda v, _: ObjectId(v))
     configure_union_passthrough(
-        Union[str, int, float, None, bytes, datetime, ObjectId, Int64], converter
+        Union[str, bool, int, float, None, bytes, datetime, ObjectId, Int64], converter
     )
 
     # datetime inherits from date, so identity unstructure hook used

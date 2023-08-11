@@ -39,7 +39,7 @@ def configure_converter(converter: BaseConverter):
     converter.register_unstructure_hook(date, lambda v: v.isoformat())
     converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
     configure_union_passthrough(
-        Union[str, int, float, None, bytes, datetime], converter
+        Union[str, bool, int, float, None, bytes, datetime], converter
     )
 
 

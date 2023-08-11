@@ -3,15 +3,17 @@ from enum import Enum, IntEnum, unique
 from json import dumps as json_dumps
 from json import loads as json_loads
 from platform import python_implementation
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 
 import pytest
 from attrs import define
 from bson import CodecOptions, ObjectId
 from hypothesis import given
 from hypothesis.strategies import (
+    DrawFn,
     binary,
     booleans,
+    builds,
     characters,
     composite,
     dates,
@@ -23,6 +25,7 @@ from hypothesis.strategies import (
     just,
     lists,
     one_of,
+    sampled_from,
     sets,
     text,
 )
@@ -98,7 +101,7 @@ class Everything:
 
 @composite
 def everythings(
-    draw,
+    draw: DrawFn,
     min_int=None,
     max_int=None,
     allow_inf=True,
@@ -171,6 +174,50 @@ def everythings(
     )
 
 
+@composite
+def native_unions(
+    draw: DrawFn,
+    include_strings=True,
+    include_bools=True,
+    include_ints=True,
+    include_floats=True,
+    include_nones=True,
+    include_bytes=True,
+    include_datetimes=True,
+    include_objectids=False,
+) -> tuple[Any, Any]:
+    types = []
+    strats = {}
+    if include_strings:
+        types.append(str)
+        strats[str] = text()
+    if include_bools:
+        types.append(bool)
+        strats[bool] = booleans()
+    if include_ints:
+        types.append(int)
+        strats[int] = integers()
+    if include_floats:
+        types.append(float)
+        strats[float] = floats(allow_nan=False)
+    if include_nones:
+        types.append(None)
+        strats[None] = just(None)
+    if include_bytes:
+        types.append(bytes)
+        strats[bytes] = binary()
+    if include_datetimes:
+        types.append(datetime)
+        strats[datetime] = datetimes()
+    if include_objectids:
+        types.append(ObjectId)
+        strats[ObjectId] = builds(ObjectId)
+
+    chosen_types = draw(sets(sampled_from(types), min_size=2))
+
+    return Union[tuple(chosen_types)], draw(one_of(*[strats[t] for t in chosen_types]))
+
+
 @given(everythings())
 def test_stdlib_json(everything: Everything):
     converter = json_make_converter()
@@ -195,6 +242,18 @@ def test_stdlib_json_converter_unstruct_collection_overrides(everything: Everyth
     assert raw["a_set"] == sorted(raw["a_set"])
     assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
+
+
+@given(
+    union_and_val=native_unions(include_bytes=False, include_datetimes=False),
+    detailed_validation=...,
+)
+def test_stdlib_json_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    converter = json_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val
 
 
 @given(
@@ -235,6 +294,18 @@ def test_ujson_converter_unstruct_collection_overrides(everything: Everything):
     assert raw["a_set"] == sorted(raw["a_set"])
     assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
+
+
+@given(
+    union_and_val=native_unions(include_bytes=False, include_datetimes=False),
+    detailed_validation=...,
+)
+def test_ujson_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    converter = ujson_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val
 
 
 @pytest.mark.skipif(python_implementation() == "PyPy", reason="no orjson on PyPy")
@@ -288,6 +359,21 @@ def test_orjson_converter_unstruct_collection_overrides(everything: Everything):
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
 
 
+@pytest.mark.skipif(python_implementation() == "PyPy", reason="no orjson on PyPy")
+@given(
+    union_and_val=native_unions(include_bytes=False, include_datetimes=False),
+    detailed_validation=...,
+)
+def test_orjson_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    from cattrs.preconf.orjson import make_converter as orjson_make_converter
+
+    converter = orjson_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val
+
+
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
 def test_msgpack(everything: Everything):
     from msgpack import dumps as msgpack_dumps
@@ -317,6 +403,15 @@ def test_msgpack_converter_unstruct_collection_overrides(everything: Everything)
     assert raw["a_set"] == sorted(raw["a_set"])
     assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
+
+
+@given(union_and_val=native_unions(include_datetimes=False), detailed_validation=...)
+def test_msgpack_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    converter = msgpack_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val
 
 
 @given(
@@ -378,6 +473,15 @@ def test_bson_converter_unstruct_collection_overrides(everything: Everything):
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
 
 
+@given(union_and_val=native_unions(include_objectids=True), detailed_validation=...)
+def test_bson_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    converter = bson_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val
+
+
 @given(everythings())
 def test_pyyaml(everything: Everything):
     from yaml import safe_dump, safe_load
@@ -402,6 +506,15 @@ def test_pyyaml_converter_unstruct_collection_overrides(everything: Everything):
     )
     raw = converter.unstructure(everything)
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
+
+
+@given(union_and_val=native_unions(), detailed_validation=...)
+def test_pyyaml_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    converter = pyyaml_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val
 
 
 @given(
@@ -456,6 +569,20 @@ def test_tomlkit_converter_unstruct_collection_overrides(everything: Everything)
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
 
 
+@given(
+    union_and_val=native_unions(
+        include_nones=False, include_bytes=False, include_datetimes=False
+    ),
+    detailed_validation=...,
+)
+def test_tomlkit_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    converter = tomlkit_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val
+
+
 def test_bson_objectid():
     """BSON ObjectIds are supported by default."""
     converter = bson_make_converter()
@@ -490,3 +617,12 @@ def test_cbor2_converter_unstruct_collection_overrides(everything: Everything):
     assert raw["a_set"] == sorted(raw["a_set"])
     assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
+
+
+@given(union_and_val=native_unions(include_datetimes=False), detailed_validation=...)
+def test_cbor2_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    converter = cbor2_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val
