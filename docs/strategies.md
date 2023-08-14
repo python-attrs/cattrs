@@ -336,25 +336,30 @@ For example, every JSON library can differentiate between numbers, booleans, str
 This strategy enables _cattrs_ to offload the creation of these values to an underlying library and just validate the final value.
 So, _cattrs_ preconf JSON converters can handle the following type:
 
-* `bool | int | float | str | None`
+- `bool | int | float | str | None`
 
 Continuing the JSON example, this strategy also enables structuring subsets of unions of these values.
 Accordingly, here are some examples of subset unions that are also supported:
 
-* `bool | int`
-* `int | str`
-* `int | float | str`
+- `bool | int`
+- `int | str`
+- `int | float | str`
+
+The strategy also supports types including one or more [Literals](https://docs.python.org/3/library/typing.html#typing.Literal) of supported types. For example:
+
+- `Literal["admin", "user"] | int`
+- `Literal[True] | str | int | float`
 
 This strategy has been preapplied to the following preconfigured converters:
 
-* {py:class}`BsonConverter <cattrs.preconf.bson.BsonConverter>`
-* {py:class}`Cbor2Converter <cattrs.preconf.cbor2.Cbor2Converter>`
-* {py:class}`JsonConverter <cattrs.preconf.json.JsonConverter>`
-* {py:class}`MsgpackConverter <cattrs.preconf.msgpack.MsgpackConverter>`
-* {py:class}`OrjsonConverter <cattrs.preconf.orjson.OrjsonConverter>`
-* {py:class}`PyyamlConverter <cattrs.preconf.pyyaml.PyyamlConverter>`
-* {py:class}`TomlkitConverter <cattrs.preconf.tomlkit.TomlkitConverter>`
-* {py:class}`UjsonConverter <cattrs.preconf.ujson.UjsonConverter>`
+- {py:class}`BsonConverter <cattrs.preconf.bson.BsonConverter>`
+- {py:class}`Cbor2Converter <cattrs.preconf.cbor2.Cbor2Converter>`
+- {py:class}`JsonConverter <cattrs.preconf.json.JsonConverter>`
+- {py:class}`MsgpackConverter <cattrs.preconf.msgpack.MsgpackConverter>`
+- {py:class}`OrjsonConverter <cattrs.preconf.orjson.OrjsonConverter>`
+- {py:class}`PyyamlConverter <cattrs.preconf.pyyaml.PyyamlConverter>`
+- {py:class}`TomlkitConverter <cattrs.preconf.tomlkit.TomlkitConverter>`
+- {py:class}`UjsonConverter <cattrs.preconf.ujson.UjsonConverter>`
 
 ```{versionadded} 23.2.0
 

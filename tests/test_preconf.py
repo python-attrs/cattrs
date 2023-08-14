@@ -1,3 +1,4 @@
+import sys
 from datetime import date, datetime, timezone
 from enum import Enum, IntEnum, unique
 from json import dumps as json_dumps
@@ -185,6 +186,7 @@ def native_unions(
     include_bytes=True,
     include_datetimes=True,
     include_objectids=False,
+    include_literals=True,
 ) -> tuple[Any, Any]:
     types = []
     strats = {}
@@ -208,12 +210,37 @@ def native_unions(
         strats[bytes] = binary()
     if include_datetimes:
         types.append(datetime)
-        strats[datetime] = datetimes()
+        strats[datetime] = datetimes(max_value=datetime(2038, 1, 1))
     if include_objectids:
         types.append(ObjectId)
         strats[ObjectId] = builds(ObjectId)
 
     chosen_types = draw(sets(sampled_from(types), min_size=2))
+
+    if include_literals:
+        from typing_extensions import Literal
+
+        # We can replace some of the types with 1+ literal types.
+        if str in chosen_types and draw(booleans()):
+            chosen_types.discard(str)
+            vals = draw(sets(text(), min_size=1, max_size=2))
+            for lit in vals:
+                t = Literal[lit]
+                chosen_types.add(t)
+                strats[t] = just(lit)
+        if bool in chosen_types and draw(booleans()):
+            chosen_types.discard(bool)
+            val = draw(booleans())
+            t = Literal[val]
+            chosen_types.add(t)
+            strats[t] = just(val)
+        if int in chosen_types and draw(booleans()):
+            chosen_types.discard(int)
+            vals = draw(sets(integers(), min_size=1, max_size=2))
+            for lit in vals:
+                t = Literal[lit]
+                chosen_types.add(t)
+                strats[t] = just(lit)
 
     return Union[tuple(chosen_types)], draw(one_of(*[strats[t] for t in chosen_types]))
 
@@ -245,11 +272,16 @@ def test_stdlib_json_converter_unstruct_collection_overrides(everything: Everyth
 
 
 @given(
-    union_and_val=native_unions(include_bytes=False, include_datetimes=False),
+    union_and_val=native_unions(
+        include_bytes=False,
+        include_datetimes=False,
+        include_literals=sys.version_info >= (3, 8),
+    ),
     detailed_validation=...,
 )
 def test_stdlib_json_unions(union_and_val: tuple, detailed_validation: bool):
     """Native union passthrough works."""
+    print(union_and_val)
     converter = json_make_converter(detailed_validation=detailed_validation)
     type, val = union_and_val
 
