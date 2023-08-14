@@ -4,7 +4,7 @@ from enum import Enum, IntEnum, unique
 from json import dumps as json_dumps
 from json import loads as json_loads
 from platform import python_implementation
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import pytest
 from attrs import define
@@ -187,7 +187,7 @@ def native_unions(
     include_datetimes=True,
     include_objectids=False,
     include_literals=True,
-) -> tuple[Any, Any]:
+) -> Tuple[Any, Any]:
     types = []
     strats = {}
     if include_strings:
