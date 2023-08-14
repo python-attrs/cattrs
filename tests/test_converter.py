@@ -381,6 +381,23 @@ def test_omit_default_roundtrip(cl_and_vals):
     assert inst == converter.structure(unstructured, C)
 
 
+def test_dict_roundtrip_with_alias():
+    """
+    A class with an aliased attribute can be unstructured and structured.
+    """
+
+    converter = Converter()
+
+    @define
+    class C:
+        _a: int
+
+    inst = C(a=0)
+    unstructured = converter.unstructure(inst)
+    assert unstructured == {"_a": 0}
+    assert converter.structure(unstructured, C) == inst
+
+
 @given(simple_typed_classes(defaults=True))
 def test_type_overrides(cl_and_vals):
     """
