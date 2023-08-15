@@ -662,7 +662,10 @@ def test_tomlkit_converter_unstruct_collection_overrides(everything: Everything)
 
 @given(
     union_and_val=native_unions(
-        include_nones=False, include_bytes=False, include_datetimes=False
+        include_nones=False,
+        include_bytes=False,
+        include_datetimes=False,
+        include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
 )
