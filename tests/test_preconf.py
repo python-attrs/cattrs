@@ -218,7 +218,7 @@ def native_unions(
     chosen_types = draw(sets(sampled_from(types), min_size=2))
 
     if include_literals:
-        from typing_extensions import Literal
+        from typing import Literal
 
         # We can replace some of the types with 1+ literal types.
         if str in chosen_types and draw(booleans()):
