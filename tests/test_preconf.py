@@ -349,7 +349,11 @@ def test_ujson_converter_unstruct_collection_overrides(everything: Everything):
 
 
 @given(
-    union_and_val=native_unions(include_bytes=False, include_datetimes=False),
+    union_and_val=native_unions(
+        include_bytes=False,
+        include_datetimes=False,
+        include_literals=sys.version_info >= (3, 8),
+    ),
     detailed_validation=...,
 )
 def test_ujson_unions(union_and_val: tuple, detailed_validation: bool):
@@ -457,7 +461,12 @@ def test_msgpack_converter_unstruct_collection_overrides(everything: Everything)
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
 
 
-@given(union_and_val=native_unions(include_datetimes=False), detailed_validation=...)
+@given(
+    union_and_val=native_unions(
+        include_datetimes=False, include_literals=sys.version_info >= (3, 8)
+    ),
+    detailed_validation=...,
+)
 def test_msgpack_unions(union_and_val: tuple, detailed_validation: bool):
     """Native union passthrough works."""
     converter = msgpack_make_converter(detailed_validation=detailed_validation)
@@ -525,7 +534,12 @@ def test_bson_converter_unstruct_collection_overrides(everything: Everything):
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
 
 
-@given(union_and_val=native_unions(include_objectids=True), detailed_validation=...)
+@given(
+    union_and_val=native_unions(
+        include_objectids=True, include_literals=sys.version_info >= (3, 8)
+    ),
+    detailed_validation=...,
+)
 def test_bson_unions(union_and_val: tuple, detailed_validation: bool):
     """Native union passthrough works."""
     converter = bson_make_converter(detailed_validation=detailed_validation)
@@ -560,7 +574,10 @@ def test_pyyaml_converter_unstruct_collection_overrides(everything: Everything):
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
 
 
-@given(union_and_val=native_unions(), detailed_validation=...)
+@given(
+    union_and_val=native_unions(include_literals=sys.version_info >= (3, 8)),
+    detailed_validation=...,
+)
 def test_pyyaml_unions(union_and_val: tuple, detailed_validation: bool):
     """Native union passthrough works."""
     converter = pyyaml_make_converter(detailed_validation=detailed_validation)
@@ -689,7 +706,12 @@ def test_cbor2_converter_unstruct_collection_overrides(everything: Everything):
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
 
 
-@given(union_and_val=native_unions(include_datetimes=False), detailed_validation=...)
+@given(
+    union_and_val=native_unions(
+        include_datetimes=False, include_literals=sys.version_info >= (3, 8)
+    ),
+    detailed_validation=...,
+)
 def test_cbor2_unions(union_and_val: tuple, detailed_validation: bool):
     """Native union passthrough works."""
     converter = cbor2_make_converter(detailed_validation=detailed_validation)
