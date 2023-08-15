@@ -569,6 +569,24 @@ def test_pyyaml_unions(union_and_val: tuple, detailed_validation: bool):
     assert converter.structure(val, type) == val
 
 
+@given(detailed_validation=...)
+def test_pyyaml_dates(detailed_validation: bool):
+    """Pyyaml dates work."""
+    converter = pyyaml_make_converter(detailed_validation=detailed_validation)
+
+    @define
+    class A:
+        datetime: datetime
+        date: date
+
+    data = """
+    datetime: 1970-01-01T00:00:00Z
+    date: 1970-01-01"""
+    assert converter.loads(data, A) == A(
+        datetime(1970, 1, 1, tzinfo=timezone.utc), date(1970, 1, 1)
+    )
+
+
 @given(
     everythings(
         min_key_length=1,

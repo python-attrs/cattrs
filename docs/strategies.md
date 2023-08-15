@@ -328,13 +328,13 @@ Nested(m=MyClass(a=43))
 
 _Found at {py:func}`cattrs.strategies.configure_union_passthrough`._
 
-The _union passthrough_ strategy enables a Converter to structure unions and subunions of given types.
+The _union passthrough_ strategy enables a {py:class}`Converter <cattrs.BaseConverter>` to structure unions and subunions of given types.
 
 A very common use case for _cattrs_ is processing data created by other serialization libraries, such as JSON or msgpack.
 These libraries are able to directly produce values of unions inherent to the format.
 For example, every JSON library can differentiate between numbers, booleans, strings and null values since these values are represented differently in the JSON payload.
 This strategy enables _cattrs_ to offload the creation of these values to an underlying library and just validate the final value.
-So, _cattrs_ preconf JSON converters can handle the following type:
+So, _cattrs_ preconfigured JSON converters can handle the following type:
 
 - `bool | int | float | str | None`
 

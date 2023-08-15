@@ -13,6 +13,12 @@ from . import validate_datetime
 T = TypeVar("T")
 
 
+def validate_date(v, _):
+    if not isinstance(v, date):
+        raise ValueError(f"Expected date, got {v}")
+    return v
+
+
 class PyyamlConverter(Converter):
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> str:
         return safe_dump(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
@@ -27,6 +33,7 @@ def configure_converter(converter: BaseConverter):
 
     * frozensets are serialized as lists
     * string enums are converted into strings explicitly
+    * datetimes and dates are validated
     """
     converter.register_unstructure_hook(
         str, lambda v: v if v.__class__ is str else v.value
@@ -36,10 +43,9 @@ def configure_converter(converter: BaseConverter):
     # here to prevent the date unstructure hook running.
     converter.register_unstructure_hook(datetime, lambda v: v)
     converter.register_structure_hook(datetime, validate_datetime)
-    converter.register_unstructure_hook(date, lambda v: v.isoformat())
-    converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
+    converter.register_structure_hook(date, validate_date)
     configure_union_passthrough(
-        Union[str, bool, int, float, None, bytes, datetime], converter
+        Union[str, bool, int, float, None, bytes, datetime, date], converter
     )
 
 
