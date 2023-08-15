@@ -281,11 +281,31 @@ def test_stdlib_json_converter_unstruct_collection_overrides(everything: Everyth
 )
 def test_stdlib_json_unions(union_and_val: tuple, detailed_validation: bool):
     """Native union passthrough works."""
-    print(union_and_val)
     converter = json_make_converter(detailed_validation=detailed_validation)
     type, val = union_and_val
 
     assert converter.structure(val, type) == val
+
+
+@given(
+    union_and_val=native_unions(
+        include_strings=False,
+        include_bytes=False,
+        include_literals=sys.version_info >= (3, 8),
+    ),
+    detailed_validation=...,
+)
+def test_stdlib_json_unions_with_spillover(
+    union_and_val: tuple, detailed_validation: bool
+):
+    """Native union passthrough works and can handle spillover.
+
+    The stdlib json converter cannot handle datetimes natively.
+    """
+    converter = json_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(converter.unstructure(val), type) == val
 
 
 @given(

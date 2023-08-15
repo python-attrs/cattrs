@@ -350,6 +350,12 @@ The strategy also supports types including one or more [Literals](https://docs.p
 - `Literal["admin", "user"] | int`
 - `Literal[True] | str | int | float`
 
+Unions containing unsupported types can be handled if at least one union type is supported by the strategy; the supported union types will be checked before the rest (referred to as the _spillover_) is handed over to the converter again.
+For example, if `A` and `B` are arbitrary _attrs_ classes, the union `Literal[10] | A | B` cannot be handled directly by a JSON converter.
+However, the strategy will check if the value being structured matches `Literal[10]` (because this type *is* supported) and if not will pass it back to the converter to be structured as `A | B` (where a different strategy can handle it).
+
+The strategy is designed to run in _O(1)_ at structure time; it doesn't depend on the size of the union and the ordering of union members.
+
 This strategy has been preapplied to the following preconfigured converters:
 
 - {py:class}`BsonConverter <cattrs.preconf.bson.BsonConverter>`
