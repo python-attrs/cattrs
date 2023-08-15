@@ -141,7 +141,13 @@ def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
         # We have no idea what the actual type of `val` will be, so we can't
         # use it blindly with an `in` check since it might not be hashable.
         # So we do an additional check when handling literals.
-        literal_classes = {lv.__class__ for lv in literal_values}
+        # Note: do no use `literal_values` here, since {0, False} gets reduced to {0}
+        literal_classes = {
+            v.__class__
+            for t in exact_type.__args__
+            if is_literal(t)
+            for v in t.__args__
+        }
 
         non_literal_classes = {
             t for t in exact_type.__args__ if not is_literal(t) and t in args
