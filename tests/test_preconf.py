@@ -417,7 +417,11 @@ def test_orjson_converter_unstruct_collection_overrides(everything: Everything):
 
 @pytest.mark.skipif(python_implementation() == "PyPy", reason="no orjson on PyPy")
 @given(
-    union_and_val=native_unions(include_bytes=False, include_datetimes=False),
+    union_and_val=native_unions(
+        include_bytes=False,
+        include_datetimes=False,
+        include_literals=sys.version_info >= (3, 8),
+    ),
     detailed_validation=...,
 )
 def test_orjson_unions(union_and_val: tuple, detailed_validation: bool):
