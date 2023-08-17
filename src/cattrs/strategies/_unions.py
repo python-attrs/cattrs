@@ -204,6 +204,7 @@ def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
         return structure_native_union
 
     def contains_native_union(exact_type: Any) -> bool:
+        """Can we handle this type?"""
         if is_union_type(exact_type):
             type_args = set(exact_type.__args__)
             # We special case optionals, since they are very common
@@ -217,9 +218,11 @@ def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
                 if is_literal(t)
                 for lit_arg in t.__args__
             }
-            non_literals = {t for t in type_args if not is_literal(t)}
+            non_literal_types = {
+                get_newtype_base(t) or t for t in type_args if not is_literal(t)
+            }
 
-            return (literal_classes | non_literals) & args
+            return (literal_classes | non_literal_types) & args
         return False
 
     converter.register_structure_hook_factory(
