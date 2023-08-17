@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, Optional, Type, Union
 from attrs import NOTHING
 
 from cattrs import BaseConverter, Converter
-from cattrs._compat import is_literal, is_subclass, is_union_type
+from cattrs._compat import get_newtype_base, is_literal, is_subclass, is_union_type
 
 __all__ = [
     "default_tag_generator",
@@ -150,7 +150,9 @@ def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
         }
 
         non_literal_classes = {
-            t for t in exact_type.__args__ if not is_literal(t) and t in args
+            get_newtype_base(t) or t
+            for t in exact_type.__args__
+            if not is_literal(t) and ((get_newtype_base(t) or t) in args)
         }
 
         # We augment the set of allowed classes with any configured subclasses of
@@ -165,7 +167,8 @@ def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
         spillover = {
             a
             for a in exact_type.__args__
-            if a not in non_literal_classes and not is_literal(a)
+            if (get_newtype_base(a) or a) not in non_literal_classes
+            and not is_literal(a)
         }
 
         if spillover:

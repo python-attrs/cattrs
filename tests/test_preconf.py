@@ -4,12 +4,12 @@ from enum import Enum, IntEnum, unique
 from json import dumps as json_dumps
 from json import loads as json_loads
 from platform import python_implementation
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, NewType, Tuple, Union
 
 import pytest
 from attrs import define
 from bson import CodecOptions, ObjectId
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis.strategies import (
     DrawFn,
     binary,
@@ -175,6 +175,10 @@ def everythings(
     )
 
 
+NewStr = NewType("NewStr", str)
+NewInt = NewType("NewInt", int)
+
+
 @composite
 def native_unions(
     draw: DrawFn,
@@ -221,26 +225,40 @@ def native_unions(
         from typing import Literal
 
         # We can replace some of the types with 1+ literal types.
-        if str in chosen_types and draw(booleans()):
-            chosen_types.remove(str)
-            vals = draw(sets(text(), min_size=1, max_size=2))
-            for lit in vals:
-                t = Literal[lit]
-                chosen_types.add(t)
-                strats[t] = just(lit)
+        if str in chosen_types:
+            strat = draw(sampled_from(["leave", "literal", "newtype"]))
+            if strat == "literal":
+                chosen_types.remove(str)
+                vals = draw(sets(text(), min_size=1, max_size=2))
+                for lit in vals:
+                    t = Literal[lit]
+                    chosen_types.add(t)
+                    strats[t] = just(lit)
+            elif strat == "newtype":
+                chosen_types.remove(str)
+                chosen_types.add(NewStr)
+                strats[NewStr] = strats.pop(str)
         if bool in chosen_types and draw(booleans()):
             chosen_types.remove(bool)
             val = draw(booleans())
             t = Literal[val]
             chosen_types.add(t)
             strats[t] = just(val)
-        if int in chosen_types and draw(booleans()):
-            chosen_types.remove(int)
-            vals = draw(sets(integers(), min_size=1, max_size=2))
-            for val in vals:
-                t = Literal[val]
-                chosen_types.add(t)
-                strats[t] = just(val)
+        if int in chosen_types:
+            strat = draw(sampled_from(["leave", "literal", "newtype"]))
+            if strat == "literal":
+                chosen_types.remove(int)
+                vals = draw(sets(integers(), min_size=1, max_size=2))
+                for val in vals:
+                    t = Literal[val]
+                    chosen_types.add(t)
+                    strats[t] = just(val)
+            elif strat == "newtype":
+                # NewTypes instead.
+                chosen_types.remove(int)
+                chosen_types.add(NewInt)
+                strats[NewInt] = strats.pop(int)
+
     return Union[tuple(chosen_types)], draw(one_of(*[strats[t] for t in chosen_types]))
 
 
@@ -279,6 +297,7 @@ def test_stdlib_json_converter_unstruct_collection_overrides(everything: Everyth
     ),
     detailed_validation=...,
 )
+@settings(max_examples=1000)
 def test_stdlib_json_unions(union_and_val: tuple, detailed_validation: bool):
     """Native union passthrough works."""
     converter = json_make_converter(detailed_validation=detailed_validation)

@@ -8,6 +8,32 @@ known_first_party = ["cattr"]
 [tool.hatch.build.targets.wheel]
 packages = ["src/cattr", "src/cattrs"]
 
+
+[tool.pdm.dev-dependencies]
+lint = [
+    "isort>=5.11.5",
+    "black>=23.3.0",
+    "ruff>=0.0.277",
+]
+test = [
+    "hypothesis>=6.79.4",
+    "pytest>=7.4.0",
+    "pytest-benchmark>=4.0.0",
+    "immutables>=0.19",
+    "typing-extensions>=4.7.1",
+    "coverage>=7.2.7",
+]
+docs = [
+    "sphinx>=5.3.0",
+    "furo>=2023.3.27",
+    "sphinx-copybutton>=0.5.2",
+    "myst-parser>=1.0.0",
+    "pendulum>=2.1.2",
+]
+bench = [
+    "pyperf>=2.6.1",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -60,28 +86,6 @@ cbor2 = [
 ]
 bson = [
     "pymongo>=4.4.0",
-]
-
-[tool.pdm.dev-dependencies]
-lint = [
-    "isort>=5.11.5",
-    "black>=23.3.0",
-    "ruff>=0.0.277",
-]
-test = [
-    "hypothesis>=6.79.4",
-    "pytest>=7.4.0",
-    "pytest-benchmark>=4.0.0",
-    "immutables>=0.19",
-    "typing-extensions>=4.7.1",
-    "coverage>=7.2.7",
-]
-docs = [
-    "sphinx>=5.3.0",
-    "furo>=2023.3.27",
-    "sphinx-copybutton>=0.5.2",
-    "myst-parser>=1.0.0",
-    "pendulum>=2.1.2",
 ]
 
 [tool.pytest.ini_options]
