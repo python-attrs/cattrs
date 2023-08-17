@@ -222,26 +222,25 @@ def native_unions(
 
         # We can replace some of the types with 1+ literal types.
         if str in chosen_types and draw(booleans()):
-            chosen_types.discard(str)
+            chosen_types.remove(str)
             vals = draw(sets(text(), min_size=1, max_size=2))
             for lit in vals:
                 t = Literal[lit]
                 chosen_types.add(t)
                 strats[t] = just(lit)
         if bool in chosen_types and draw(booleans()):
-            chosen_types.discard(bool)
+            chosen_types.remove(bool)
             val = draw(booleans())
             t = Literal[val]
             chosen_types.add(t)
             strats[t] = just(val)
         if int in chosen_types and draw(booleans()):
-            chosen_types.discard(int)
+            chosen_types.remove(int)
             vals = draw(sets(integers(), min_size=1, max_size=2))
-            for lit in vals:
-                t = Literal[lit]
+            for val in vals:
+                t = Literal[val]
                 chosen_types.add(t)
-                strats[t] = just(lit)
-
+                strats[t] = just(val)
     return Union[tuple(chosen_types)], draw(one_of(*[strats[t] for t in chosen_types]))
 
 
@@ -275,6 +274,7 @@ def test_stdlib_json_converter_unstruct_collection_overrides(everything: Everyth
     union_and_val=native_unions(
         include_bytes=False,
         include_datetimes=False,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
         include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
@@ -291,6 +291,7 @@ def test_stdlib_json_unions(union_and_val: tuple, detailed_validation: bool):
     union_and_val=native_unions(
         include_strings=False,
         include_bytes=False,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
         include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
@@ -352,6 +353,7 @@ def test_ujson_converter_unstruct_collection_overrides(everything: Everything):
     union_and_val=native_unions(
         include_bytes=False,
         include_datetimes=False,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
         include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
@@ -420,6 +422,7 @@ def test_orjson_converter_unstruct_collection_overrides(everything: Everything):
     union_and_val=native_unions(
         include_bytes=False,
         include_datetimes=False,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
         include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
@@ -467,7 +470,9 @@ def test_msgpack_converter_unstruct_collection_overrides(everything: Everything)
 
 @given(
     union_and_val=native_unions(
-        include_datetimes=False, include_literals=sys.version_info >= (3, 8)
+        include_datetimes=False,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
+        include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
 )
@@ -540,7 +545,9 @@ def test_bson_converter_unstruct_collection_overrides(everything: Everything):
 
 @given(
     union_and_val=native_unions(
-        include_objectids=True, include_literals=sys.version_info >= (3, 8)
+        include_objectids=True,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
+        include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
 )
@@ -579,7 +586,10 @@ def test_pyyaml_converter_unstruct_collection_overrides(everything: Everything):
 
 
 @given(
-    union_and_val=native_unions(include_literals=sys.version_info >= (3, 8)),
+    union_and_val=native_unions(
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
+        include_literals=sys.version_info >= (3, 8),
+    ),
     detailed_validation=...,
 )
 def test_pyyaml_unions(union_and_val: tuple, detailed_validation: bool):
@@ -665,6 +675,7 @@ def test_tomlkit_converter_unstruct_collection_overrides(everything: Everything)
         include_nones=False,
         include_bytes=False,
         include_datetimes=False,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
         include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
@@ -715,7 +726,9 @@ def test_cbor2_converter_unstruct_collection_overrides(everything: Everything):
 
 @given(
     union_and_val=native_unions(
-        include_datetimes=False, include_literals=sys.version_info >= (3, 8)
+        include_datetimes=False,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
+        include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
 )
