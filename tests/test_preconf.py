@@ -177,6 +177,7 @@ def everythings(
 
 NewStr = NewType("NewStr", str)
 NewInt = NewType("NewInt", int)
+NewBool = NewType("NewBool", bool)
 
 
 @composite
@@ -238,12 +239,18 @@ def native_unions(
                 chosen_types.remove(str)
                 chosen_types.add(NewStr)
                 strats[NewStr] = strats.pop(str)
-        if bool in chosen_types and draw(booleans()):
-            chosen_types.remove(bool)
-            val = draw(booleans())
-            t = Literal[val]
-            chosen_types.add(t)
-            strats[t] = just(val)
+        if bool in chosen_types:
+            strat = draw(sampled_from(["leave", "literal", "newtype"]))
+            if strat == "literal":
+                chosen_types.remove(bool)
+                val = draw(booleans())
+                t = Literal[val]
+                chosen_types.add(t)
+                strats[t] = just(val)
+            elif strat == "newtype":
+                chosen_types.remove(bool)
+                chosen_types.add(NewBool)
+                strats[NewBool] = strats.pop(bool)
         if int in chosen_types:
             strat = draw(sampled_from(["leave", "literal", "newtype"]))
             if strat == "literal":

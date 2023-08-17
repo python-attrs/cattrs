@@ -330,9 +330,9 @@ _Found at {py:func}`cattrs.strategies.configure_union_passthrough`._
 
 The _union passthrough_ strategy enables a {py:class}`Converter <cattrs.BaseConverter>` to structure unions and subunions of given types.
 
-A very common use case for _cattrs_ is processing data created by other serialization libraries, such as JSON or msgpack.
+A very common use case for _cattrs_ is processing data created by other serialization libraries, such as _JSON_ or _msgpack_.
 These libraries are able to directly produce values of unions inherent to the format.
-For example, every JSON library can differentiate between numbers, booleans, strings and null values since these values are represented differently in the JSON payload.
+For example, every JSON library can differentiate between numbers, booleans, strings and null values since these values are represented differently in the wire format.
 This strategy enables _cattrs_ to offload the creation of these values to an underlying library and just validate the final value.
 So, _cattrs_ preconfigured JSON converters can handle the following type:
 
@@ -345,14 +345,26 @@ Accordingly, here are some examples of subset unions that are also supported:
 - `int | str`
 - `int | float | str`
 
-The strategy also supports types including one or more [Literals](https://docs.python.org/3/library/typing.html#typing.Literal) of supported types. For example:
+The strategy also supports types including one or more [Literals](https://mypy.readthedocs.io/en/stable/literal_types.html#literal-types) of supported types. For example:
 
 - `Literal["admin", "user"] | int`
 - `Literal[True] | str | int | float`
 
+The strategy also supports [NewTypes](https://mypy.readthedocs.io/en/stable/more_types.html#newtypes) of these types. For example:
+
+```python
+>>> from typing import NewType
+
+>>> UserId = NewType("UserId", int)
+
+>>> converter.loads("12", UserId)
+12
+```
+
 Unions containing unsupported types can be handled if at least one union type is supported by the strategy; the supported union types will be checked before the rest (referred to as the _spillover_) is handed over to the converter again.
+
 For example, if `A` and `B` are arbitrary _attrs_ classes, the union `Literal[10] | A | B` cannot be handled directly by a JSON converter.
-However, the strategy will check if the value being structured matches `Literal[10]` (because this type *is* supported) and if not will pass it back to the converter to be structured as `A | B` (where a different strategy can handle it).
+However, the strategy will check if the value being structured matches `Literal[10]` (because this type _is_ supported) and, if not, will pass it back to the converter to be structured as `A | B` (where a different strategy can handle it).
 
 The strategy is designed to run in _O(1)_ at structure time; it doesn't depend on the size of the union and the ordering of union members.
 

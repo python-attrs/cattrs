@@ -110,8 +110,8 @@ def configure_tagged_union(
 
 def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
     """
-    Configure the converter to support validating and passing through unions of the provided
-    types and their subsets.
+    Configure the converter to support validating and passing through unions of the
+    provided types and their subsets.
 
     For example, all mature JSON libraries natively support producing unions of ints,
     floats, Nones, and strings. Using this strategy, a converter can be configured
@@ -121,9 +121,12 @@ def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
     library) handles producing the union, and the converter is configured to just
     validate it.
 
-    Literals of native types are also supported, and are checked by value.
+    Literals of provided types are also supported, and are checked by value.
 
-    The strategy is designed to be O(1) in execution time.
+    NewTypes of provided types are also supported.
+
+    The strategy is designed to be O(1) in execution time, and independent of the
+    ordering of types in the union.
 
     If the union contains a class and one or more of its subclasses, the subclasses
     will also be included when validating the superclass.
