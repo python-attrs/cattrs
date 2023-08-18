@@ -34,6 +34,8 @@
   ([#408](https://github.com/python-attrs/cattrs/pull/408))
 - Fix structuring `Final` lists.
   ([#412](https://github.com/python-attrs/cattrs/issues/412))
+- Fix certain cases of structuring `Annotated` types.
+  ([#418](https://github.com/python-attrs/cattrs/issues/418))
 
 
 ## 23.1.2 (2023-06-02)
