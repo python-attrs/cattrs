@@ -917,9 +917,11 @@ class Converter(BaseConverter):
         origin = type.__origin__
         return self._unstructure_func.dispatch(origin)
 
-    def gen_structure_annotated(self, type):
+    def gen_structure_annotated(self, type) -> Callable:
+        """A hook factory for annotated types."""
         origin = type.__origin__
-        return self._structure_func.dispatch(origin)
+        hook = self._structure_func.dispatch(origin)
+        return lambda v, _: hook(v, origin)
 
     def gen_unstructure_typeddict(self, cl: Any) -> Callable[[Dict], Dict]:
         """Generate a TypedDict unstructure function.
