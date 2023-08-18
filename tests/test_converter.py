@@ -671,7 +671,7 @@ def test_annotated_with_typing_extensions_attrs():
     class Outer:
         i: Annotated[Inner, "test"]
         j: List[Annotated[Inner, "test"]]
-        k: Annotated[Inner | None, "test"]
+        k: Annotated[Union[Inner, None], "test"]
 
     orig = Outer(Inner(1), [Inner(1)], Inner(1))
     raw = converter.unstructure(orig)
