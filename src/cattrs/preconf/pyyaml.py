@@ -1,5 +1,5 @@
 """Preconfigured converters for pyyaml."""
-from datetime import datetime
+from datetime import datetime, date
 from typing import Any, Type, TypeVar
 
 from yaml import safe_dump, safe_load
@@ -30,7 +30,13 @@ def configure_converter(converter: BaseConverter):
     converter.register_unstructure_hook(
         str, lambda v: v if v.__class__ is str else v.value
     )
+
+    # datetime inherits from date, so identity unstructure hook used
+    # here to prevent the date unstructure hook running.
+    converter.register_unstructure_hook(datetime, lambda v: v)
     converter.register_structure_hook(datetime, validate_datetime)
+    converter.register_unstructure_hook(date, lambda v: v.isoformat())
+    converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
 
 
 def make_converter(*args: Any, **kwargs: Any) -> PyyamlConverter:
