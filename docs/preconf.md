@@ -20,7 +20,7 @@ These converters support the following classes and type annotations, both for st
 - lists, homogenous tuples, heterogenous tuples, dictionaries, counters, sets, frozensets
 - optionals
 - sequences, mutable sequences, mappings, mutable mappings, sets, mutable sets
-- `datetime.datetime`
+- `datetime.datetime`, `datetime.date`
 
 ```{versionadded} 22.1.0
 All preconf converters now have `loads` and `dumps` methods, which combine un/structuring and the de/serialization logic from their underlying libraries.
@@ -57,13 +57,13 @@ poetry add --extras tomlkit cattrs
 
 Found at {mod}`cattrs.preconf.json`.
 
-Bytes are serialized as base 85 strings. Counters are serialized as dictionaries. Sets are serialized as lists, and deserialized back into sets. `datetime` s are serialized as ISO 8601 strings.
+Bytes are serialized as base 85 strings. Counters are serialized as dictionaries. Sets are serialized as lists, and deserialized back into sets. `datetime` s and `date` s are serialized as ISO 8601 strings.
 
 ## _ujson_
 
 Found at {mod}`cattrs.preconf.ujson`.
 
-Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets. `datetime` s are serialized as ISO 8601 strings.
+Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets. `datetime` s and `date` s are serialized as ISO 8601 strings.
 
 `ujson` doesn't support integers less than -9223372036854775808, and greater than 9223372036854775807, nor does it support `float('inf')`.
 
@@ -71,7 +71,7 @@ Bytes are serialized as base 85 strings. Sets are serialized as lists, and deser
 
 Found at {mod}`cattrs.preconf.orjson`.
 
-Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets. `datetime` s are serialized as ISO 8601 strings.
+Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets. `datetime` s and `date` s are serialized as ISO 8601 strings.
 
 _orjson_ doesn't support integers less than -9223372036854775808, and greater than 9223372036854775807.
 _orjson_ only supports mappings with string keys so mappings will have their keys stringified before serialization, and destringified during deserialization.
@@ -80,7 +80,7 @@ _orjson_ only supports mappings with string keys so mappings will have their key
 
 Found at {mod}`cattrs.preconf.msgpack`.
 
-Sets are serialized as lists, and deserialized back into sets. `datetime` s are serialized as UNIX timestamp float values.
+Sets are serialized as lists, and deserialized back into sets. `datetime` s are serialized as UNIX timestamp float values. `date` s are serialized as midnight-aligned UNIX timestamp float values.
 
 _msgpack_ doesn't support integers less than -9223372036854775808, and greater than 18446744073709551615.
 
@@ -103,6 +103,8 @@ Tuples are serialized as lists.
 Use keyword argument `datetime_as_timestamp=True` to encode as UNIX timestamp integer/float (CBOR Tag 1)
 **note:** this replaces timezone information as UTC.
 
+`date` s are serialized as ISO 8601 strings.
+
 Use keyword argument `canonical=True` for efficient encoding to the smallest binary output.
 
 Floats can be forced to smaller output by casting to lower-precision formats by casting to `numpy` floats (and back to Python floats).
@@ -118,6 +120,7 @@ _bson_ doesn't support integers less than -9223372036854775808 or greater than 9
 _bson_ does not support null bytes in mapping keys.
 _bson_ only supports mappings with string keys so mappings will have their keys stringified before serialization, and destringified during deserialization.
 The _bson_ datetime representation doesn't support microsecond accuracy.
+`date` s are serialized as ISO 8601 strings.
 
 When encoding and decoding, the library needs to be passed `codec_options=bson.CodecOptions(tz_aware=True)` to get the full range of compatibility.
 
@@ -125,7 +128,7 @@ When encoding and decoding, the library needs to be passed `codec_options=bson.C
 
 Found at {mod}`cattrs.preconf.pyyaml`.
 
-Frozensets are serialized as lists, and deserialized back into frozensets.
+Frozensets are serialized as lists, and deserialized back into frozensets. `date` s are serialized as ISO 8601 strings.
 
 ## _tomlkit_
 
@@ -133,4 +136,4 @@ Found at {mod}`cattrs.preconf.tomlkit`.
 
 Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets.
 Tuples are serialized as lists, and deserialized back into tuples.
-_tomlkit_ only supports mappings with string keys so mappings will have their keys stringified before serialization, and destringified during deserialization.
+_tomlkit_ only supports mappings with string keys so mappings will have their keys stringified before serialization, and destringified during deserialization. `date` s are serialized as ISO 8601 strings.
