@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from enum import Enum, IntEnum, unique
 from json import dumps as json_dumps
 from json import loads as json_loads
@@ -15,6 +15,7 @@ from hypothesis.strategies import (
     characters,
     composite,
     datetimes,
+    dates,
     dictionaries,
     floats,
     frozensets,
@@ -76,6 +77,7 @@ class Everything:
     an_int_enum: AnIntEnum
     a_str_enum: AStringEnum
     a_datetime: datetime
+    a_date: date
     a_string_enum_dict: Dict[AStringEnum, int]
     a_bytes_dict: Dict[bytes, bytes]
 
@@ -148,6 +150,7 @@ def everythings(
         Everything.AnIntEnum.A,
         Everything.AStringEnum.A,
         draw(dts),
+        draw(dates(min_value=date(1970, 1, 1), max_value=date(2038, 1, 1))),
         draw(
             dictionaries(
                 just(Everything.AStringEnum.A),
