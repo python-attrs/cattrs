@@ -36,6 +36,8 @@
   ([#412](https://github.com/python-attrs/cattrs/issues/412))
 - Fix certain cases of structuring `Annotated` types.
   ([#418](https://github.com/python-attrs/cattrs/issues/418))
+- Add support for `date` to preconfigured converters.
+  ([#420](https://github.com/python-attrs/cattrs/pull/420))
 
 
 ## 23.1.2 (2023-06-02)

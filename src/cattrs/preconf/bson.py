@@ -1,6 +1,6 @@
 """Preconfigured converters for bson."""
 from base64 import b85decode, b85encode
-from datetime import datetime
+from datetime import datetime, date
 from typing import Any, Type, TypeVar
 
 from bson import DEFAULT_CODEC_OPTIONS, CodecOptions, ObjectId, decode, encode
@@ -82,8 +82,14 @@ def configure_converter(converter: BaseConverter):
         [(is_mapping, gen_structure_mapping, True)]
     )
 
-    converter.register_structure_hook(datetime, validate_datetime)
     converter.register_structure_hook(ObjectId, lambda v, _: ObjectId(v))
+
+    # datetime inherits from date, so identity unstructure hook used
+    # here to prevent the date unstructure hook running.
+    converter.register_unstructure_hook(datetime, lambda v: v)
+    converter.register_structure_hook(datetime, validate_datetime)
+    converter.register_unstructure_hook(date, lambda v: v.isoformat())
+    converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
 
 
 def make_converter(*args: Any, **kwargs: Any) -> BsonConverter:
