@@ -221,6 +221,7 @@ Child2(a=1, b=1)
 ```
 
 Other customizations available see are (see {py:func}`include_subclasses()<cattrs.strategies.include_subclasses>`):
+
 - The exact list of subclasses that should participate to the union with the `subclasses` argument.
 - Attribute overrides that permit the customization of attributes un/structuring like renaming an attribute.
 
@@ -259,13 +260,12 @@ Child(a=1, b='foo')
 
 ```
 
-
-
-### Using Class-Specific Structure and Unstructure Methods
+## Using Class-Specific Structure and Unstructure Methods
 
 _Found at {py:func}`cattrs.strategies.use_class_methods`._
 
-The following strategy can be applied for both structuring and unstructuring (also simultaneously).
+This strategy allows for un/structuring logic on the models themselves.
+It can be applied for both structuring and unstructuring (also simultaneously).
 
 If a class requires special handling for (un)structuring, you can add a dedicated (un)structuring
 method:
@@ -295,11 +295,11 @@ MyClass(a=43)
 {'c': 41}
 ```
 
-Any class without a `_structure` or `_unstructure` method will use the default strategy for
-structuring or unstructuring, respectively. Feel free to use other names.
+Any class without a `_structure` or `_unstructure` method will use the default strategy for structuring or unstructuring, respectively.
+Feel free to use other names.
+The stategy can be applied multiple times (with different method names).
 
-If you want to (un)structured nested objects, just append a converter parameter
-to your (un)structuring methods and you will receive the converter there:
+If you want to (un)structured nested objects, just append a converter parameter to your (un)structuring methods and you will receive the converter there:
 
 ```{doctest} class_methods
 

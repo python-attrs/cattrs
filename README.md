@@ -149,6 +149,7 @@ _cattrs_ is based on a few fundamental design decisions.
 
 - Un/structuring rules are separate from the models.
   This allows models to have a one-to-many relationship with un/structuring rules, and to create un/structuring rules for models which you do not own and you cannot change.
+  (_cattrs_ can be configured to use un/structuring rules from models using the [`use_class_methods` strategy](https://catt.rs/en/latest/strategies.html#using-class-specific-structure-and-unstructure-methods).)
 - Invent as little as possible; reuse existing ordinary Python instead.
   For example, _cattrs_ did not have a custom exception type to group exceptions until the sanctioned Python [`exceptiongroups`](https://docs.python.org/3/library/exceptions.html#ExceptionGroup).
   A side-effect of this design decision is that, in a lot of cases, when you're solving _cattrs_ problems you're actually learning Python instead of learning _cattrs_.
@@ -163,6 +164,7 @@ A foolish consistency is the hobgoblin of little minds so these decisions can an
 - [Why I use attrs instead of pydantic](https://threeofwands.com/why-i-use-attrs-instead-of-pydantic/)
 - [cattrs I: un/structuring speed](https://threeofwands.com/why-cattrs-is-so-fast/)
 - [Python has a macro language - it's Python (PyCon IT 2022)](https://www.youtube.com/watch?v=UYRSixikUTo)
+- [Intro to cattrs 23.1](https://threeofwands.com/intro-to-cattrs-23-1-0/)
 
 ## Credits
 

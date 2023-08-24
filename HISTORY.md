@@ -8,6 +8,8 @@
 - **Potentially breaking**: {py:func}`cattrs.gen.make_dict_structure_fn` and {py:func}`cattrs.gen.typeddicts.make_dict_structure_fn` will use the values for the `detailed_validation` and `forbid_extra_keys` parameters from the given converter by default now.
   If you're using these functions directly, the old behavior can be restored by passing in the desired values directly.
   ([#410](https://github.com/python-attrs/cattrs/issues/410) [#411](https://github.com/python-attrs/cattrs/pull/411))
+- Introduce the `use_class_methods` strategy. Learn more [here](https://catt.rs/en/latest/strategies.html#using-class-specific-structure-and-unstructure-methods).
+  ([#405](https://github.com/python-attrs/cattrs/pull/405))
 - The `omit` parameter of {py:func}`cattrs.override` is now of type `bool | None` (from `bool`).
   `None` is the new default and means to apply default _cattrs_ handling to the attribute, which is to omit the attribute if it's marked as `init=False`, and keep it otherwise.
 - Fix {py:func}`format_exception() <cattrs.v.format_exception>` parameter working for recursive calls to {py:func}`transform_error <cattrs.transform_error>`.
@@ -38,7 +40,6 @@
   ([#418](https://github.com/python-attrs/cattrs/issues/418))
 - Add support for `date` to preconfigured converters.
   ([#420](https://github.com/python-attrs/cattrs/pull/420))
-
 
 ## 23.1.2 (2023-06-02)
 
