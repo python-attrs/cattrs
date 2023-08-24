@@ -172,7 +172,7 @@ Without the application of the strategy, in both unstructure and structure opera
 
 ```{note}
 The handling of subclasses is an opt-in feature for two main reasons:
-- Performance. While small and probably negligeable in most cases the subclass handling incurs more function calls and has a performance impact. 
+- Performance. While small and probably negligeable in most cases the subclass handling incurs more function calls and has a performance impact.
 - Customization. The specific handling of subclasses can be different from one situation to the other. In particular there is not apparent universal good defaults for disambiguating the union type. Consequently the decision is left to the user.
 ```
 
@@ -256,5 +256,70 @@ Child(a=1, b='foo')
 ```
 
 ```{versionadded} 23.1.0
+
+```
+
+
+
+### Using Class-Specific Structure and Unstructure Methods
+
+_Found at {py:func}`cattrs.strategies.use_class_methods`._
+
+The following strategy can be applied for both structuring and unstructuring (also simultaneously).
+
+If a class requires special handling for (un)structuring, you can add a dedicated (un)structuring
+method:
+
+```{doctest} class_methods
+
+>>> from attrs import define
+>>> from cattrs import Converter
+>>> from cattrs.strategies import use_class_methods
+
+>>> @define
+... class MyClass:
+...     a: int
+...
+...     @classmethod
+...     def _structure(cls, data: dict):
+...         return cls(data["b"] + 1)  # expecting "b", not "a"
+...
+...     def _unstructure(self):
+...         return {"c": self.a - 1}  # unstructuring as "c", not "a"
+
+>>> converter = Converter()
+>>> use_class_methods(converter, "_structure", "_unstructure")
+>>> print(converter.structure({"b": 42}, MyClass))
+MyClass(a=43)
+>>> print(converter.unstructure(MyClass(42)))
+{'c': 41}
+```
+
+Any class without a `_structure` or `_unstructure` method will use the default strategy for
+structuring or unstructuring, respectively. Feel free to use other names.
+
+If you want to (un)structured nested objects, just append a converter parameter
+to your (un)structuring methods and you will receive the converter there:
+
+```{doctest} class_methods
+
+>>> @define
+... class Nested:
+...     m: MyClass
+...
+...     @classmethod
+...     def _structure(cls, data: dict, conv):
+...         return cls(conv.structure(data["n"], MyClass))
+...
+...     def _unstructure(self, conv):
+...         return {"n": conv.unstructure(self.m)}
+
+>>> print(converter.structure({"n": {"b": 42}}, Nested))
+Nested(m=MyClass(a=43))
+>>> print(converter.unstructure(Nested(MyClass(42))))
+{'n': {'c': 41}}
+```
+
+```{versionadded} 23.2.0
 
 ```
