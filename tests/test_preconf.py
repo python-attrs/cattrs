@@ -161,12 +161,6 @@ def everythings(
         Everything.AStringEnum.A,
         draw(dts),
         draw(dates(min_value=date(1970, 1, 1), max_value=date(2038, 1, 1))),
-        draw(
-            dictionaries(
-                just(Everything.AStringEnum.A),
-                integers(min_value=min_int, max_value=max_int),
-            )
-        ),
         draw(dictionaries(just(Everything.AStringEnum.A), ints)),
         draw(dictionaries(binary(min_size=min_key_length), binary())),
         draw(one_of(ints, fs, strings)),
