@@ -209,7 +209,9 @@ def native_unions(
         strats[bytes] = binary()
     if include_datetimes:
         types.append(datetime)
-        strats[datetime] = datetimes(max_value=datetime(2038, 1, 1))
+        strats[datetime] = datetimes(
+            min_value=datetime(1970, 1, 1), max_value=datetime(2038, 1, 1)
+        )
     if include_objectids:
         types.append(ObjectId)
         strats[ObjectId] = builds(ObjectId)
