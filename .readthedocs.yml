@@ -9,5 +9,4 @@ build:
     post_create_environment:
       - "curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -"
     post_install:
-      - pdm use $READTHEDOCS_VIRTUALENV_PATH
-      - pdm sync -G :all,docs
+      - "VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH ~/.local/bin/pdm sync -dG :all,docs"
