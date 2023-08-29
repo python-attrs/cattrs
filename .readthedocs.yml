@@ -7,7 +7,7 @@ build:
     python: "3.11"
   jobs:
     post_create_environment:
-      - pip install pdm
+      - "curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -"
     post_install:
       - pdm use $READTHEDOCS_VIRTUALENV_PATH
       - pdm sync -G :all,docs
