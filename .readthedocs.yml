@@ -6,7 +6,7 @@ build:
     # Keep version in sync with tox.ini (docs and gh-actions).
     python: "3.11"
 
-python:
+build:
   jobs:
     post_create_environment:
       - pip install pdm

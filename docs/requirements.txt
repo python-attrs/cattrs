@@ -1,4 +1,0 @@
-furo==2023.3.27
-pdm==2.7.0
-sphinx-copybutton==0.5.2
-myst-parser==1.0.0
