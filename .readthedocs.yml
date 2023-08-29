@@ -4,10 +4,11 @@ build:
   os: ubuntu-20.04
   tools:
     # Keep version in sync with tox.ini (docs and gh-actions).
-    python: "3.10"
+    python: "3.11"
 
 python:
-  install:
-    - requirements: "docs/requirements.txt"
-    - path: .
-      method: pip
+  jobs:
+    post_create_environment:
+      - pip install pdm
+    post_install:
+      - pdm install -G :all,docs
