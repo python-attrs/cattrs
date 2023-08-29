@@ -7,6 +7,7 @@ build:
     python: "3.11"
   jobs:
     post_create_environment:
-      - pip install pdm
+      - python -m pip install pdm
     post_install:
+      - pdm use $READTHEDOCS_VIRTUALENV_PATH
       - pdm install -G :all,docs
