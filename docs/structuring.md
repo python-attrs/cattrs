@@ -154,7 +154,7 @@ to deques are:
 - `Deque[T]`
 - `deque[T]`
 
-In all cases, a new **unbounded** deque (`maxlen=None`) will be returned, 
+In all cases, a new **unbounded** deque (`maxlen=None`) will be returned,
 so this operation can be used to copy an iterable into a deque.
 If you want to convert into bounded `deque`, registering a custom structuring hook is a good approach.
 
@@ -173,6 +173,7 @@ deque(['1', None, '3'])
 ```
 
 ```{versionadded} 23.1.0
+
 ```
 
 ### Sets and Frozensets
@@ -384,10 +385,10 @@ Another option is to use a custom tagged union strategy (see [Strategies - Tagge
 [PEP 593](https://www.python.org/dev/peps/pep-0593/) annotations (`typing.Annotated[type, ...]`) are supported and are
 matched using the first type present in the annotated type.
 
-### `typing.NewType`
+## `typing.NewType`
 
 [NewTypes](https://docs.python.org/3/library/typing.html#newtype) are supported and are structured according to the rules for their underlying type.
-Their hooks can also be overriden using :py:attr:`cattrs.Converter.register_structure_hook`.
+Their hooks can also be overriden using {meth}`Converter.register_structure_hook() <cattrs.BaseConverter.register_structure_hook>`.
 
 ```{doctest}
 

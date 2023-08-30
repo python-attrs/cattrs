@@ -1,10 +1,14 @@
-# Tips for handling unions
+# Tips for Handling Unions
 
 This sections contains information for advanced union handling.
 
-As mentioned in the structuring section, _cattrs_ is able to handle simple
-unions of _attrs_ classes automatically. More complex cases require
-converter customization (since there are many ways of handling unions).
+As mentioned in the structuring section, _cattrs_ is able to handle simple unions of _attrs_ classes automatically.
+More complex cases require converter customization (since there are many ways of handling unions).
+
+_cattrs_ also comes with a number of strategies to help handle unions:
+
+- [tagged unions strategy](strategies.md#tagged-unions-strategy) mentioned below
+- [union passthrough strategy](strategies.md#union-passthrough), which is preapplied to all the [preconfigured](preconf.md) converters
 
 ## Unstructuring unions with extra metadata
 

@@ -5,7 +5,8 @@ from collections.abc import MutableSequence as AbcMutableSequence
 from collections.abc import MutableSet as AbcMutableSet
 from collections.abc import Sequence as AbcSequence
 from collections.abc import Set as AbcSet
-from dataclasses import field, make_dataclass
+from dataclasses import field as dc_field
+from dataclasses import make_dataclass
 from functools import partial
 from pathlib import Path
 from typing import (
@@ -24,9 +25,8 @@ from typing import (
     TypeVar,
 )
 
-import attr
-from attr import NOTHING, Factory, frozen
 from attr._make import _CountingAttr
+from attrs import NOTHING, Factory, field, frozen
 from hypothesis import note
 from hypothesis.strategies import (
     DrawFn,
@@ -46,6 +46,7 @@ from hypothesis.strategies import (
     text,
     tuples,
 )
+from typing_extensions import Final
 
 from .untyped import gen_attr_names, make_class
 
@@ -212,7 +213,7 @@ def _create_hyp_class(
     """
 
     def key(t):
-        return (t[0]._default is not attr.NOTHING, t[0].kw_only)
+        return (t[0]._default is not NOTHING, t[0].kw_only)
 
     attrs_and_strat = sorted(attrs_and_strategy, key=key)
     attrs = [a[0] for a in attrs_and_strat]
@@ -261,7 +262,7 @@ def _create_dataclass(
     """
 
     def key(t):
-        return t[0]._default is not attr.NOTHING
+        return t[0]._default is not NOTHING
 
     attrs_and_strat = sorted(attrs_and_strategy, key=key)
     attrs = [a[0] for a in attrs_and_strat]
@@ -276,9 +277,9 @@ def _create_dataclass(
                     (n, a.type)
                     if a._default is NOTHING
                     else (
-                        (n, a.type, field(default=a._default))
+                        (n, a.type, dc_field(default=a._default))
                         if not isinstance(a._default, Factory)
-                        else (n, a.type, field(default_factory=a._default.factory))
+                        else (n, a.type, dc_field(default_factory=a._default.factory))
                     )
                     for n, a in zip(gen_attr_names(), attrs)
                 ],
@@ -294,7 +295,7 @@ def _create_hyp_class_and_strat(
     attrs_and_strategy: List[Tuple[_CountingAttr, SearchStrategy[PosArg]]]
 ) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs], SearchStrategy[KwArgs]]]:
     def key(t):
-        return (t[0].default is not attr.NOTHING, t[0].kw_only)
+        return (t[0].default is not NOTHING, t[0].kw_only)
 
     attrs_and_strat = sorted(attrs_and_strategy, key=key)
     attrs = [a[0] for a in attrs_and_strat]
@@ -320,11 +321,11 @@ def bare_typed_attrs(draw, defaults=None, kw_only=None):
     Generate a tuple of an attribute and a strategy that yields values
     appropriate for that attribute.
     """
-    default = attr.NOTHING
+    default = NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = None
     return (
-        attr.ib(
+        field(
             type=Any,
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
@@ -339,11 +340,11 @@ def int_typed_attrs(draw, defaults=None, kw_only=None):
     Generate a tuple of an attribute and a strategy that yields ints for that
     attribute.
     """
-    default = attr.NOTHING
+    default = NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(integers())
     return (
-        attr.ib(
+        field(
             type=int,
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
@@ -362,7 +363,7 @@ def str_typed_attrs(draw, defaults=None, kw_only=None):
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(text())
     return (
-        attr.ib(
+        field(
             type=str,
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
@@ -377,11 +378,11 @@ def float_typed_attrs(draw, defaults=None, kw_only=None):
     Generate a tuple of an attribute and a strategy that yields floats for that
     attribute.
     """
-    default = attr.NOTHING
+    default = NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(floats())
     return (
-        attr.ib(
+        field(
             type=float,
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
@@ -400,11 +401,11 @@ def path_typed_attrs(
     """
     from string import ascii_lowercase
 
-    default = attr.NOTHING
+    default = NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = Path(draw(text(ascii_lowercase, min_size=1)))
     return (
-        attr.ib(
+        field(
             type=Path,
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
@@ -422,7 +423,7 @@ def dict_typed_attrs(
     for that attribute. The dictionaries map strings to integers.
     The generated dict types are what's expected to be used on pre-3.9 Pythons.
     """
-    default = attr.NOTHING
+    default = NOTHING
     val_strat = dictionaries(keys=text(), values=integers())
     if defaults is True or (defaults is None and draw(booleans())):
         default_val = draw(val_strat)
@@ -432,7 +433,7 @@ def dict_typed_attrs(
             default = default_val
     type = draw(sampled_from([Dict[str, int], Dict, dict]))
     return (
-        attr.ib(
+        field(
             type=type,
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
@@ -451,7 +452,7 @@ def new_dict_typed_attrs(
 
     Uses the new 3.9 dict annotation.
     """
-    default_val = attr.NOTHING
+    default_val = NOTHING
     val_strat = dictionaries(keys=text(), values=integers())
     if defaults is True or (defaults is None and draw(booleans())):
         default_val = draw(val_strat)
@@ -463,7 +464,7 @@ def new_dict_typed_attrs(
         default = default_val
 
     return (
-        attr.ib(
+        field(
             type=dict[str, int],
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
@@ -484,7 +485,7 @@ def set_typed_attrs(
     Generate a tuple of an attribute and a strategy that yields sets
     for that attribute. The sets contain integers.
     """
-    default_val = attr.NOTHING
+    default_val = NOTHING
     val_strat = sets(integers())
     if defaults is True or (defaults is None and draw(booleans())):
         default_val = draw(val_strat)
@@ -503,7 +504,7 @@ def set_typed_attrs(
         )
     )
     return (
-        attr.ib(
+        field(
             type=type,
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
@@ -520,7 +521,7 @@ def frozenset_typed_attrs(
     Generate a tuple of an attribute and a strategy that yields frozensets
     for that attribute. The frozensets contain integers.
     """
-    default = attr.NOTHING
+    default = NOTHING
     val_strat = frozensets(integers())
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(val_strat)
@@ -532,7 +533,7 @@ def frozenset_typed_attrs(
         )
     )
     return (
-        attr.ib(
+        field(
             type=type,
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
@@ -548,12 +549,12 @@ def list_typed_attrs(
     allow_mutable_defaults=True,
     legacy_types_only=False,
     kw_only=None,
-):
+) -> Tuple[_CountingAttr, SearchStrategy[List[float]]]:
     """
     Generate a tuple of an attribute and a strategy that yields lists
     for that attribute. The lists contain floats.
     """
-    default_val = attr.NOTHING
+    default_val = NOTHING
     val_strat = lists(floats(allow_infinity=False, allow_nan=False))
     if defaults is True or (defaults is None and draw(booleans())):
         default_val = draw(val_strat)
@@ -564,10 +565,10 @@ def list_typed_attrs(
     else:
         default = default_val
     return (
-        attr.ib(
+        field(
             type=draw(
                 sampled_from(
-                    [list[float], list, List[float], List]
+                    [list[float], list, List[float], List, Final[list[float]]]
                     if not legacy_types_only
                     else [List, List[float], list]
                 )
@@ -591,7 +592,7 @@ def seq_typed_attrs(
     Generate a tuple of an attribute and a strategy that yields lists
     for that attribute. The lists contain integers.
     """
-    default_val = attr.NOTHING
+    default_val = NOTHING
     val_strat = lists(integers())
     if defaults is True or (defaults is None and draw(booleans())):
         default_val = draw(val_strat)
@@ -603,7 +604,7 @@ def seq_typed_attrs(
         default = default_val
 
     return (
-        attr.ib(
+        field(
             type=AbcSequence[int] if not legacy_types_only else Sequence[int],
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
@@ -624,7 +625,7 @@ def mutable_seq_typed_attrs(
     Generate a tuple of an attribute and a strategy that yields lists
     for that attribute. The lists contain floats.
     """
-    default_val = attr.NOTHING
+    default_val = NOTHING
     val_strat = lists(floats(allow_infinity=False, allow_nan=False))
     if defaults is True or (defaults is None and draw(booleans())):
         default_val = draw(val_strat)
@@ -636,7 +637,7 @@ def mutable_seq_typed_attrs(
         default = default_val
 
     return (
-        attr.ib(
+        field(
             type=AbcMutableSequence[float]
             if not legacy_types_only
             else MutableSequence[float],
@@ -653,12 +654,12 @@ def homo_tuple_typed_attrs(draw, defaults=None, legacy_types_only=False, kw_only
     Generate a tuple of an attribute and a strategy that yields homogenous
     tuples for that attribute. The tuples contain strings.
     """
-    default = attr.NOTHING
+    default = NOTHING
     val_strat = tuples(text(), text(), text())
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(val_strat)
     return (
-        attr.ib(
+        field(
             type=draw(
                 sampled_from(
                     [tuple[str, ...], tuple, Tuple, Tuple[str, ...]]
@@ -679,12 +680,12 @@ def newtype_int_typed_attrs(draw: DrawFn, defaults=None, kw_only=None):
     Generate a tuple of an attribute and a strategy that yields ints for that
     attribute.
     """
-    default = attr.NOTHING
+    default = NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = draw(integers())
     NewInt = NewType("NewInt", int)
     return (
-        attr.ib(
+        field(
             type=NewInt,
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
@@ -699,7 +700,7 @@ def newtype_attrs_typed_attrs(draw: DrawFn, defaults=None, kw_only=None):
     Generate a tuple of an attribute and a strategy that yields values for that
     attribute.
     """
-    default = attr.NOTHING
+    default = NOTHING
 
     @frozen
     class NewTypeAttrs:
@@ -710,7 +711,7 @@ def newtype_attrs_typed_attrs(draw: DrawFn, defaults=None, kw_only=None):
 
     NewAttrs = NewType("NewAttrs", NewTypeAttrs)
     return (
-        attr.ib(
+        field(
             type=NewAttrs,
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
@@ -728,11 +729,11 @@ def just_class(
     nested_cl = tup[1][0]
     nested_cl_args = tup[1][1]
     nested_cl_kwargs = tup[1][2]
-    default = attr.Factory(lambda: nested_cl(*defaults[0], **defaults[1]))
+    default = Factory(lambda: nested_cl(*defaults[0], **defaults[1]))
     combined_attrs = list(tup[0])
     combined_attrs.append(
         (
-            attr.ib(type=nested_cl, default=default),
+            field(type=nested_cl, default=default),
             just(nested_cl(*nested_cl_args, **nested_cl_kwargs)),
         )
     )
@@ -748,11 +749,11 @@ def list_of_class(
     nested_cl = tup[1][0]
     nested_cl_args = tup[1][1]
     nested_cl_kwargs = tup[1][2]
-    default = attr.Factory(lambda: [nested_cl(*defaults[0], **defaults[1])])
+    default = Factory(lambda: [nested_cl(*defaults[0], **defaults[1])])
     combined_attrs = list(tup[0])
     combined_attrs.append(
         (
-            attr.ib(type=List[nested_cl], default=default),
+            field(type=List[nested_cl], default=default),
             just([nested_cl(*nested_cl_args, **nested_cl_kwargs)]),
         )
     )
@@ -769,11 +770,11 @@ def new_list_of_class(
     nested_cl = tup[1][0]
     nested_cl_args = tup[1][1]
     nested_cl_kwargs = tup[1][2]
-    default = attr.Factory(lambda: [nested_cl(*defaults[0], **defaults[1])])
+    default = Factory(lambda: [nested_cl(*defaults[0], **defaults[1])])
     combined_attrs = list(tup[0])
     combined_attrs.append(
         (
-            attr.ib(type=list[nested_cl], default=default),
+            field(type=list[nested_cl], default=default),
             just([nested_cl(*nested_cl_args, **nested_cl_kwargs)]),
         )
     )
@@ -789,11 +790,11 @@ def dict_of_class(
     nested_cl = tup[1][0]
     nested_cl_args = tup[1][1]
     nested_cl_kwargs = tup[1][2]
-    default = attr.Factory(lambda: {"cls": nested_cl(*defaults[0], **defaults[1])})
+    default = Factory(lambda: {"cls": nested_cl(*defaults[0], **defaults[1])})
     combined_attrs = list(tup[0])
     combined_attrs.append(
         (
-            attr.ib(type=Dict[str, nested_cl], default=default),
+            field(type=Dict[str, nested_cl], default=default),
             just({"cls": nested_cl(*nested_cl_args, **nested_cl_kwargs)}),
         )
     )

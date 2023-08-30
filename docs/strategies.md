@@ -172,7 +172,7 @@ Without the application of the strategy, in both unstructure and structure opera
 
 ```{note}
 The handling of subclasses is an opt-in feature for two main reasons:
-- Performance. While small and probably negligeable in most cases the subclass handling incurs more function calls and has a performance impact. 
+- Performance. While small and probably negligeable in most cases the subclass handling incurs more function calls and has a performance impact.
 - Customization. The specific handling of subclasses can be different from one situation to the other. In particular there is not apparent universal good defaults for disambiguating the union type. Consequently the decision is left to the user.
 ```
 
@@ -221,6 +221,7 @@ Child2(a=1, b=1)
 ```
 
 Other customizations available see are (see {py:func}`include_subclasses()<cattrs.strategies.include_subclasses>`):
+
 - The exact list of subclasses that should participate to the union with the `subclasses` argument.
 - Attribute overrides that permit the customization of attributes un/structuring like renaming an attribute.
 
@@ -256,5 +257,128 @@ Child(a=1, b='foo')
 ```
 
 ```{versionadded} 23.1.0
+
+```
+
+## Using Class-Specific Structure and Unstructure Methods
+
+_Found at {py:func}`cattrs.strategies.use_class_methods`._
+
+This strategy allows for un/structuring logic on the models themselves.
+It can be applied for both structuring and unstructuring (also simultaneously).
+
+If a class requires special handling for (un)structuring, you can add a dedicated (un)structuring
+method:
+
+```{doctest} class_methods
+
+>>> from attrs import define
+>>> from cattrs import Converter
+>>> from cattrs.strategies import use_class_methods
+
+>>> @define
+... class MyClass:
+...     a: int
+...
+...     @classmethod
+...     def _structure(cls, data: dict):
+...         return cls(data["b"] + 1)  # expecting "b", not "a"
+...
+...     def _unstructure(self):
+...         return {"c": self.a - 1}  # unstructuring as "c", not "a"
+
+>>> converter = Converter()
+>>> use_class_methods(converter, "_structure", "_unstructure")
+>>> print(converter.structure({"b": 42}, MyClass))
+MyClass(a=43)
+>>> print(converter.unstructure(MyClass(42)))
+{'c': 41}
+```
+
+Any class without a `_structure` or `_unstructure` method will use the default strategy for structuring or unstructuring, respectively.
+Feel free to use other names.
+The stategy can be applied multiple times (with different method names).
+
+If you want to (un)structured nested objects, just append a converter parameter to your (un)structuring methods and you will receive the converter there:
+
+```{doctest} class_methods
+
+>>> @define
+... class Nested:
+...     m: MyClass
+...
+...     @classmethod
+...     def _structure(cls, data: dict, conv):
+...         return cls(conv.structure(data["n"], MyClass))
+...
+...     def _unstructure(self, conv):
+...         return {"n": conv.unstructure(self.m)}
+
+>>> print(converter.structure({"n": {"b": 42}}, Nested))
+Nested(m=MyClass(a=43))
+>>> print(converter.unstructure(Nested(MyClass(42))))
+{'n': {'c': 41}}
+```
+
+```{versionadded} 23.2.0
+
+```
+
+## Union Passthrough
+
+_Found at {py:func}`cattrs.strategies.configure_union_passthrough`._
+
+The _union passthrough_ strategy enables a {py:class}`Converter <cattrs.BaseConverter>` to structure unions and subunions of given types.
+
+A very common use case for _cattrs_ is processing data created by other serialization libraries, such as _JSON_ or _msgpack_.
+These libraries are able to directly produce values of unions inherent to the format.
+For example, every JSON library can differentiate between numbers, booleans, strings and null values since these values are represented differently in the wire format.
+This strategy enables _cattrs_ to offload the creation of these values to an underlying library and just validate the final value.
+So, _cattrs_ preconfigured JSON converters can handle the following type:
+
+- `bool | int | float | str | None`
+
+Continuing the JSON example, this strategy also enables structuring subsets of unions of these values.
+Accordingly, here are some examples of subset unions that are also supported:
+
+- `bool | int`
+- `int | str`
+- `int | float | str`
+
+The strategy also supports types including one or more [Literals](https://mypy.readthedocs.io/en/stable/literal_types.html#literal-types) of supported types. For example:
+
+- `Literal["admin", "user"] | int`
+- `Literal[True] | str | int | float`
+
+The strategy also supports [NewTypes](https://mypy.readthedocs.io/en/stable/more_types.html#newtypes) of these types. For example:
+
+```python
+>>> from typing import NewType
+
+>>> UserId = NewType("UserId", int)
+
+>>> converter.loads("12", UserId)
+12
+```
+
+Unions containing unsupported types can be handled if at least one union type is supported by the strategy; the supported union types will be checked before the rest (referred to as the _spillover_) is handed over to the converter again.
+
+For example, if `A` and `B` are arbitrary _attrs_ classes, the union `Literal[10] | A | B` cannot be handled directly by a JSON converter.
+However, the strategy will check if the value being structured matches `Literal[10]` (because this type _is_ supported) and, if not, will pass it back to the converter to be structured as `A | B` (where a different strategy can handle it).
+
+The strategy is designed to run in _O(1)_ at structure time; it doesn't depend on the size of the union and the ordering of union members.
+
+This strategy has been preapplied to the following preconfigured converters:
+
+- {py:class}`BsonConverter <cattrs.preconf.bson.BsonConverter>`
+- {py:class}`Cbor2Converter <cattrs.preconf.cbor2.Cbor2Converter>`
+- {py:class}`JsonConverter <cattrs.preconf.json.JsonConverter>`
+- {py:class}`MsgpackConverter <cattrs.preconf.msgpack.MsgpackConverter>`
+- {py:class}`OrjsonConverter <cattrs.preconf.orjson.OrjsonConverter>`
+- {py:class}`PyyamlConverter <cattrs.preconf.pyyaml.PyyamlConverter>`
+- {py:class}`TomlkitConverter <cattrs.preconf.tomlkit.TomlkitConverter>`
+- {py:class}`UjsonConverter <cattrs.preconf.ujson.UjsonConverter>`
+
+```{versionadded} 23.2.0
 
 ```

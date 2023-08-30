@@ -2,13 +2,19 @@
 from typing import Dict, FrozenSet, List, Set, Tuple
 
 import pytest
+import pickle
 from attrs import define, field
 from attrs.validators import in_
 from hypothesis import given
 
 from cattrs import Converter
 from cattrs._compat import Counter
-from cattrs.errors import ClassValidationError, IterableValidationError
+from cattrs.errors import (
+    AttributeValidationNote,
+    ClassValidationError,
+    IterableValidationError,
+    IterableValidationNote,
+)
 
 
 def test_class_validation():
@@ -178,3 +184,20 @@ def test_hetero_tuple_validation():
     assert exc.value.exceptions[0].__notes__ == [
         "Structuring typing.Tuple[int, int, int] @ index 2"
     ]
+
+
+def test_notes_pickling():
+    """Validation notes should be picklable"""
+    note = pickle.loads(  # noqa: S301
+        pickle.dumps(IterableValidationNote("foo", "key", str))
+    )
+    assert note == "foo"
+    assert note.index == "key"
+    assert note.type is str
+
+    note = pickle.loads(  # noqa: S301
+        pickle.dumps(AttributeValidationNote("foo", "name", int))
+    )
+    assert note == "foo"
+    assert note.name == "name"
+    assert note.type is int

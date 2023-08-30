@@ -5,9 +5,16 @@
 - **Potentially breaking**: skip _attrs_ fields marked as `init=False` by default. This change is potentially breaking for unstructuring.
   See [here](https://catt.rs/en/latest/customizing.html#include_init_false) for instructions on how to restore the old behavior.
   ([#40](https://github.com/python-attrs/cattrs/issues/40) [#395](https://github.com/python-attrs/cattrs/pull/395))
-- The `omit` parameter of `cattrs.override()` is now of type `bool | None` (from `bool`). `None` is the new default and means to apply default `cattrs` handling to the attribute.
-- Fix `format_exception` parameter working for recursive calls to `transform_error`
-  ([#389](https://github.com/python-attrs/cattrs/issues/389)
+- **Potentially breaking**: {py:func}`cattrs.gen.make_dict_structure_fn` and {py:func}`cattrs.gen.typeddicts.make_dict_structure_fn` will use the values for the `detailed_validation` and `forbid_extra_keys` parameters from the given converter by default now.
+  If you're using these functions directly, the old behavior can be restored by passing in the desired values directly.
+  ([#410](https://github.com/python-attrs/cattrs/issues/410) [#411](https://github.com/python-attrs/cattrs/pull/411))
+- Introduce the `use_class_methods` strategy. Learn more [here](https://catt.rs/en/latest/strategies.html#using-class-specific-structure-and-unstructure-methods).
+  ([#405](https://github.com/python-attrs/cattrs/pull/405))
+- Implement the `union passthrough` strategy, enabling much richer union handling for preconfigured converters. [Learn more here](https://catt.rs/en/stable/strategies.html#union-passthrough).
+- The `omit` parameter of {py:func}`cattrs.override` is now of type `bool | None` (from `bool`).
+  `None` is the new default and means to apply default _cattrs_ handling to the attribute, which is to omit the attribute if it's marked as `init=False`, and keep it otherwise.
+- Fix {py:func}`format_exception() <cattrs.v.format_exception>` parameter working for recursive calls to {py:func}`transform_error <cattrs.transform_error>`.
+  ([#389](https://github.com/python-attrs/cattrs/issues/389))
 - [_attrs_ aliases](https://www.attrs.org/en/stable/init.html#private-attributes-and-aliases) are now supported, although aliased fields still map to their attribute name instead of their alias by default when un/structuring.
   ([#322](https://github.com/python-attrs/cattrs/issues/322) [#391](https://github.com/python-attrs/cattrs/pull/391))
 - Use [PDM](https://pdm.fming.dev/latest/) instead of Poetry.
@@ -16,16 +23,26 @@
   ([#376](https://github.com/python-attrs/cattrs/issues/376) [#377](https://github.com/python-attrs/cattrs/pull/377))
 - Optimize and improve unstructuring of `Optional` (unions of one type and `None`).
   ([#380](https://github.com/python-attrs/cattrs/issues/380) [#381](https://github.com/python-attrs/cattrs/pull/381))
-- Fix `format_exception` and `transform_error` type annotations.
+- Fix {py:func}`format_exception <cattrs.v.format_exception>` and {py:func}`transform_error <cattrs.transform_error>` type annotations.
 - Improve the implementation of `cattrs._compat.is_typeddict`. The implementation is now simpler, and relies on fewer private implementation details from `typing` and typing_extensions.
   ([#384](https://github.com/python-attrs/cattrs/pull/384))
 - Improve handling of TypedDicts with forward references.
 - Speed up generated _attrs_ and TypedDict structuring functions by changing their signature slightly.
   ([#388](https://github.com/python-attrs/cattrs/pull/388))
-- Fix copying of converters using function hooks.
+- Fix copying of converters with function hooks.
   ([#398](https://github.com/python-attrs/cattrs/issues/398) [#399](https://github.com/python-attrs/cattrs/pull/399))
-- Broaden loads' type definition for the preconf orjson converter.
+- Broaden {py:func}`loads' <cattrs.preconf.orjson.OrjsonConverter.loads>` type definition for the preconf orjson converter.
   ([#400](https://github.com/python-attrs/cattrs/pull/400))
+- {py:class}`AttributeValidationNote <cattrs.AttributeValidationNote>` and {py:class}`IterableValidationNote <cattrs.IterableValidationNote>` are now picklable.
+  ([#408](https://github.com/python-attrs/cattrs/pull/408))
+- Fix structuring `Final` lists.
+  ([#412](https://github.com/python-attrs/cattrs/issues/412))
+- Fix certain cases of structuring `Annotated` types.
+  ([#418](https://github.com/python-attrs/cattrs/issues/418))
+- Add support for `date` to preconfigured converters.
+  ([#420](https://github.com/python-attrs/cattrs/pull/420))
+- Add support for `datetime.date`s to the PyYAML preconfigured converter.
+  ([#393](https://github.com/python-attrs/cattrs/issues/393))
 - Disambiguate a union of attrs classes where there's a `typing.Literal` tag of some sort.
   ([#391](https://github.com/python-attrs/cattrs/pull/391))
 

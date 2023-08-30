@@ -14,9 +14,10 @@ strategies
 validation
 preconf
 unions
+history
 benchmarking
 contributing
-history
+API <modules>
 ```
 
 ```{include} ../README.md

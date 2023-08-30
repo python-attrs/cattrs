@@ -1,12 +1,13 @@
 """Preconfigured converters for msgpack."""
-from datetime import datetime, timezone
-from typing import Any, Type, TypeVar
+from datetime import date, datetime, time, timezone
+from typing import Any, Type, TypeVar, Union
 
 from msgpack import dumps, loads
 
 from cattrs._compat import AbstractSet
 
 from ..converters import BaseConverter, Converter
+from ..strategies import configure_union_passthrough
 
 T = TypeVar("T")
 
@@ -30,6 +31,13 @@ def configure_converter(converter: BaseConverter):
     converter.register_structure_hook(
         datetime, lambda v, _: datetime.fromtimestamp(v, timezone.utc)
     )
+    converter.register_unstructure_hook(
+        date, lambda v: datetime.combine(v, time(tzinfo=timezone.utc)).timestamp()
+    )
+    converter.register_structure_hook(
+        date, lambda v, _: datetime.fromtimestamp(v, timezone.utc).date()
+    )
+    configure_union_passthrough(Union[str, bool, int, float, None, bytes], converter)
 
 
 def make_converter(*args: Any, **kwargs: Any) -> MsgpackConverter:

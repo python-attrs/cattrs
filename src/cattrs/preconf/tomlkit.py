@@ -1,15 +1,17 @@
 """Preconfigured converters for tomlkit."""
 from base64 import b85decode, b85encode
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 from operator import attrgetter
-from typing import Any, Type, TypeVar
+from typing import Any, Type, TypeVar, Union
 
 from tomlkit import dumps, loads
+from tomlkit.items import Float, Integer, String
 
 from cattrs._compat import AbstractSet, is_mapping
 
 from ..converters import BaseConverter, Converter
+from ..strategies import configure_union_passthrough
 from . import validate_datetime
 
 T = TypeVar("T")
@@ -59,7 +61,16 @@ def configure_converter(converter: BaseConverter):
     converter._unstructure_func.register_func_list(
         [(is_mapping, gen_unstructure_mapping, True)]
     )
+
+    # datetime inherits from date, so identity unstructure hook used
+    # here to prevent the date unstructure hook running.
+    converter.register_unstructure_hook(datetime, lambda v: v)
     converter.register_structure_hook(datetime, validate_datetime)
+    converter.register_unstructure_hook(date, lambda v: v.isoformat())
+    converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
+    configure_union_passthrough(
+        Union[str, String, bool, int, Integer, float, Float], converter
+    )
 
 
 def make_converter(*args: Any, **kwargs: Any) -> TomlkitConverter:

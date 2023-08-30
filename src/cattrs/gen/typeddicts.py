@@ -5,7 +5,7 @@ import re
 import sys
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
-from attr import NOTHING, Attribute
+from attrs import NOTHING, Attribute
 
 try:
     from inspect import get_annotations
@@ -51,6 +51,8 @@ from ._lc import generate_unique_filename
 from ._shared import find_structure_handler
 
 if TYPE_CHECKING:  # pragma: no cover
+    from typing_extensions import Literal
+
     from cattr.converters import BaseConverter
 
 __all__ = ["make_dict_unstructure_fn", "make_dict_structure_fn"]
@@ -242,9 +244,9 @@ def make_dict_unstructure_fn(
 def make_dict_structure_fn(
     cl: Any,
     converter: BaseConverter,
-    _cattrs_forbid_extra_keys: bool = False,
+    _cattrs_forbid_extra_keys: bool | Literal["from_converter"] = "from_converter",
     _cattrs_use_linecache: bool = True,
-    _cattrs_detailed_validation: bool = True,
+    _cattrs_detailed_validation: bool | Literal["from_converter"] = "from_converter",
     **kwargs: AttributeOverride,
 ) -> Callable[[dict, Any], Any]:
     """Generate a specialized dict structuring function for typed dicts.
@@ -259,6 +261,10 @@ def make_dict_structure_fn(
         `ForbiddenExtraKeysError` if unknown keys are encountered.
     :param _cattrs_detailed_validation: Whether to store the generated code in the
         _linecache_, for easier debugging and better stack traces.
+
+    ..  versionchanged:: 23.2.0
+        The `_cattrs_forbid_extra_keys` and `_cattrs_detailed_validation` parameters
+        take their values from the given converter by default.
     """
 
     mapping = {}
@@ -307,6 +313,12 @@ def make_dict_structure_fn(
     req_keys = _required_keys(cl)
 
     allowed_fields = set()
+    if _cattrs_forbid_extra_keys == "from_converter":
+        # BaseConverter doesn't have it so we're careful.
+        _cattrs_forbid_extra_keys = getattr(converter, "forbid_extra_keys", False)
+    if _cattrs_detailed_validation == "from_converter":
+        _cattrs_detailed_validation = converter.detailed_validation
+
     if _cattrs_forbid_extra_keys:
         globs["__c_a"] = allowed_fields
         globs["__c_feke"] = ForbiddenExtraKeysError

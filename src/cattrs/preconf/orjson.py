@@ -1,6 +1,6 @@
 """Preconfigured converters for orjson."""
 from base64 import b85decode, b85encode
-from datetime import datetime
+from datetime import datetime, date
 from enum import Enum
 from typing import Any, Type, TypeVar, Union
 
@@ -9,6 +9,7 @@ from orjson import dumps, loads
 from cattrs._compat import AbstractSet, is_mapping
 
 from ..converters import BaseConverter, Converter
+from ..strategies import configure_union_passthrough
 
 T = TypeVar("T")
 
@@ -38,6 +39,8 @@ def configure_converter(converter: BaseConverter):
 
     converter.register_unstructure_hook(datetime, lambda v: v.isoformat())
     converter.register_structure_hook(datetime, lambda v, _: datetime.fromisoformat(v))
+    converter.register_unstructure_hook(date, lambda v: v.isoformat())
+    converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
 
     def gen_unstructure_mapping(cl: Any, unstructure_to=None):
         key_handler = str
@@ -64,6 +67,7 @@ def configure_converter(converter: BaseConverter):
     converter._unstructure_func.register_func_list(
         [(is_mapping, gen_unstructure_mapping, True)]
     )
+    configure_union_passthrough(Union[str, bool, int, float, None], converter)
 
 
 def make_converter(*args: Any, **kwargs: Any) -> OrjsonConverter:

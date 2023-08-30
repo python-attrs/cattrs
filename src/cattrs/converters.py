@@ -279,11 +279,10 @@ class BaseConverter:
         """
         Register a hook factory for a given predicate.
 
-        A predicate is a function that, given a type, returns whether the factory
-        can produce a hook for that type.
-
-        A factory is a callable that, given a type, produces an unstructuring
-        hook for that type. This unstructuring hook will be cached.
+        :param predicate: A function that, given a type, returns whether the factory
+            can produce a hook for that type.
+        :param factory: A callable that, given a type, produces an unstructuring
+            hook for that type. This unstructuring hook will be cached.
         """
         self._unstructure_func.register_func_list([(predicate, factory, True)])
 
@@ -326,11 +325,10 @@ class BaseConverter:
         """
         Register a hook factory for a given predicate.
 
-        A predicate is a function that, given a type, returns whether the factory
-        can produce a hook for that type.
-
-        A factory is a callable that, given a type, produces a structuring
-        hook for that type. This structuring hook will be cached.
+        :param predicate: A function that, given a type, returns whether the factory
+            can produce a hook for that type.
+        :param factory: A callable that, given a type, produces a structuring
+            hook for that type. This structuring hook will be cached.
         """
         self._structure_func.register_func_list([(predicate, factory, True)])
 
@@ -469,7 +467,7 @@ class BaseConverter:
         if res == self._structure_call:
             # It's not really `structure_call` for Finals (can't call Final())
             return lambda v, _: self._structure_call(v, base)
-        return res
+        return lambda v, _: res(v, base)
 
     # Attrs classes.
 
@@ -606,7 +604,7 @@ class BaseConverter:
                         ix,
                         elem_type,
                     )
-                    exc.__notes__ = [*getattr(e, "__notes__", []), msg]
+                    exc.__notes__ = [*getattr(exc, "__notes__", []), msg]
                     errors.append(exc)
                 finally:
                     ix += 1
@@ -673,7 +671,7 @@ class BaseConverter:
                         msg = IterableValidationNote(
                             f"Structuring {tup} @ index {ix}", ix, tup_type
                         )
-                        exc.__notes__ = [*getattr(e, "__notes__", []), msg]
+                        exc.__notes__ = [*getattr(exc, "__notes__", []), msg]
                         errors.append(exc)
                     finally:
                         ix += 1
@@ -704,13 +702,13 @@ class BaseConverter:
                     msg = IterableValidationNote(
                         f"Structuring {tup} @ index {ix}", ix, t
                     )
-                    exc.__notes__ = [*getattr(e, "__notes__", []), msg]
+                    exc.__notes__ = [*getattr(exc, "__notes__", []), msg]
                     errors.append(exc)
             if len(res) < exp_len:
                 problem = "Not enough" if len(res) < len(tup_params) else "Too many"
                 exc = ValueError(f"{problem} values in {obj!r} to structure as {tup!r}")
                 msg = f"Structuring {tup}"
-                exc.__notes__ = [*getattr(e, "__notes__", []), msg]
+                exc.__notes__ = [*getattr(exc, "__notes__", []), msg]
                 errors.append(exc)
             if errors:
                 raise IterableValidationError(f"While structuring {tup!r}", errors, tup)
@@ -920,9 +918,11 @@ class Converter(BaseConverter):
         origin = type.__origin__
         return self._unstructure_func.dispatch(origin)
 
-    def gen_structure_annotated(self, type):
+    def gen_structure_annotated(self, type) -> Callable:
+        """A hook factory for annotated types."""
         origin = type.__origin__
-        return self._structure_func.dispatch(origin)
+        hook = self._structure_func.dispatch(origin)
+        return lambda v, _: hook(v, origin)
 
     def gen_unstructure_typeddict(self, cl: Any) -> Callable[[Dict], Dict]:
         """Generate a TypedDict unstructure function.

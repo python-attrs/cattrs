@@ -1,19 +1,23 @@
-from datetime import datetime, timezone
+import sys
+from datetime import date, datetime, timezone
 from enum import Enum, IntEnum, unique
 from json import dumps as json_dumps
 from json import loads as json_loads
 from platform import python_implementation
-from typing import Dict, List
+from typing import Any, Dict, List, NewType, Tuple, Union
 
 import pytest
-from attr import define
+from attrs import define
 from bson import CodecOptions, ObjectId
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis.strategies import (
+    DrawFn,
     binary,
     booleans,
+    builds,
     characters,
     composite,
+    dates,
     datetimes,
     dictionaries,
     floats,
@@ -21,6 +25,8 @@ from hypothesis.strategies import (
     integers,
     just,
     lists,
+    one_of,
+    sampled_from,
     sets,
     text,
 )
@@ -45,6 +51,16 @@ from cattrs.preconf.msgpack import make_converter as msgpack_make_converter
 from cattrs.preconf.pyyaml import make_converter as pyyaml_make_converter
 from cattrs.preconf.tomlkit import make_converter as tomlkit_make_converter
 from cattrs.preconf.ujson import make_converter as ujson_make_converter
+
+
+@define
+class A:
+    a: int
+
+
+@define
+class B:
+    b: str
 
 
 @define
@@ -76,13 +92,17 @@ class Everything:
     an_int_enum: AnIntEnum
     a_str_enum: AStringEnum
     a_datetime: datetime
+    a_date: date
     a_string_enum_dict: Dict[AStringEnum, int]
     a_bytes_dict: Dict[bytes, bytes]
+    native_union: Union[int, float, str]
+    native_union_with_spillover: Union[int, str, Set[str]]
+    native_union_with_union_spillover: Union[int, str, A, B]
 
 
 @composite
 def everythings(
-    draw,
+    draw: DrawFn,
     min_int=None,
     max_int=None,
     allow_inf=True,
@@ -117,45 +137,132 @@ def everythings(
                 d.year, d.month, d.day, d.hour, d.minute, d.second, tzinfo=d.tzinfo
             )
         )
+    fs = floats(allow_nan=False, allow_infinity=allow_inf)
+    ints = integers(min_value=min_int, max_value=max_int)
+
     return Everything(
         draw(strings),
         draw(binary()),
-        draw(integers(min_value=min_int, max_value=max_int)),
-        draw(floats(allow_nan=False, allow_infinity=allow_inf)),
-        draw(dictionaries(key_text, integers(min_value=min_int, max_value=max_int))),
-        draw(lists(integers(min_value=min_int, max_value=max_int))),
-        tuple(draw(lists(integers(min_value=min_int, max_value=max_int)))),
-        (
-            draw(strings),
-            draw(integers(min_value=min_int, max_value=max_int)),
-            draw(floats(allow_nan=False, allow_infinity=allow_inf)),
-        ),
-        Counter(
-            draw(dictionaries(key_text, integers(min_value=min_int, max_value=max_int)))
-        ),
-        draw(
-            dictionaries(
-                integers(min_value=min_int, max_value=max_int),
-                floats(allow_nan=False, allow_infinity=allow_inf),
-            )
-        ),
-        draw(dictionaries(floats(allow_nan=False, allow_infinity=allow_inf), strings)),
-        draw(lists(floats(allow_nan=False, allow_infinity=allow_inf))),
+        draw(ints),
+        draw(fs),
+        draw(dictionaries(key_text, ints)),
+        draw(lists(ints)),
+        tuple(draw(lists(ints))),
+        (draw(strings), draw(ints), draw(fs)),
+        Counter(draw(dictionaries(key_text, ints))),
+        draw(dictionaries(ints, fs)),
+        draw(dictionaries(fs, strings)),
+        draw(lists(fs)),
         draw(lists(strings)),
-        draw(sets(floats(allow_nan=False, allow_infinity=allow_inf))),
-        draw(sets(integers(min_value=min_int, max_value=max_int))),
+        draw(sets(fs)),
+        draw(sets(ints)),
         draw(frozensets(strings)),
         Everything.AnIntEnum.A,
         Everything.AStringEnum.A,
         draw(dts),
-        draw(
-            dictionaries(
-                just(Everything.AStringEnum.A),
-                integers(min_value=min_int, max_value=max_int),
-            )
-        ),
+        draw(dates(min_value=date(1970, 1, 1), max_value=date(2038, 1, 1))),
+        draw(dictionaries(just(Everything.AStringEnum.A), ints)),
         draw(dictionaries(binary(min_size=min_key_length), binary())),
+        draw(one_of(ints, fs, strings)),
+        draw(one_of(ints, strings, sets(strings))),
+        draw(one_of(ints, strings, ints.map(A), strings.map(B))),
     )
+
+
+NewStr = NewType("NewStr", str)
+NewInt = NewType("NewInt", int)
+NewBool = NewType("NewBool", bool)
+
+
+@composite
+def native_unions(
+    draw: DrawFn,
+    include_strings=True,
+    include_bools=True,
+    include_ints=True,
+    include_floats=True,
+    include_nones=True,
+    include_bytes=True,
+    include_datetimes=True,
+    include_objectids=False,
+    include_literals=True,
+) -> Tuple[Any, Any]:
+    types = []
+    strats = {}
+    if include_strings:
+        types.append(str)
+        strats[str] = text()
+    if include_bools:
+        types.append(bool)
+        strats[bool] = booleans()
+    if include_ints:
+        types.append(int)
+        strats[int] = integers()
+    if include_floats:
+        types.append(float)
+        strats[float] = floats(allow_nan=False)
+    if include_nones:
+        types.append(None)
+        strats[None] = just(None)
+    if include_bytes:
+        types.append(bytes)
+        strats[bytes] = binary()
+    if include_datetimes:
+        types.append(datetime)
+        strats[datetime] = datetimes(
+            min_value=datetime(1970, 1, 1), max_value=datetime(2038, 1, 1)
+        )
+    if include_objectids:
+        types.append(ObjectId)
+        strats[ObjectId] = builds(ObjectId)
+
+    chosen_types = draw(sets(sampled_from(types), min_size=2))
+
+    if include_literals:
+        from typing import Literal
+
+        # We can replace some of the types with 1+ literal types.
+        if str in chosen_types:
+            strat = draw(sampled_from(["leave", "literal", "newtype"]))
+            if strat == "literal":
+                chosen_types.remove(str)
+                vals = draw(sets(text(), min_size=1, max_size=2))
+                for lit in vals:
+                    t = Literal[lit]
+                    chosen_types.add(t)
+                    strats[t] = just(lit)
+            elif strat == "newtype":
+                chosen_types.remove(str)
+                chosen_types.add(NewStr)
+                strats[NewStr] = strats.pop(str)
+        if bool in chosen_types:
+            strat = draw(sampled_from(["leave", "literal", "newtype"]))
+            if strat == "literal":
+                chosen_types.remove(bool)
+                val = draw(booleans())
+                t = Literal[val]
+                chosen_types.add(t)
+                strats[t] = just(val)
+            elif strat == "newtype":
+                chosen_types.remove(bool)
+                chosen_types.add(NewBool)
+                strats[NewBool] = strats.pop(bool)
+        if int in chosen_types:
+            strat = draw(sampled_from(["leave", "literal", "newtype"]))
+            if strat == "literal":
+                chosen_types.remove(int)
+                vals = draw(sets(integers(), min_size=1, max_size=2))
+                for val in vals:
+                    t = Literal[val]
+                    chosen_types.add(t)
+                    strats[t] = just(val)
+            elif strat == "newtype":
+                # NewTypes instead.
+                chosen_types.remove(int)
+                chosen_types.add(NewInt)
+                strats[NewInt] = strats.pop(int)
+
+    return Union[tuple(chosen_types)], draw(one_of(*[strats[t] for t in chosen_types]))
 
 
 @given(everythings())
@@ -182,6 +289,46 @@ def test_stdlib_json_converter_unstruct_collection_overrides(everything: Everyth
     assert raw["a_set"] == sorted(raw["a_set"])
     assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
+
+
+@given(
+    union_and_val=native_unions(
+        include_bytes=False,
+        include_datetimes=False,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
+        include_literals=sys.version_info >= (3, 8),
+    ),
+    detailed_validation=...,
+)
+@settings(max_examples=1000)
+def test_stdlib_json_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    converter = json_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val
+
+
+@given(
+    union_and_val=native_unions(
+        include_strings=False,
+        include_bytes=False,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
+        include_literals=sys.version_info >= (3, 8),
+    ),
+    detailed_validation=...,
+)
+def test_stdlib_json_unions_with_spillover(
+    union_and_val: tuple, detailed_validation: bool
+):
+    """Native union passthrough works and can handle spillover.
+
+    The stdlib json converter cannot handle datetimes natively.
+    """
+    converter = json_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(converter.unstructure(val), type) == val
 
 
 @given(
@@ -222,6 +369,23 @@ def test_ujson_converter_unstruct_collection_overrides(everything: Everything):
     assert raw["a_set"] == sorted(raw["a_set"])
     assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
+
+
+@given(
+    union_and_val=native_unions(
+        include_bytes=False,
+        include_datetimes=False,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
+        include_literals=sys.version_info >= (3, 8),
+    ),
+    detailed_validation=...,
+)
+def test_ujson_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    converter = ujson_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val
 
 
 @pytest.mark.skipif(python_implementation() == "PyPy", reason="no orjson on PyPy")
@@ -275,6 +439,26 @@ def test_orjson_converter_unstruct_collection_overrides(everything: Everything):
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
 
 
+@pytest.mark.skipif(python_implementation() == "PyPy", reason="no orjson on PyPy")
+@given(
+    union_and_val=native_unions(
+        include_bytes=False,
+        include_datetimes=False,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
+        include_literals=sys.version_info >= (3, 8),
+    ),
+    detailed_validation=...,
+)
+def test_orjson_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    from cattrs.preconf.orjson import make_converter as orjson_make_converter
+
+    converter = orjson_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val
+
+
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
 def test_msgpack(everything: Everything):
     from msgpack import dumps as msgpack_dumps
@@ -304,6 +488,22 @@ def test_msgpack_converter_unstruct_collection_overrides(everything: Everything)
     assert raw["a_set"] == sorted(raw["a_set"])
     assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
+
+
+@given(
+    union_and_val=native_unions(
+        include_datetimes=False,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
+        include_literals=sys.version_info >= (3, 8),
+    ),
+    detailed_validation=...,
+)
+def test_msgpack_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    converter = msgpack_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val
 
 
 @given(
@@ -365,6 +565,22 @@ def test_bson_converter_unstruct_collection_overrides(everything: Everything):
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
 
 
+@given(
+    union_and_val=native_unions(
+        include_objectids=True,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
+        include_literals=sys.version_info >= (3, 8),
+    ),
+    detailed_validation=...,
+)
+def test_bson_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    converter = bson_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val
+
+
 @given(everythings())
 def test_pyyaml(everything: Everything):
     from yaml import safe_dump, safe_load
@@ -389,6 +605,39 @@ def test_pyyaml_converter_unstruct_collection_overrides(everything: Everything):
     )
     raw = converter.unstructure(everything)
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
+
+
+@given(
+    union_and_val=native_unions(
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
+        include_literals=sys.version_info >= (3, 8),
+    ),
+    detailed_validation=...,
+)
+def test_pyyaml_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    converter = pyyaml_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val
+
+
+@given(detailed_validation=...)
+def test_pyyaml_dates(detailed_validation: bool):
+    """Pyyaml dates work."""
+    converter = pyyaml_make_converter(detailed_validation=detailed_validation)
+
+    @define
+    class A:
+        datetime: datetime
+        date: date
+
+    data = """
+    datetime: 1970-01-01T00:00:00Z
+    date: 1970-01-01"""
+    assert converter.loads(data, A) == A(
+        datetime(1970, 1, 1, tzinfo=timezone.utc), date(1970, 1, 1)
+    )
 
 
 @given(
@@ -443,6 +692,24 @@ def test_tomlkit_converter_unstruct_collection_overrides(everything: Everything)
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
 
 
+@given(
+    union_and_val=native_unions(
+        include_nones=False,
+        include_bytes=False,
+        include_datetimes=False,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
+        include_literals=sys.version_info >= (3, 8),
+    ),
+    detailed_validation=...,
+)
+def test_tomlkit_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    converter = tomlkit_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val
+
+
 def test_bson_objectid():
     """BSON ObjectIds are supported by default."""
     converter = bson_make_converter()
@@ -477,3 +744,19 @@ def test_cbor2_converter_unstruct_collection_overrides(everything: Everything):
     assert raw["a_set"] == sorted(raw["a_set"])
     assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
+
+
+@given(
+    union_and_val=native_unions(
+        include_datetimes=False,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
+        include_literals=sys.version_info >= (3, 8),
+    ),
+    detailed_validation=...,
+)
+def test_cbor2_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    converter = cbor2_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val

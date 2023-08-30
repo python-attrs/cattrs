@@ -101,6 +101,7 @@ span:target ~ h4:first-of-type,
 span:target ~ h5:first-of-type,
 span:target ~ h6:first-of-type {
   text-decoration: underline dashed;
+  text-decoration-thickness: 1px;
 }
 
 div.article-container > article {
