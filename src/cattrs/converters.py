@@ -279,11 +279,10 @@ class BaseConverter:
         """
         Register a hook factory for a given predicate.
 
-        A predicate is a function that, given a type, returns whether the factory
-        can produce a hook for that type.
-
-        A factory is a callable that, given a type, produces an unstructuring
-        hook for that type. This unstructuring hook will be cached.
+        :param predicate: A function that, given a type, returns whether the factory
+            can produce a hook for that type.
+        :param factory: A callable that, given a type, produces an unstructuring
+            hook for that type. This unstructuring hook will be cached.
         """
         self._unstructure_func.register_func_list([(predicate, factory, True)])
 
@@ -326,11 +325,10 @@ class BaseConverter:
         """
         Register a hook factory for a given predicate.
 
-        A predicate is a function that, given a type, returns whether the factory
-        can produce a hook for that type.
-
-        A factory is a callable that, given a type, produces a structuring
-        hook for that type. This structuring hook will be cached.
+        :param predicate: A function that, given a type, returns whether the factory
+            can produce a hook for that type.
+        :param factory: A callable that, given a type, produces a structuring
+            hook for that type. This structuring hook will be cached.
         """
         self._structure_func.register_func_list([(predicate, factory, True)])
 
