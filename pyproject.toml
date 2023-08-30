@@ -19,7 +19,8 @@ test = [
     "hypothesis>=6.79.4",
     "pytest>=7.4.0",
     "pytest-benchmark>=4.0.0",
-    "immutables>=0.19",
+    "immutables>=0.19; python_version < '3.8'",
+    "immutables>=0.20; python_version >= '3.8'",
     "typing-extensions>=4.7.1",
     "coverage>=7.2.7",
 ]
