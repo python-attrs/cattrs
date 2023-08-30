@@ -821,7 +821,7 @@ class Converter(BaseConverter):
         if OriginAbstractSet in co:
             if OriginMutableSet not in co:
                 co[OriginMutableSet] = co[OriginAbstractSet]
-                co[AbcMutableSet] = co[OriginAbstractSet]  # For 3.7/3.8 compatibility.
+                co[AbcMutableSet] = co[OriginAbstractSet]  # For 3.8 compatibility.
             if FrozenSetSubscriptable not in co:
                 co[FrozenSetSubscriptable] = co[OriginAbstractSet]
 
@@ -830,7 +830,7 @@ class Converter(BaseConverter):
             co[set] = co[OriginMutableSet]
 
         if FrozenSetSubscriptable in co:
-            co[frozenset] = co[FrozenSetSubscriptable]  # For 3.7/3.8 compatibility.
+            co[frozenset] = co[FrozenSetSubscriptable]  # For 3.8 compatibility.
 
         # abc.Sequence overrides, if defined, can apply to MutableSequences, lists and
         # tuples

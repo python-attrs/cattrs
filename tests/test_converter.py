@@ -120,7 +120,7 @@ def test_forbid_extra_keys(cls_and_vals):
     cl, vals, kwargs = cls_and_vals
     inst = cl(*vals, **kwargs)
     unstructured = converter.unstructure(inst)
-    bad_key = list(unstructured)[0] + "A" if unstructured else "Hyp"
+    bad_key = next(iter(unstructured)) + "A" if unstructured else "Hyp"
     while bad_key in unstructured:
         bad_key += "A"
     unstructured[bad_key] = 1

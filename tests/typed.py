@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import (
     Any,
     Dict,
+    Final,
     FrozenSet,
     List,
     MutableSequence,
@@ -46,7 +47,6 @@ from hypothesis.strategies import (
     text,
     tuples,
 )
-from typing_extensions import Final
 
 from .untyped import gen_attr_names, make_class
 

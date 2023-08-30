@@ -108,7 +108,7 @@ destructure them.
 
 - Free software: MIT license
 - Documentation: https://catt.rs
-- Python versions supported: 3.7 and up. (Older Python versions, like 2.7, 3.5 and 3.6 are supported by older versions; see the changelog.)
+- Python versions supported: 3.8 and up. (Older Python versions are supported by older versions; see the changelog.)
 
 ## Features
 
