@@ -11,8 +11,6 @@ from attrs import define
 from cattrs import BaseConverter
 from cattrs.strategies import configure_union_passthrough
 
-from .._compat import is_py37
-
 
 def test_only_primitives(converter: BaseConverter) -> None:
     """A native union with only primitives works."""
@@ -30,7 +28,6 @@ def test_only_primitives(converter: BaseConverter) -> None:
         converter.structure((), union)
 
 
-@pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
 def test_literals(converter: BaseConverter) -> None:
     """A union with primitives and literals works."""
     from typing import Literal

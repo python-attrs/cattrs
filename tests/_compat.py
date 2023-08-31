@@ -1,12 +1,11 @@
 import sys
 
-is_py37 = sys.version_info[:2] == (3, 7)
 is_py38 = sys.version_info[:2] == (3, 8)
 is_py39_plus = sys.version_info >= (3, 9)
 is_py310_plus = sys.version_info >= (3, 10)
 is_py311_plus = sys.version_info >= (3, 11)
 
-if is_py37 or is_py38:
+if is_py38:
     from typing import Dict, List
 
     List_origin = List

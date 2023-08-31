@@ -6,19 +6,19 @@ from dataclasses import MISSING
 from dataclasses import fields as dataclass_fields
 from dataclasses import is_dataclass
 from typing import AbstractSet as TypingAbstractSet
-from typing import Any, Deque, Dict, FrozenSet, List
+from typing import Any, Deque, Dict, Final, FrozenSet, List
 from typing import Mapping as TypingMapping
 from typing import MutableMapping as TypingMutableMapping
 from typing import MutableSequence as TypingMutableSequence
 from typing import MutableSet as TypingMutableSet
-from typing import NewType, Optional
+from typing import NewType, Optional, Protocol
 from typing import Sequence as TypingSequence
 from typing import Set as TypingSet
-from typing import Tuple, get_type_hints
+from typing import Tuple, get_args, get_origin, get_type_hints
 
-from attr import NOTHING, Attribute, Factory
-from attr import fields as attrs_fields
-from attr import resolve_types
+from attrs import NOTHING, Attribute, Factory
+from attrs import fields as attrs_fields
+from attrs import resolve_types
 
 __all__ = ["ExceptionGroup", "ExtensionsTypedDict", "TypedDict", "is_typeddict"]
 
@@ -27,18 +27,6 @@ try:
 except ImportError:
     ExtensionsTypedDict = None
 
-if sys.version_info >= (3, 8):
-    from typing import Final, Protocol, get_args, get_origin
-
-else:
-
-    def get_args(cl):
-        return cl.__args__
-
-    def get_origin(cl):
-        return getattr(cl, "__origin__", None)
-
-    from typing_extensions import Final, Protocol
 
 if sys.version_info >= (3, 11):
     from builtins import ExceptionGroup
@@ -355,15 +343,10 @@ else:
     TupleSubscriptable = Tuple
 
     from collections import Counter as ColCounter
-    from typing import Counter, Union, _GenericAlias
+    from typing import Counter, TypedDict, Union, _GenericAlias
 
     from typing_extensions import Annotated, NotRequired, Required
     from typing_extensions import get_origin as te_get_origin
-
-    if sys.version_info >= (3, 8):
-        from typing import TypedDict
-    else:
-        TypedDict = ExtensionsTypedDict
 
     def is_annotated(type) -> bool:
         return te_get_origin(type) is Annotated
@@ -440,16 +423,10 @@ else:
             or getattr(type, "__origin__", None) is ColCounter
         )
 
-    if sys.version_info >= (3, 8):
-        from typing import Literal
+    from typing import Literal
 
-        def is_literal(type) -> bool:
-            return type.__class__ is _GenericAlias and type.__origin__ is Literal
-
-    else:
-        # No literals in 3.7.
-        def is_literal(_) -> bool:
-            return False
+    def is_literal(type) -> bool:
+        return type.__class__ is _GenericAlias and type.__origin__ is Literal
 
     def is_generic(obj):
         return isinstance(obj, _GenericAlias)

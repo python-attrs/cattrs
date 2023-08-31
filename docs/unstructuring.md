@@ -52,7 +52,6 @@ False
 
 Generic TypedDicts work on Python 3.11 and later, since that is the first Python version that supports them in general.
 
-On Python 3.7, using `typing_extensions.TypedDict` is required since `typing.TypedDict` doesn't exist there.
 On Python 3.8, using `typing_extensions.TypedDict` is recommended since `typing.TypedDict` doesn't support all necessary features, so certain combinations of subclassing, totality and `typing.Required` won't work.
 
 [Similar to _attrs_ classes](customizing.md#using-cattrsgen-generators), unstructuring can be customized using {meth}`cattrs.gen.typeddicts.make_dict_unstructure_fn`.
