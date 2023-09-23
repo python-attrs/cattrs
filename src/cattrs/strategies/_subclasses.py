@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from gc import collect
-from typing import Any, Callable, Union
+from typing import Any, Callable, Union, TypeVar
 
-from ..converters import BaseConverter, Converter
+from ..converters import BaseConverter
 from ..gen import AttributeOverride, make_dict_structure_fn, make_dict_unstructure_fn
 from ..gen._consts import already_generating
 
@@ -28,11 +28,14 @@ def _get_union_type(cl: type, given_subclasses_tree: tuple[type]) -> type | None
     return Union[class_tree] if len(class_tree) >= 2 else None
 
 
+C = TypeVar("C", bound=BaseConverter)
+
+
 def include_subclasses(
     cl: type,
-    converter: Converter,
+    converter: C,
     subclasses: tuple[type, ...] | None = None,
-    union_strategy: Callable[[Any, BaseConverter], Any] | None = None,
+    union_strategy: Callable[[Any, C], Any] | None = None,
     overrides: dict[str, AttributeOverride] | None = None,
 ) -> None:
     """
@@ -79,7 +82,7 @@ def include_subclasses(
 
 def _include_subclasses_without_union_strategy(
     cl,
-    converter: Converter,
+    converter: BaseConverter,
     parent_subclass_tree: tuple[type],
     overrides: dict[str, AttributeOverride] | None,
 ):
@@ -153,9 +156,9 @@ def _include_subclasses_without_union_strategy(
 
 
 def _include_subclasses_with_union_strategy(
-    converter: Converter,
+    converter: C,
     union_classes: tuple[type, ...],
-    union_strategy: Callable[[Any, BaseConverter], Any],
+    union_strategy: Callable[[Any, C], Any],
     overrides: dict[str, AttributeOverride] | None,
 ):
     """
