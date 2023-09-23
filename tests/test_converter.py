@@ -17,7 +17,7 @@ from attrs import Factory, define, fields, make_class
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis.strategies import booleans, just, lists, one_of, sampled_from
 
-from cattrs import Converter, UnstructureStrategy
+from cattrs import BaseConverter, Converter, UnstructureStrategy
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import make_dict_structure_fn, override
 
@@ -379,6 +379,23 @@ def test_omit_default_roundtrip(cl_and_vals):
     unstructured = converter.unstructure(inst)
     assert unstructured == {"a": 0}
     assert inst == converter.structure(unstructured, C)
+
+
+def test_dict_roundtrip_with_alias():
+    """
+    A class with an aliased attribute can be unstructured and structured.
+    """
+
+    converter = BaseConverter()
+
+    @define
+    class C:
+        _a: int
+
+    inst = C(a=0)
+    unstructured = converter.unstructure(inst)
+    assert unstructured == {"_a": 0}
+    assert converter.structure(unstructured, C) == inst
 
 
 @given(simple_typed_classes(defaults=True))

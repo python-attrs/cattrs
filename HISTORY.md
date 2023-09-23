@@ -45,6 +45,8 @@
   ([#420](https://github.com/python-attrs/cattrs/pull/420))
 - Add support for `datetime.date`s to the PyYAML preconfigured converter.
   ([#393](https://github.com/python-attrs/cattrs/issues/393))
+- Remove some unused lines in the unstructuring code.
+  ([#416](https://github.com/python-attrs/cattrs/pull/416))
 
 ## 23.1.2 (2023-06-02)
 

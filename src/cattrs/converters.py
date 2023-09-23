@@ -509,16 +509,12 @@ class BaseConverter:
 
         conv_obj = {}  # Start with a fresh dict, to ignore extra keys.
         for a in fields(cl):
-            name = a.name
-
             try:
-                val = obj[name]
+                val = obj[a.name]
             except KeyError:
                 continue
 
-            if name[0] == "_":
-                name = name[1:]
-
+            # try .alias and .name because this code also supports dataclasses!
             conv_obj[getattr(a, "alias", a.name)] = self._structure_attribute(a, val)
 
         return cl(**conv_obj)
