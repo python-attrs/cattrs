@@ -8,6 +8,8 @@
 - **Potentially breaking**: {py:func}`cattrs.gen.make_dict_structure_fn` and {py:func}`cattrs.gen.typeddicts.make_dict_structure_fn` will use the values for the `detailed_validation` and `forbid_extra_keys` parameters from the given converter by default now.
   If you're using these functions directly, the old behavior can be restored by passing in the desired values directly.
   ([#410](https://github.com/python-attrs/cattrs/issues/410) [#411](https://github.com/python-attrs/cattrs/pull/411))
+- Python 3.12 is now supported. Python 3.7 is no longer supported; use older releases there.
+  ([#424](https://github.com/python-attrs/cattrs/pull/424))
 - Introduce the `use_class_methods` strategy. Learn more [here](https://catt.rs/en/latest/strategies.html#using-class-specific-structure-and-unstructure-methods).
   ([#405](https://github.com/python-attrs/cattrs/pull/405))
 - Implement the `union passthrough` strategy, enabling much richer union handling for preconfigured converters. [Learn more here](https://catt.rs/en/stable/strategies.html#union-passthrough).
@@ -43,6 +45,8 @@
   ([#420](https://github.com/python-attrs/cattrs/pull/420))
 - Add support for `datetime.date`s to the PyYAML preconfigured converter.
   ([#393](https://github.com/python-attrs/cattrs/issues/393))
+- Remove some unused lines in the unstructuring code.
+  ([#416](https://github.com/python-attrs/cattrs/pull/416))
 - Disambiguate a union of attrs classes where there's a `typing.Literal` tag of some sort.
   ([#391](https://github.com/python-attrs/cattrs/pull/391))
 

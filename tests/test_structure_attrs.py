@@ -11,7 +11,6 @@ from hypothesis.strategies import data, lists, sampled_from
 
 from cattrs.converters import BaseConverter, Converter
 
-from ._compat import is_py37
 from .untyped import simple_classes
 
 
@@ -137,7 +136,6 @@ def test_structure_union_explicit(cl_and_vals_a, cl_and_vals_b):
     assert inst == converter.structure(converter.unstructure(inst), Union[cl_a, cl_b])
 
 
-@pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal(converter_cls):
     """Structuring a class with a literal field works."""
@@ -154,7 +152,6 @@ def test_structure_literal(converter_cls):
     ) == ClassWithLiteral(4)
 
 
-@pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_enum(converter_cls):
     """Structuring a class with a literal field works."""
@@ -175,7 +172,6 @@ def test_structure_literal_enum(converter_cls):
     ) == ClassWithLiteral(Foo.FOO)
 
 
-@pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_multiple(converter_cls):
     """Structuring a class with a literal field works."""
@@ -211,7 +207,6 @@ def test_structure_literal_multiple(converter_cls):
     assert isinstance(cwl.literal_field, Bar)
 
 
-@pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_error(converter_cls):
     """Structuring a class with a literal field can raise an error."""
@@ -227,7 +222,6 @@ def test_structure_literal_error(converter_cls):
         converter.structure({"literal_field": 3}, ClassWithLiteral)
 
 
-@pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_multiple_error(converter_cls):
     """Structuring a class with a literal field can raise an error."""
