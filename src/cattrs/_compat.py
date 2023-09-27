@@ -324,7 +324,7 @@ if sys.version_info >= (3, 9):
         """Replace a generic type's arguments."""
         if is_annotated(type):
             # typing.Annotated requires a special case.
-            return Annotated[args]
+            return Annotated[(args,)]
         return type.__origin__[args]
 
     def get_full_type_hints(obj, globalns=None, localns=None):
