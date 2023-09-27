@@ -1,7 +1,7 @@
 """Loading of attrs classes."""
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Union
+from typing import Union, Literal
 from unittest.mock import Mock
 
 import pytest
@@ -139,8 +139,6 @@ def test_structure_union_explicit(cl_and_vals_a, cl_and_vals_b):
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal(converter_cls):
     """Structuring a class with a literal field works."""
-    from typing import Literal
-
     converter = converter_cls()
 
     @define
@@ -155,8 +153,6 @@ def test_structure_literal(converter_cls):
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_enum(converter_cls):
     """Structuring a class with a literal field works."""
-    from typing import Literal
-
     converter = converter_cls()
 
     class Foo(Enum):
@@ -175,8 +171,6 @@ def test_structure_literal_enum(converter_cls):
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_multiple(converter_cls):
     """Structuring a class with a literal field works."""
-    from typing import Literal
-
     converter = converter_cls()
 
     class Foo(Enum):
@@ -210,8 +204,6 @@ def test_structure_literal_multiple(converter_cls):
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_error(converter_cls):
     """Structuring a class with a literal field can raise an error."""
-    from typing import Literal
-
     converter = converter_cls()
 
     @define
@@ -225,8 +217,6 @@ def test_structure_literal_error(converter_cls):
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_multiple_error(converter_cls):
     """Structuring a class with a literal field can raise an error."""
-    from typing import Literal
-
     converter = converter_cls()
 
     @define
@@ -304,11 +294,8 @@ def test_structure_prefers_attrib_converters(converter_type):
     assert inst.z == "5"
 
 
-@pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
 @pytest.mark.parametrize("converter_type", [BaseConverter, Converter])
 def test_structure_multitier_discriminator_union(converter_type):
-    from typing import Literal
-
     converter = converter_type()
 
     @define()
