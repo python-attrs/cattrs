@@ -1,5 +1,5 @@
 """Tests for auto-disambiguators."""
-from typing import Any, Union
+from typing import Any, Literal, Union
 
 import attr
 import pytest
@@ -8,14 +8,10 @@ from hypothesis import HealthCheck, assume, given, settings
 
 from cattrs.disambiguators import create_default_dis_func, create_uniq_field_dis_func
 
-from ._compat import is_py37
 from .untyped import simple_classes
 
 
-@pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
 def test_edge_errors():
-    from typing import Literal
-
     """Edge input cases cause errors."""
 
     @attr.s
@@ -128,10 +124,7 @@ def test_disambiguation(cl_and_vals_a, cl_and_vals_b):
 
 
 # not too sure of properties of `create_default_dis_func`
-@pytest.mark.skipif(is_py37, reason="Not supported on 3.7")
 def test_disambiguate_from_discriminated_enum():
-    from typing import Literal
-
     # can it find any discriminator?
     @define()
     class A:
