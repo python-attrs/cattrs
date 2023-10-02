@@ -47,7 +47,7 @@ clean-test: ## remove test and coverage artifacts
 	rm -f .coverage
 	rm -fr htmlcov/
 
-lint: ## check style with flake8
+lint: ## check style with ruff and black
 	pdm run ruff src/ tests
 	pdm run black --check src tests docs/conf.py
 

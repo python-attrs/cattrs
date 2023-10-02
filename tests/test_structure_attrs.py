@@ -1,7 +1,7 @@
 """Loading of attrs classes."""
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Union
+from typing import Literal, Union
 from unittest.mock import Mock
 
 import pytest
@@ -139,8 +139,6 @@ def test_structure_union_explicit(cl_and_vals_a, cl_and_vals_b):
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal(converter_cls):
     """Structuring a class with a literal field works."""
-    from typing import Literal
-
     converter = converter_cls()
 
     @define
@@ -155,8 +153,6 @@ def test_structure_literal(converter_cls):
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_enum(converter_cls):
     """Structuring a class with a literal field works."""
-    from typing import Literal
-
     converter = converter_cls()
 
     class Foo(Enum):
@@ -175,8 +171,6 @@ def test_structure_literal_enum(converter_cls):
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_multiple(converter_cls):
     """Structuring a class with a literal field works."""
-    from typing import Literal
-
     converter = converter_cls()
 
     class Foo(Enum):
@@ -210,8 +204,6 @@ def test_structure_literal_multiple(converter_cls):
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_error(converter_cls):
     """Structuring a class with a literal field can raise an error."""
-    from typing import Literal
-
     converter = converter_cls()
 
     @define
@@ -225,8 +217,6 @@ def test_structure_literal_error(converter_cls):
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_multiple_error(converter_cls):
     """Structuring a class with a literal field can raise an error."""
-    from typing import Literal
-
     converter = converter_cls()
 
     @define
@@ -302,3 +292,28 @@ def test_structure_prefers_attrib_converters(converter_type):
 
     attrib_converter.assert_any_call(5)
     assert inst.z == "5"
+
+
+@pytest.mark.parametrize("converter_type", [BaseConverter, Converter])
+def test_structure_multitier_discriminator_union(converter_type):
+    converter = converter_type()
+
+    @define()
+    class E:
+        op: Literal[1]
+
+    @define()
+    class F:
+        op: Literal[0]
+        t: Literal["MESSAGE_CREATE"]
+
+    @define()
+    class G:
+        op: Literal[0]
+        t: Literal["MESSAGE_UPDATE"]
+
+    inst = converter.structure({"op": 1}, Union[E, F, G])
+    assert isinstance(inst, E)
+
+    inst = converter.structure({"op": 0, "t": "MESSAGE_CREATE"}, Union[E, F, G])
+    assert isinstance(inst, F)

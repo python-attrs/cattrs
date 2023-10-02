@@ -1,12 +1,12 @@
 """Tests for auto-disambiguators."""
-from typing import Any
+from typing import Any, Literal, Union
 
 import attr
 import pytest
-from attr import NOTHING
+from attrs import NOTHING, define
 from hypothesis import HealthCheck, assume, given, settings
 
-from cattrs.disambiguators import create_uniq_field_dis_func
+from cattrs.disambiguators import create_default_dis_func, create_uniq_field_dis_func
 
 from .untyped import simple_classes
 
@@ -22,6 +22,9 @@ def test_edge_errors():
         # Can't generate for only one class.
         create_uniq_field_dis_func(A)
 
+    with pytest.raises(ValueError):
+        create_default_dis_func(A)
+
     @attr.s
     class B:
         pass
@@ -29,6 +32,9 @@ def test_edge_errors():
     with pytest.raises(ValueError):
         # No fields on either class.
         create_uniq_field_dis_func(A, B)
+
+    with pytest.raises(ValueError):
+        create_default_dis_func(A, B)
 
     @attr.s
     class C:
@@ -42,6 +48,10 @@ def test_edge_errors():
         # No unique fields on either class.
         create_uniq_field_dis_func(C, D)
 
+    with pytest.raises(ValueError):
+        # No discriminator candidates
+        create_default_dis_func(C, D)
+
     @attr.s
     class E:
         pass
@@ -53,6 +63,18 @@ def test_edge_errors():
     with pytest.raises(ValueError):
         # no usable non-default attributes
         create_uniq_field_dis_func(E, F)
+
+    @define()
+    class G:
+        x: Literal[1]
+
+    @define()
+    class H:
+        x: Literal[1]
+
+    with pytest.raises(ValueError):
+        # The discriminator chosen does not actually help
+        create_default_dis_func(C, D)
 
 
 @given(simple_classes(defaults=False))
@@ -99,3 +121,71 @@ def test_disambiguation(cl_and_vals_a, cl_and_vals_b):
     fn = create_uniq_field_dis_func(cl_a, cl_b)
 
     assert fn(attr.asdict(cl_a(*vals_a, **kwargs_a))) is cl_a
+
+
+# not too sure of properties of `create_default_dis_func`
+def test_disambiguate_from_discriminated_enum():
+    # can it find any discriminator?
+    @define()
+    class A:
+        a: Literal[0]
+
+    @define()
+    class B:
+        a: Literal[1]
+
+    fn = create_default_dis_func(A, B)
+    assert fn({"a": 0}) is A
+    assert fn({"a": 1}) is B
+
+    # can it find the better discriminator?
+    @define()
+    class C:
+        a: Literal[0]
+        b: Literal[1]
+
+    @define()
+    class D:
+        a: Literal[0]
+        b: Literal[0]
+
+    fn = create_default_dis_func(C, D)
+    assert fn({"a": 0, "b": 1}) is C
+    assert fn({"a": 0, "b": 0}) is D
+
+    # can it handle multiple tiers of discriminators?
+    # (example inspired by Discord's gateway's discriminated union)
+    @define()
+    class E:
+        op: Literal[1]
+
+    @define()
+    class F:
+        op: Literal[0]
+        t: Literal["MESSAGE_CREATE"]
+
+    @define()
+    class G:
+        op: Literal[0]
+        t: Literal["MESSAGE_UPDATE"]
+
+    fn = create_default_dis_func(E, F, G)
+    assert fn({"op": 1}) is E
+    assert fn({"op": 0, "t": "MESSAGE_CREATE"}) is Union[F, G]
+
+    # can it handle multiple literals?
+    @define()
+    class H:
+        a: Literal[1]
+
+    @define()
+    class J:
+        a: Literal[0, 1]
+
+    @define()
+    class K:
+        a: Literal[0]
+
+    fn = create_default_dis_func(H, J, K)
+    assert fn({"a": 1}) is Union[H, J]
+    assert fn({"a": 0}) is Union[J, K]

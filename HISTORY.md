@@ -47,6 +47,8 @@
   ([#393](https://github.com/python-attrs/cattrs/issues/393))
 - Remove some unused lines in the unstructuring code.
   ([#416](https://github.com/python-attrs/cattrs/pull/416))
+- Disambiguate a union of attrs classes where there's a `typing.Literal` tag of some sort.
+  ([#391](https://github.com/python-attrs/cattrs/pull/391))
 
 ## 23.1.2 (2023-06-02)
 
