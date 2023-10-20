@@ -2,9 +2,9 @@
 from collections import OrderedDict, defaultdict
 from functools import reduce
 from operator import or_
-from typing import Any, Callable, Dict, Mapping, Optional, Type, Union
+from typing import Any, Callable, Dict, Mapping, Optional, Set, Type, Union
 
-from attr import NOTHING, fields, fields_dict
+from attrs import NOTHING, fields, fields_dict
 
 from cattrs._compat import get_args, get_origin, is_literal
 
@@ -12,7 +12,7 @@ from cattrs._compat import get_args, get_origin, is_literal
 def create_default_dis_func(
     *classes: Type[Any],
 ) -> Callable[[Mapping[Any, Any]], Optional[Type[Any]]]:
-    """Given attr classes, generate a disambiguation function.
+    """Given attrs classes, generate a disambiguation function.
 
     The function is based on unique fields or unique values."""
     if len(classes) < 2:
@@ -33,13 +33,15 @@ def create_default_dis_func(
         for cl in classes
     ]
 
-    discriminators = cls_candidates[0]
+    # literal field names common to all members
+    discriminators: Set[str] = cls_candidates[0]
     for possible_discriminators in cls_candidates:
         discriminators &= possible_discriminators
 
     best_result = None
     best_discriminator = None
     for discriminator in discriminators:
+        # maps Literal values (strings, ints...) to classes
         mapping = defaultdict(list)
 
         for cl in classes:
