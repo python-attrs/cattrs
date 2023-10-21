@@ -33,6 +33,21 @@ class ClassB:
 
 In this case, a payload containing `{"field_one": "one"}` will produce an instance of `ClassA`.
 
+````{note}
+The following snippet can be used to disable the use of literal fields, restoring the previous behavior.
+
+```python
+from functools import partial
+from cattrs.disambiguators import is_supported_union
+
+converter.register_structure_hook_factory(
+    is_supported_union,
+    partial(converter._gen_attrs_union_structure, use_literals=False),
+)
+```
+
+````
+
 If there are no appropriate fields, the strategy will examine the classes for **unique required fields**.
 
 So, given a union of `ClassA` and `ClassB`:
