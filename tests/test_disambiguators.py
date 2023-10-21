@@ -1,5 +1,5 @@
 """Tests for auto-disambiguators."""
-from typing import Any, Literal, Union
+from typing import Literal, Union
 
 import pytest
 from attrs import NOTHING, asdict, define, field, fields
