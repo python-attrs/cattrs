@@ -1,9 +1,8 @@
 """Test both structuring and unstructuring."""
 from typing import Optional, Union
 
-import attr
 import pytest
-from attr import define, fields, make_class
+from attrs import define, fields, make_class
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis.strategies import just, one_of
 
@@ -90,9 +89,9 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     common_names = a_field_names & b_field_names
     assume(len(a_field_names) > len(common_names))
 
-    @attr.s
+    @define
     class C:
-        a = attr.ib(type=Union[cl_a, cl_b])
+        a: Union[cl_a, cl_b]
 
     inst = C(a=cl_a(*vals_a, **kwargs_a))
 
@@ -161,9 +160,9 @@ def test_optional_field_roundtrip(cl_and_vals):
     converter = BaseConverter()
     cl, vals, kwargs = cl_and_vals
 
-    @attr.s
+    @define
     class C:
-        a = attr.ib(type=Optional[cl])
+        a: Optional[cl]
 
     inst = C(a=cl(*vals, **kwargs))
     assert inst == converter.structure(converter.unstructure(inst), C)

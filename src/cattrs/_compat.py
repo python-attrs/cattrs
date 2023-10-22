@@ -316,8 +316,11 @@ if sys.version_info >= (3, 9):
         )
 
     def is_generic(obj) -> bool:
-        return isinstance(obj, (_GenericAlias, GenericAlias)) or is_subclass(
-            obj, Generic
+        """Whether obj is a generic type."""
+        # Inheriting from protocol will inject `Generic` into the MRO
+        # without `__orig_bases__`.
+        return isinstance(obj, (_GenericAlias, GenericAlias)) or (
+            is_subclass(obj, Generic) and hasattr(obj, "__orig_bases__")
         )
 
     def copy_with(type, args):
@@ -343,7 +346,7 @@ else:
     TupleSubscriptable = Tuple
 
     from collections import Counter as ColCounter
-    from typing import Counter, TypedDict, Union, _GenericAlias
+    from typing import Counter, Generic, TypedDict, Union, _GenericAlias
 
     from typing_extensions import Annotated, NotRequired, Required
     from typing_extensions import get_origin as te_get_origin
@@ -429,7 +432,9 @@ else:
         return type.__class__ is _GenericAlias and type.__origin__ is Literal
 
     def is_generic(obj):
-        return isinstance(obj, _GenericAlias)
+        return isinstance(obj, _GenericAlias) or (
+            is_subclass(obj, Generic) and hasattr(obj, "__orig_bases__")
+        )
 
     def copy_with(type, args):
         """Replace a generic type's arguments."""

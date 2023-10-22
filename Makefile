@@ -49,6 +49,7 @@ clean-test: ## remove test and coverage artifacts
 
 lint: ## check style with ruff and black
 	pdm run ruff src/ tests
+	pdm run isort -c src/ tests
 	pdm run black --check src tests docs/conf.py
 
 test: ## run tests quickly with the default Python

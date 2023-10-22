@@ -2,7 +2,7 @@
 import linecache
 from traceback import format_exc
 
-from attr import define
+from attrs import define
 
 from cattrs import Converter
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn
