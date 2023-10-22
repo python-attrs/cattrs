@@ -1,6 +1,6 @@
 """Preconfigured converters for orjson."""
 from base64 import b85decode, b85encode
-from datetime import datetime, date
+from datetime import date, datetime
 from enum import Enum
 from typing import Any, Type, TypeVar, Union
 

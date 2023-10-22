@@ -2,7 +2,7 @@ from collections import deque
 from typing import Deque, Dict, Generic, List, Optional, TypeVar, Union
 
 import pytest
-from attr import asdict, attrs, define
+from attrs import asdict, define
 
 from cattrs import BaseConverter, Converter
 from cattrs._compat import Protocol
@@ -132,7 +132,7 @@ def test_able_to_structure_deeply_nested_generics_gen(converter):
 
 
 def test_structure_unions_of_generics(converter):
-    @attrs(auto_attribs=True)
+    @define
     class TClass2(Generic[T]):
         c: T
 
@@ -142,7 +142,7 @@ def test_structure_unions_of_generics(converter):
 
 
 def test_structure_list_of_generic_unions(converter):
-    @attrs(auto_attribs=True)
+    @define
     class TClass2(Generic[T]):
         c: T
 
@@ -154,7 +154,7 @@ def test_structure_list_of_generic_unions(converter):
 
 
 def test_structure_deque_of_generic_unions(converter):
-    @attrs(auto_attribs=True)
+    @define
     class TClass2(Generic[T]):
         c: T
 
@@ -180,11 +180,11 @@ def test_raises_if_no_generic_params_supplied(
 
 
 def test_unstructure_generic_attrs(genconverter):
-    @attrs(auto_attribs=True)
+    @define
     class Inner(Generic[T]):
         a: T
 
-    @attrs(auto_attribs=True)
+    @define
     class Outer:
         inner: Inner[int]
 
@@ -196,7 +196,7 @@ def test_unstructure_generic_attrs(genconverter):
     new = genconverter.structure(raw, Outer)
     assert initial == new
 
-    @attrs(auto_attribs=True)
+    @define
     class OuterStr:
         inner: Inner[str]
 

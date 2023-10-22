@@ -1,8 +1,8 @@
 """Tests for the extended validation mode."""
+import pickle
 from typing import Dict, FrozenSet, List, Set, Tuple
 
 import pytest
-import pickle
 from attrs import define, field
 from attrs.validators import in_
 from hypothesis import given
