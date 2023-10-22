@@ -9,6 +9,7 @@
   If you're using these functions directly, the old behavior can be restored by passing in the desired values directly.
   ([#410](https://github.com/python-attrs/cattrs/issues/410) [#411](https://github.com/python-attrs/cattrs/pull/411))
 - **Potentially breaking**: The default union structuring strategy will also use fields annotated as `typing.Literal` to help guide structuring.
+  See [here](https://catt.rs/en/latest/unions.html#default-union-strategy) for instructions on how to restore the old behavior.
   ([#391](https://github.com/python-attrs/cattrs/pull/391))
 - Python 3.12 is now supported. Python 3.7 is no longer supported; use older releases there.
   ([#424](https://github.com/python-attrs/cattrs/pull/424))
