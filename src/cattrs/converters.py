@@ -19,9 +19,9 @@ from typing import (
     Union,
 )
 
-from attr import Attribute
-from attr import has as attrs_has
-from attr import resolve_types
+from attrs import Attribute
+from attrs import has as attrs_has
+from attrs import resolve_types
 
 from ._compat import (
     FrozenSetSubscriptable,
@@ -55,7 +55,7 @@ from ._compat import (
     is_typeddict,
     is_union_type,
 )
-from .disambiguators import create_default_dis_func
+from .disambiguators import create_default_dis_func, is_supported_union
 from .dispatch import MultiStrategyDispatch
 from .errors import (
     IterableValidationError,
@@ -94,16 +94,6 @@ class UnstructureStrategy(Enum):
 def _subclass(typ: Type) -> Callable[[Type], bool]:
     """a shortcut"""
     return lambda cls: issubclass(cls, typ)
-
-
-def is_attrs_union(typ: Type) -> bool:
-    return is_union_type(typ) and all(has(get_origin(e) or e) for e in typ.__args__)
-
-
-def is_attrs_union_or_none(typ: Type) -> bool:
-    return is_union_type(typ) and all(
-        e is NoneType or has(get_origin(e) or e) for e in typ.__args__
-    )
 
 
 def is_optional(typ: Type) -> bool:
@@ -204,7 +194,7 @@ class BaseConverter:
                 (is_frozenset, self._structure_frozenset),
                 (is_tuple, self._structure_tuple),
                 (is_mapping, self._structure_dict),
-                (is_attrs_union_or_none, self._gen_attrs_union_structure, True),
+                (is_supported_union, self._gen_attrs_union_structure, True),
                 (
                     lambda t: is_union_type(t) and t in self._union_struct_registry,
                     self._structure_union,
@@ -411,17 +401,19 @@ class BaseConverter:
         )
 
     def _gen_attrs_union_structure(
-        self, cl: Any
+        self, cl: Any, use_literals: bool = True
     ) -> Callable[[Any, Type[T]], Optional[Type[T]]]:
         """
         Generate a structuring function for a union of attrs classes (and maybe None).
+
+        :param use_literals: Whether to consider literal fields.
         """
-        dis_fn = self._get_dis_func(cl)
+        dis_fn = self._get_dis_func(cl, use_literals=use_literals)
         has_none = NoneType in cl.__args__
 
         if has_none:
 
-            def structure_attrs_union(obj, _):
+            def structure_attrs_union(obj, _) -> cl:
                 if obj is None:
                     return None
                 return self.structure(obj, dis_fn(obj))
@@ -719,7 +711,7 @@ class BaseConverter:
         return res
 
     @staticmethod
-    def _get_dis_func(union: Any) -> Callable[[Any], Type]:
+    def _get_dis_func(union: Any, use_literals: bool = True) -> Callable[[Any], Type]:
         """Fetch or try creating a disambiguation function for a union."""
         union_types = union.__args__
         if NoneType in union_types:  # type: ignore
@@ -738,7 +730,7 @@ class BaseConverter:
                 type_=union,
             )
 
-        return create_default_dis_func(*union_types)
+        return create_default_dis_func(*union_types, use_literals=use_literals)
 
     def __deepcopy__(self, _) -> "BaseConverter":
         return self.copy()

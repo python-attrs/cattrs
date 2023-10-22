@@ -8,19 +8,19 @@
 - **Potentially breaking**: {py:func}`cattrs.gen.make_dict_structure_fn` and {py:func}`cattrs.gen.typeddicts.make_dict_structure_fn` will use the values for the `detailed_validation` and `forbid_extra_keys` parameters from the given converter by default now.
   If you're using these functions directly, the old behavior can be restored by passing in the desired values directly.
   ([#410](https://github.com/python-attrs/cattrs/issues/410) [#411](https://github.com/python-attrs/cattrs/pull/411))
+- **Potentially breaking**: The default union structuring strategy will also use fields annotated as `typing.Literal` to help guide structuring.
+  ([#391](https://github.com/python-attrs/cattrs/pull/391))
 - Python 3.12 is now supported. Python 3.7 is no longer supported; use older releases there.
   ([#424](https://github.com/python-attrs/cattrs/pull/424))
+- Implement the `union passthrough` strategy, enabling much richer union handling for preconfigured converters. [Learn more here](https://catt.rs/en/stable/strategies.html#union-passthrough).
 - Introduce the `use_class_methods` strategy. Learn more [here](https://catt.rs/en/latest/strategies.html#using-class-specific-structure-and-unstructure-methods).
   ([#405](https://github.com/python-attrs/cattrs/pull/405))
-- Implement the `union passthrough` strategy, enabling much richer union handling for preconfigured converters. [Learn more here](https://catt.rs/en/stable/strategies.html#union-passthrough).
 - The `omit` parameter of {py:func}`cattrs.override` is now of type `bool | None` (from `bool`).
   `None` is the new default and means to apply default _cattrs_ handling to the attribute, which is to omit the attribute if it's marked as `init=False`, and keep it otherwise.
 - Fix {py:func}`format_exception() <cattrs.v.format_exception>` parameter working for recursive calls to {py:func}`transform_error <cattrs.transform_error>`.
   ([#389](https://github.com/python-attrs/cattrs/issues/389))
 - [_attrs_ aliases](https://www.attrs.org/en/stable/init.html#private-attributes-and-aliases) are now supported, although aliased fields still map to their attribute name instead of their alias by default when un/structuring.
   ([#322](https://github.com/python-attrs/cattrs/issues/322) [#391](https://github.com/python-attrs/cattrs/pull/391))
-- Use [PDM](https://pdm.fming.dev/latest/) instead of Poetry.
-- _cattrs_ is now linted with [Ruff](https://beta.ruff.rs/docs/).
 - Fix TypedDicts with periods in their field names.
   ([#376](https://github.com/python-attrs/cattrs/issues/376) [#377](https://github.com/python-attrs/cattrs/pull/377))
 - Optimize and improve unstructuring of `Optional` (unions of one type and `None`).
@@ -45,10 +45,10 @@
   ([#420](https://github.com/python-attrs/cattrs/pull/420))
 - Add support for `datetime.date`s to the PyYAML preconfigured converter.
   ([#393](https://github.com/python-attrs/cattrs/issues/393))
+- Use [PDM](https://pdm.fming.dev/latest/) instead of Poetry.
+- _cattrs_ is now linted with [Ruff](https://beta.ruff.rs/docs/).
 - Remove some unused lines in the unstructuring code.
   ([#416](https://github.com/python-attrs/cattrs/pull/416))
-- Disambiguate a union of attrs classes where there's a `typing.Literal` tag of some sort.
-  ([#391](https://github.com/python-attrs/cattrs/pull/391))
 
 ## 23.1.2 (2023-06-02)
 

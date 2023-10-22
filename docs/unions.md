@@ -2,7 +2,7 @@
 
 This sections contains information for advanced union handling.
 
-As mentioned in the structuring section, _cattrs_ is able to handle simple unions of _attrs_ classes automatically.
+As mentioned in the structuring section, _cattrs_ is able to handle simple unions of _attrs_ classes [automatically](#default-union-strategy).
 More complex cases require converter customization (since there are many ways of handling unions).
 
 _cattrs_ also comes with a number of strategies to help handle unions:
@@ -10,7 +10,67 @@ _cattrs_ also comes with a number of strategies to help handle unions:
 - [tagged unions strategy](strategies.md#tagged-unions-strategy) mentioned below
 - [union passthrough strategy](strategies.md#union-passthrough), which is preapplied to all the [preconfigured](preconf.md) converters
 
-## Unstructuring unions with extra metadata
+## Default Union Strategy
+
+For convenience, _cattrs_ includes a default union structuring strategy which is a little more opinionated.
+
+Given a union of several _attrs_ classes, the default union strategy will attempt to handle it in several ways.
+
+First, it will look for `Literal` fields.
+If all members of the union contain a literal field, _cattrs_ will generate a disambiguation function based on the field.
+
+```python
+from typing import Literal
+
+@define
+class ClassA:
+    field_one: Literal["one"]
+
+@define
+class ClassB:
+    field_one: Literal["two"]
+```
+
+In this case, a payload containing `{"field_one": "one"}` will produce an instance of `ClassA`.
+
+````{note}
+The following snippet can be used to disable the use of literal fields, restoring the previous behavior.
+
+```python
+from functools import partial
+from cattrs.disambiguators import is_supported_union
+
+converter.register_structure_hook_factory(
+    is_supported_union,
+    partial(converter._gen_attrs_union_structure, use_literals=False),
+)
+```
+
+````
+
+If there are no appropriate fields, the strategy will examine the classes for **unique required fields**.
+
+So, given a union of `ClassA` and `ClassB`:
+
+```python
+@define
+class ClassA:
+    field_one: str
+    field_with_default: str = "a default"
+
+@define
+class ClassB:
+    field_two: str
+```
+
+the strategy will determine that if a payload contains the key `field_one` it should be handled as `ClassA`, and if it contains the key `field_two` it should be handled as `ClassB`.
+The field `field_with_default` will not be considered since it has a default value, so it gets treated as optional.
+
+```{versionchanged} 23.2.0
+Literals can now be potentially used to disambiguate.
+```
+
+## Unstructuring Unions with Extra Metadata
 
 ```{note}
 _cattrs_ comes with the [tagged unions strategy](strategies.md#tagged-unions-strategy) for handling this exact use-case since version 23.1.
