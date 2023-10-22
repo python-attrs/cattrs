@@ -179,9 +179,7 @@ def test_raises_if_no_generic_params_supplied(
     assert exc.value.type_ is T
 
 
-def test_unstructure_generic_attrs():
-    c = Converter()
-
+def test_unstructure_generic_attrs(genconverter):
     @attrs(auto_attribs=True)
     class Inner(Generic[T]):
         a: T
@@ -191,23 +189,21 @@ def test_unstructure_generic_attrs():
         inner: Inner[int]
 
     initial = Outer(Inner(1))
-    raw = c.unstructure(initial)
+    raw = genconverter.unstructure(initial)
 
     assert raw == {"inner": {"a": 1}}
 
-    new = c.structure(raw, Outer)
+    new = genconverter.structure(raw, Outer)
     assert initial == new
 
     @attrs(auto_attribs=True)
     class OuterStr:
         inner: Inner[str]
 
-    assert c.structure(raw, OuterStr) == OuterStr(Inner("1"))
+    assert genconverter.structure(raw, OuterStr) == OuterStr(Inner("1"))
 
 
-def test_unstructure_deeply_nested_generics():
-    c = Converter()
-
+def test_unstructure_deeply_nested_generics(genconverter):
     @define
     class Inner:
         a: int
@@ -217,16 +213,14 @@ def test_unstructure_deeply_nested_generics():
         inner: T
 
     initial = Outer[Inner](Inner(1))
-    raw = c.unstructure(initial, Outer[Inner])
+    raw = genconverter.unstructure(initial, Outer[Inner])
     assert raw == {"inner": {"a": 1}}
 
-    raw = c.unstructure(initial)
+    raw = genconverter.unstructure(initial)
     assert raw == {"inner": {"a": 1}}
 
 
-def test_unstructure_deeply_nested_generics_list():
-    c = Converter()
-
+def test_unstructure_deeply_nested_generics_list(genconverter):
     @define
     class Inner:
         a: int
@@ -236,16 +230,14 @@ def test_unstructure_deeply_nested_generics_list():
         inner: List[T]
 
     initial = Outer[Inner]([Inner(1)])
-    raw = c.unstructure(initial, Outer[Inner])
+    raw = genconverter.unstructure(initial, Outer[Inner])
     assert raw == {"inner": [{"a": 1}]}
 
-    raw = c.unstructure(initial)
+    raw = genconverter.unstructure(initial)
     assert raw == {"inner": [{"a": 1}]}
 
 
-def test_unstructure_protocol():
-    c = Converter()
-
+def test_unstructure_protocol(genconverter):
     class Proto(Protocol):
         a: int
 
@@ -258,10 +250,10 @@ def test_unstructure_protocol():
         inner: Proto
 
     initial = Outer(Inner(1))
-    raw = c.unstructure(initial, Outer)
+    raw = genconverter.unstructure(initial, Outer)
     assert raw == {"inner": {"a": 1}}
 
-    raw = c.unstructure(initial)
+    raw = genconverter.unstructure(initial)
     assert raw == {"inner": {"a": 1}}
 
 
@@ -306,3 +298,27 @@ def test_generate_typeddict_mapping() -> None:
         pass
 
     assert generate_mapping(B, {}) == {T.__name__: int}
+
+
+def test_nongeneric_protocols(converter):
+    """Non-generic protocols work."""
+
+    class NongenericProtocol(Protocol):
+        ...
+
+    @define
+    class Entity(NongenericProtocol):
+        ...
+
+    assert generate_mapping(Entity) == {}
+
+    class GenericProtocol(Protocol[T]):
+        ...
+
+    @define
+    class GenericEntity(GenericProtocol[int]):
+        a: int
+
+    assert generate_mapping(GenericEntity) == {"T": int}
+
+    assert converter.structure({"a": 1}, GenericEntity) == GenericEntity(1)

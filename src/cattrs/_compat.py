@@ -316,8 +316,11 @@ if sys.version_info >= (3, 9):
         )
 
     def is_generic(obj) -> bool:
-        return isinstance(obj, (_GenericAlias, GenericAlias)) or is_subclass(
-            obj, Generic
+        """Whether obj is a generic type."""
+        # Inheriting from protocol will inject `Generic` into the MRO
+        # without `__orig_bases__`.
+        return isinstance(obj, (_GenericAlias, GenericAlias)) or (
+            is_subclass(obj, Generic) and hasattr(obj, "__orig_bases__")
         )
 
     def copy_with(type, args):
