@@ -51,7 +51,7 @@
 - Remove some unused lines in the unstructuring code.
   ([#416](https://github.com/python-attrs/cattrs/pull/416))
 - Fix handling classes inheriting from non-generic protocols.
-  ([#374](https://github.com/python-attrs/cattrs/issues/374))
+  ([#374](https://github.com/python-attrs/cattrs/issues/374) [#436](https://github.com/python-attrs/cattrs/pull/436))
 
 ## 23.1.2 (2023-06-02)
 
