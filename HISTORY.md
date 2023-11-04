@@ -52,6 +52,7 @@
   ([#416](https://github.com/python-attrs/cattrs/pull/416))
 - Fix handling classes inheriting from non-generic protocols.
   ([#374](https://github.com/python-attrs/cattrs/issues/374) [#436](https://github.com/python-attrs/cattrs/pull/436))
+- _cattrs_ is now published using PyPI Trusted Publishers, and `main` branch commits are automatically deployed to Test PyPI.
 
 ## 23.1.2 (2023-06-02)
 
