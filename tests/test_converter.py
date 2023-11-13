@@ -9,6 +9,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    Type,
     Union,
 )
 
@@ -18,7 +19,11 @@ from hypothesis import HealthCheck, assume, given, settings
 from hypothesis.strategies import booleans, just, lists, one_of, sampled_from
 
 from cattrs import BaseConverter, Converter, UnstructureStrategy
-from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
+from cattrs.errors import (
+    ClassValidationError,
+    ForbiddenExtraKeysError,
+    StructureHandlerNotFoundError,
+)
 from cattrs.gen import make_dict_structure_fn, override
 
 from ._compat import is_py39_plus, is_py310_plus
@@ -707,3 +712,34 @@ def test_annotated_with_typing_extensions_attrs():
 
     structured = converter.structure(raw, Outer)
     assert structured == Outer(Inner(2), [Inner(2)], Inner(2))
+
+
+def test_unstructure_fallbacks(converter_cls: Type[BaseConverter]):
+    """Unstructure fallback factories work."""
+
+    class Test:
+        """Unsupported by default."""
+
+    c = converter_cls()
+
+    assert isinstance(c.unstructure(Test()), Test)
+
+    c = converter_cls(
+        unstructure_fallback_factory=lambda _: lambda v: v.__class__.__name__
+    )
+    assert c.unstructure(Test()) == "Test"
+
+
+def test_structure_fallbacks(converter_cls: Type[BaseConverter]):
+    """Structure fallback factories work."""
+
+    class Test:
+        """Unsupported by default."""
+
+    c = converter_cls()
+
+    with pytest.raises(StructureHandlerNotFoundError):
+        c.structure({}, Test)
+
+    c = converter_cls(structure_fallback_factory=lambda _: lambda v, _: Test())
+    assert isinstance(c.structure({}, Test), Test)

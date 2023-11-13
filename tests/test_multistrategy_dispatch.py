@@ -21,14 +21,14 @@ def test_multistrategy_dispatch_register_cls():
     _fallback()
     _foo_func()
     _foo_cls()
-    dispatch = MultiStrategyDispatch(_fallback)
+    dispatch = MultiStrategyDispatch(lambda _: _fallback)
     assert dispatch.dispatch(Foo) == _fallback
     dispatch.register_cls_list([(Foo, _foo_cls)])
     assert dispatch.dispatch(Foo) == _foo_cls
 
 
 def test_multistrategy_dispatch_register_func():
-    dispatch = MultiStrategyDispatch(_fallback)
+    dispatch = MultiStrategyDispatch(lambda _: _fallback)
     assert dispatch.dispatch(Foo) == _fallback
     dispatch.register_func_list([(lambda cls: issubclass(cls, Foo), _foo_func)])
     assert dispatch.dispatch(Foo) == _foo_func
@@ -40,7 +40,7 @@ def test_multistrategy_dispatch_conflict_class_wins():
     are registered which handle the same type, the
     class dispatch should return.
     """
-    dispatch = MultiStrategyDispatch(_fallback)
+    dispatch = MultiStrategyDispatch(lambda _: _fallback)
     dispatch.register_func_list([(lambda cls: issubclass(cls, Foo), _foo_func)])
     dispatch.register_cls_list([(Foo, _foo_cls)])
     assert dispatch.dispatch(Foo) == _foo_cls

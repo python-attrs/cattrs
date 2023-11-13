@@ -44,6 +44,7 @@ from ..errors import (
     ForbiddenExtraKeysError,
     StructureHandlerNotFoundError,
 )
+from ..fns import identity
 from . import AttributeOverride
 from ._consts import already_generating, neutral
 from ._generics import generate_mapping
@@ -142,12 +143,12 @@ def make_dict_unstructure_fn(
                 except RecursionError:
                     # There's a circular reference somewhere down the line
                     handler = converter.unstructure
-            is_identity = handler == converter._unstructure_identity
+            is_identity = handler == identity
             if not is_identity:
                 break
         else:
             # We've not broken the loop.
-            return converter._unstructure_identity
+            return identity
 
         for ix, a in enumerate(attrs):
             attr_name = a.name
@@ -189,7 +190,7 @@ def make_dict_unstructure_fn(
                         # There's a circular reference somewhere down the line
                         handler = converter.unstructure
 
-            is_identity = handler == converter._unstructure_identity
+            is_identity = handler == identity
 
             if not is_identity:
                 unstruct_handler_name = f"__c_unstr_{ix}"

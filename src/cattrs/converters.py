@@ -11,7 +11,6 @@ from typing import (
     Dict,
     Iterable,
     List,
-    NoReturn,
     Optional,
     Tuple,
     Type,
@@ -56,12 +55,13 @@ from ._compat import (
     is_union_type,
 )
 from .disambiguators import create_default_dis_func, is_supported_union
-from .dispatch import MultiStrategyDispatch
+from .dispatch import HookFactory, MultiStrategyDispatch, StructureHook, UnstructureHook
 from .errors import (
     IterableValidationError,
     IterableValidationNote,
     StructureHandlerNotFoundError,
 )
+from .fns import identity, raise_error
 from .gen import (
     AttributeOverride,
     DictStructureFn,
@@ -78,6 +78,8 @@ from .gen import (
 )
 from .gen.typeddicts import make_dict_structure_fn as make_typeddict_dict_struct_fn
 from .gen.typeddicts import make_dict_unstructure_fn as make_typeddict_dict_unstruct_fn
+
+__all__ = ["UnstructureStrategy", "BaseConverter", "Converter", "GenConverter"]
 
 NoneType = type(None)
 T = TypeVar("T")
@@ -127,7 +129,18 @@ class BaseConverter:
         unstruct_strat: UnstructureStrategy = UnstructureStrategy.AS_DICT,
         prefer_attrib_converters: bool = False,
         detailed_validation: bool = True,
+        unstructure_fallback_factory: HookFactory[UnstructureHook] = lambda _: identity,
+        structure_fallback_factory: HookFactory[StructureHook] = lambda _: raise_error,
     ) -> None:
+        """
+        :param unstructure_fallback_factory: A hook factory to be called when no
+            registered unstructuring hooks match.
+        :param structure_fallback_factory: A hook factory to be called when no
+            registered structuring hooks match.
+
+        ..  versionadded:: 23.2.0 *unstructure_fallback_factory*
+        ..  versionadded:: 23.2.0 *structure_fallback_factory*
+        """
         unstruct_strat = UnstructureStrategy(unstruct_strat)
         self._prefer_attrib_converters = prefer_attrib_converters
 
@@ -143,13 +156,9 @@ class BaseConverter:
 
         self._dis_func_cache = lru_cache()(self._get_dis_func)
 
-        self._unstructure_func = MultiStrategyDispatch(self._unstructure_identity)
+        self._unstructure_func = MultiStrategyDispatch(unstructure_fallback_factory)
         self._unstructure_func.register_cls_list(
-            [
-                (bytes, self._unstructure_identity),
-                (str, self._unstructure_identity),
-                (Path, str),
-            ]
+            [(bytes, identity), (str, identity), (Path, str)]
         )
         self._unstructure_func.register_func_list(
             [
@@ -175,7 +184,7 @@ class BaseConverter:
         # Per-instance register of to-attrs converters.
         # Singledispatch dispatches based on the first argument, so we
         # store the function and switch the arguments in self.loads.
-        self._structure_func = MultiStrategyDispatch(BaseConverter._structure_error)
+        self._structure_func = MultiStrategyDispatch(structure_fallback_factory)
         self._structure_func.register_func_list(
             [
                 (lambda cl: cl is Any or cl is Optional or cl is None, lambda v, _: v),
@@ -237,7 +246,7 @@ class BaseConverter:
             else UnstructureStrategy.AS_TUPLE
         )
 
-    def register_unstructure_hook(self, cls: Any, func: Callable[[Any], Any]) -> None:
+    def register_unstructure_hook(self, cls: Any, func: UnstructureHook) -> None:
         """Register a class-to-primitive converter function for a class.
 
         The converter function should take an instance of the class and return
@@ -254,7 +263,7 @@ class BaseConverter:
             self._unstructure_func.register_cls_list([(cls, func)])
 
     def register_unstructure_hook_func(
-        self, check_func: Callable[[Any], bool], func: Callable[[Any], Any]
+        self, check_func: Callable[[Any], bool], func: UnstructureHook
     ) -> None:
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
@@ -262,9 +271,7 @@ class BaseConverter:
         self._unstructure_func.register_func_list([(check_func, func)])
 
     def register_unstructure_hook_factory(
-        self,
-        predicate: Callable[[Any], bool],
-        factory: Callable[[Any], Callable[[Any], Any]],
+        self, predicate: Callable[[Any], bool], factory: HookFactory[UnstructureHook]
     ) -> None:
         """
         Register a hook factory for a given predicate.
@@ -276,9 +283,7 @@ class BaseConverter:
         """
         self._unstructure_func.register_func_list([(predicate, factory, True)])
 
-    def register_structure_hook(
-        self, cl: Any, func: Callable[[Any, Type[T]], T]
-    ) -> None:
+    def register_structure_hook(self, cl: Any, func: StructureHook) -> None:
         """Register a primitive-to-class converter function for a type.
 
         The converter function should take two arguments:
@@ -300,7 +305,7 @@ class BaseConverter:
             self._structure_func.register_cls_list([(cl, func)])
 
     def register_structure_hook_func(
-        self, check_func: Callable[[Type[T]], bool], func: Callable[[Any, Type[T]], T]
+        self, check_func: Callable[[Type[T]], bool], func: StructureHook
     ) -> None:
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
@@ -308,9 +313,7 @@ class BaseConverter:
         self._structure_func.register_func_list([(check_func, func)])
 
     def register_structure_hook_factory(
-        self,
-        predicate: Callable[[Any], bool],
-        factory: Callable[[Any], Callable[[Any, Any], Any]],
+        self, predicate: Callable[[Any], bool], factory: HookFactory[StructureHook]
     ) -> None:
         """
         Register a hook factory for a given predicate.
@@ -353,11 +356,6 @@ class BaseConverter:
         """Convert an enum to its value."""
         return obj.value
 
-    @staticmethod
-    def _unstructure_identity(obj: T) -> T:
-        """Just pass it through."""
-        return obj
-
     def _unstructure_seq(self, seq: Sequence[T]) -> Sequence[T]:
         """Convert a sequence to primitive equivalents."""
         # We can reuse the sequence class, so tuples stay tuples.
@@ -387,12 +385,6 @@ class BaseConverter:
         return self._unstructure_func.dispatch(obj.__class__)(obj)
 
     # Python primitives to classes.
-
-    @staticmethod
-    def _structure_error(_, cl: Type) -> NoReturn:
-        """At the bottom of the condition stack, we explode if we can't handle it."""
-        msg = f"Unsupported type: {cl!r}. Register a structure hook for it."
-        raise StructureHandlerNotFoundError(msg, type_=cl)
 
     def _gen_structure_generic(self, cl: Type[T]) -> DictStructureFn[T]:
         """Create and return a hook for structuring generics."""
@@ -786,12 +778,25 @@ class Converter(BaseConverter):
         unstruct_collection_overrides: Mapping[Type, Callable] = {},
         prefer_attrib_converters: bool = False,
         detailed_validation: bool = True,
+        unstructure_fallback_factory: HookFactory[UnstructureHook] = lambda _: identity,
+        structure_fallback_factory: HookFactory[StructureHook] = lambda _: raise_error,
     ):
+        """
+        :param unstructure_fallback_factory: A hook factory to be called when no
+            registered unstructuring hooks match.
+        :param structure_fallback_factory: A hook factory to be called when no
+            registered structuring hooks match.
+
+        ..  versionadded:: 23.2.0 *unstructure_fallback_factory*
+        ..  versionadded:: 23.2.0 *structure_fallback_factory*
+        """
         super().__init__(
             dict_factory=dict_factory,
             unstruct_strat=unstruct_strat,
             prefer_attrib_converters=prefer_attrib_converters,
             detailed_validation=detailed_validation,
+            unstructure_fallback_factory=unstructure_fallback_factory,
+            structure_fallback_factory=structure_fallback_factory,
         )
         self.omit_if_default = omit_if_default
         self.forbid_extra_keys = forbid_extra_keys

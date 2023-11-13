@@ -1,7 +1,20 @@
-from functools import lru_cache, singledispatch
-from typing import Any, Callable, List, Optional, Tuple, Union
+from functools import lru_cache, partial, singledispatch
+from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
-from attrs import Factory, define
+from attrs import Factory, define, field
+from typing_extensions import TypeAlias
+
+T = TypeVar("T")
+
+TargetType: TypeAlias = Any
+UnstructuredValue: TypeAlias = Any
+StructuredValue: TypeAlias = Any
+
+StructureHook: TypeAlias = Callable[[UnstructuredValue, TargetType], StructuredValue]
+UnstructureHook: TypeAlias = Callable[[StructuredValue], UnstructuredValue]
+
+Hook = TypeVar("Hook", StructureHook, UnstructureHook)
+HookFactory: TypeAlias = Callable[[TargetType], Hook]
 
 
 @define
@@ -9,29 +22,81 @@ class _DispatchNotFound:
     """A dummy object to help signify a dispatch not found."""
 
 
-class MultiStrategyDispatch:
+@define
+class FunctionDispatch:
+    """
+    FunctionDispatch is similar to functools.singledispatch, but
+    instead dispatches based on functions that take the type of the
+    first argument in the method, and return True or False.
+
+    objects that help determine dispatch should be instantiated objects.
+    """
+
+    _handler_pairs: List[
+        Tuple[Callable[[Any], bool], Callable[[Any, Any], Any], bool]
+    ] = Factory(list)
+
+    def register(
+        self,
+        can_handle: Callable[[Any], bool],
+        func: Callable[..., Any],
+        is_generator=False,
+    ) -> None:
+        self._handler_pairs.insert(0, (can_handle, func, is_generator))
+
+    def dispatch(self, typ: Any) -> Optional[Callable[..., Any]]:
+        """
+        Return the appropriate handler for the object passed.
+        """
+        for can_handle, handler, is_generator in self._handler_pairs:
+            # can handle could raise an exception here
+            # such as issubclass being called on an instance.
+            # it's easier to just ignore that case.
+            try:
+                ch = can_handle(typ)
+            except Exception:  # noqa: S112
+                continue
+            if ch:
+                if is_generator:
+                    return handler(typ)
+
+                return handler
+        return None
+
+    def get_num_fns(self) -> int:
+        return len(self._handler_pairs)
+
+    def copy_to(self, other: "FunctionDispatch", skip: int = 0) -> None:
+        other._handler_pairs = self._handler_pairs[:-skip] + other._handler_pairs
+
+
+@define
+class MultiStrategyDispatch(Generic[Hook]):
     """
     MultiStrategyDispatch uses a combination of exact-match dispatch,
     singledispatch, and FunctionDispatch.
+
+    :param fallback_factory: A hook factory to be called when a hook cannot be
+        produced.
+
+    ..  versionchanged:: 23.2.0
+        Fallbacks are now factories.
     """
 
-    __slots__ = (
-        "_direct_dispatch",
-        "_function_dispatch",
-        "_single_dispatch",
-        "_generators",
-        "_fallback_func",
-        "dispatch",
+    _fallback_factory: HookFactory[Hook]
+    _direct_dispatch: Dict = field(init=False, factory=dict)
+    _function_dispatch: FunctionDispatch = field(init=False, factory=FunctionDispatch)
+    _single_dispatch: Any = field(
+        init=False, factory=partial(singledispatch, _DispatchNotFound)
+    )
+    dispatch: Callable[[TargetType], Hook] = field(
+        init=False,
+        default=Factory(
+            lambda self: lru_cache(maxsize=None)(self._dispatch), takes_self=True
+        ),
     )
 
-    def __init__(self, fallback_func: Callable[[Any, Any], Any]):
-        self._direct_dispatch = {}
-        self._function_dispatch = FunctionDispatch()
-        self._single_dispatch = singledispatch(_DispatchNotFound)
-        self.dispatch = lru_cache(maxsize=None)(self._dispatch)
-        self._fallback_func = fallback_func
-
-    def _dispatch(self, typ: Any) -> Callable[[Any, Any], Any]:
+    def _dispatch(self, typ: TargetType) -> Hook:
         try:
             dispatch = self._single_dispatch.dispatch(typ)
             if dispatch is not _DispatchNotFound:
@@ -44,7 +109,7 @@ class MultiStrategyDispatch:
             return direct_dispatch
 
         res = self._function_dispatch.dispatch(typ)
-        return res if res is not None else self._fallback_func
+        return res if res is not None else self._fallback_factory(typ)
 
     def register_cls_list(self, cls_and_handler, direct: bool = False) -> None:
         """Register a class to direct or singledispatch."""
@@ -79,11 +144,11 @@ class MultiStrategyDispatch:
         self.clear_direct()
         self.dispatch.cache_clear()
 
-    def clear_direct(self):
+    def clear_direct(self) -> None:
         """Clear the direct dispatch."""
         self._direct_dispatch.clear()
 
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         """Clear all caches."""
         self._direct_dispatch.clear()
         self.dispatch.cache_clear()
@@ -91,53 +156,8 @@ class MultiStrategyDispatch:
     def get_num_fns(self) -> int:
         return self._function_dispatch.get_num_fns()
 
-    def copy_to(self, other: "MultiStrategyDispatch", skip: int = 0):
+    def copy_to(self, other: "MultiStrategyDispatch", skip: int = 0) -> None:
         self._function_dispatch.copy_to(other._function_dispatch, skip=skip)
         for cls, fn in self._single_dispatch.registry.items():
             other._single_dispatch.register(cls, fn)
         other.clear_cache()
-
-
-@define
-class FunctionDispatch:
-    """
-    FunctionDispatch is similar to functools.singledispatch, but
-    instead dispatches based on functions that take the type of the
-    first argument in the method, and return True or False.
-
-    objects that help determine dispatch should be instantiated objects.
-    """
-
-    _handler_pairs: List[
-        Tuple[Callable[[Any], bool], Callable[[Any, Any], Any], bool]
-    ] = Factory(list)
-
-    def register(
-        self, can_handle: Callable[[Any], bool], func, is_generator=False
-    ) -> None:
-        self._handler_pairs.insert(0, (can_handle, func, is_generator))
-
-    def dispatch(self, typ: Any) -> Optional[Callable[[Any, Any], Any]]:
-        """
-        Return the appropriate handler for the object passed.
-        """
-        for can_handle, handler, is_generator in self._handler_pairs:
-            # can handle could raise an exception here
-            # such as issubclass being called on an instance.
-            # it's easier to just ignore that case.
-            try:
-                ch = can_handle(typ)
-            except Exception:  # noqa: S112
-                continue
-            if ch:
-                if is_generator:
-                    return handler(typ)
-
-                return handler
-        return None
-
-    def get_num_fns(self) -> int:
-        return len(self._handler_pairs)
-
-    def copy_to(self, other: "FunctionDispatch", skip: int = 0) -> None:
-        other._handler_pairs = self._handler_pairs[:-skip] + other._handler_pairs

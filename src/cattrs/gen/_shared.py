@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable
 
-from attr import NOTHING, Attribute, Factory
+from attrs import NOTHING, Attribute, Factory
 
 from .._compat import is_bare_final
+from ..fns import raise_error
 
 if TYPE_CHECKING:  # pragma: no cover
     from cattr.converters import BaseConverter
@@ -23,7 +24,7 @@ def find_structure_handler(
         handler = None
     elif a.converter is not None and not prefer_attrs_converters and type is not None:
         handler = c._structure_func.dispatch(type)
-        if handler == c._structure_error:
+        if handler == raise_error:
             handler = None
     elif type is not None:
         if (

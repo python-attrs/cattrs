@@ -5,7 +5,7 @@ from typing import Literal, Union
 from unittest.mock import Mock
 
 import pytest
-from attr import NOTHING, Factory, asdict, astuple, attrib, define, fields, make_class
+from attrs import NOTHING, Factory, asdict, astuple, define, field, fields, make_class
 from hypothesis import assume, given
 from hypothesis.strategies import data, lists, sampled_from
 
@@ -244,11 +244,11 @@ def test_structure_fallback_to_attrib_converters(converter_type):
         "HasConverter",
         {
             # non-built-in type with custom converter
-            "ip": attrib(type=Union[IPv4Address, IPv6Address], converter=ip_address),
+            "ip": field(type=Union[IPv4Address, IPv6Address], converter=ip_address),
             # attribute without type
-            "x": attrib(converter=attrib_converter),
+            "x": field(converter=attrib_converter),
             # built-in types converters
-            "z": attrib(type=int, converter=called_after_default_converter),
+            "z": field(type=int, converter=called_after_default_converter),
         },
     )
 
@@ -270,13 +270,13 @@ def test_structure_prefers_attrib_converters(converter_type):
         "HasConverter",
         {
             # non-built-in type with custom converter
-            "ip": attrib(type=Union[IPv4Address, IPv6Address], converter=ip_address),
+            "ip": field(type=Union[IPv4Address, IPv6Address], converter=ip_address),
             # attribute without type
-            "x": attrib(converter=attrib_converter),
+            "x": field(converter=attrib_converter),
             # built-in types converters
-            "y": attrib(type=int, converter=attrib_converter),
+            "y": field(type=int, converter=attrib_converter),
             # attribute with type and default value
-            "z": attrib(type=int, converter=attrib_converter, default=5),
+            "z": field(type=int, converter=attrib_converter, default=5),
         },
     )
 
