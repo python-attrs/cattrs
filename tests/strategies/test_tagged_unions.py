@@ -2,7 +2,7 @@ from typing import Union
 
 from attrs import define
 
-from cattrs import BaseConverter
+from cattrs import BaseConverter, Converter
 from cattrs.strategies import configure_tagged_union
 
 
@@ -102,3 +102,39 @@ def test_default_member_validation(converter: BaseConverter) -> None:
 
     # A.a should be coerced to an int.
     assert converter.structure({"_type": "A", "a": "1"}, union) == A(1)
+
+
+def test_forbid_extra_keys():
+    """The strategy works when converters forbid extra keys."""
+
+    @define
+    class A:
+        pass
+
+    @define
+    class B:
+        pass
+
+    c = Converter(forbid_extra_keys=True)
+    configure_tagged_union(A | B, c)
+
+    data = c.unstructure(A(), A | B)
+    c.structure(data, A | B)
+
+
+def test_forbid_extra_keys_default():
+    """The strategy works when converters forbid extra keys."""
+
+    @define
+    class A:
+        pass
+
+    @define
+    class B:
+        pass
+
+    c = Converter(forbid_extra_keys=True)
+    configure_tagged_union(A | B, c, default=A)
+
+    data = c.unstructure(A(), A | B)
+    c.structure(data, A | B)
