@@ -116,10 +116,10 @@ def test_forbid_extra_keys():
         pass
 
     c = Converter(forbid_extra_keys=True)
-    configure_tagged_union(A | B, c)
+    configure_tagged_union(Union[A, B], c)
 
-    data = c.unstructure(A(), A | B)
-    c.structure(data, A | B)
+    data = c.unstructure(A(), Union[A, B])
+    c.structure(data, Union[A, B])
 
 
 def test_forbid_extra_keys_default():
@@ -134,7 +134,7 @@ def test_forbid_extra_keys_default():
         pass
 
     c = Converter(forbid_extra_keys=True)
-    configure_tagged_union(A | B, c, default=A)
+    configure_tagged_union(Union[A, B], c, default=A)
 
-    data = c.unstructure(A(), A | B)
-    c.structure(data, A | B)
+    data = c.unstructure(A(), Union[A, B])
+    c.structure(data, Union[A, B])
