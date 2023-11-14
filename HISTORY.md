@@ -18,6 +18,8 @@
   ([#405](https://github.com/python-attrs/cattrs/pull/405))
 - The `omit` parameter of {py:func}`cattrs.override` is now of type `bool | None` (from `bool`).
   `None` is the new default and means to apply default _cattrs_ handling to the attribute, which is to omit the attribute if it's marked as `init=False`, and keep it otherwise.
+- Converters can now be initialized with custom fallback hook factories for un/structuring.
+  ([#331](https://github.com/python-attrs/cattrs/issues/311) [#441](https://github.com/python-attrs/cattrs/pull/441))
 - Fix {py:func}`format_exception() <cattrs.v.format_exception>` parameter working for recursive calls to {py:func}`transform_error <cattrs.transform_error>`.
   ([#389](https://github.com/python-attrs/cattrs/issues/389))
 - [_attrs_ aliases](https://www.attrs.org/en/stable/init.html#private-attributes-and-aliases) are now supported, although aliased fields still map to their attribute name instead of their alias by default when un/structuring.

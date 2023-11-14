@@ -9,6 +9,7 @@ from orjson import dumps, loads
 from cattrs._compat import AbstractSet, is_mapping
 
 from ..converters import BaseConverter, Converter
+from ..fns import identity
 from ..strategies import configure_union_passthrough
 
 T = TypeVar("T")
@@ -57,7 +58,7 @@ def configure_converter(converter: BaseConverter):
                 # In that case, we want to use the override.
 
                 kh = converter._unstructure_func.dispatch(args[0])
-                if kh != converter._unstructure_identity:
+                if kh != identity:
                     key_handler = kh
 
         return converter.gen_unstructure_mapping(

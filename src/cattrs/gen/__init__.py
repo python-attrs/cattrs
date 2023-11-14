@@ -24,6 +24,7 @@ from ..errors import (
     IterableValidationNote,
     StructureHandlerNotFoundError,
 )
+from ..fns import identity
 from ._consts import AttributeOverride, already_generating, neutral
 from ._generics import generate_mapping
 from ._lc import generate_unique_filename
@@ -160,7 +161,7 @@ def make_dict_unstructure_fn(
                 else:
                     handler = converter.unstructure
 
-            is_identity = handler == converter._unstructure_identity
+            is_identity = handler == identity
 
             if not is_identity:
                 unstruct_handler_name = f"__c_unstr_{attr_name}"
@@ -697,7 +698,7 @@ def make_hetero_tuple_unstructure_fn(
     else:
         lines.append("    res = (")
     for i in range(len(handlers)):
-        if handlers[i] == converter._unstructure_identity:
+        if handlers[i] == identity:
             lines.append(f"        tup[{i}],")
         else:
             lines.append(f"        __cattr_u_{i}(tup[{i}]),")
@@ -739,11 +740,11 @@ def make_mapping_unstructure_fn(
             key_arg, val_arg = args, Any
         # We can do the dispatch here and now.
         kh = key_handler or converter._unstructure_func.dispatch(key_arg)
-        if kh == converter._unstructure_identity:
+        if kh == identity:
             kh = None
 
         val_handler = converter._unstructure_func.dispatch(val_arg)
-        if val_handler == converter._unstructure_identity:
+        if val_handler == identity:
             val_handler = None
 
     globs = {

@@ -284,6 +284,7 @@ texinfo_documents = [
 doctest_global_setup = (
     "import attr, cattr, cattrs;"
     "from attr import Factory, define, field;"
+    "from cattrs import Converter;"
     "from typing import *;"
     "from enum import Enum, unique"
 )
@@ -292,3 +293,4 @@ autosectionlabel_prefix_document = True
 copybutton_prompt_text = r">>> |\.\.\. "
 copybutton_prompt_is_regexp = True
 myst_heading_anchors = 3
+autoclass_content = "both"
