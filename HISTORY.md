@@ -49,7 +49,7 @@
 - Fix certain cases of structuring `Annotated` types.
   ([#418](https://github.com/python-attrs/cattrs/issues/418))
 - Fix the [tagged union strategy](https://catt.rs/en/stable/strategies.html#tagged-unions-strategy) to work with `forbid_extra_keys`.
-  ([#402](https://github.com/python-attrs/cattrs/issues/402))
+  ([#402](https://github.com/python-attrs/cattrs/issues/402) [#443](https://github.com/python-attrs/cattrs/pull/443))
 - Use [PDM](https://pdm.fming.dev/latest/) instead of Poetry.
 - _cattrs_ is now linted with [Ruff](https://beta.ruff.rs/docs/).
 - Remove some unused lines in the unstructuring code.

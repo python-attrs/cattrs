@@ -88,6 +88,7 @@ def configure_tagged_union(
         def structure_tagged_union(
             val: dict, _, _tag_to_cl=tag_to_hook, _tag_name=tag_name
         ) -> union:
+            val = val.copy()
             return _tag_to_cl[val.pop(_tag_name)](val)
 
     else:
@@ -101,6 +102,7 @@ def configure_tagged_union(
             _default=default,
         ) -> union:
             if _tag_name in val:
+                val = val.copy()
                 return _tag_to_hook[val.pop(_tag_name)](val)
             return _dh(val, _default)
 
