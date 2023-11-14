@@ -50,6 +50,7 @@ These behaviors can be customized by providing custom [hook factories](usage.md#
 >>> converter = Converter(unstructure_fallback_factory=lambda _: dumps)
 >>> instance = Unsupported()
 >>> converter.unstructure(instance)
+b'\x80\x04\x95\x18\x00\x00\x00\x00\x00\x00\x00\x8c\x08__main__\x94\x8c\x04Test\x94\x93\x94)\x81\x94.'
 ```
 
 This also enables converters to be chained.
