@@ -18,8 +18,12 @@
   ([#405](https://github.com/python-attrs/cattrs/pull/405))
 - The `omit` parameter of {py:func}`cattrs.override` is now of type `bool | None` (from `bool`).
   `None` is the new default and means to apply default _cattrs_ handling to the attribute, which is to omit the attribute if it's marked as `init=False`, and keep it otherwise.
-- Converters can now be initialized with custom fallback hook factories for un/structuring.
+- Converters can now be initialized with [custom fallback hook factories](https://catt.rs/en/latest/converters.html#fallback-hook-factories) for un/structuring.
   ([#331](https://github.com/python-attrs/cattrs/issues/311) [#441](https://github.com/python-attrs/cattrs/pull/441))
+- Add support for `date` to preconfigured converters.
+  ([#420](https://github.com/python-attrs/cattrs/pull/420))
+- Add support for `datetime.date`s to the PyYAML preconfigured converter.
+  ([#393](https://github.com/python-attrs/cattrs/issues/393))
 - Fix {py:func}`format_exception() <cattrs.v.format_exception>` parameter working for recursive calls to {py:func}`transform_error <cattrs.transform_error>`.
   ([#389](https://github.com/python-attrs/cattrs/issues/389))
 - [_attrs_ aliases](https://www.attrs.org/en/stable/init.html#private-attributes-and-aliases) are now supported, although aliased fields still map to their attribute name instead of their alias by default when un/structuring.
@@ -44,10 +48,8 @@
   ([#412](https://github.com/python-attrs/cattrs/issues/412))
 - Fix certain cases of structuring `Annotated` types.
   ([#418](https://github.com/python-attrs/cattrs/issues/418))
-- Add support for `date` to preconfigured converters.
-  ([#420](https://github.com/python-attrs/cattrs/pull/420))
-- Add support for `datetime.date`s to the PyYAML preconfigured converter.
-  ([#393](https://github.com/python-attrs/cattrs/issues/393))
+- Fix the [tagged union strategy](https://catt.rs/en/stable/strategies.html#tagged-unions-strategy) to work with `forbid_extra_keys`.
+  ([#402](https://github.com/python-attrs/cattrs/issues/402) [#443](https://github.com/python-attrs/cattrs/pull/443))
 - Use [PDM](https://pdm.fming.dev/latest/) instead of Poetry.
 - _cattrs_ is now linted with [Ruff](https://beta.ruff.rs/docs/).
 - Remove some unused lines in the unstructuring code.
@@ -68,7 +70,8 @@
 
 ## 23.1.0 (2023-05-30)
 
-- Introduce the `tagged_union` strategy. ([#318](https://github.com/python-attrs/cattrs/pull/318) [#317](https://github.com/python-attrs/cattrs/issues/317))
+- Introduce the [`tagged_union` strategy](https://catt.rs/en/stable/strategies.html#tagged-unions-strategy).
+  ([#318](https://github.com/python-attrs/cattrs/pull/318) [#317](https://github.com/python-attrs/cattrs/issues/317))
 - Introduce the `cattrs.transform_error` helper function for formatting validation exceptions. ([258](https://github.com/python-attrs/cattrs/issues/258) [342](https://github.com/python-attrs/cattrs/pull/342))
 - Add support for [`typing.TypedDict` and `typing_extensions.TypedDict`](https://peps.python.org/pep-0589/).
   ([#296](https://github.com/python-attrs/cattrs/issues/296) [#364](https://github.com/python-attrs/cattrs/pull/364))
