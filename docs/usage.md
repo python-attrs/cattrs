@@ -4,12 +4,10 @@ This section covers common use examples of _cattrs_ features.
 
 ## Using Pendulum for Dates and Time
 
-To use the excellent [Pendulum](https://pendulum.eustace.io/) library for datetimes, we need to register
-structuring and unstructuring hooks for it.
+To use the [Pendulum](https://pendulum.eustace.io/) library for datetimes, we need to register structuring and unstructuring hooks for it.
 
-First, we need to decide on the unstructured representation of a datetime
-instance. Since all our datetimes will use the UTC time zone, we decide to
-use the UNIX epoch timestamp as our unstructured representation.
+First, we need to decide on the unstructured representation of a datetime instance.
+Since all our datetimes will use the UTC time zone, we decide to use the UNIX epoch timestamp as our unstructured representation.
 
 Define a class using Pendulum's `DateTime`:
 

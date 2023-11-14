@@ -29,6 +29,7 @@ docs = [
     "sphinx-copybutton>=0.5.2",
     "myst-parser>=1.0.0",
     "pendulum>=2.1.2",
+    "sphinx-autobuild",
 ]
 bench = [
     "pyperf>=2.6.1",

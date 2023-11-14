@@ -21,6 +21,9 @@ Larger applications are strongly encouraged to create and customize a different,
 ## Converter Objects
 
 To create a private converter, simply instantiate a {class}`cattrs.Converter`.
+
+The core functionality of a converter is [structuring](structuring.md) and [unstructuring](unstructuring.md) data by composing provided and [custom handling functions](customizing.md), called _hooks_.
+
 Currently, a converter contains the following state:
 
 - a registry of unstructure hooks, backed by a [singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch) and a `function_dispatch`.
