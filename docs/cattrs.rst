@@ -46,6 +46,14 @@ cattrs.errors module
    :undoc-members:
    :show-inheritance:
 
+cattrs.fns module
+-----------------
+
+.. automodule:: cattrs.fns
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 cattrs.v module
 ---------------
 

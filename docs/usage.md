@@ -95,10 +95,9 @@ MyRecord(a_string='test', a_datetime=DateTime(2018, 7, 28, 18, 24, 0, tzinfo=Tim
 MyRecord(a_string='test', a_datetime=DateTime(2018, 7, 28, 18, 24, 0, tzinfo=Timezone('+02:00')))
 ```
 
-## Using factory hooks
+## Using Factory Hooks
 
-For this example, let's assume you have some attrs classes with snake case attributes, and you want to
-un/structure them as camel case.
+For this example, let's assume you have some attrs classes with snake case attributes, and you want to un/structure them as camel case.
 
 ```{warning}
 A simpler and better approach to this problem is to simply make your class attributes camel case.
@@ -257,7 +256,7 @@ converter.register_structure_hook_factory(
 The `converter` instance will now un/structure every attrs class to camel case.
 Nothing has been omitted from this final example; it's complete.
 
-## Using fallback key names
+## Using Fallback Key Names
 
 Sometimes when structuring data, the input data may be in multiple formats that need to be converted into a common attribute.
 
@@ -305,7 +304,7 @@ class MyInternalAttr:
 
 _cattrs_ will now structure both key names into `new_field` on your class.
 
-```
+```python
 converter.structure({"new_field": "foo"}, MyInternalAttr)
 converter.structure({"old_field": "foo"}, MyInternalAttr)
 ```

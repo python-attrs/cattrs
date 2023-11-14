@@ -6,7 +6,7 @@ This section deals with customizing the unstructuring and structuring processes 
 
 The default {class}`Converter <cattrs.Converter>`, upon first encountering an _attrs_ class, will use the generation functions mentioned here to generate the specialized hooks for it, register the hooks and use them.
 
-## Manual un/structuring hooks
+## Manual Un/structuring Hooks
 
 You can write your own structuring and unstructuring functions and register
 them for types using {meth}`Converter.register_structure_hook() <cattrs.BaseConverter.register_structure_hook>` and

@@ -133,6 +133,8 @@ class BaseConverter:
         structure_fallback_factory: HookFactory[StructureHook] = lambda _: raise_error,
     ) -> None:
         """
+        :param detailed_validation: Whether to use a slightly slower mode for detailed
+            validation errors.
         :param unstructure_fallback_factory: A hook factory to be called when no
             registered unstructuring hooks match.
         :param structure_fallback_factory: A hook factory to be called when no
@@ -734,7 +736,11 @@ class BaseConverter:
         prefer_attrib_converters: Optional[bool] = None,
         detailed_validation: Optional[bool] = None,
     ) -> "BaseConverter":
-        """Create a copy of the converter, keeping all existing custom hooks."""
+        """Create a copy of the converter, keeping all existing custom hooks.
+
+        :param detailed_validation: Whether to use a slightly slower mode for detailed
+            validation errors.
+        """
         res = self.__class__(
             dict_factory if dict_factory is not None else self._dict_factory,
             unstruct_strat
@@ -782,6 +788,8 @@ class Converter(BaseConverter):
         structure_fallback_factory: HookFactory[StructureHook] = lambda _: raise_error,
     ):
         """
+        :param detailed_validation: Whether to use a slightly slower mode for detailed
+            validation errors.
         :param unstructure_fallback_factory: A hook factory to be called when no
             registered unstructuring hooks match.
         :param structure_fallback_factory: A hook factory to be called when no
@@ -1047,7 +1055,11 @@ class Converter(BaseConverter):
         prefer_attrib_converters: Optional[bool] = None,
         detailed_validation: Optional[bool] = None,
     ) -> "Converter":
-        """Create a copy of the converter, keeping all existing custom hooks."""
+        """Create a copy of the converter, keeping all existing custom hooks.
+
+        :param detailed_validation: Whether to use a slightly slower mode for detailed
+            validation errors.
+        """
         res = self.__class__(
             dict_factory if dict_factory is not None else self._dict_factory,
             unstruct_strat

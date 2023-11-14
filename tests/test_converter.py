@@ -743,3 +743,27 @@ def test_structure_fallbacks(converter_cls: Type[BaseConverter]):
 
     c = converter_cls(structure_fallback_factory=lambda _: lambda v, _: Test())
     assert isinstance(c.structure({}, Test), Test)
+
+
+def test_fallback_chaining(converter_cls: Type[BaseConverter]):
+    """Converters can be chained using fallback hooks."""
+
+    class Test:
+        """Unsupported by default."""
+
+    parent = converter_cls()
+
+    parent.register_unstructure_hook(Test, lambda _: "Test")
+    parent.register_structure_hook(Test, lambda v, _: Test())
+
+    # No chaining first.
+    child = converter_cls()
+    with pytest.raises(StructureHandlerNotFoundError):
+        child.structure(child.unstructure(Test()), Test)
+
+    child = converter_cls(
+        unstructure_fallback_factory=parent._unstructure_func.dispatch,
+        structure_fallback_factory=parent._structure_func.dispatch,
+    )
+
+    assert isinstance(child.structure(child.unstructure(Test()), Test), Test)
