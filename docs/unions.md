@@ -28,7 +28,7 @@ class ClassA:
 
 @define
 class ClassB:
-    field_one: Literal["two"]
+    field_one: Literal["two"] = "two"
 ```
 
 In this case, a payload containing `{"field_one": "one"}` will produce an instance of `ClassA`.
