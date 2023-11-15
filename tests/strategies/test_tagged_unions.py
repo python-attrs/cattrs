@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional, Sequence, Union
 
 from attrs import define
 
@@ -138,3 +138,15 @@ def test_forbid_extra_keys_default():
 
     data = c.unstructure(A(), Union[A, B])
     c.structure(data, Union[A, B])
+
+
+def test_nested_sequence_union():
+    @define
+    class Top:
+        u: Optional[Sequence[Union[A, B]]]
+
+    c = Converter()
+    configure_tagged_union(Union[A, B], c)
+
+    data = c.unstructure(Top(u=[B(a="")]), Top)
+    c.structure(data, Top)
