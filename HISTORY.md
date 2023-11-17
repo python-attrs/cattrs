@@ -1,6 +1,6 @@
 # History
 
-## 23.2.0 (UNRELEASED)
+## 23.2.0 (2023-11-17)
 
 - **Potentially breaking**: skip _attrs_ fields marked as `init=False` by default. This change is potentially breaking for unstructuring.
   See [here](https://catt.rs/en/latest/customizing.html#include_init_false) for instructions on how to restore the old behavior.
