@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 from functools import lru_cache, partial, singledispatch
-from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Callable, Generic, TypeVar
 
 from attrs import Factory, define, field
-from typing_extensions import TypeAlias
+
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
 
 T = TypeVar("T")
 
@@ -32,8 +36,8 @@ class FunctionDispatch:
     objects that help determine dispatch should be instantiated objects.
     """
 
-    _handler_pairs: List[
-        Tuple[Callable[[Any], bool], Callable[[Any, Any], Any], bool]
+    _handler_pairs: list[
+        tuple[Callable[[Any], bool], Callable[[Any, Any], Any], bool]
     ] = Factory(list)
 
     def register(
@@ -44,7 +48,7 @@ class FunctionDispatch:
     ) -> None:
         self._handler_pairs.insert(0, (can_handle, func, is_generator))
 
-    def dispatch(self, typ: Any) -> Optional[Callable[..., Any]]:
+    def dispatch(self, typ: Any) -> Callable[..., Any] | None:
         """
         Return the appropriate handler for the object passed.
         """
@@ -66,7 +70,7 @@ class FunctionDispatch:
     def get_num_fns(self) -> int:
         return len(self._handler_pairs)
 
-    def copy_to(self, other: "FunctionDispatch", skip: int = 0) -> None:
+    def copy_to(self, other: FunctionDispatch, skip: int = 0) -> None:
         other._handler_pairs = self._handler_pairs[:-skip] + other._handler_pairs
 
 
@@ -84,7 +88,7 @@ class MultiStrategyDispatch(Generic[Hook]):
     """
 
     _fallback_factory: HookFactory[Hook]
-    _direct_dispatch: Dict = field(init=False, factory=dict)
+    _direct_dispatch: dict = field(init=False, factory=dict)
     _function_dispatch: FunctionDispatch = field(init=False, factory=FunctionDispatch)
     _single_dispatch: Any = field(
         init=False, factory=partial(singledispatch, _DispatchNotFound)
@@ -123,11 +127,8 @@ class MultiStrategyDispatch(Generic[Hook]):
 
     def register_func_list(
         self,
-        pred_and_handler: List[
-            Union[
-                Tuple[Callable[[Any], bool], Any],
-                Tuple[Callable[[Any], bool], Any, bool],
-            ]
+        pred_and_handler: list[
+            tuple[Callable[[Any], bool], Any] | tuple[Callable[[Any], bool], Any, bool]
         ],
     ):
         """
@@ -156,7 +157,7 @@ class MultiStrategyDispatch(Generic[Hook]):
     def get_num_fns(self) -> int:
         return self._function_dispatch.get_num_fns()
 
-    def copy_to(self, other: "MultiStrategyDispatch", skip: int = 0) -> None:
+    def copy_to(self, other: MultiStrategyDispatch, skip: int = 0) -> None:
         self._function_dispatch.copy_to(other._function_dispatch, skip=skip)
         for cls, fn in self._single_dispatch.registry.items():
             other._single_dispatch.register(cls, fn)
