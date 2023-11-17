@@ -2,7 +2,8 @@ from functools import lru_cache, partial, singledispatch
 from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
 from attrs import Factory, define, field
-from typing_extensions import TypeAlias
+
+from cattrs._compat import TypeAlias
 
 T = TypeVar("T")
 
