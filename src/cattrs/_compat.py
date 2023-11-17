@@ -20,7 +20,13 @@ from attrs import NOTHING, Attribute, Factory
 from attrs import fields as attrs_fields
 from attrs import resolve_types
 
-__all__ = ["ExceptionGroup", "ExtensionsTypedDict", "TypedDict", "is_typeddict"]
+__all__ = [
+    "ExceptionGroup",
+    "ExtensionsTypedDict",
+    "TypedDict",
+    "TypeAlias",
+    "is_typeddict",
+]
 
 try:
     from typing_extensions import TypedDict as ExtensionsTypedDict
@@ -38,6 +44,12 @@ try:
 except ImportError:
     assert sys.version_info >= (3, 10)
     from typing import is_typeddict as _is_typeddict
+
+try:
+    from typing_extensions import TypeAlias
+except ImportError:
+    assert sys.version_info >= (3, 11)
+    from typing import TypeAlias
 
 
 def is_typeddict(cls):

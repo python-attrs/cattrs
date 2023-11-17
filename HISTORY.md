@@ -1,5 +1,10 @@
 # History
 
+## 23.2.1 (UNRELEASED)
+
+- Fix unnecessary `typing_extensions` import on Python 3.11.
+  ([#446](https://github.com/python-attrs/cattrs/issues/446) [#447](https://github.com/python-attrs/cattrs/pull/447))
+
 ## 23.2.0 (2023-11-17)
 
 - **Potentially breaking**: skip _attrs_ fields marked as `init=False` by default. This change is potentially breaking for unstructuring.
