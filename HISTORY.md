@@ -1,6 +1,6 @@
 # History
 
-## 23.2.1 (UNRELEASED)
+## 23.2.1 (2023-11-18)
 
 - Fix unnecessary `typing_extensions` import on Python 3.11.
   ([#446](https://github.com/python-attrs/cattrs/issues/446) [#447](https://github.com/python-attrs/cattrs/pull/447))
