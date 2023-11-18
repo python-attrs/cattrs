@@ -6,7 +6,7 @@ from dataclasses import MISSING
 from dataclasses import fields as dataclass_fields
 from dataclasses import is_dataclass
 from typing import AbstractSet as TypingAbstractSet
-from typing import Any, Deque, Dict, Final, FrozenSet, List
+from typing import Any, Deque, Dict, Final, FrozenSet, List, Literal
 from typing import Mapping as TypingMapping
 from typing import MutableMapping as TypingMutableMapping
 from typing import MutableSequence as TypingMutableSequence
@@ -243,6 +243,9 @@ if sys.version_info >= (3, 9):
             return None
 
     def get_notrequired_base(type) -> "Union[Any, Literal[NOTHING]]":
+        if is_annotated(type):
+            # Handle `Annotated[NotRequired[int]]`
+            type = get_args(type)[0]
         if get_origin(type) in (NotRequired, Required):
             return get_args(type)[0]
         return NOTHING
@@ -438,8 +441,6 @@ else:
             or getattr(type, "__origin__", None) is ColCounter
         )
 
-    from typing import Literal
-
     def is_literal(type) -> bool:
         return type.__class__ is _GenericAlias and type.__origin__ is Literal
 
@@ -453,6 +454,10 @@ else:
         return type.copy_with(args)
 
     def get_notrequired_base(type) -> "Union[Any, Literal[NOTHING]]":
+        if is_annotated(type):
+            # Handle `Annotated[NotRequired[int]]`
+            type = get_origin(type)
+
         if get_origin(type) in (NotRequired, Required):
             return get_args(type)[0]
         return NOTHING

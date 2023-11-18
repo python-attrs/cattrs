@@ -3,7 +3,7 @@ from datetime import datetime
 from string import ascii_lowercase
 from typing import Any, Dict, Generic, List, Optional, Set, Tuple, TypeVar
 
-from attr import NOTHING
+from attrs import NOTHING
 from hypothesis.strategies import (
     DrawFn,
     SearchStrategy,
@@ -17,7 +17,13 @@ from hypothesis.strategies import (
     text,
 )
 
-from cattrs._compat import ExtensionsTypedDict, NotRequired, Required, TypedDict
+from cattrs._compat import (
+    Annotated,
+    ExtensionsTypedDict,
+    NotRequired,
+    Required,
+    TypedDict,
+)
 
 from .untyped import gen_attr_names
 
@@ -53,6 +59,34 @@ def int_attributes(
         return Required[int], integers(), text(ascii_lowercase)
 
     return int, integers() | just(NOTHING), text(ascii_lowercase)
+
+
+@composite
+def annotated_int_attributes(
+    draw: DrawFn, total: bool = True, not_required: bool = False
+) -> Tuple[int, SearchStrategy, SearchStrategy]:
+    """Generate combinations of Annotated types."""
+    if total:
+        if not_required and draw(booleans()):
+            return (
+                NotRequired[Annotated[int, "test"]]
+                if draw(booleans())
+                else Annotated[NotRequired[int], "test"],
+                integers() | just(NOTHING),
+                text(ascii_lowercase),
+            )
+        return Annotated[int, "test"], integers(), text(ascii_lowercase)
+
+    if not_required and draw(booleans()):
+        return (
+            Required[Annotated[int, "test"]]
+            if draw(booleans())
+            else Annotated[Required[int], "test"],
+            integers(),
+            text(ascii_lowercase),
+        )
+
+    return Annotated[int, "test"], integers() | just(NOTHING), text(ascii_lowercase)
 
 
 @composite
@@ -120,6 +154,7 @@ def simple_typeddicts(
     attrs = draw(
         lists(
             int_attributes(total, not_required)
+            | annotated_int_attributes(total, not_required)
             | list_of_int_attributes(total, not_required)
             | datetime_attributes(total, not_required),
             min_size=min_attrs,

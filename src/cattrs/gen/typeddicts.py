@@ -568,6 +568,7 @@ elif sys.version_info >= (3, 9):
     from typing_extensions import Annotated, NotRequired, Required, get_args
 
     def _required_keys(cls: type) -> set[str]:
+        """Own own processor for required keys."""
         if _is_extensions_typeddict(cls):
             return cls.__required_keys__
 
@@ -600,6 +601,7 @@ else:
     # On 3.8, typing.TypedDicts do not have __required_keys__.
 
     def _required_keys(cls: type) -> set[str]:
+        """Own own processor for required keys."""
         if _is_extensions_typeddict(cls):
             return cls.__required_keys__
 
@@ -613,12 +615,14 @@ else:
             if key in superclass_keys:
                 continue
             annotation_type = own_annotations[key]
+
+            if is_annotated(annotation_type):
+                # If this is `Annotated`, we need to get the origin twice.
+                annotation_type = get_origin(annotation_type)
+
             annotation_origin = get_origin(annotation_type)
-            if annotation_origin is Annotated:
-                annotation_args = get_args(annotation_type)
-                if annotation_args:
-                    annotation_type = annotation_args[0]
-                    annotation_origin = get_origin(annotation_type)
+            print(annotation_type)
+            print(annotation_origin)
 
             if annotation_origin is Required:
                 required_keys.add(key)
