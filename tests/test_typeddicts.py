@@ -172,6 +172,7 @@ def test_generics(
     assert restructured == instance
 
 
+@pytest.mark.skipif(not is_py311_plus, reason="3.11+ only")
 @given(booleans())
 def test_generics_with_unbound(detailed_validation: bool):
     """TypedDicts with unbound TypeVars work."""
