@@ -55,7 +55,13 @@ from ._compat import (
     is_union_type,
 )
 from .disambiguators import create_default_dis_func, is_supported_union
-from .dispatch import HookFactory, MultiStrategyDispatch, StructureHook, UnstructureHook
+from .dispatch import (
+    HookFactory,
+    MultiStrategyDispatch,
+    StructureHook,
+    UnstructuredValue,
+    UnstructureHook,
+)
 from .errors import (
     IterableValidationError,
     IterableValidationNote,
@@ -327,7 +333,7 @@ class BaseConverter:
         """
         self._structure_func.register_func_list([(predicate, factory, True)])
 
-    def structure(self, obj: Any, cl: Type[T]) -> T:
+    def structure(self, obj: UnstructuredValue, cl: Type[T]) -> T:
         """Convert unstructured Python data structures to structured data."""
         return self._structure_func.dispatch(cl)(obj, cl)
 
@@ -1088,6 +1094,12 @@ class Converter(BaseConverter):
         self._unstructure_func.copy_to(
             res._unstructure_func, skip=self._unstruct_copy_skip
         )
+        self._structure_func.copy_to(res._structure_func, skip=self._struct_copy_skip)
+
+        return res
+
+
+GenConverter = Converter
         self._structure_func.copy_to(res._structure_func, skip=self._struct_copy_skip)
 
         return res

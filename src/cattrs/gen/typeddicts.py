@@ -488,20 +488,17 @@ def make_dict_structure_fn(
                 kn = an if override.rename is None else override.rename
                 allowed_fields.add(kn)
                 post_lines.append(f"  if '{kn}' in o:")
-                if handler:
-                    if handler == converter._structure_call:
-                        internal_arg_parts[struct_handler_name] = t
-                        post_lines.append(
-                            f"    res['{ian}'] = {struct_handler_name}(o['{kn}'])"
-                        )
-                    else:
-                        tn = f"__c_type_{ix}"
-                        internal_arg_parts[tn] = t
-                        post_lines.append(
-                            f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], {tn})"
-                        )
+                if handler == converter._structure_call:
+                    internal_arg_parts[struct_handler_name] = t
+                    post_lines.append(
+                        f"    res['{ian}'] = {struct_handler_name}(o['{kn}'])"
+                    )
                 else:
-                    post_lines.append(f"    res['{ian}'] = o['{kn}']")
+                    tn = f"__c_type_{ix}"
+                    internal_arg_parts[tn] = t
+                    post_lines.append(
+                        f"    res['{ian}'] = {struct_handler_name}(o['{kn}'], {tn})"
+                    )
                 if override.rename is not None:
                     lines.append(f"  res.pop('{override.rename}', None)")
 
