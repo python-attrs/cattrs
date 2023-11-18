@@ -1100,9 +1100,3 @@ class Converter(BaseConverter):
 
 
 GenConverter = Converter
-        self._structure_func.copy_to(res._structure_func, skip=self._struct_copy_skip)
-
-        return res
-
-
-GenConverter = Converter
