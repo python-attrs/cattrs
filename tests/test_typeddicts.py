@@ -6,6 +6,7 @@ import pytest
 from hypothesis import assume, given
 from hypothesis.strategies import booleans
 from pytest import raises
+from typing_extensions import NotRequired
 
 from cattrs import BaseConverter, Converter
 from cattrs._compat import ExtensionsTypedDict, is_generic
@@ -437,3 +438,33 @@ def test_detailed_validation_from_converter(converter: BaseConverter):
     else:
         with pytest.raises(ValueError):
             converter.structure({"a": "a"}, A)
+
+
+def test_override_entire_hooks(converter: BaseConverter):
+    """Overriding entire hooks works."""
+
+    class A(ExtensionsTypedDict):
+        a: int
+        b: NotRequired[int]
+
+    converter.register_structure_hook(
+        A,
+        make_dict_structure_fn(
+            A,
+            converter,
+            a=override(struct_hook=lambda v, _: 1),
+            b=override(struct_hook=lambda v, _: 2),
+        ),
+    )
+    converter.register_unstructure_hook(
+        A,
+        make_dict_unstructure_fn(
+            A,
+            converter,
+            a=override(unstruct_hook=lambda v: 1),
+            b=override(unstruct_hook=lambda v: 2),
+        ),
+    )
+
+    assert converter.unstructure({"a": 10, "b": 10}, A) == {"a": 1, "b": 2}
+    assert converter.structure({"a": 10, "b": 10}, A) == {"a": 1, "b": 2}

@@ -425,13 +425,16 @@ def make_dict_structure_fn(
             elif is_generic(t) and not is_bare(t) and not is_annotated(t):
                 t = deep_copy_with(t, mapping)
 
-            # For each attribute, we try resolving the type here and now.
-            # If a type is manually overwritten, this function should be
-            # regenerated.
-            if t is not None:
-                handler = converter._structure_func.dispatch(t)
+            if override.struct_hook is not None:
+                handler = override.struct_hook
             else:
-                handler = converter.structure
+                # For each attribute, we try resolving the type here and now.
+                # If a type is manually overwritten, this function should be
+                # regenerated.
+                if t is not None:
+                    handler = converter._structure_func.dispatch(t)
+                else:
+                    handler = converter.structure
 
             kn = an if override.rename is None else override.rename
             allowed_fields.add(kn)
@@ -468,13 +471,16 @@ def make_dict_structure_fn(
                 elif is_generic(t) and not is_bare(t) and not is_annotated(t):
                     t = deep_copy_with(t, mapping)
 
-                # For each attribute, we try resolving the type here and now.
-                # If a type is manually overwritten, this function should be
-                # regenerated.
-                if t is not None:
-                    handler = converter._structure_func.dispatch(t)
+                if override.struct_hook is not None:
+                    handler = override.struct_hook
                 else:
-                    handler = converter.structure
+                    # For each attribute, we try resolving the type here and now.
+                    # If a type is manually overwritten, this function should be
+                    # regenerated.
+                    if t is not None:
+                        handler = converter._structure_func.dispatch(t)
+                    else:
+                        handler = converter.structure
 
                 struct_handler_name = f"__c_structure_{ix}"
                 internal_arg_parts[struct_handler_name] = handler
