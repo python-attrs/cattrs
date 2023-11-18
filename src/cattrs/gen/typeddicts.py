@@ -133,6 +133,7 @@ def make_dict_unstructure_fn(
                 if t.__name__ in mapping:
                     t = mapping[t.__name__]
                 else:
+                    # Unbound typevars use late binding.
                     handler = converter.unstructure
             elif is_generic(t) and not is_bare(t) and not is_annotated(t):
                 t = deep_copy_with(t, mapping)

@@ -1,6 +1,6 @@
 """Tests for TypedDict un/structuring."""
 from datetime import datetime
-from typing import Dict, Set, Tuple
+from typing import Dict, Generic, Set, Tuple, TypedDict, TypeVar
 
 import pytest
 from hypothesis import assume, given
@@ -9,7 +9,11 @@ from pytest import raises
 
 from cattrs import BaseConverter, Converter
 from cattrs._compat import ExtensionsTypedDict, is_generic
-from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
+from cattrs.errors import (
+    ClassValidationError,
+    ForbiddenExtraKeysError,
+    StructureHandlerNotFoundError,
+)
 from cattrs.gen import already_generating, override
 from cattrs.gen._generics import generate_mapping
 from cattrs.gen.typeddicts import (
@@ -166,6 +170,23 @@ def test_generics(
 
     assert restructured is not unstructured
     assert restructured == instance
+
+
+@given(booleans())
+def test_generics_with_unbound(detailed_validation: bool):
+    """TypedDicts with unbound TypeVars work."""
+    c = mk_converter(detailed_validation=detailed_validation)
+
+    T = TypeVar("T")
+
+    class GenericTypedDict(TypedDict, Generic[T]):
+        a: T
+
+    assert c.unstructure({"a": 1}, GenericTypedDict)
+
+    with pytest.raises(StructureHandlerNotFoundError):
+        # This doesn't work since we refuse the temptation to guess.
+        c.structure({"a": 1}, GenericTypedDict)
 
 
 @given(simple_typeddicts(total=True, not_required=True), booleans())
