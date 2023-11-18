@@ -621,8 +621,6 @@ else:
                 annotation_type = get_origin(annotation_type)
 
             annotation_origin = get_origin(annotation_type)
-            print(annotation_type)
-            print(annotation_origin)
 
             if annotation_origin is Required:
                 required_keys.add(key)
