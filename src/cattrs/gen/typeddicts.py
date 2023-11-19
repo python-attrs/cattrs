@@ -283,9 +283,6 @@ def make_dict_structure_fn(
             mapping = generate_mapping(base, mapping)
             break
 
-    if isinstance(cl, TypeVar):
-        cl = mapping.get(cl.__name__, cl)
-
     cl_name = cl.__name__
     fn_name = "structure_" + cl_name
 
