@@ -2,23 +2,34 @@ import sys
 from collections import deque
 from collections.abc import MutableSet as AbcMutableSet
 from collections.abc import Set as AbcSet
-from dataclasses import MISSING
+from dataclasses import MISSING, is_dataclass
 from dataclasses import fields as dataclass_fields
-from dataclasses import is_dataclass
 from typing import AbstractSet as TypingAbstractSet
-from typing import Any, Deque, Dict, Final, FrozenSet, List, Literal
+from typing import (
+    Any,
+    Deque,
+    Dict,
+    Final,
+    FrozenSet,
+    List,
+    Literal,
+    NewType,
+    Optional,
+    Protocol,
+    Tuple,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 from typing import Mapping as TypingMapping
 from typing import MutableMapping as TypingMutableMapping
 from typing import MutableSequence as TypingMutableSequence
 from typing import MutableSet as TypingMutableSet
-from typing import NewType, Optional, Protocol
 from typing import Sequence as TypingSequence
 from typing import Set as TypingSet
-from typing import Tuple, get_args, get_origin, get_type_hints
 
-from attrs import NOTHING, Attribute, Factory
+from attrs import NOTHING, Attribute, Factory, resolve_types
 from attrs import fields as attrs_fields
-from attrs import resolve_types
 
 __all__ = [
     "ExceptionGroup",
@@ -157,9 +168,8 @@ if sys.version_info >= (3, 9):
     from collections.abc import Sequence as AbcSequence
     from collections.abc import Set as AbcSet
     from types import GenericAlias
-    from typing import Annotated
-    from typing import Counter as TypingCounter
     from typing import (
+        Annotated,
         Generic,
         TypedDict,
         Union,
@@ -168,6 +178,7 @@ if sys.version_info >= (3, 9):
         _SpecialGenericAlias,
         _UnionGenericAlias,
     )
+    from typing import Counter as TypingCounter
 
     try:
         # Not present on 3.9.0, so we try carefully.
@@ -349,6 +360,7 @@ if sys.version_info >= (3, 9):
         return get_type_hints(obj, globalns, localns, include_extras=True)
 
 else:
+    # 3.8
     Set = TypingSet
     AbstractSet = TypingAbstractSet
     MutableSet = TypingMutableSet
@@ -466,5 +478,6 @@ else:
         return get_type_hints(obj, globalns, localns)
 
 
-def is_generic_attrs(type):
+def is_generic_attrs(type) -> bool:
+    """Return True for both specialized (A[int]) and unspecialized (A) generics."""
     return is_generic(type) and has(type.__origin__)

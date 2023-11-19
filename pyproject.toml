@@ -139,6 +139,7 @@ select = [
     "PLC", # Pylint
     "PIE", # flake8-pie
     "RUF", # ruff
+    "I",   # isort
 ]
 ignore = [
     "E501",   # line length is handled by black

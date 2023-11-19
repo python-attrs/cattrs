@@ -504,15 +504,10 @@ but this priority can be inverted by setting `prefer_attrib_converters` to `True
 A(a=15)
 ```
 
-### Complex `attrs` Classes and Dataclasses
+### Complex _attrs_ Classes and Dataclasses
 
-Complex `attrs` classes and dataclasses are classes with type information
-available for some or all attributes. These classes support almost arbitrary
-nesting.
-
-Type information is supported by attrs directly, and can be set using type
-annotations when using Python 3.6+, or by passing the appropriate type to
-`attr.ib`.
+Complex _attrs_ classes and dataclasses are classes with type information available for some or all attributes.
+These classes support almost arbitrary nesting.
 
 ```{doctest}
 
@@ -520,12 +515,11 @@ annotations when using Python 3.6+, or by passing the appropriate type to
 ... class A:
 ...     a: int
 
->>> attr.fields(A).a
+>>> attrs.fields(A).a
 Attribute(name='a', default=NOTHING, validator=None, repr=True, eq=True, eq_key=None, order=True, order_key=None, hash=None, init=True, metadata=mappingproxy({}), type=<class 'int'>, converter=None, kw_only=False, inherited=False, on_setattr=None, alias='a')
 ```
 
-Type information, when provided, can be used for all attribute types, not only
-attributes holding `attrs` classes and dataclasses.
+Type information can be used for all attribute types, not only attributes holding _attrs_ classes and dataclasses.
 
 ```{doctest}
 
@@ -541,13 +535,23 @@ attributes holding `attrs` classes and dataclasses.
 B(b=A(a=1))
 ```
 
-Finally, if an `attrs` or `dataclass` class uses inheritance and as such has one or several subclasses, it can be structured automatically to its exact subtype by using the [include subclasses](strategies.md#include-subclasses-strategy) strategy.
+Generic _attrs_ classes and dataclasses are fully supported, both using `typing.Generic` and [PEP 695](https://peps.python.org/pep-0695/).
+
+```python
+>>> @define
+... class A[T]:
+...    a: T
+
+>>> cattrs.structure({"a": "1"}, A[int])
+A(a=1)
+```
+
+Finally, if an _attrs_ or dataclass class uses inheritance and as such has one or several subclasses, it can be structured automatically to its exact subtype by using the [include subclasses](strategies.md#include-subclasses-strategy) strategy.
 
 ## Registering Custom Structuring Hooks
 
-_cattrs_ doesn't know how to structure non-_attrs_ classes by default,
-so it has to be taught. This can be done by registering structuring hooks on
-a converter instance (including the global converter).
+_cattrs_ doesn't know how to structure non-_attrs_ classes by default, so it has to be taught.
+This can be done by registering structuring hooks on a converter instance (including the global converter).
 
 Here's an example involving a simple, classic (i.e. non-_attrs_) Python class.
 
@@ -569,8 +573,7 @@ StructureHandlerNotFoundError: Unsupported type: <class '__main__.C'>. Register 
 C(a=1)
 ```
 
-The structuring hooks are callables that take two arguments: the object to
-convert to the desired class and the type to convert to.
+The structuring hooks are callables that take two arguments: the object to convert to the desired class and the type to convert to.
 (The type may seem redundant but is useful when dealing with generic types.)
 
 When using {meth}`cattrs.register_structure_hook`, the hook will be registered on the global converter.

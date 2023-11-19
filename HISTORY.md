@@ -4,6 +4,8 @@
 
 - More robust support for `Annotated` and `NotRequired` in TypedDicts.
   ([#450](https://github.com/python-attrs/cattrs/pull/450))
+- [PEP 695](https://peps.python.org/pep-0695/) generics are now tested.
+- _cattrs_ now uses Ruff for sorting imports.
 
 ## 23.2.1 (2023-11-18)
 

@@ -18,9 +18,8 @@ from typing import (
     Union,
 )
 
-from attrs import Attribute
+from attrs import Attribute, resolve_types
 from attrs import has as attrs_has
-from attrs import resolve_types
 
 from ._compat import (
     FrozenSetSubscriptable,
