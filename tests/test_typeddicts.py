@@ -1,15 +1,20 @@
 """Tests for TypedDict un/structuring."""
 from datetime import datetime
-from typing import Dict, Set, Tuple
+from typing import Dict, Generic, Set, Tuple, TypedDict, TypeVar
 
 import pytest
 from hypothesis import assume, given
 from hypothesis.strategies import booleans
 from pytest import raises
+from typing_extensions import NotRequired
 
 from cattrs import BaseConverter, Converter
 from cattrs._compat import ExtensionsTypedDict, is_generic
-from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
+from cattrs.errors import (
+    ClassValidationError,
+    ForbiddenExtraKeysError,
+    StructureHandlerNotFoundError,
+)
 from cattrs.gen import already_generating, override
 from cattrs.gen._generics import generate_mapping
 from cattrs.gen.typeddicts import (
@@ -155,8 +160,11 @@ def test_generics(
     cls, instance = cls_and_instance
 
     unstructured = c.unstructure(instance, unstructure_as=cls)
+    assert not any(isinstance(v, datetime) for v in unstructured.values())
 
-    if all(a is not datetime for _, a in get_annot(cls).items()):
+    if all(
+        a not in (datetime, NotRequired[datetime]) for _, a in get_annot(cls).items()
+    ):
         assert unstructured == instance
 
     if all(a is int for _, a in get_annot(cls).items()):
@@ -166,6 +174,24 @@ def test_generics(
 
     assert restructured is not unstructured
     assert restructured == instance
+
+
+@pytest.mark.skipif(not is_py311_plus, reason="3.11+ only")
+@given(booleans())
+def test_generics_with_unbound(detailed_validation: bool):
+    """TypedDicts with unbound TypeVars work."""
+    c = mk_converter(detailed_validation=detailed_validation)
+
+    T = TypeVar("T")
+
+    class GenericTypedDict(TypedDict, Generic[T]):
+        a: T
+
+    assert c.unstructure({"a": 1}, GenericTypedDict)
+
+    with pytest.raises(StructureHandlerNotFoundError):
+        # This doesn't work since we refuse the temptation to guess.
+        c.structure({"a": 1}, GenericTypedDict)
 
 
 @given(simple_typeddicts(total=True, not_required=True), booleans())
@@ -415,3 +441,33 @@ def test_detailed_validation_from_converter(converter: BaseConverter):
     else:
         with pytest.raises(ValueError):
             converter.structure({"a": "a"}, A)
+
+
+def test_override_entire_hooks(converter: BaseConverter):
+    """Overriding entire hooks works."""
+
+    class A(ExtensionsTypedDict):
+        a: int
+        b: NotRequired[int]
+
+    converter.register_structure_hook(
+        A,
+        make_dict_structure_fn(
+            A,
+            converter,
+            a=override(struct_hook=lambda v, _: 1),
+            b=override(struct_hook=lambda v, _: 2),
+        ),
+    )
+    converter.register_unstructure_hook(
+        A,
+        make_dict_unstructure_fn(
+            A,
+            converter,
+            a=override(unstruct_hook=lambda v: 1),
+            b=override(unstruct_hook=lambda v: 2),
+        ),
+    )
+
+    assert converter.unstructure({"a": 10, "b": 10}, A) == {"a": 1, "b": 2}
+    assert converter.structure({"a": 10, "b": 10}, A) == {"a": 1, "b": 2}

@@ -3,7 +3,7 @@ from datetime import datetime
 from string import ascii_lowercase
 from typing import Any, Dict, Generic, List, Optional, Set, Tuple, TypeVar
 
-from attr import NOTHING
+from attrs import NOTHING
 from hypothesis.strategies import (
     DrawFn,
     SearchStrategy,
@@ -17,7 +17,13 @@ from hypothesis.strategies import (
     text,
 )
 
-from cattrs._compat import ExtensionsTypedDict, NotRequired, Required, TypedDict
+from cattrs._compat import (
+    Annotated,
+    ExtensionsTypedDict,
+    NotRequired,
+    Required,
+    TypedDict,
+)
 
 from .untyped import gen_attr_names
 
@@ -53,6 +59,34 @@ def int_attributes(
         return Required[int], integers(), text(ascii_lowercase)
 
     return int, integers() | just(NOTHING), text(ascii_lowercase)
+
+
+@composite
+def annotated_int_attributes(
+    draw: DrawFn, total: bool = True, not_required: bool = False
+) -> Tuple[int, SearchStrategy, SearchStrategy]:
+    """Generate combinations of Annotated types."""
+    if total:
+        if not_required and draw(booleans()):
+            return (
+                NotRequired[Annotated[int, "test"]]
+                if draw(booleans())
+                else Annotated[NotRequired[int], "test"],
+                integers() | just(NOTHING),
+                text(ascii_lowercase),
+            )
+        return Annotated[int, "test"], integers(), text(ascii_lowercase)
+
+    if not_required and draw(booleans()):
+        return (
+            Required[Annotated[int, "test"]]
+            if draw(booleans())
+            else Annotated[Required[int], "test"],
+            integers(),
+            text(ascii_lowercase),
+        )
+
+    return Annotated[int, "test"], integers() | just(NOTHING), text(ascii_lowercase)
 
 
 @composite
@@ -120,6 +154,7 @@ def simple_typeddicts(
     attrs = draw(
         lists(
             int_attributes(total, not_required)
+            | annotated_int_attributes(total, not_required)
             | list_of_int_attributes(total, not_required)
             | datetime_attributes(total, not_required),
             min_size=min_attrs,
@@ -201,7 +236,11 @@ def generic_typeddicts(
         if ix in generic_attrs:
             typevar = TypeVar(f"T{ix+1}")
             generics.append(typevar)
-            actual_types.append(attr_type)
+            if total and draw(booleans()):
+                # We might decide to make these NotRequired
+                actual_types.append(NotRequired[attr_type])
+            else:
+                actual_types.append(attr_type)
             attrs_dict[attr_name] = typevar
 
     cls = make_typeddict(
@@ -227,13 +266,13 @@ def make_typeddict(
     globs = {"TypedDict": TypedDict}
     lines = []
 
-    bases_snippet = ",".join(f"_base{ix}" for ix in range(len(bases)))
+    bases_snippet = ", ".join(f"_base{ix}" for ix in range(len(bases)))
     for ix, base in enumerate(bases):
         globs[f"_base{ix}"] = base
     if bases_snippet:
         bases_snippet = f", {bases_snippet}"
 
-    lines.append(f"class {cls_name}(TypedDict{bases_snippet},total={total}):")
+    lines.append(f"class {cls_name}(TypedDict{bases_snippet}, total={total}):")
     for n, t in attrs.items():
         # Strip the initial underscore if present, to prevent mangling.
         trimmed = n[1:] if n.startswith("_") else n
