@@ -5,7 +5,7 @@
 groups = ["default", "bench", "bson", "cbor2", "docs", "lint", "msgpack", "orjson", "pyyaml", "test", "tomlkit", "ujson"]
 strategy = ["cross_platform"]
 lock_version = "4.4"
-content_hash = "sha256:ae80bb05246f0b5d6054f2e90df4f7c3cd39696694c48608cf4592341550409e"
+content_hash = "sha256:ef67dba9400ae655c15640f489c30128ac6b265e154c2cb49eddc81828ba8f9b"
 
 [[package]]
 name = "alabaster"
@@ -440,16 +440,6 @@ summary = "brain-dead simple config-ini parsing"
 files = [
     {file = "iniconfig-2.0.0-py3-none-any.whl", hash = "sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374"},
     {file = "iniconfig-2.0.0.tar.gz", hash = "sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3"},
-]
-
-[[package]]
-name = "isort"
-version = "5.12.0"
-requires_python = ">=3.8.0"
-summary = "A Python utility / library to sort Python imports."
-files = [
-    {file = "isort-5.12.0-py3-none-any.whl", hash = "sha256:f84c2818376e66cf843d497486ea8fed8700b340f308f076c6fb1229dff318b6"},
-    {file = "isort-5.12.0.tar.gz", hash = "sha256:8bef7dde241278824a6d83f44a544709b065191b95b6e50894bdc722fcba0504"},
 ]
 
 [[package]]
