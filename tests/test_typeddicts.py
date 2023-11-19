@@ -160,8 +160,11 @@ def test_generics(
     cls, instance = cls_and_instance
 
     unstructured = c.unstructure(instance, unstructure_as=cls)
+    assert not any(isinstance(v, datetime) for v in unstructured.values())
 
-    if all(a is not datetime for _, a in get_annot(cls).items()):
+    if all(
+        a not in (datetime, NotRequired[datetime]) for _, a in get_annot(cls).items()
+    ):
         assert unstructured == instance
 
     if all(a is int for _, a in get_annot(cls).items()):

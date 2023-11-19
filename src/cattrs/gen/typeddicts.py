@@ -125,9 +125,6 @@ def make_dict_unstructure_fn(
                 break
             handler = None
             t = a.type
-            nrb = get_notrequired_base(t)
-            if nrb is not NOTHING:
-                t = nrb
 
             if isinstance(t, TypeVar):
                 if t.__name__ in mapping:
@@ -139,6 +136,9 @@ def make_dict_unstructure_fn(
                 t = deep_copy_with(t, mapping)
 
             if handler is None:
+                nrb = get_notrequired_base(t)
+                if nrb is not NOTHING:
+                    t = nrb
                 try:
                     handler = converter._unstructure_func.dispatch(t)
                 except RecursionError:
@@ -172,9 +172,6 @@ def make_dict_unstructure_fn(
                 handler = override.unstruct_hook
             else:
                 t = a.type
-                nrb = get_notrequired_base(t)
-                if nrb is not NOTHING:
-                    t = nrb
 
                 if isinstance(t, TypeVar):
                     if t.__name__ in mapping:
@@ -185,6 +182,9 @@ def make_dict_unstructure_fn(
                     t = deep_copy_with(t, mapping)
 
                 if handler is None:
+                    nrb = get_notrequired_base(t)
+                    if nrb is not NOTHING:
+                        t = nrb
                     try:
                         handler = converter._unstructure_func.dispatch(t)
                     except RecursionError:
@@ -338,6 +338,12 @@ def make_dict_structure_fn(
             if override.omit:
                 continue
             t = a.type
+
+            if isinstance(t, TypeVar):
+                t = mapping.get(t.__name__, t)
+            elif is_generic(t) and not is_bare(t) and not is_annotated(t):
+                t = deep_copy_with(t, mapping)
+
             nrb = get_notrequired_base(t)
             if nrb is not NOTHING:
                 t = nrb
@@ -371,16 +377,11 @@ def make_dict_structure_fn(
             tn = f"__c_type_{ix}"
             internal_arg_parts[tn] = t
 
-            if handler:
-                if handler == converter._structure_call:
-                    internal_arg_parts[struct_handler_name] = t
-                    lines.append(f"{i}res['{an}'] = {struct_handler_name}(o['{kn}'])")
-                else:
-                    lines.append(
-                        f"{i}res['{an}'] = {struct_handler_name}(o['{kn}'], {tn})"
-                    )
+            if handler == converter._structure_call:
+                internal_arg_parts[struct_handler_name] = t
+                lines.append(f"{i}res['{an}'] = {struct_handler_name}(o['{kn}'])")
             else:
-                lines.append(f"{i}res['{an}'] = o['{kn}']")
+                lines.append(f"{i}res['{an}'] = {struct_handler_name}(o['{kn}'], {tn})")
             if override.rename is not None:
                 lines.append(f"{i}del res['{kn}']")
             i = i[:-2]
@@ -416,14 +417,15 @@ def make_dict_structure_fn(
                 continue
 
             t = a.type
-            nrb = get_notrequired_base(t)
-            if nrb is not NOTHING:
-                t = nrb
 
             if isinstance(t, TypeVar):
                 t = mapping.get(t.__name__, t)
             elif is_generic(t) and not is_bare(t) and not is_annotated(t):
                 t = deep_copy_with(t, mapping)
+
+            nrb = get_notrequired_base(t)
+            if nrb is not NOTHING:
+                t = nrb
 
             if override.struct_hook is not None:
                 handler = override.struct_hook
@@ -431,10 +433,7 @@ def make_dict_structure_fn(
                 # For each attribute, we try resolving the type here and now.
                 # If a type is manually overwritten, this function should be
                 # regenerated.
-                if t is not None:
-                    handler = converter._structure_func.dispatch(t)
-                else:
-                    handler = converter.structure
+                handler = converter._structure_func.dispatch(t)
 
             kn = an if override.rename is None else override.rename
             allowed_fields.add(kn)
@@ -477,10 +476,7 @@ def make_dict_structure_fn(
                     # For each attribute, we try resolving the type here and now.
                     # If a type is manually overwritten, this function should be
                     # regenerated.
-                    if t is not None:
-                        handler = converter._structure_func.dispatch(t)
-                    else:
-                        handler = converter.structure
+                    handler = converter._structure_func.dispatch(t)
 
                 struct_handler_name = f"__c_structure_{ix}"
                 internal_arg_parts[struct_handler_name] = handler

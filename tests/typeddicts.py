@@ -236,7 +236,11 @@ def generic_typeddicts(
         if ix in generic_attrs:
             typevar = TypeVar(f"T{ix+1}")
             generics.append(typevar)
-            actual_types.append(attr_type)
+            if total and draw(booleans()):
+                # We might decide to make these NotRequired
+                actual_types.append(NotRequired[attr_type])
+            else:
+                actual_types.append(attr_type)
             attrs_dict[attr_name] = typevar
 
     cls = make_typeddict(
@@ -262,13 +266,13 @@ def make_typeddict(
     globs = {"TypedDict": TypedDict}
     lines = []
 
-    bases_snippet = ",".join(f"_base{ix}" for ix in range(len(bases)))
+    bases_snippet = ", ".join(f"_base{ix}" for ix in range(len(bases)))
     for ix, base in enumerate(bases):
         globs[f"_base{ix}"] = base
     if bases_snippet:
         bases_snippet = f", {bases_snippet}"
 
-    lines.append(f"class {cls_name}(TypedDict{bases_snippet},total={total}):")
+    lines.append(f"class {cls_name}(TypedDict{bases_snippet}, total={total}):")
     for n, t in attrs.items():
         # Strip the initial underscore if present, to prevent mangling.
         trimmed = n[1:] if n.startswith("_") else n
