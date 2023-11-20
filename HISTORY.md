@@ -8,7 +8,8 @@
   ([#450](https://github.com/python-attrs/cattrs/pull/450))
 - [PEP 695](https://peps.python.org/pep-0695/) generics are now tested.
   ([#452](https://github.com/python-attrs/cattrs/pull/452))
-- _cattrs_ now uses Ruff for sorting imports.
+- Imports are now sorted using Ruff.
+- Tests are run with the pytest-xdist plugin by default.
 
 ## 23.2.1 (2023-11-18)
 
