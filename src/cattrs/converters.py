@@ -954,7 +954,12 @@ class Converter(BaseConverter):
         """Generate an unstructuring hook for optional types."""
         union_params = cl.__args__
         other = union_params[0] if union_params[1] is NoneType else union_params[1]
-        handler = self._unstructure_func.dispatch(other)
+
+        # TODO: Remove this special case when we make unstructuring Any consistent.
+        if other is Any:
+            handler = self.unstructure
+        else:
+            handler = self._unstructure_func.dispatch(other)
 
         def unstructure_optional(val, _handler=handler):
             return None if val is None else _handler(val)

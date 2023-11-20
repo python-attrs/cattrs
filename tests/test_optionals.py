@@ -1,7 +1,9 @@
-from typing import NewType, Optional
+from typing import Any, NewType, Optional
 
 import pytest
 from attrs import define
+
+from cattrs import Converter
 
 from ._compat import is_py310_plus
 
@@ -39,3 +41,13 @@ def test_newtype_modern_optionals(genconverter):
         "total_foo": "bar",
         "maybe_foo": "is it a bar?",
     }
+
+
+def test_optional_any(converter: Converter):
+    """Unstructuring Any|None is equivalent to unstructuring as v.__class__."""
+
+    @define
+    class A:
+        pass
+
+    assert converter.unstructure(A(), Optional[Any]) == {}
