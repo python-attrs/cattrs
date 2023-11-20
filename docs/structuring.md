@@ -467,11 +467,11 @@ A(a='string', b=2)
 Structuring from tuples can also be made the default for specific classes only;
 see registering custom structure hooks below.
 
-## Using Attribute Types and Converters
+### Using Attribute Types and Converters
 
 By default, {meth}`structure() <cattrs.BaseConverter.structure>` will use hooks registered using {meth}`register_structure_hook() <cattrs.BaseConverter.register_structure_hook>`,
 to convert values to the attribute type, and fallback to invoking any converters registered on
-attributes with `attrib`.
+attributes with `field`.
 
 ```{doctest}
 
@@ -493,8 +493,6 @@ but this priority can be inverted by setting `prefer_attrib_converters` to `True
 ```{doctest}
 
 >>> converter = cattrs.Converter(prefer_attrib_converters=True)
-
->>> converter.register_structure_hook(int, lambda v, t: int(v))
 
 >>> @define
 ... class A:
