@@ -180,6 +180,11 @@ class BaseConverter:
                     lambda t: self._unstructure_func.dispatch(get_final_base(t)),
                     True,
                 ),
+                (
+                    is_type_alias,
+                    lambda t: self._unstructure_func.dispatch(get_type_alias_base(t)),
+                    True,
+                ),
                 (is_mapping, self._unstructure_mapping),
                 (is_sequence, self._unstructure_seq),
                 (is_mutable_set, self._unstructure_seq),
