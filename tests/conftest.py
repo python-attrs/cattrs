@@ -1,3 +1,4 @@
+import sys
 from os import environ
 
 import pytest
@@ -27,3 +28,6 @@ settings.register_profile(
 settings.register_profile("fast", settings.get_profile("tests"), max_examples=10)
 
 settings.load_profile("fast" if "FAST" in environ else "tests")
+
+if sys.version_info < (3, 12):
+    collect_ignore_glob = ["*_695.py"]

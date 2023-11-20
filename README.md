@@ -60,8 +60,7 @@ _cattrs_ works well with _attrs_ classes out of the box.
 C(a=1, b='a')
 ```
 
-Here's a much more complex example, involving `attrs` classes with type
-metadata.
+Here's a much more complex example, involving _attrs_ classes with type metadata.
 
 ```python
 >>> from enum import unique, Enum
@@ -99,12 +98,9 @@ metadata.
 [Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)), Cat(breed=<CatBreed.MAINE_COON: 'maine_coon'>, names=['Fluffly', 'Fluffer'])]
 ```
 
-Consider unstructured data a low-level representation that needs to be converted
-to structured data to be handled, and use `structure`. When you're done,
-`unstructure` the data to its unstructured form and pass it along to another
-library or module. Use [attrs type metadata](http://attrs.readthedocs.io/en/stable/examples.html#types)
-to add type metadata to attributes, so _cattrs_ will know how to structure and
-destructure them.
+Consider unstructured data a low-level representation that needs to be converted to structured data to be handled, and use `structure`.
+When you're done, `unstructure` the data to its unstructured form and pass it along to another library or module.
+Use [attrs type metadata](http://attrs.readthedocs.io/en/stable/examples.html#types) to add type metadata to attributes, so _cattrs_ will know how to structure and destructure them.
 
 - Free software: MIT license
 - Documentation: https://catt.rs
@@ -116,12 +112,11 @@ destructure them.
 
   - _attrs_ classes and dataclasses are converted into dictionaries in a way similar to `attrs.asdict`, or into tuples in a way similar to `attrs.astuple`.
   - Enumeration instances are converted to their values.
-  - Other types are let through without conversion. This includes types such as
-    integers, dictionaries, lists and instances of non-_attrs_ classes.
+  - Other types are let through without conversion. This includes types such as integers, dictionaries, lists and instances of non-_attrs_ classes.
   - Custom converters for any type can be registered using `register_unstructure_hook`.
 
-- Converts unstructured data into structured data, recursively, according to
-  your specification given as a type. The following types are supported:
+- Converts unstructured data into structured data, recursively, according to your specification given as a type.
+  The following types are supported:
 
   - `typing.Optional[T]`.
   - `typing.List[T]`, `typing.MutableSequence[T]`, `typing.Sequence[T]` (converts to a list).
@@ -129,15 +124,15 @@ destructure them.
   - `typing.MutableSet[T]`, `typing.Set[T]` (converts to a set).
   - `typing.FrozenSet[T]` (converts to a frozenset).
   - `typing.Dict[K, V]`, `typing.MutableMapping[K, V]`, `typing.Mapping[K, V]` (converts to a dict).
-  - `typing.TypedDict`.
+  - `typing.TypedDict`, ordinary and generic.
   - _attrs_ classes with simple attributes and the usual `__init__`.
 
     - Simple attributes are attributes that can be assigned unstructured data,
       like numbers, strings, and collections of unstructured data.
 
   - All _attrs_ classes and dataclasses with the usual `__init__`, if their complex attributes have type metadata.
-  - `typing.Union` s of supported _attrs_ classes, given that all of the classes have a unique field.
-  - `typing.Union` s of anything, given that you provide a disambiguation function for it.
+  - Unions of supported _attrs_ classes, given that all of the classes have a unique field.
+  - Unions s of anything, given that you provide a disambiguation function for it.
   - Custom converters for any type can be registered using `register_structure_hook`.
 
 _cattrs_ comes with preconfigured converters for a number of serialization libraries, including json, msgpack, cbor2, bson, yaml and toml.

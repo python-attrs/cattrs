@@ -2,8 +2,13 @@
 
 ## 24.1.0 (UNRELEASED)
 
+- Add support for [PEP 695](https://peps.python.org/pep-0695/) type aliases.
+  ([#452](https://github.com/python-attrs/cattrs/pull/452))
 - More robust support for `Annotated` and `NotRequired` in TypedDicts.
   ([#450](https://github.com/python-attrs/cattrs/pull/450))
+- [PEP 695](https://peps.python.org/pep-0695/) generics are now tested.
+  ([#452](https://github.com/python-attrs/cattrs/pull/452))
+- _cattrs_ now uses Ruff for sorting imports.
 
 ## 23.2.1 (2023-11-18)
 

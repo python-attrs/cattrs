@@ -18,9 +18,8 @@ from typing import (
     Union,
 )
 
-from attrs import Attribute
+from attrs import Attribute, resolve_types
 from attrs import has as attrs_has
-from attrs import resolve_types
 
 from ._compat import (
     FrozenSetSubscriptable,
@@ -35,6 +34,7 @@ from ._compat import (
     get_final_base,
     get_newtype_base,
     get_origin,
+    get_type_alias_base,
     has,
     has_with_generic,
     is_annotated,
@@ -51,6 +51,7 @@ from ._compat import (
     is_protocol,
     is_sequence,
     is_tuple,
+    is_type_alias,
     is_typeddict,
     is_union_type,
 )
@@ -179,6 +180,11 @@ class BaseConverter:
                     lambda t: self._unstructure_func.dispatch(get_final_base(t)),
                     True,
                 ),
+                (
+                    is_type_alias,
+                    lambda t: self._unstructure_func.dispatch(get_type_alias_base(t)),
+                    True,
+                ),
                 (is_mapping, self._unstructure_mapping),
                 (is_sequence, self._unstructure_seq),
                 (is_mutable_set, self._unstructure_seq),
@@ -198,6 +204,7 @@ class BaseConverter:
                 (lambda cl: cl is Any or cl is Optional or cl is None, lambda v, _: v),
                 (is_generic_attrs, self._gen_structure_generic, True),
                 (lambda t: get_newtype_base(t) is not None, self._structure_newtype),
+                (is_type_alias, self._find_type_alias_structure_hook, True),
                 (
                     lambda t: get_final_base(t) is not None,
                     self._structure_final_factory,
@@ -453,13 +460,18 @@ class BaseConverter:
         base = get_newtype_base(type)
         return self._structure_func.dispatch(base)(val, base)
 
+    def _find_type_alias_structure_hook(self, type: Any) -> StructureHook:
+        base = get_type_alias_base(type)
+        res = self._structure_func.dispatch(base)
+        if res == self._structure_call:
+            # we need to replace the type arg of `structure_call`
+            return lambda v, _, __base=base: self._structure_call(v, __base)
+        return res
+
     def _structure_final_factory(self, type):
         base = get_final_base(type)
         res = self._structure_func.dispatch(base)
-        if res == self._structure_call:
-            # It's not really `structure_call` for Finals (can't call Final())
-            return lambda v, _: self._structure_call(v, base)
-        return lambda v, _: res(v, base)
+        return lambda v, _, __base=base: res(v, __base)
 
     # Attrs classes.
 
