@@ -595,3 +595,9 @@ def test_detailed_validation_from_converter(converter: BaseConverter):
     else:
         with pytest.raises(ValueError):
             converter.structure({"a": "a"}, A)
+
+
+def test_fields_exception():
+    """fields() raises on a non-attrs, non-dataclass class."""
+    with pytest.raises(Exception):  # noqa: B017
+        fields(int)

@@ -45,7 +45,7 @@ __all__ = [
 
 try:
     from typing_extensions import TypedDict as ExtensionsTypedDict
-except ImportError:
+except ImportError:  # pragma: no cover
     ExtensionsTypedDict = None
 
 
@@ -56,13 +56,13 @@ else:
 
 try:
     from typing_extensions import is_typeddict as _is_typeddict
-except ImportError:
+except ImportError:  # pragma: no cover
     assert sys.version_info >= (3, 10)
     from typing import is_typeddict as _is_typeddict
 
 try:
     from typing_extensions import TypeAlias
-except ImportError:
+except ImportError:  # pragma: no cover
     assert sys.version_info >= (3, 11)
     from typing import TypeAlias
 
@@ -78,8 +78,12 @@ def is_type_alias(type: Any) -> bool:
 
 
 def get_type_alias_base(type: Any) -> Any:
-    """What is this a type alias of?"""
-    raise Exception("Runtime type aliases not supported")
+    """
+    What is this a type alias of?
+
+    Works only on 3.12+.
+    """
+    return type.__value__
 
 
 def has(cls):
@@ -201,7 +205,7 @@ if sys.version_info >= (3, 9):
         def is_literal(type) -> bool:
             return type.__class__ is _LiteralGenericAlias
 
-    except ImportError:
+    except ImportError:  # pragma: no cover
 
         def is_literal(_) -> bool:
             return False
@@ -232,10 +236,6 @@ if sys.version_info >= (3, 9):
         def is_type_alias(type: Any) -> bool:  # noqa: F811
             """Is this a PEP 695 type alias?"""
             return isinstance(type, TypeAliasType)
-
-        def get_type_alias_base(type: Any) -> Any:  # noqa: F811
-            """What is this a type alias of?"""
-            return type.__value__
 
     if sys.version_info >= (3, 10):
 

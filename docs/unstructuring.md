@@ -173,8 +173,41 @@ from `typing` on older Python versions.
 
 ## `typing.Annotated`
 
-Fields marked as `typing.Annotated[type, ...]` are supported and are matched
-using the first type present in the annotated type.
+[PEP 593](https://www.python.org/dev/peps/pep-0593/) `typing.Annotated[type, ...]` are supported and are matched using the first type present in the annotated type.
+
+## Type Aliases
+
+[Type aliases](https://docs.python.org/3/library/typing.html#type-aliases) are supported on Python 3.12+ and are unstructured according to the rules for their underlying type.
+Their hooks can also be overriden using {meth}`Converter.register_unstructure_hook() <cattrs.BaseConverter.register_unstructure_hook>`.
+(Since type aliases aren't proper classes they cannot be used with {meth}`Converter.register_unstructure_hook() <cattrs.BaseConverter.register_unstructure_hook>`.)
+
+```{warning}
+Type aliases using [`typing.TypeAlias`](https://docs.python.org/3/library/typing.html#typing.TypeAlias) aren't supported since there is no way at runtime to distinguish them from their underlying types.
+```
+
+```python
+>>> from datetime import datetime, UTC
+
+>>> type IsoDate = datetime
+
+>>> converter = cattrs.Converter()
+>>> converter.register_unstructure_hook_func(
+...     lambda t: t is IsoDate,
+...     lambda v: v.isoformat()
+... )
+
+>>> converter.unstructure(datetime.now(UTC), unstructure_as=IsoDate)
+'2023-11-20T23:10:46.728394+00:00'
+```
+
+```{versionadded} 24.1.0
+
+```
+
+```{seealso} [Structuring Type Aliases.](structuring.md#type-aliases)
+
+```
+
 
 ## `typing.NewType`
 
