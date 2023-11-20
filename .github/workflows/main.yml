@@ -79,6 +79,7 @@ jobs:
         with:
           name: "html-report"
           path: "htmlcov"
+        if: always()
 
       - name: "Make badge"
         if: github.ref == 'refs/heads/main'

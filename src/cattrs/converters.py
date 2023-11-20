@@ -59,6 +59,7 @@ from .disambiguators import create_default_dis_func, is_supported_union
 from .dispatch import (
     HookFactory,
     MultiStrategyDispatch,
+    StructuredValue,
     StructureHook,
     UnstructuredValue,
     UnstructureHook,
@@ -456,7 +457,7 @@ class BaseConverter:
         except KeyError:
             raise Exception(f"{val} not in literal {type}") from None
 
-    def _structure_newtype(self, val, type):
+    def _structure_newtype(self, val: UnstructuredValue, type) -> StructuredValue:
         base = get_newtype_base(type)
         return self._structure_func.dispatch(base)(val, base)
 
