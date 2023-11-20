@@ -1,5 +1,10 @@
 # History
 
+## 23.2.2 (UNRELEASED)
+
+- Fix a regression when unstructuring `Any | None`.
+  ([#453](https://github.com/python-attrs/cattrs/issues/453))
+
 ## 23.2.1 (2023-11-18)
 
 - Fix unnecessary `typing_extensions` import on Python 3.11.

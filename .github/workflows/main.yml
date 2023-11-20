@@ -5,7 +5,6 @@ on:
   push:
     branches: ["main"]
   pull_request:
-    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -47,7 +46,7 @@ jobs:
 
     steps:
       - uses: "actions/checkout@v3"
-      
+
       - uses: "actions/setup-python@v4"
         with:
           cache: "pip"
@@ -76,7 +75,7 @@ jobs:
         with:
           name: "html-report"
           path: "htmlcov"
-      
+
       - name: "Make badge"
         if: github.ref == 'refs/heads/main'
         uses: "schneegans/dynamic-badges-action@v1.4.0"
