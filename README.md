@@ -118,13 +118,15 @@ Use [attrs type metadata](http://attrs.readthedocs.io/en/stable/examples.html#ty
 - Converts unstructured data into structured data, recursively, according to your specification given as a type.
   The following types are supported:
 
-  - `typing.Optional[T]`.
-  - `typing.List[T]`, `typing.MutableSequence[T]`, `typing.Sequence[T]` (converts to a list).
-  - `typing.Tuple` (both variants, `Tuple[T, ...]` and `Tuple[X, Y, Z]`).
-  - `typing.MutableSet[T]`, `typing.Set[T]` (converts to a set).
-  - `typing.FrozenSet[T]` (converts to a frozenset).
-  - `typing.Dict[K, V]`, `typing.MutableMapping[K, V]`, `typing.Mapping[K, V]` (converts to a dict).
-  - `typing.TypedDict`, ordinary and generic.
+  - `typing.Optional[T]` and its 3.10+ form, `T | None`.
+  - `list[T]`, `typing.List[T]`, `typing.MutableSequence[T]`, `typing.Sequence[T]` (converts to a list).
+  - `tuple` and `typing.Tuple` (both variants, `tuple[T, ...]` and `tuple[X, Y, Z]`).
+  - `set[T]`, `typing.MutableSet[T]`, `typing.Set[T]` (converts to a set).
+  - `frozenset[T]`, `typing.FrozenSet[T]` (converts to a frozenset).
+  - `dict[K, V]`, `typing.Dict[K, V]`, `typing.MutableMapping[K, V]`, `typing.Mapping[K, V]` (converts to a dict).
+  - [`typing.TypedDict`](https://docs.python.org/3/library/typing.html#typing.TypedDict), ordinary and generic.
+  - [`typing.NewType`](https://docs.python.org/3/library/typing.html#newtype)
+  - [PEP 695 type aliases](https://docs.python.org/3/library/typing.html#newtype) on 3.12+
   - _attrs_ classes with simple attributes and the usual `__init__`.
 
     - Simple attributes are attributes that can be assigned unstructured data,

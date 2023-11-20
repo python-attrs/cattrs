@@ -411,10 +411,6 @@ datetime.datetime(2022, 1, 1, 0, 0)
 
 ```
 
-```{note}
-NewTypes are not supported by the legacy BaseConverter.
-```
-
 ## _attrs_ Classes and Dataclasses
 
 ### Simple _attrs_ Classes and Dataclasses
