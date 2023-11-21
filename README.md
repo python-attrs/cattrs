@@ -126,7 +126,7 @@ Use [attrs type metadata](http://attrs.readthedocs.io/en/stable/examples.html#ty
   - `dict[K, V]`, `typing.Dict[K, V]`, `typing.MutableMapping[K, V]`, `typing.Mapping[K, V]` (converts to a dict).
   - [`typing.TypedDict`](https://docs.python.org/3/library/typing.html#typing.TypedDict), ordinary and generic.
   - [`typing.NewType`](https://docs.python.org/3/library/typing.html#newtype)
-  - [PEP 695 type aliases](https://docs.python.org/3/library/typing.html#newtype) on 3.12+
+  - [PEP 695 type aliases](https://docs.python.org/3/library/typing.html#type-aliases) on 3.12+
   - _attrs_ classes with simple attributes and the usual `__init__`.
 
     - Simple attributes are attributes that can be assigned unstructured data,

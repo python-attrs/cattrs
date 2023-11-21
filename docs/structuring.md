@@ -379,10 +379,41 @@ Another option is to use a custom tagged union strategy (see [Strategies - Tagge
 
 ```
 
-### `typing.Annotated`
+## `typing.Annotated`
 
-[PEP 593](https://www.python.org/dev/peps/pep-0593/) annotations (`typing.Annotated[type, ...]`) are supported and are
-matched using the first type present in the annotated type.
+[PEP 593](https://www.python.org/dev/peps/pep-0593/) annotations (`typing.Annotated[type, ...]`) are supported and are matched using the first type present in the annotated type.
+
+## Type Aliases
+
+[Type aliases](https://docs.python.org/3/library/typing.html#type-aliases) are supported on Python 3.12+ and are structured according to the rules for their underlying type.
+Their hooks can also be overriden using {meth}`Converter.register_structure_hook_func() <cattrs.BaseConverter.register_structure_hook_func>`.
+(Since type aliases aren't proper classes they cannot be used with {meth}`Converter.register_structure_hook() <cattrs.BaseConverter.register_structure_hook>`.)
+
+```{warning}
+Type aliases using [`typing.TypeAlias`](https://docs.python.org/3/library/typing.html#typing.TypeAlias) aren't supported since there is no way at runtime to distinguish them from their underlying types.
+```
+
+```python
+>>> from datetime import datetime
+
+>>> type IsoDate = datetime
+
+>>> converter = cattrs.Converter()
+>>> converter.register_structure_hook_func(
+...     lambda t: t is IsoDate, lambda v, _: datetime.fromisoformat(v)
+... )
+
+>>> converter.structure("2022-01-01", IsoDate)
+datetime.datetime(2022, 1, 1, 0, 0)
+```
+
+```{versionadded} 24.1.0
+
+```
+
+```{seealso} [Unstructuring Type Aliases.](unstructuring.md#type-aliases)
+
+```
 
 ## `typing.NewType`
 
