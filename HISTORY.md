@@ -11,6 +11,11 @@
 - Imports are now sorted using Ruff.
 - Tests are run with the pytest-xdist plugin by default.
 
+## 23.2.2 (2023-11-21)
+
+- Fix a regression when unstructuring `Any | None`.
+  ([#453](https://github.com/python-attrs/cattrs/issues/453))
+
 ## 23.2.1 (2023-11-18)
 
 - Fix unnecessary `typing_extensions` import on Python 3.11.
