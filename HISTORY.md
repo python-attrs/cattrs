@@ -51,6 +51,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - The documentation has been significantly reworked.
   ([#473](https://github.com/python-attrs/cattrs/pull/473))
 - The docs now use the Inter font.
+- Make type annotations for `include_subclasses` and `tagged_union` strategies more lenient.
+  ([#431](https://github.com/python-attrs/cattrs/pull/431))
 
 ## 23.2.3 (2023-11-30)
 
