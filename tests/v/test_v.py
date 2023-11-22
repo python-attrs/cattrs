@@ -11,18 +11,12 @@ from typing import (
 )
 
 from attrs import Factory, define, field
-from pytest import fixture, raises
+from pytest import raises
 
 from cattrs import Converter, transform_error
 from cattrs._compat import Mapping, TypedDict
 from cattrs.gen import make_dict_structure_fn
 from cattrs.v import format_exception
-
-
-@fixture
-def c() -> Converter:
-    """We need only converters with detailed_validation=True."""
-    return Converter()
 
 
 def test_attribute_errors(c: Converter) -> None:
@@ -39,7 +33,9 @@ def test_attribute_errors(c: Converter) -> None:
     try:
         c.structure({"a": 1, "b": "str"}, C)
     except Exception as exc:
-        assert transform_error(exc) == ["invalid value for type, expected int @ $.b"]
+        assert transform_error(exc) == [
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $.b"
+        ]
 
     @define
     class D:
@@ -63,7 +59,9 @@ def test_attribute_errors(c: Converter) -> None:
     try:
         c.structure({"c": {"a": "str"}}, D)
     except Exception as exc:
-        assert transform_error(exc) == ["invalid value for type, expected int @ $.c.a"]
+        assert transform_error(exc) == [
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $.c.a"
+        ]
 
     @define
     class E:
@@ -79,7 +77,7 @@ def test_attribute_errors(c: Converter) -> None:
         else repr(Optional[int])
     )
     assert transform_error(exc.value) == [
-        f"invalid value for type, expected {tn} @ $.a"
+        f"invalid value for type, expected {tn} (invalid literal for int() with base 10: 'str') @ $.a"
     ]
 
 
@@ -134,8 +132,8 @@ def test_sequence_errors(c: Converter) -> None:
         c.structure(["str", 1, "str"], List[int])
     except Exception as exc:
         assert transform_error(exc) == [
-            "invalid value for type, expected int @ $[0]",
-            "invalid value for type, expected int @ $[2]",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $[0]",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $[2]",
         ]
 
     try:
@@ -149,24 +147,24 @@ def test_sequence_errors(c: Converter) -> None:
         c.structure(["str", 1, "str"], Tuple[int, ...])
     except Exception as exc:
         assert transform_error(exc) == [
-            "invalid value for type, expected int @ $[0]",
-            "invalid value for type, expected int @ $[2]",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $[0]",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $[2]",
         ]
 
     try:
         c.structure(["str", 1, "str"], Sequence[int])
     except Exception as exc:
         assert transform_error(exc) == [
-            "invalid value for type, expected int @ $[0]",
-            "invalid value for type, expected int @ $[2]",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $[0]",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $[2]",
         ]
 
     try:
         c.structure(["str", 1, "str"], MutableSequence[int])
     except Exception as exc:
         assert transform_error(exc) == [
-            "invalid value for type, expected int @ $[0]",
-            "invalid value for type, expected int @ $[2]",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $[0]",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $[2]",
         ]
 
     @define
@@ -178,16 +176,16 @@ def test_sequence_errors(c: Converter) -> None:
         c.structure({"a": ["str", 1, "str"]}, C)
     except Exception as exc:
         assert transform_error(exc) == [
-            "invalid value for type, expected int @ $.a[0]",
-            "invalid value for type, expected int @ $.a[2]",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $.a[0]",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $.a[2]",
         ]
 
     try:
         c.structure({"a": [], "b": [[], ["str", 1, "str"]]}, C)
     except Exception as exc:
         assert transform_error(exc) == [
-            "invalid value for type, expected int @ $.b[1][0]",
-            "invalid value for type, expected int @ $.b[1][2]",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $.b[1][0]",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $.b[1][2]",
         ]
 
 
@@ -195,7 +193,9 @@ def test_mapping_errors(c: Converter) -> None:
     try:
         c.structure({"a": 1, "b": "str"}, Dict[str, int])
     except Exception as exc:
-        assert transform_error(exc) == ["invalid value for type, expected int @ $['b']"]
+        assert transform_error(exc) == [
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $['b']"
+        ]
 
     @define
     class C:
@@ -205,8 +205,8 @@ def test_mapping_errors(c: Converter) -> None:
         c.structure({"a": {"a": "str", "b": 1, "c": "str"}}, C)
     except Exception as exc:
         assert transform_error(exc) == [
-            "invalid value for type, expected int @ $.a['a']",
-            "invalid value for type, expected int @ $.a['c']",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $.a['a']",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $.a['c']",
         ]
 
     try:
@@ -217,19 +217,23 @@ def test_mapping_errors(c: Converter) -> None:
     try:
         c.structure({"a": 1, "b": "str"}, Mapping[str, int])
     except Exception as exc:
-        assert transform_error(exc) == ["invalid value for type, expected int @ $['b']"]
+        assert transform_error(exc) == [
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $['b']"
+        ]
 
     try:
         c.structure({"a": 1, "b": "str"}, MutableMapping[str, int])
     except Exception as exc:
-        assert transform_error(exc) == ["invalid value for type, expected int @ $['b']"]
+        assert transform_error(exc) == [
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $['b']"
+        ]
 
     try:
         c.structure({"a": 1, 2: "str"}, MutableMapping[int, int])
     except Exception as exc:
         assert transform_error(exc) == [
-            "invalid value for type, expected int @ $['a']",
-            "invalid value for type, expected int @ $[2]",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'a') @ $['a']",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $[2]",
         ]
 
 
@@ -249,7 +253,7 @@ def test_custom_error_fn(c: Converter) -> None:
     except Exception as exc:
         assert transform_error(exc, format_exception=my_format) == [
             "no key @ $.a",
-            "invalid value for type, expected int @ $.b",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $.b",
         ]
 
 
@@ -267,7 +271,7 @@ def test_custom_error_fn_nested(c: Converter) -> None:
         c.structure({"a": {"a": "str", "b": 1, "c": None}}, C)
     except Exception as exc:
         assert transform_error(exc, format_exception=my_format) == [
-            "invalid value for type, expected int @ $.a['a']",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $.a['a']",
             "Must be correct type @ $.a['c']",
         ]
 
@@ -295,7 +299,9 @@ def test_typeddict_attribute_errors(c: Converter) -> None:
     try:
         c.structure({"a": 1, "b": "str"}, C)
     except Exception as exc:
-        assert transform_error(exc) == ["invalid value for type, expected int @ $.b"]
+        assert transform_error(exc) == [
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $.b"
+        ]
 
     class D(TypedDict):
         c: C
@@ -322,7 +328,7 @@ def test_typeddict_attribute_errors(c: Converter) -> None:
         c.structure({"c": {"a": "str"}}, D)
     except Exception as exc:
         assert transform_error(exc) == [
-            "invalid value for type, expected int @ $.c.a",
+            "invalid value for type, expected int (invalid literal for int() with base 10: 'str') @ $.c.a",
             "required field missing @ $.c.b",
         ]
 
@@ -339,7 +345,7 @@ def test_typeddict_attribute_errors(c: Converter) -> None:
         else repr(Optional[int])
     )
     assert transform_error(exc.value) == [
-        f"invalid value for type, expected {tn} @ $.a"
+        f"invalid value for type, expected {tn} (invalid literal for int() with base 10: 'str') @ $.a"
     ]
 
 

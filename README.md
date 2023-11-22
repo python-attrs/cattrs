@@ -13,31 +13,21 @@
 
 ---
 
-**cattrs** is an open source Python library for structuring and unstructuring
-data. _cattrs_ works best with _attrs_ classes, dataclasses and the usual
-Python collections, but other kinds of classes are supported by manually
-registering converters.
+**cattrs** is an open source Python library for structuring and unstructuring data.
+_cattrs_ works best with _attrs_ classes, dataclasses and the usual Python collections, but other kinds of classes are supported by manually registering converters.
 
-Python has a rich set of powerful, easy to use, built-in data types like
-dictionaries, lists and tuples. These data types are also the lingua franca
-of most data serialization libraries, for formats like json, msgpack, cbor,
-yaml or toml.
+Python has a rich set of powerful, easy to use, built-in data types like dictionaries, lists and tuples.
+These data types are also the lingua franca of most data serialization libraries, for formats like json, msgpack, cbor, yaml or toml.
 
-Data types like this, and mappings like `dict` s in particular, represent
-unstructured data. Your data is, in all likelihood, structured: not all
-combinations of field names or values are valid inputs to your programs. In
-Python, structured data is better represented with classes and enumerations.
-_attrs_ is an excellent library for declaratively describing the structure of
-your data, and validating it.
+Data types like this, and mappings like `dict` s in particular, represent unstructured data.
+Your data is, in all likelihood, structured: not all combinations of field names or values are valid inputs to your programs.
+In Python, structured data is better represented with classes and enumerations.
+_attrs_ is an excellent library for declaratively describing the structure of your data and validating it.
 
-When you're handed unstructured data (by your network, file system, database...),
-_cattrs_ helps to convert this data into structured data. When you have to
-convert your structured data into data types other libraries can handle,
-_cattrs_ turns your classes and enumerations into dictionaries, integers and
-strings.
+When you're handed unstructured data (by your network, file system, database...), _cattrs_ helps to convert this data into structured data.
+When you have to convert your structured data into data types other libraries can handle, _cattrs_ turns your classes and enumerations into dictionaries, integers and strings.
 
-Here's a simple taste. The list containing a float, an int and a string
-gets converted into a tuple of three ints.
+Here's a simple taste. The list containing a float, an int and a string gets converted into a tuple of three ints.
 
 ```python
 >>> import cattrs
@@ -68,7 +58,7 @@ Here's a much more complex example, involving _attrs_ classes with type metadata
 
 ```python
 >>> from enum import unique, Enum
->>> from typing import Optional, Sequence, Union
+>>> from typing import Sequence
 >>> from cattrs import structure, unstructure
 >>> from attrs import define, field
 
@@ -91,14 +81,18 @@ Here's a much more complex example, involving _attrs_ classes with type metadata
 >>> @define
 ... class Dog:
 ...     cuteness: int
-...     chip: Optional[DogMicrochip] = None
+...     chip: DogMicrochip | None = None
 
->>> p = unstructure([Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)),
-...                  Cat(breed=CatBreed.MAINE_COON, names=('Fluffly', 'Fluffer'))])
+>>> p = unstructure(
+...     [
+...         Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)),
+...         Cat(CatBreed.MAINE_COON, names=('Fluffly', 'Fluffer'))
+...     ]
+... )
 
 >>> print(p)
 [{'cuteness': 1, 'chip': {'chip_id': 1, 'time_chipped': 10.0}}, {'breed': 'maine_coon', 'names': ('Fluffly', 'Fluffer')}]
->>> print(structure(p, list[Union[Dog, Cat]]))
+>>> print(structure(p, list[Dog | Cat]))
 [Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)), Cat(breed=<CatBreed.MAINE_COON: 'maine_coon'>, names=['Fluffly', 'Fluffer'])]
 ```
 
@@ -151,6 +145,9 @@ _cattrs_ is based on a few fundamental design decisions.
 - Un/structuring rules are separate from the models.
   This allows models to have a one-to-many relationship with un/structuring rules, and to create un/structuring rules for models which you do not own and you cannot change.
   (_cattrs_ can be configured to use un/structuring rules from models using the [`use_class_methods` strategy](https://catt.rs/en/latest/strategies.html#using-class-specific-structure-and-unstructure-methods).)
+- Strongly lean on function composition.
+  Almost all problems in _cattrs_ can be solved by writing and composing functions (called _hooks_), instead of writing classes and subclassing.
+  This makes _cattrs_ code elegant, concise, powerful and amenable to all the rich Python ways of working with functions.
 - Invent as little as possible; reuse existing ordinary Python instead.
   For example, _cattrs_ did not have a custom exception type to group exceptions until the sanctioned Python [`exceptiongroups`](https://docs.python.org/3/library/exceptions.html#ExceptionGroup).
   A side-effect of this design decision is that, in a lot of cases, when you're solving _cattrs_ problems you're actually learning Python instead of learning _cattrs_.
