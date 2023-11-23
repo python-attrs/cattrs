@@ -99,15 +99,12 @@ def transform_error(
     """
     errors: List[str] = []
     if isinstance(exc, IterableValidationError):
-        with_notes, without = exc.group_exceptions()
-        for exc, note in with_notes:
+        for e, note in exc.group_exceptions():
             p = f"{path}[{note.index!r}]"
-            if isinstance(exc, (ClassValidationError, IterableValidationError)):
-                errors.extend(transform_error(exc, p, format_exception))
+            if isinstance(e, (ClassValidationError, IterableValidationError)):
+                errors.extend(transform_error(e, p, format_exception))
             else:
-                errors.append(f"{format_exception(exc, note.type)} @ {p}")
-        for exc in without:
-            errors.append(f"{format_exception(exc, None)} @ {path}")
+                errors.append(f"{format_exception(e, note.type)} @ {p}")
     elif isinstance(exc, ClassValidationError):
         with_notes, without = exc.group_exceptions()
         for exc, note in with_notes:

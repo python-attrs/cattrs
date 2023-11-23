@@ -45,26 +45,24 @@ class IterableValidationNote(str):
 
 
 class IterableValidationError(BaseValidationError):
-    """Raised when structuring an iterable."""
+    """Raised when structuring an iterable.
 
-    def group_exceptions(
-        self,
-    ) -> Tuple[List[Tuple[Exception, IterableValidationNote]], List[Exception]]:
-        """Split the exceptions into two groups: with and without validation notes."""
+    If instantiating this error manually (outside of cattrs), ensure every
+    subexception has an appropriate IterableValidationNote note in its notes.
+    """
+
+    def group_exceptions(self) -> List[Tuple[Exception, IterableValidationNote]]:
+        """Group up the subexceptions alongside their IV notes."""
         excs_with_notes = []
-        other_excs = []
         for subexc in self.exceptions:
-            if hasattr(subexc, "__notes__"):
-                for note in subexc.__notes__:
-                    if note.__class__ is IterableValidationNote:
-                        excs_with_notes.append((subexc, note))
-                        break
-                else:
-                    other_excs.append(subexc)
+            for note in subexc.__notes__:
+                if note.__class__ is IterableValidationNote:
+                    excs_with_notes.append((subexc, note))
+                    break
             else:
-                other_excs.append(subexc)
+                raise AttributeError("Subexceptions require notes")
 
-        return excs_with_notes, other_excs
+        return excs_with_notes
 
 
 class AttributeValidationNote(str):

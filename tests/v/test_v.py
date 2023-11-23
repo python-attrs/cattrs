@@ -13,7 +13,7 @@ from typing import (
 from attrs import Factory, define, field
 from pytest import raises
 
-from cattrs import Converter, transform_error
+from cattrs import Converter, IterableValidationError, transform_error
 from cattrs._compat import Mapping, TypedDict
 from cattrs.gen import make_dict_structure_fn
 from cattrs.v import format_exception
@@ -352,3 +352,20 @@ def test_typeddict_attribute_errors(c: Converter) -> None:
 def test_other_errors():
     """Errors without explicit support transform predictably."""
     assert format_exception(IndexError("Test"), List[int]) == "unknown error (Test)"
+
+
+def test_iterable_val_no_note():
+    """`IterableValidationErrors` require subexceptions with notes."""
+    with raises(AttributeError):
+        IterableValidationError("Test", [RuntimeError()], List[str]).group_exceptions()
+
+    r = RuntimeError()
+    r.__notes__ = ["test"]
+    with raises(AttributeError):
+        IterableValidationError("Test", [r], List[str]).group_exceptions()
+
+
+def test_typeerror_formatting():
+    """`format_exception` works with non-iteration TypeErrors."""
+    exc = TypeError("exception")
+    assert format_exception(exc, None) == "invalid type (exception)"
