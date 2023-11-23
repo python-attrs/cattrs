@@ -1,5 +1,10 @@
 # History
 
+## 23.2.3 (UNRELEASED)
+
+- Fix a regression when unstructuring dictionary values typed as `Any`.
+  ([#453](https://github.com/python-attrs/cattrs/issues/453))
+
 ## 23.2.2 (2023-11-21)
 
 - Fix a regression when unstructuring `Any | None`.
