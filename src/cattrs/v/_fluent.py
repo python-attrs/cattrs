@@ -12,8 +12,12 @@ from typing import (
     Sequence,
     Sized,
     TypeVar,
-    assert_never,
 )
+
+try:
+    from typing import assert_never
+except ImportError:
+    from typing_extensions import assert_never
 
 from attrs import Attribute, AttrsInstance, define
 from attrs import fields as f
@@ -279,7 +283,7 @@ def customize(
             )
         else:
             # The match is exhaustive.
-            assert_never()
+            assert_never(field)
     res = make_dict_structure_fn(
         cl,
         converter,
