@@ -8,7 +8,6 @@ from typing import (
     Generic,
     Iterable,
     Literal,
-    Protocol,
     Sequence,
     Sized,
     TypeVar,
@@ -130,27 +129,6 @@ def len_between(min: int, max: int) -> Callable[[Sized], None]:
     return assert_len_between
 
 
-class Comparable(Protocol):
-    def __lt__(self: T, other: T) -> bool:
-        ...
-
-    def __le__(self: T, other: T) -> bool:
-        ...
-
-
-C = TypeVar("C", bound=Comparable)
-
-
-def between(min: C, max: C) -> Callable[[C], None]:
-    """Ensure the value of the attribute is between min (inclusive) and max (exclusive)."""
-
-    def assert_between(val: C, _min: C = min, _max: C = max) -> None:
-        if not (_min <= val) and not (_max < val):
-            raise ValueError(f"Value not between {_min} and {_max}")
-
-    return assert_between
-
-
 def ignoring_none(*validators: Callable[[T], None]) -> Callable[[T | None], None]:
     """
     A validator for (f.e.) strings cannot be applied to `str | None`, but it can
@@ -198,7 +176,7 @@ def all_elements_must(
 
 
 def _compose_validators(
-    base_structure: StructureHook | str,
+    base_structure: StructureHook,
     validators: Sequence[Callable[[Any], None | bool]],
     detailed_validation: bool,
 ) -> Callable[[Any, Any], Any]:
@@ -208,13 +186,14 @@ def _compose_validators(
 
     The new hook will raise an ExceptionGroup.
     """
-    if isinstance(base_structure, str):
-        name = base_structure
+    bs = base_structure
+
+    if detailed_validation:
 
         def structure_hook(
-            val: dict[str, Any], t: Any, _name: str = name, _hooks=validators
+            val: dict[str, Any], t: Any, _hooks=validators, _bs=bs
         ) -> Any:
-            res = val[_name]
+            res = _bs(val, t)
             errors: list[Exception] = []
             for hook in _hooks:
                 try:
@@ -226,18 +205,13 @@ def _compose_validators(
             return res
 
     else:
-        bs = base_structure
 
-        def structure_hook(val: dict[str, Any], t: Any, _hooks=validators) -> Any:
-            res = bs(val, t)
-            errors: list[Exception] = []
+        def structure_hook(
+            val: dict[str, Any], t: Any, _hooks=validators, _bs=bs
+        ) -> Any:
+            res = _bs(val, t)
             for hook in _hooks:
-                try:
-                    hook(val)
-                except Exception as exc:
-                    errors.append(exc)
-            if errors:
-                raise ExceptionGroup("Validation errors structuring {}", errors)
+                hook(val)
             return res
 
     return structure_hook

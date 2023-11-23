@@ -5,20 +5,17 @@ from attrs import Factory, define, evolve
 from attrs import fields as f
 from pytest import fixture, raises
 
-from cattrs import ClassValidationError, Converter
-from cattrs.v import V, customize, transform_error
+from cattrs import BaseConverter, ClassValidationError, Converter
+from cattrs.v import V, customize, greater_than, transform_error
 
 
 @fixture
-def c() -> Converter:
-    """We need only converters with detailed_validation=True."""
-    res = Converter()
-
-    res.register_structure_hook(
+def c(converter: BaseConverter) -> BaseConverter:
+    converter.register_structure_hook(
         Union[str, int], lambda v, _: v if isinstance(v, int) else str(v)
     )
 
-    return res
+    return converter
 
 
 @define
@@ -91,12 +88,18 @@ def test_simple_string_validation(c: Converter) -> None:
 
     unstructured = c.unstructure(instance)
 
-    with raises(ClassValidationError) as exc_info:
-        c.structure(unstructured, Model)
+    if c.detailed_validation:
+        with raises(ClassValidationError) as exc_info:
+            c.structure(unstructured, Model)
 
-    assert transform_error(exc_info.value) == [
-        "invalid value ('A' not lowercase) @ $.b"
-    ]
+        assert transform_error(exc_info.value) == [
+            "invalid value ('A' not lowercase) @ $.b"
+        ]
+    else:
+        with raises(ValueError) as exc_info:
+            c.structure(unstructured, Model)
+
+        assert repr(exc_info.value) == "ValueError(\"'A' not lowercase\")"
 
     instance.b = "a"
     assert instance == c.structure(c.unstructure(instance), Model)
@@ -110,13 +113,51 @@ def test_multiple_string_validators(c: Converter) -> None:
 
     unstructured = c.unstructure(instance)
 
-    with raises(ClassValidationError) as exc_info:
-        c.structure(unstructured, Model)
+    if c.detailed_validation:
+        with raises(ClassValidationError) as exc_info:
+            c.structure(unstructured, Model)
 
-    assert transform_error(exc_info.value) == [
-        "invalid value ('A' not lowercase) @ $.b",
-        "invalid value ('A' is not a valid email) @ $.b",
-    ]
+        assert transform_error(exc_info.value) == [
+            "invalid value ('A' not lowercase) @ $.b",
+            "invalid value ('A' is not a valid email) @ $.b",
+        ]
+    else:
+        with raises(ValueError) as exc_info:
+            c.structure(unstructured, Model)
+
+        assert repr(exc_info.value) == "ValueError(\"'A' not lowercase\")"
 
     instance.b = "a@b"
+    assert instance == c.structure(c.unstructure(instance), Model)
+
+
+def test_multiple_field_validators(c: Converter) -> None:
+    """Multiple fields are validated."""
+    customize(
+        c,
+        Model,
+        V((fs := f(Model)).a).ensure(greater_than(5)),
+        V(fs.b).ensure(is_lowercase),
+    )
+
+    instance = Model(5, "A", ["1"], [1], "", 0, 0, {"a": 1})
+
+    unstructured = c.unstructure(instance)
+
+    if c.detailed_validation:
+        with raises(ClassValidationError) as exc_info:
+            c.structure(unstructured, Model)
+
+        assert transform_error(exc_info.value) == [
+            "invalid value (5 not greater than 5) @ $.a",
+            "invalid value ('A' not lowercase) @ $.b",
+        ]
+    else:
+        with raises(ValueError) as exc_info:
+            c.structure(unstructured, Model)
+
+        assert repr(exc_info.value) == "ValueError('5 not greater than 5')"
+
+    instance.a = 6
+    instance.b = "a"
     assert instance == c.structure(c.unstructure(instance), Model)

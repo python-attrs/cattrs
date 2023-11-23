@@ -9,8 +9,16 @@ from ..errors import (
     IterableValidationError,
 )
 from ._fluent import V, customize
+from ._validators import between, greater_than
 
-__all__ = ["customize", "format_exception", "transform_error", "V"]
+__all__ = [
+    "customize",
+    "format_exception",
+    "transform_error",
+    "V",
+    "between",
+    "greater_than",
+]
 
 
 def format_exception(exc: BaseException, type: Union[type, None]) -> str:
