@@ -2,6 +2,7 @@
 
 from typing import Callable, List, Union
 
+from .._compat import ExceptionGroup
 from ..errors import (
     ClassValidationError,
     ForbiddenExtraKeysError,
