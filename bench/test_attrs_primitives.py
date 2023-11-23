@@ -1,9 +1,9 @@
 from enum import IntEnum
 
-import attr
 import pytest
+from attrs import define
 
-from cattr import BaseConverter, Converter, UnstructureStrategy
+from cattrs import BaseConverter, Converter, UnstructureStrategy
 
 
 class E(IntEnum):
@@ -11,7 +11,7 @@ class E(IntEnum):
     TWO = 2
 
 
-@attr.define
+@define
 class C:
     a: int
     b: float
@@ -60,32 +60,32 @@ def test_unstructure_attrs_primitives(benchmark, converter_cls, unstructure_stra
             1,
             1.0,
             "a small string",
-            "test".encode(),
+            b"test",
             E.ONE,
             2,
             2.0,
             "a small string",
-            "test".encode(),
+            b"test",
             E.TWO,
             3,
             3.0,
             "a small string",
-            "test".encode(),
+            b"test",
             E.ONE,
             4,
             4.0,
             "a small string",
-            "test".encode(),
+            b"test",
             E.TWO,
             5,
             5.0,
             "a small string",
-            "test".encode(),
+            b"test",
             E.ONE,
             6,
             6.0,
             "a small string",
-            "test".encode(),
+            b"test",
             E.TWO,
         ),
     )
@@ -104,32 +104,32 @@ def test_structure_attrs_primitives(benchmark, converter_cls, unstructure_strat)
         1,
         1.0,
         "a small string",
-        "test".encode(),
+        b"test",
         E.ONE,
         2,
         2.0,
         "a small string",
-        "test".encode(),
+        b"test",
         E.TWO,
         3,
         3.0,
         "a small string",
-        "test".encode(),
+        b"test",
         E.ONE,
         4,
         4.0,
         "a small string",
-        "test".encode(),
+        b"test",
         E.TWO,
         5,
         5.0,
         "a small string",
-        "test".encode(),
+        b"test",
         E.ONE,
         6,
         6.0,
         "a small string",
-        "test".encode(),
+        b"test",
         E.TWO,
     )
 

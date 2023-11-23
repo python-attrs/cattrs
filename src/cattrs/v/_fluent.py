@@ -9,7 +9,6 @@ from typing import (
     Iterable,
     Literal,
     Sequence,
-    Sized,
     TypeVar,
 )
 
@@ -116,17 +115,6 @@ def is_unique(val: Collection[Any]) -> None:
     """
     if len(val) != len(set(val)):
         raise ValueError(f"Value ({val}) not unique")
-
-
-def len_between(min: int, max: int) -> Callable[[Sized], None]:
-    """Ensure the length of the argument is between min (inclusive) and max (exclusive)."""
-
-    def assert_len_between(val: Sized, _min: int = min, _max: int = max) -> None:
-        length = len(val)
-        if not (_min <= length < max):
-            raise ValueError(f"Length ({length}) not between {_min} and {_max}")
-
-    return assert_len_between
 
 
 def ignoring_none(*validators: Callable[[T], None]) -> Callable[[T | None], None]:

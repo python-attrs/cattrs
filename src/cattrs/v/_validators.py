@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Protocol, TypeVar
+from typing import Callable, Protocol, Sized, TypeVar
 
 T = TypeVar("T")
 
@@ -32,3 +32,14 @@ def between(min: C, max: C) -> Callable[[C], None]:
             raise ValueError(f"{val} not between {_min} and {_max}")
 
     return assert_between
+
+
+def len_between(min: int, max: int) -> Callable[[Sized], None]:
+    """Ensure the length of the argument is between min (inclusive) and max (exclusive)."""
+
+    def assert_len_between(val: Sized, _min: int = min, _max: int = max) -> None:
+        length = len(val)
+        if not (_min <= length < max):
+            raise ValueError(f"length ({length}) not between {_min} and {_max}")
+
+    return assert_len_between
