@@ -110,6 +110,7 @@ exclude_also = [
     "@overload",
     "if TYPE_CHECKING:",
     "class .*\\bProtocol\\):",
+    "class .*\\bProtocol(\\[.*\\])?\\):",
 ]
 
 [tool.ruff]
