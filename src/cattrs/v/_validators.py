@@ -28,7 +28,7 @@ def between(min: C, max: C) -> Callable[[C], None]:
     """Ensure the value of the attribute is between min (inclusive) and max (exclusive)."""
 
     def assert_between(val: C, _min: C = min, _max: C = max) -> None:
-        if not (_min <= val) and not (_max < val):
+        if val < _min or val >= _max:
             raise ValueError(f"{val} not between {_min} and {_max}")
 
     return assert_between
@@ -39,7 +39,7 @@ def len_between(min: int, max: int) -> Callable[[Sized], None]:
 
     def assert_len_between(val: Sized, _min: int = min, _max: int = max) -> None:
         length = len(val)
-        if not (_min <= length < max):
+        if not (_min <= length < _max):
             raise ValueError(f"length ({length}) not between {_min} and {_max}")
 
     return assert_len_between
