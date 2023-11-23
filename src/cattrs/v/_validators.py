@@ -5,11 +5,11 @@ from typing import Callable, Protocol, Sized, TypeVar
 T = TypeVar("T")
 
 
-class Comparable(Protocol):
+class Comparable(Protocol[T]):
     def __lt__(self: T, other: T) -> bool:
         ...
 
-    def __le__(self: T, other: T) -> bool:
+    def __eq__(self: T, other: T) -> bool:
         ...
 
 

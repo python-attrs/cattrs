@@ -109,6 +109,7 @@ source_pkgs = ["cattrs", "tests"]
 exclude_also = [
     "@overload",
     "if TYPE_CHECKING:",
+    "class .*\\bProtocol\\):",
 ]
 
 [tool.ruff]
