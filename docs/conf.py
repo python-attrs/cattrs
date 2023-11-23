@@ -121,7 +121,7 @@ exclude_patterns = ["_build"]
 html_theme = "furo"
 html_theme_options = {
     "light_css_variables": {
-        "font-stack": "Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji",
+        "font-stack": "Inter,sans-serif",
         "font-stack--monospace": "'Ubuntu Mono', monospace",
         "code-font-size": "90%",
         "color-highlight-on-target": "transparent",

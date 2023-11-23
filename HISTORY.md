@@ -10,6 +10,7 @@
   ([#452](https://github.com/python-attrs/cattrs/pull/452))
 - Imports are now sorted using Ruff.
 - Tests are run with the pytest-xdist plugin by default.
+- The docs now use the Inter font.
 
 ## 23.2.2 (2023-11-21)
 
