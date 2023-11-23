@@ -1,4 +1,6 @@
 """Tests for the fluent validation API."""
+from typing import Dict, List, Union
+
 from attrs import Factory, define, evolve
 from attrs import fields as f
 from pytest import fixture, raises
@@ -13,7 +15,7 @@ def c() -> Converter:
     res = Converter()
 
     res.register_structure_hook(
-        str | int, lambda v, t: v if isinstance(v, int) else str(v)
+        Union[str, int], lambda v, _: v if isinstance(v, int) else str(v)
     )
 
     return res
@@ -25,12 +27,12 @@ class Model:
 
     a: int
     b: str
-    c: list[str] = Factory(list)
-    d: list[int] = Factory(list)
-    e: str | None = None
-    f: int | None = None
-    g: str | int = 0
-    h: dict[str, int] = Factory(dict)
+    c: List[str] = Factory(list)
+    d: List[int] = Factory(list)
+    e: Union[str, None] = None
+    f: Union[int, None] = None
+    g: Union[str, int] = 0
+    h: Dict[str, int] = Factory(dict)
 
 
 def is_lowercase(val: str) -> None:
