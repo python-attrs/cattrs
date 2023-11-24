@@ -119,7 +119,7 @@ def test_unique(converter: BaseConverter):
 
     @define
     class A:
-        a: list[int]
+        a: List[int]
 
     customize(converter, A, V(f(A).a).ensure(is_unique))
 
