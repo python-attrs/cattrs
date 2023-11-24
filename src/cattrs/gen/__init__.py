@@ -219,7 +219,7 @@ def make_dict_unstructure_fn(
             )
             linecache.cache[fname] = len(script), None, total_lines, fname
 
-        eval(compile(script, fname "exec"), globs)
+        eval(compile(script, fname, "exec"), globs)
     finally:
         working_set.remove(cl)
         if not working_set:
@@ -632,7 +632,7 @@ def make_dict_structure_fn(
         fname = generate_unique_filename(cl, "structure", reserve=_cattrs_use_linecache)
         linecache.cache[fname] = len(script), None, total_lines, fname
 
-    eval(compile(script, fname , "exec"), globs)
+    eval(compile(script, fname, "exec"), globs)
 
     return globs[fn_name]
 
