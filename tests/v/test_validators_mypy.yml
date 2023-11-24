@@ -1,0 +1,38 @@
+- case: greater_than
+  main: |
+    from attrs import define, fields
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: int
+
+    c = Converter()
+
+    v.customize(c, A, v.V(fields(A).a).ensure(v.greater_than(5)))
+
+- case: greater_than_error
+  main: |
+    from attrs import define, fields
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: int
+
+    c = Converter()
+
+    v.customize(c, A, v.V(fields(A).a).ensure(v.greater_than("5")))  # E: Argument 1 to "greater_than" has incompatible type "str"; expected "int"  [arg-type]
+
+- case: len_between
+  main: |
+    from attrs import define, fields
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: list[int]
+
+    c = Converter()
+
+    v.customize(c, A, v.V(fields(A).a).ensure(v.len_between(5, 10)))

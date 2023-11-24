@@ -1,0 +1,51 @@
+- case: empty_customize
+  main: |
+    from attrs import define, fields as f
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: int
+
+    c = Converter()
+
+    v.customize(c, A)
+
+- case: customize_int
+  main: |
+    from attrs import define, fields as f
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: int
+
+    c = Converter()
+
+    v.customize(c, A, v.V(f(A).a).ensure(v.between(5, 10)))
+
+- case: customize_int_no_empty_ensure
+  main: |
+    from attrs import define, fields as f
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: int
+
+    c = Converter()
+
+    v.customize(c, A, v.V(f(A).a).ensure())  # E: Missing positional argument "validator" in call to "ensure" of "V"  [call-arg]
+
+- case: customize_int_no_wrong_validator
+  main: |
+    from attrs import define, fields as f
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: int
+
+    c = Converter()
+
+    v.customize(c, A, v.V(f(A).a).ensure(v.len_between(0, 10)))  # E: Argument 1 to "ensure" of "V" has incompatible type "Callable[[Sized], None]"; expected "Callable[[int], bool | None]"  [arg-type]
