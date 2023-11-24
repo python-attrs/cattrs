@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Callable, Protocol, Sized, TypeVar
+from collections.abc import Hashable
+from typing import Callable, Collection, Protocol, Sized, TypeVar
 
 T = TypeVar("T")
 
@@ -43,3 +44,11 @@ def len_between(min: int, max: int) -> Callable[[Sized], None]:
             raise ValueError(f"length ({length}) not between {_min} and {_max}")
 
     return assert_len_between
+
+
+def is_unique(val: Collection[Hashable]) -> None:
+    """Ensure all elements in a collection are unique."""
+    if (length := len(val)) != (unique_length := len(set(val))):
+        raise ValueError(
+            f"Collection ({length} elem(s)) not unique, only {unique_length} unique elem(s)"
+        )

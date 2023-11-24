@@ -6,7 +6,15 @@ from pytest import raises
 
 from cattrs import BaseConverter
 from cattrs.errors import ClassValidationError
-from cattrs.v import V, between, customize, greater_than, len_between, transform_error
+from cattrs.v import (
+    V,
+    between,
+    customize,
+    greater_than,
+    is_unique,
+    len_between,
+    transform_error,
+)
 
 
 @define
@@ -104,3 +112,31 @@ def test_len_between(converter: BaseConverter):
             converter.structure({"a": [1, 2]}, WithList)
 
         assert repr(exc_info.value) == "ValueError('length (2) not between 1 and 2')"
+
+
+def test_unique(converter: BaseConverter):
+    """The `is_unique` validator works."""
+
+    @define
+    class A:
+        a: list[int]
+
+    customize(converter, A, V(f(A).a).ensure(is_unique))
+
+    assert converter.structure({"a": [1]}, A) == A([1])
+
+    if converter.detailed_validation:
+        with raises(ClassValidationError) as exc_info:
+            converter.structure({"a": [1, 1]}, A)
+
+        assert transform_error(exc_info.value) == [
+            "invalid value (Collection (2 elem(s)) not unique, only 1 unique elem(s)) @ $.a"
+        ]
+    else:
+        with raises(ValueError) as exc_info:
+            converter.structure({"a": [1, 1]}, A)
+
+        assert (
+            repr(exc_info.value)
+            == "ValueError('Collection (2 elem(s)) not unique, only 1 unique elem(s)')"
+        )

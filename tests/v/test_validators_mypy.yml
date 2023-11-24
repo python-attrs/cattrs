@@ -36,3 +36,29 @@
     c = Converter()
 
     v.customize(c, A, v.V(fields(A).a).ensure(v.len_between(5, 10)))
+
+- case: unique
+  main: |
+    from attrs import define, fields
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: list[int]
+
+    c = Converter()
+
+    v.customize(c, A, v.V(fields(A).a).ensure(v.is_unique))
+
+- case: unique_error_not_hashable
+  main: |
+    from attrs import define, fields
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: list[dict]
+
+    c = Converter()
+
+    v.customize(c, A, v.V(fields(A).a).ensure(v.is_unique))  # E: Argument 1 to "ensure" of "V" has incompatible type "Callable[[Collection[Hashable]], None]"; expected "Callable[[list[dict[Any, Any]]], bool | None]"  [arg-type]

@@ -108,15 +108,6 @@ class V(Generic[T]):
         return VOmitted(self.attr)
 
 
-def is_unique(val: Collection[Any]) -> None:
-    """Ensure all elements in a collection are unique.
-
-    Takes a value that implements Collection.
-    """
-    if len(val) != len(set(val)):
-        raise ValueError(f"Value ({val}) not unique")
-
-
 def ignoring_none(*validators: Callable[[T], None]) -> Callable[[T | None], None]:
     """
     A validator for (f.e.) strings cannot be applied to `str | None`, but it can
