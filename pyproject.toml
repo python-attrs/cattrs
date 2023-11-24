@@ -103,7 +103,7 @@ msgspec = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "-l --mypy-only-local-stub --benchmark-sort=fullname --benchmark-warmup=true --benchmark-warmup-iterations=5  --benchmark-group-by=fullname"
+addopts = "-l"
 
 [tool.coverage.run]
 parallel = true
