@@ -1,16 +1,7 @@
 """The fluent validation API."""
 from __future__ import annotations
 
-from typing import (
-    Any,
-    Callable,
-    Collection,
-    Generic,
-    Iterable,
-    Literal,
-    Sequence,
-    TypeVar,
-)
+from typing import Any, Callable, Generic, Iterable, Literal, Sequence, TypeVar
 
 try:
     from typing import assert_never
