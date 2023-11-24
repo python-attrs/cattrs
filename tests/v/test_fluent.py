@@ -80,6 +80,34 @@ def test_rename(c: Converter) -> None:
     assert c.structure(unstructured, Model) == instance
 
 
+def test_rename_also_validates(c: Converter) -> None:
+    """Renaming a field and validating works."""
+    customize(c, Model, V(f(Model).b).rename("B").ensure(is_lowercase))
+
+    instance = Model(1, "A", ["1"], [1], "", 0, 0, {"a": 1})
+
+    unstructured = c.unstructure(instance)
+
+    # Customize only affects structuring currently.
+    unstructured["B"] = unstructured.pop("b")
+
+    if c.detailed_validation:
+        with raises(ClassValidationError) as exc_info:
+            c.structure(unstructured, Model)
+
+        assert transform_error(exc_info.value) == [
+            "invalid value ('A' not lowercase) @ $.b"
+        ]
+    else:
+        with raises(ValueError) as exc_info:
+            c.structure(unstructured, Model)
+
+        assert repr(exc_info.value) == "ValueError(\"'A' not lowercase\")"
+
+    unstructured["B"] = instance.b = "a"
+    assert instance == c.structure(unstructured, Model)
+
+
 def test_simple_string_validation(c: Converter) -> None:
     """Simple string validation works."""
     customize(c, Model, V(f(Model).b).ensure(is_lowercase))
