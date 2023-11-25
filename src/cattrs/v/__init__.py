@@ -9,17 +9,18 @@ from ..errors import (
     IterableValidationError,
 )
 from ._fluent import V, customize
-from ._validators import between, greater_than, is_unique, len_between
+from ._validators import between, greater_than, ignoring_none, is_unique, len_between
 
 __all__ = [
+    "between",
     "customize",
     "format_exception",
+    "greater_than",
+    "ignoring_none",
+    "is_unique",
+    "len_between",
     "transform_error",
     "V",
-    "between",
-    "greater_than",
-    "len_between",
-    "is_unique",
 ]
 
 
@@ -110,21 +111,21 @@ def transform_error(
         with_notes, without = exc.group_exceptions()
         for exc, note in with_notes:
             p = f"{path}.{note.name}"
-            if isinstance(exc, (ClassValidationError, IterableValidationError)):
+            if isinstance(exc, ExceptionGroup):
                 errors.extend(transform_error(exc, p, format_exception))
-            elif isinstance(exc, ExceptionGroup):
-                # A bare ExceptionGroup is now used to group all validator failures.
-                errors.extend(
-                    [
-                        line
-                        for inner in exc.exceptions
-                        for line in transform_error(inner, p, format_exception)
-                    ]
-                )
             else:
                 errors.append(f"{format_exception(exc, note.type)} @ {p}")
         for exc in without:
             errors.append(f"{format_exception(exc, None)} @ {path}")
+    elif isinstance(exc, ExceptionGroup):
+        # Likely from a nested validator, needs flattening.
+        errors.extend(
+            [
+                line
+                for inner in exc.exceptions
+                for line in transform_error(inner, path, format_exception)
+            ]
+        )
     else:
         errors.append(f"{format_exception(exc, None)} @ {path}")
     return errors

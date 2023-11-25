@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections.abc import Hashable
 from typing import Callable, Collection, Protocol, Sized, TypeVar
 
+from ._fluent import ValidatorFactory
+
 T = TypeVar("T")
 
 
@@ -52,3 +54,42 @@ def is_unique(val: Collection[Hashable]) -> None:
         raise ValueError(
             f"Collection ({length} elem(s)) not unique, only {unique_length} unique elem(s)"
         )
+
+
+def ignoring_none(
+    validator: Callable[[T], None], *validators: Callable[[T], None]
+) -> ValidatorFactory[T | None]:
+    """
+    Wrap validators with this so they can be applied to types that include `None`.
+
+    Values that are equal to `None` are passed through.
+    """
+
+    validators = (validator, *validators)
+
+    def factory(detailed_validation: bool) -> Callable[[T | None], None]:
+        if detailed_validation:
+
+            def skip_none(val: T | None, _validators=validators) -> None:
+                if val is None:
+                    return
+                errors = []
+                for validator in _validators:
+                    try:
+                        validator(val)
+                    except Exception as exc:
+                        errors.append(exc)
+                if errors:
+                    raise ExceptionGroup("", errors)
+
+        else:
+
+            def skip_none(val: T | None, _validators=validators) -> None:
+                if val is None:
+                    return
+                for validator in _validators:
+                    validator(val)
+
+        return skip_none
+
+    return factory

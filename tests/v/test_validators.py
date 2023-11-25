@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from attrs import define
 from attrs import fields as f
@@ -11,6 +11,7 @@ from cattrs.v import (
     between,
     customize,
     greater_than,
+    ignoring_none,
     is_unique,
     len_between,
     transform_error,
@@ -25,6 +26,11 @@ class WithInt:
 @define
 class WithList:
     a: List[int]
+
+
+@define
+class WithOptional:
+    a: Optional[int]
 
 
 def test_gt(converter: BaseConverter):
@@ -117,26 +123,48 @@ def test_len_between(converter: BaseConverter):
 def test_unique(converter: BaseConverter):
     """The `is_unique` validator works."""
 
-    @define
-    class A:
-        a: List[int]
+    customize(converter, WithList, V(f(WithList).a).ensure(is_unique))
 
-    customize(converter, A, V(f(A).a).ensure(is_unique))
-
-    assert converter.structure({"a": [1]}, A) == A([1])
+    assert converter.structure({"a": [1]}, WithList) == WithList([1])
 
     if converter.detailed_validation:
         with raises(ClassValidationError) as exc_info:
-            converter.structure({"a": [1, 1]}, A)
+            converter.structure({"a": [1, 1]}, WithList)
 
         assert transform_error(exc_info.value) == [
             "invalid value (Collection (2 elem(s)) not unique, only 1 unique elem(s)) @ $.a"
         ]
     else:
         with raises(ValueError) as exc_info:
-            converter.structure({"a": [1, 1]}, A)
+            converter.structure({"a": [1, 1]}, WithList)
 
         assert (
             repr(exc_info.value)
             == "ValueError('Collection (2 elem(s)) not unique, only 1 unique elem(s)')"
         )
+
+
+def test_ignoring_none(converter: BaseConverter):
+    """`ignoring_none` works."""
+
+    customize(
+        converter,
+        WithOptional,
+        V(f(WithOptional).a).ensure(ignoring_none(between(0, 5))),
+    )
+
+    assert converter.structure({"a": None}, WithOptional) == WithOptional(None)
+    assert converter.structure({"a": 1}, WithOptional) == WithOptional(1)
+
+    if converter.detailed_validation:
+        with raises(ClassValidationError) as exc_info:
+            converter.structure({"a": 10}, WithOptional)
+
+        assert transform_error(exc_info.value) == [
+            "invalid value (10 not between 0 and 5) @ $.a"
+        ]
+    else:
+        with raises(ValueError) as exc_info:
+            converter.structure({"a": 10}, WithOptional)
+
+        # assert repr(exc_info.value) == "invalid value (10 not between 0 and 5) @ $.a"

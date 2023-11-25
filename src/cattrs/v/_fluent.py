@@ -8,15 +8,24 @@ try:
 except ImportError:
     from typing_extensions import assert_never
 
+try:
+    from typing import TypeGuard
+except ImportError:
+    from typing_extensions import TypeGuard
+
+from inspect import signature
+
 from attrs import Attribute, AttrsInstance, define
 from attrs import fields as f
 
-from cattrs import BaseConverter
-from cattrs._compat import ExceptionGroup
-from cattrs.dispatch import StructureHook
-from cattrs.gen import make_dict_structure_fn, override
+from .. import BaseConverter
+from .._compat import ExceptionGroup, TypeAlias
+from ..dispatch import StructureHook
+from ..gen import make_dict_structure_fn, override
 
 T = TypeVar("T")
+
+ValidatorFactory: TypeAlias = Callable[[bool], Callable[[T], None]]
 
 
 @define
@@ -33,7 +42,7 @@ class VOmitted:
 class VRenamed(Generic[T]):
     """This attribute has been renamed.
 
-    This class has no `omit` and no `rename`..
+    This class has no `omit` and no `rename`.
     """
 
     attr: Attribute[T]
@@ -41,8 +50,8 @@ class VRenamed(Generic[T]):
 
     def ensure(
         self: VRenamed[T],
-        validator: Callable[[T], None | bool],
-        *validators: Callable[[T], None | bool],
+        validator: Callable[[T], None | bool] | ValidatorFactory[T],
+        *validators: Callable[[T], None | bool] | ValidatorFactory[T],
     ) -> VCustomized[T]:
         return VCustomized(self.attr, self.new_name, (validator, *validators))
 
@@ -56,7 +65,7 @@ class VCustomized(Generic[T]):
 
     attr: Attribute[T]
     new_name: str | None
-    hooks: tuple[Callable[[T], None | bool], ...] = ()
+    validators: tuple[Callable[[T], None | bool] | ValidatorFactory[T], ...] = ()
 
 
 @define
@@ -73,18 +82,17 @@ class V(Generic[T]):
 
     def __init__(self, attr: Attribute[T]) -> None:
         self.attr = attr
-        self.hooks = ()
+        self.validators = ()
 
     attr: Attribute[T]
-    hooks: tuple[Callable[[T], None], ...] = ()
+    validators: tuple[Callable[[T], None | bool] | ValidatorFactory[T], ...] = ()
 
     def ensure(
         self: V[T],
-        validator: Callable[[T], None | bool],
-        *validators: Callable[[T], None],
+        validator: Callable[[T], None | bool] | ValidatorFactory[T],
+        *validators: Callable[[T], None] | ValidatorFactory[T],
     ) -> VCustomized[T]:
-        hooks = (*self.hooks, validator, *validators)
-        return VCustomized(self.attr, None, hooks)
+        return VCustomized(self.attr, None, (*self.validators, validator, *validators))
 
     def rename(self: V[T], new_name: str) -> VRenamed[T]:
         """Rename the attribute after processing."""
@@ -94,30 +102,9 @@ class V(Generic[T]):
         """Omit the attribute."""
         return VOmitted(self.attr)
 
-    def replace_with(self, value: T) -> VOmitted:
+    def replace_on_structure(self, value: T) -> VOmitted:
         """This attribute should be replaced with a value when structuring."""
         return VOmitted(self.attr)
-
-
-def ignoring_none(*validators: Callable[[T], None]) -> Callable[[T | None], None]:
-    """
-    A validator for (f.e.) strings cannot be applied to `str | None`, but it can
-    be wrapped with this to adapt it so it can.
-    """
-
-    def skip_none(val: T | None) -> None:
-        if val is None:
-            return
-        errors = []
-        for validator in validators:
-            try:
-                validator(val)
-            except Exception as exc:
-                errors.append(exc)
-        if errors:
-            raise ExceptionGroup("", errors)
-
-    return skip_none
 
 
 def all_elements_must(
@@ -145,9 +132,22 @@ def all_elements_must(
     return assert_all_elements
 
 
+def _is_validator_factory(
+    validator: Callable[[Any], None | bool] | ValidatorFactory[T]
+) -> TypeGuard[ValidatorFactory[T]]:
+    """Figure out if this is a validator factory or not."""
+    sig = signature(validator)
+    ra = sig.return_annotation
+    return (
+        callable(ra)
+        or isinstance(ra, str)
+        and sig.return_annotation.startswith("Callable")
+    )
+
+
 def _compose_validators(
     base_structure: StructureHook,
-    validators: Sequence[Callable[[Any], None | bool]],
+    validators: Sequence[Callable[[Any], None | bool] | ValidatorFactory],
     detailed_validation: bool,
 ) -> Callable[[Any, Any], Any]:
     """Produce a hook composing the base structuring hook and additional validators.
@@ -157,11 +157,17 @@ def _compose_validators(
     The new hook will raise an ExceptionGroup.
     """
     bs = base_structure
+    final_validators = []
+    for val in validators:
+        if _is_validator_factory(val):
+            final_validators.append(val(detailed_validation))
+        else:
+            final_validators.append(val)
 
     if detailed_validation:
 
         def structure_hook(
-            val: dict[str, Any], t: Any, _hooks=validators, _bs=bs
+            val: dict[str, Any], t: Any, _hooks=final_validators, _bs=bs
         ) -> Any:
             res = _bs(val, t)
             errors: list[Exception] = []
@@ -177,7 +183,7 @@ def _compose_validators(
     else:
 
         def structure_hook(
-            val: dict[str, Any], t: Any, _hooks=validators, _bs=bs
+            val: dict[str, Any], t: Any, _hooks=final_validators, _bs=bs
         ) -> Any:
             res = _bs(val, t)
             for hook in _hooks:
@@ -221,7 +227,7 @@ def customize(
             overrides[field.attr.name] = override(rename=field.new_name)
         elif isinstance(field, VCustomized):
             base_hook = converter._structure_func.dispatch(field.attr.type)
-            hook = _compose_validators(base_hook, field.hooks, detailed_validation)
+            hook = _compose_validators(base_hook, field.validators, detailed_validation)
             overrides[field.attr.name] = override(
                 rename=field.new_name, struct_hook=hook
             )

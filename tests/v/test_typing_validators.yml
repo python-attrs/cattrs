@@ -61,4 +61,31 @@
 
     c = Converter()
 
-    v.customize(c, A, v.V(fields(A).a).ensure(v.is_unique))  # E: Argument 1 to "ensure" of "V" has incompatible type "Callable[[Collection[Hashable]], None]"; expected "Callable[[list[dict[Any, Any]]], bool | None]"  [arg-type]
+    v.customize(c, A, v.V(fields(A).a).ensure(v.is_unique))  # E: Argument 1 to "ensure" of "V" has incompatible type "Callable[[Collection[Hashable]], None]"; expected "Callable[[list[dict[Any, Any]]], bool | None] | Callable[[bool], Callable[[list[dict[Any, Any]]], None]]"  [arg-type]
+
+- case: ignoring_none
+  main: |
+    from attrs import define, fields
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: int | None
+
+    c = Converter()
+
+    v.customize(c, A, v.V(fields(A).a).ensure(v.ignoring_none(v.greater_than(5))))
+
+- case: ignoring_none_missing
+  main: |
+    from attrs import define, fields
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: int | None
+
+    c = Converter()
+
+    v.customize(c, A, v.V(fields(A).a).ensure(v.greater_than(5)))  # E: Argument 1 to "ensure" of "V" has incompatible type "Callable[[int], None]"; expected "Callable[[int | None], bool | None] | Callable[[bool], Callable[[int | None], None]]"  [arg-type]
+    v.customize(c, A, v.V(fields(A).a).ensure(v.ignoring_none(v.len_between(0, 5))))  # E: Argument 1 to "ignoring_none" has incompatible type "Callable[[Sized], None]"; expected "Callable[[int], None]"  [arg-type]

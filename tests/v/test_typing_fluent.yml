@@ -48,4 +48,4 @@
 
     c = Converter()
 
-    v.customize(c, A, v.V(f(A).a).ensure(v.len_between(0, 10)))  # E: Argument 1 to "ensure" of "V" has incompatible type "Callable[[Sized], None]"; expected "Callable[[int], bool | None]"  [arg-type]
+    v.customize(c, A, v.V(f(A).a).ensure(v.len_between(0, 10)))  # E: Argument 1 to "ensure" of "V" has incompatible type "Callable[[Sized], None]"; expected "Callable[[int], bool | None] | Callable[[bool], Callable[[int], None]]"  [arg-type]
