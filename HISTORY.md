@@ -4,6 +4,7 @@
 
 - Add support for [PEP 695](https://peps.python.org/pep-0695/) type aliases.
   ([#452](https://github.com/python-attrs/cattrs/pull/452))
+- The {class}`orjson preconf converter <cattrs.preconf.orjson.OrjsonConverter>` now passes through dates and datetimes to orjson while unstructuring, greatly improving speed.
 - More robust support for `Annotated` and `NotRequired` in TypedDicts.
   ([#450](https://github.com/python-attrs/cattrs/pull/450))
 - [PEP 695](https://peps.python.org/pep-0695/) generics are now tested.
