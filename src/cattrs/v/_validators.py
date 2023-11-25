@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Hashable
 from typing import Callable, Collection, Protocol, Sized, TypeVar
 
+from .._compat import ExceptionGroup
 from ._fluent import ValidatorFactory
 
 T = TypeVar("T")
