@@ -217,7 +217,7 @@ def customize(
         detailed_validation = converter.detailed_validation
     for field in fields:
         if field.attr.name in seen:
-            raise Exception(f"Duplicate customization for field {field.attr.name}")
+            raise TypeError(f"Duplicate customization for field {field.attr.name}")
         if field.attr is not getattr(f(cl), field.attr.name):
             raise TypeError(f"Customizing {cl}, but {field} is from a different class")
         seen.add(field.attr.name)

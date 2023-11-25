@@ -189,3 +189,27 @@ def test_multiple_field_validators(c: Converter) -> None:
     instance.a = 6
     instance.b = "a"
     assert instance == c.structure(c.unstructure(instance), Model)
+
+
+def test_multiple_fields_error(c: Converter):
+    """Customizing the same field twice is a runtime error."""
+
+    fs = f(Model)
+
+    with raises(TypeError):
+        customize(
+            c, Model, V(fs.a).ensure(greater_than(5)), V(fs.a).ensure(greater_than(5))
+        )
+
+
+def test_different_classes_error(c: Converter):
+    """Customizing the field of a different class is a runtime error."""
+
+    @define
+    class AnotherModel:
+        a: int
+
+    fs = f(Model)
+
+    with raises(TypeError):
+        customize(c, AnotherModel, V(fs.a).ensure(greater_than(5)))
