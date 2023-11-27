@@ -70,3 +70,24 @@ def test_no_linecache():
     c.structure(c.unstructure(B(1)), B)
 
     assert len(linecache.cache) == before
+
+
+def test_linecache_dedup():
+    """Linecaching avoids duplicates."""
+
+    @define
+    class LinecacheA:
+        a: int
+
+    c = Converter()
+    before = len(linecache.cache)
+    c.structure(c.unstructure(LinecacheA(1)), LinecacheA)
+    after = len(linecache.cache)
+
+    assert after == before + 2
+
+    c = Converter()
+
+    c.structure(c.unstructure(LinecacheA(1)), LinecacheA)
+
+    assert len(linecache.cache) == after

@@ -4,6 +4,8 @@
 
 - Fix a regression when unstructuring dictionary values typed as `Any`.
   ([#453](https://github.com/python-attrs/cattrs/issues/453) [#462](https://github.com/python-attrs/cattrs/pull/462))
+- Optimize function source code caching.
+  ([#445](https://github.com/python-attrs/cattrs/issues/445))
 - Generate unique files only in case of linecache enabled.
   ([#445](https://github.com/python-attrs/cattrs/issues/445) [#441](https://github.com/python-attrs/cattrs/pull/461))
 

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import linecache
 import re
 import sys
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
@@ -225,12 +224,9 @@ def make_dict_unstructure_fn(
         ]
         script = "\n".join(total_lines)
 
-        fname = ""
-        if _cattrs_use_linecache:
-            fname = generate_unique_filename(
-                cl, "unstructure", reserve=_cattrs_use_linecache
-            )
-            linecache.cache[fname] = len(script), None, total_lines, fname
+        fname = generate_unique_filename(
+            cl, "unstructure", lines=total_lines if _cattrs_use_linecache else []
+        )
 
         eval(compile(script, fname, "exec"), globs)
     finally:
@@ -523,10 +519,9 @@ def make_dict_structure_fn(
     ]
 
     script = "\n".join(total_lines)
-    fname = ""
-    if _cattrs_use_linecache:
-        fname = generate_unique_filename(cl, "structure", reserve=_cattrs_use_linecache)
-        linecache.cache[fname] = len(script), None, total_lines, fname
+    fname = generate_unique_filename(
+        cl, "structure", lines=total_lines if _cattrs_use_linecache else []
+    )
 
     eval(compile(script, fname, "exec"), globs)
     return globs[fn_name]
