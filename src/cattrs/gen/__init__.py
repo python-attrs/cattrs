@@ -212,22 +212,20 @@ def make_dict_unstructure_fn(
             + ["  return res"]
         )
         script = "\n".join(total_lines)
-
-        fname = generate_unique_filename(
-            cl, "unstructure", reserve=_cattrs_use_linecache
-        )
+        fname = ""
+        if _cattrs_use_linecache:
+            fname = generate_unique_filename(
+                cl, "unstructure", reserve=_cattrs_use_linecache
+            )
+            linecache.cache[fname] = len(script), None, total_lines, fname
 
         eval(compile(script, fname, "exec"), globs)
-
-        fn = globs[fn_name]
-        if _cattrs_use_linecache:
-            linecache.cache[fname] = len(script), None, total_lines, fname
     finally:
         working_set.remove(cl)
         if not working_set:
             del already_generating.working_set
 
-    return fn
+    return globs[fn_name]
 
 
 DictStructureFn = Callable[[Mapping[str, Any], Any], T]
@@ -628,11 +626,13 @@ def make_dict_structure_fn(
         *pi_lines,
     ]
 
-    fname = generate_unique_filename(cl, "structure", reserve=_cattrs_use_linecache)
     script = "\n".join(total_lines)
-    eval(compile(script, fname, "exec"), globs)
+    fname = ""
     if _cattrs_use_linecache:
+        fname = generate_unique_filename(cl, "structure", reserve=_cattrs_use_linecache)
         linecache.cache[fname] = len(script), None, total_lines, fname
+
+    eval(compile(script, fname, "exec"), globs)
 
     return globs[fn_name]
 
