@@ -4,6 +4,7 @@
 
 - Fix a regression when unstructuring `Any | None`.
   ([#453](https://github.com/python-attrs/cattrs/issues/453))
+- Generate unique files only in case of linecache enabled. ([#445](https://github.com/python-attrs/cattrs/issues/445) [#441](https://github.com/python-attrs/cattrs/pull/461))
 
 ## 23.2.1 (2023-11-18)
 
