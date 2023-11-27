@@ -1,9 +1,9 @@
 """Line-cache functionality."""
 import linecache
-from typing import Any
+from typing import Any, List
 
 
-def generate_unique_filename(cls: Any, func_name: str, lines: list[str] = []) -> str:
+def generate_unique_filename(cls: Any, func_name: str, lines: List[str] = []) -> str:
     """
     Create a "filename" suitable for a function being generated.
 
