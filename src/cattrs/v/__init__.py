@@ -10,8 +10,8 @@ from ..errors import (
 )
 from ._fluent import V, customize
 from ._validators import (
-    all_elements_must,
     between,
+    for_all,
     greater_than,
     ignoring_none,
     is_unique,
@@ -19,9 +19,9 @@ from ._validators import (
 )
 
 __all__ = [
-    "all_elements_must",
     "between",
     "customize",
+    "for_all",
     "format_exception",
     "greater_than",
     "ignoring_none",

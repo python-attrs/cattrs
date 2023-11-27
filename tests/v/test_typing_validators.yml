@@ -89,3 +89,56 @@
 
     v.customize(c, A, v.V(fields(A).a).ensure(v.greater_than(5)))  # E: Argument 1 to "ensure" of "V" has incompatible type "Callable[[int], None]"; expected "Callable[[int | None], bool | None] | Callable[[bool], Callable[[int | None], None]]"  [arg-type]
     v.customize(c, A, v.V(fields(A).a).ensure(v.ignoring_none(v.len_between(0, 5))))  # E: Argument 1 to "ignoring_none" has incompatible type "Callable[[Sized], None]"; expected "Callable[[int], None]"  [arg-type]
+
+- case: for_all
+  main: |
+    from attrs import define, fields
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: list[int]
+
+    c = Converter()
+
+    v.customize(c, A, v.V(fields(A).a).ensure(v.for_all(v.greater_than(5))))
+
+- case: for_all_dict
+  main: |
+    from attrs import define, fields
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: dict[str, int]
+
+    c = Converter()
+
+    v.customize(c, A, v.V(fields(A).a).ensure(v.for_all(v.len_between(0, 5))))
+
+- case: for_all_error
+  main: |
+    from attrs import define, fields
+    from cattrs import v, Converter
+    from cattrs.v import for_all as fa
+
+    @define
+    class A:
+      a: list[int]
+
+    c = Converter()
+
+    v.customize(c, A, v.V(fields(A).a).ensure(fa(fa(v.greater_than(5)))))  # E: Argument 1 to "for_all" has incompatible type "Callable[[bool], Callable[[Iterable[int]], None]]"; expected "Callable[[int], bool | None]"  [arg-type]
+
+- case: for_all_dict_error
+  main: |
+    from attrs import define, fields
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: dict[str, int]
+
+    c = Converter()
+
+    v.customize(c, A, v.V(fields(A).a).ensure(v.for_all(v.greater_than(5))))  # E: Argument 1 to "greater_than" has incompatible type "int"; expected "str"  [arg-type]

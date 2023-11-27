@@ -97,9 +97,9 @@ def ignoring_none(
     return factory
 
 
-def all_elements_must(
+def for_all(
     validator: Callable[[T], None | bool], *validators: Callable[[T], None | bool]
-) -> ValidatorFactory[T]:
+) -> ValidatorFactory[Iterable[T]]:
     """A helper validator included with cattrs.
 
     Run all the given validators against all members of the

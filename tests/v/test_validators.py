@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from attrs import define
 from attrs import fields as f
@@ -8,9 +8,9 @@ from cattrs import BaseConverter
 from cattrs.errors import ClassValidationError
 from cattrs.v import (
     V,
-    all_elements_must,
     between,
     customize,
+    for_all,
     greater_than,
     ignoring_none,
     is_unique,
@@ -27,6 +27,11 @@ class WithInt:
 @define
 class WithList:
     a: List[int]
+
+
+@define
+class WithDict:
+    a: Dict[str, int]
 
 
 @define
@@ -171,13 +176,13 @@ def test_ignoring_none(converter: BaseConverter):
         assert repr(exc_info.value) == "ValueError('10 not between 0 and 5')"
 
 
-def test_all_elements_must(converter: BaseConverter):
-    """`all_elements_must` works."""
+def test_for_all_lists(converter: BaseConverter):
+    """`for_all` works on lists."""
 
     hook = customize(
         converter,
         WithList,
-        V(f(WithList).a).ensure(all_elements_must(greater_than(5), between(5, 10))),
+        V(f(WithList).a).ensure(for_all(greater_than(5), between(5, 10))),
     )
 
     assert hook({"a": []}, None) == WithList([])
@@ -193,3 +198,32 @@ def test_all_elements_must(converter: BaseConverter):
             "invalid value (2 not greater than 5) @ $.a[1]",
             "invalid value (2 not between 5 and 10) @ $.a[1]",
         ]
+    else:
+        with raises(ValueError) as exc_info:
+            hook({"a": [1, 2]}, None)
+
+        assert repr(exc_info.value) == "ValueError('1 not greater than 5')"
+
+
+def test_for_all_dicts(converter: BaseConverter):
+    """`for_all` works on dicts."""
+
+    hook = customize(
+        converter, WithDict, V(f(WithDict).a).ensure(for_all(len_between(0, 2)))
+    )
+
+    assert hook({"a": {}}, None) == WithDict({})
+    assert hook({"a": {"a": 1, "b": 2}}, None) == WithDict({"a": 1, "b": 2})
+
+    if converter.detailed_validation:
+        with raises(ClassValidationError) as exc_info:
+            hook({"a": {"aaa": 1}}, None)
+
+        assert transform_error(exc_info.value) == [
+            "invalid value (length (3) not between 0 and 2) @ $.a[0]"
+        ]
+    else:
+        with raises(ValueError) as exc_info:
+            hook({"a": {"aaa": 1}}, None)
+
+        assert repr(exc_info.value) == "ValueError('length (3) not between 0 and 2')"
