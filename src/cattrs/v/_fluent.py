@@ -1,7 +1,7 @@
 """The fluent validation API."""
 from __future__ import annotations
 
-from typing import Any, Callable, Generic, Iterable, Literal, Sequence, TypeVar
+from typing import Any, Callable, Generic, Literal, Sequence, TypeVar
 
 try:
     from typing import assert_never
@@ -101,35 +101,6 @@ class V(Generic[T]):
     def omit(self) -> VOmitted:
         """Omit the attribute."""
         return VOmitted(self.attr)
-
-    def replace_on_structure(self, value: T) -> VOmitted:
-        """This attribute should be replaced with a value when structuring."""
-        return VOmitted(self.attr)
-
-
-def all_elements_must(
-    validator: Callable[[T], None | bool], *validators: Callable[[T], None | bool]
-) -> Callable[[Iterable[T]], None | bool]:
-    """A helper validator included with cattrs.
-
-    Run all the given validators against all members of the
-    iterable.
-    """
-
-    validators = (validator, *validators)
-
-    def assert_all_elements(val: Iterable[T]) -> None:
-        errors = []
-        for e in val:
-            for v in validators:
-                try:
-                    v(e)
-                except Exception as exc:
-                    errors.append(exc)
-        if errors:
-            raise ExceptionGroup("", errors)
-
-    return assert_all_elements
 
 
 def _is_validator_factory(

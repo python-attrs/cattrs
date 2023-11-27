@@ -8,6 +8,7 @@ from cattrs import BaseConverter
 from cattrs.errors import ClassValidationError
 from cattrs.v import (
     V,
+    all_elements_must,
     between,
     customize,
     greater_than,
@@ -167,4 +168,28 @@ def test_ignoring_none(converter: BaseConverter):
         with raises(ValueError) as exc_info:
             converter.structure({"a": 10}, WithOptional)
 
-        # assert repr(exc_info.value) == "invalid value (10 not between 0 and 5) @ $.a"
+        assert repr(exc_info.value) == "ValueError('10 not between 0 and 5')"
+
+
+def test_all_elements_must(converter: BaseConverter):
+    """`all_elements_must` works."""
+
+    hook = customize(
+        converter,
+        WithList,
+        V(f(WithList).a).ensure(all_elements_must(greater_than(5), between(5, 10))),
+    )
+
+    assert hook({"a": []}, None) == WithList([])
+    assert hook({"a": [6, 7, 8]}, None) == WithList([6, 7, 8])
+
+    if converter.detailed_validation:
+        with raises(ClassValidationError) as exc_info:
+            hook({"a": [1, 2]}, None)
+
+        assert transform_error(exc_info.value) == [
+            "invalid value (1 not greater than 5) @ $.a[0]",
+            "invalid value (1 not between 5 and 10) @ $.a[0]",
+            "invalid value (2 not greater than 5) @ $.a[1]",
+            "invalid value (2 not between 5 and 10) @ $.a[1]",
+        ]

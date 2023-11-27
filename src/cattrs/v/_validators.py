@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from collections.abc import Hashable
+from collections.abc import Hashable, Iterable
 from typing import Callable, Collection, Protocol, Sized, TypeVar
 
 from .._compat import ExceptionGroup
+from ..errors import IterableValidationError, IterableValidationNote
 from ._fluent import ValidatorFactory
 
 T = TypeVar("T")
@@ -92,5 +93,52 @@ def ignoring_none(
                     validator(val)
 
         return skip_none
+
+    return factory
+
+
+def all_elements_must(
+    validator: Callable[[T], None | bool], *validators: Callable[[T], None | bool]
+) -> ValidatorFactory[T]:
+    """A helper validator included with cattrs.
+
+    Run all the given validators against all members of the
+    iterable.
+    """
+
+    validators = (validator, *validators)
+
+    def factory(detailed_validation: bool) -> Callable[[T], None]:
+        if detailed_validation:
+
+            def assert_all_elements(val: Iterable[T], _validators=validators) -> None:
+                errors = []
+                ix = 0
+                for e in val:
+                    try:
+                        for v in _validators:
+                            try:
+                                v(e)
+                            except Exception as exc:
+                                exc.__notes__ = [
+                                    *getattr(exc, "__notes__", []),
+                                    IterableValidationNote(
+                                        f"Validating @ index {ix}", ix, None
+                                    ),
+                                ]
+                                errors.append(exc)
+                    finally:
+                        ix += 1
+                if errors:
+                    raise IterableValidationError("", errors, val.__class__)
+
+        else:
+
+            def assert_all_elements(val: Iterable[T], _validators=validators) -> None:
+                for e in val:
+                    for v in _validators:
+                        v(e)
+
+        return assert_all_elements
 
     return factory
