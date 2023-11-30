@@ -14,10 +14,21 @@
 - Tests are run with the pytest-xdist plugin by default.
 - The docs now use the Inter font.
 
+## 23.2.3 (2023-11-30)
+
+- Fix a regression when unstructuring dictionary values typed as `Any`.
+  ([#453](https://github.com/python-attrs/cattrs/issues/453) [#462](https://github.com/python-attrs/cattrs/pull/462))
+- Fix a regression when unstructuring unspecialized generic classes.
+  ([#465](https://github.com/python-attrs/cattrs/issues/465) [#466](https://github.com/python-attrs/cattrs/pull/466))
+- Optimize function source code caching.
+  ([#445](https://github.com/python-attrs/cattrs/issues/445) [#464](https://github.com/python-attrs/cattrs/pull/464))
+- Generate unique files only in case of linecache enabled.
+  ([#445](https://github.com/python-attrs/cattrs/issues/445) [#441](https://github.com/python-attrs/cattrs/pull/461))
+
 ## 23.2.2 (2023-11-21)
 
 - Fix a regression when unstructuring `Any | None`.
-  ([#453](https://github.com/python-attrs/cattrs/issues/453))
+  ([#453](https://github.com/python-attrs/cattrs/issues/453) [#454](https://github.com/python-attrs/cattrs/pull/454))
 
 ## 23.2.1 (2023-11-18)
 

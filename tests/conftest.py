@@ -31,3 +31,7 @@ settings.load_profile("fast" if "FAST" in environ else "tests")
 
 if sys.version_info < (3, 12):
     collect_ignore_glob = ["*_695.py"]
+
+collect_ignore = []
+if sys.version_info < (3, 10):
+    collect_ignore.append("test_generics_604.py")
