@@ -1,6 +1,6 @@
 # History
 
-## 23.2.3 (UNRELEASED)
+## 23.2.3 (2023-11-30)
 
 - Fix a regression when unstructuring dictionary values typed as `Any`.
   ([#453](https://github.com/python-attrs/cattrs/issues/453) [#462](https://github.com/python-attrs/cattrs/pull/462))
