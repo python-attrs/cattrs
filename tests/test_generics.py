@@ -184,6 +184,9 @@ def test_unstructure_generic_attrs(genconverter):
     class Inner(Generic[T]):
         a: T
 
+    inner = Inner(Inner(1))
+    assert genconverter.unstructure(inner) == {"a": {"a": 1}}
+
     @define
     class Outer:
         inner: Inner[int]
@@ -201,6 +204,16 @@ def test_unstructure_generic_attrs(genconverter):
         inner: Inner[str]
 
     assert genconverter.structure(raw, OuterStr) == OuterStr(Inner("1"))
+
+
+def test_unstructure_optional(genconverter):
+    """Generics with optional fields work."""
+
+    @define
+    class C(Generic[T]):
+        a: Union[T, None]
+
+    assert genconverter.unstructure(C(C(1))) == {"a": {"a": 1}}
 
 
 def test_unstructure_deeply_nested_generics(genconverter):
