@@ -956,7 +956,7 @@ class Converter(BaseConverter):
         other = union_params[0] if union_params[1] is NoneType else union_params[1]
 
         # TODO: Remove this special case when we make unstructuring Any consistent.
-        if other is Any:
+        if other is Any or isinstance(other, TypeVar):
             handler = self.unstructure
         else:
             handler = self._unstructure_func.dispatch(other)
