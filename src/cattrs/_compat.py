@@ -48,7 +48,6 @@ try:
 except ImportError:  # pragma: no cover
     ExtensionsTypedDict = None
 
-
 if sys.version_info >= (3, 11):
     from builtins import ExceptionGroup
 else:
@@ -65,6 +64,14 @@ try:
 except ImportError:  # pragma: no cover
     assert sys.version_info >= (3, 11)
     from typing import TypeAlias
+
+LITERALS = {Literal}
+try:
+    from typing_extensions import Literal as teLiteral
+
+    LITERALS.add(teLiteral)
+except ImportError:  # pragma: no cover
+    pass
 
 
 def is_typeddict(cls):
@@ -203,7 +210,12 @@ if sys.version_info >= (3, 9):
         from typing import _LiteralGenericAlias
 
         def is_literal(type) -> bool:
-            return type.__class__ is _LiteralGenericAlias
+            return type in LITERALS or (
+                isinstance(
+                    type, (_GenericAlias, _LiteralGenericAlias, _SpecialGenericAlias)
+                )
+                and type.__origin__ in LITERALS
+            )
 
     except ImportError:  # pragma: no cover
 
@@ -479,7 +491,9 @@ else:
         )
 
     def is_literal(type) -> bool:
-        return type.__class__ is _GenericAlias and type.__origin__ is Literal
+        return type in LITERALS or (
+            isinstance(type, _GenericAlias) and type.__origin__ in LITERALS
+        )
 
     def is_generic(obj):
         return isinstance(obj, _GenericAlias) or (
