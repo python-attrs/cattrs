@@ -151,6 +151,21 @@ def test_structure_literal(converter_cls):
 
 
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
+def test_structure_typing_extensions_literal(converter_cls):
+    """Structuring a class with a typing_extensions.Literal field works."""
+    converter = converter_cls()
+    import typing_extensions
+
+    @define
+    class ClassWithLiteral:
+        literal_field: typing_extensions.Literal[8] = 8
+
+    assert converter.structure(
+        {"literal_field": 8}, ClassWithLiteral
+    ) == ClassWithLiteral(8)
+
+
+@pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
 def test_structure_literal_enum(converter_cls):
     """Structuring a class with a literal field works."""
     converter = converter_cls()
