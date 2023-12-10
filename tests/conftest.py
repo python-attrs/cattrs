@@ -29,9 +29,8 @@ settings.register_profile("fast", settings.get_profile("tests"), max_examples=10
 
 settings.load_profile("fast" if "FAST" in environ else "tests")
 
-if sys.version_info < (3, 12):
-    collect_ignore_glob = ["*_695.py"]
-
-collect_ignore = []
+collect_ignore_glob = []
 if sys.version_info < (3, 10):
-    collect_ignore.append("test_generics_604.py")
+    collect_ignore_glob.append("*_604.py")
+if sys.version_info < (3, 12):
+    collect_ignore_glob.append("*_695.py")
