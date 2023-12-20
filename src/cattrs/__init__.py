@@ -1,3 +1,5 @@
+from typing import Final
+
 from .converters import BaseConverter, Converter, GenConverter, UnstructureStrategy
 from .errors import (
     AttributeValidationNote,
@@ -40,10 +42,12 @@ __all__ = (
     "transform_error",
     "unstructure",
     "UnstructureStrategy",
+    "get_structure_hook",
+    "get_unstructure_hook",
 )
 
-
-global_converter = Converter()
+#: The global converter. Prefer creating your own if customizations are required.
+global_converter: Final = Converter()
 
 unstructure = global_converter.unstructure
 structure = global_converter.structure
@@ -53,3 +57,5 @@ register_structure_hook = global_converter.register_structure_hook
 register_structure_hook_func = global_converter.register_structure_hook_func
 register_unstructure_hook = global_converter.register_unstructure_hook
 register_unstructure_hook_func = global_converter.register_unstructure_hook_func
+get_structure_hook: Final = global_converter.get_structure_hook
+get_unstructure_hook: Final = global_converter.get_unstructure_hook

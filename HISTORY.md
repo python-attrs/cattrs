@@ -4,10 +4,12 @@
 
 ## 24.1.0 (UNRELEASED)
 
+- Introduce {meth}`BaseConverter.get_structure_hook` and {meth}`BaseConverter.get_unstructure_hook` methods.
 - Add support for [PEP 695](https://peps.python.org/pep-0695/) type aliases.
   ([#452](https://github.com/python-attrs/cattrs/pull/452))
 - The {class}`orjson preconf converter <cattrs.preconf.orjson.OrjsonConverter>` now passes through dates and datetimes to orjson while unstructuring, greatly improving speed.
   ([#463](https://github.com/python-attrs/cattrs/pull/463))
+- `cattrs.gen` generators now attach metadata to the generated functions, making them introspectable.
 - More robust support for `Annotated` and `NotRequired` in TypedDicts.
   ([#450](https://github.com/python-attrs/cattrs/pull/450))
 - `typing_extensions.Literal` is now automatically structured, just like `typing.Literal`.
@@ -16,6 +18,7 @@
   ([#452](https://github.com/python-attrs/cattrs/pull/452))
 - Imports are now sorted using Ruff.
 - Tests are run with the pytest-xdist plugin by default.
+- Rework the introductory parts of the documentation, introducing the Basics section.
 - The docs now use the Inter font.
 
 ## 23.2.3 (2023-11-30)

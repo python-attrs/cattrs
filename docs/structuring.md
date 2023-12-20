@@ -1,12 +1,10 @@
 # What You Can Structure and How
 
-The philosophy of _cattrs_ structuring is simple: give it an instance of Python
-built-in types and collections, and a type describing the data you want out.
-_cattrs_ will convert the input data into the type you want, or throw an
-exception.
+The philosophy of _cattrs_ structuring is simple: give it an instance of Python built-in types and collections, and a type describing the data you want out.
+_cattrs_ will convert the input data into the type you want, or throw an exception.
 
-All structuring conversions are composable, where applicable. This is
-demonstrated further in the examples.
+All structuring conversions are composable, where applicable.
+This is demonstrated further in the examples.
 
 ## Primitive Values
 

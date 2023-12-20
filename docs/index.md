@@ -5,15 +5,16 @@ hidden: true
 ---
 
 self
-converters
-usage
+basics
 structuring
 unstructuring
+usage
 customizing
 strategies
 validation
 preconf
 unions
+indepth.md
 history
 benchmarking
 contributing

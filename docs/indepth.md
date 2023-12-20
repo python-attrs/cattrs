@@ -1,28 +1,10 @@
-# Converters
+# Converters In-Depth
+```{currentmodule} cattrs
+```
 
-All _cattrs_ functionality is exposed through a {class}`cattrs.Converter` object.
-Global _cattrs_ functions, such as {meth}`cattrs.unstructure`, use a single global converter.
-Changes done to this global converter, such as registering new structure and unstructure hooks, affect all code using the global functions.
+## Converters
 
-## Global Converter
-
-A global converter is provided for convenience as `cattrs.global_converter`.
-The following functions implicitly use this global converter:
-
-- {meth}`cattrs.structure`
-- {meth}`cattrs.unstructure`
-- {meth}`cattrs.structure_attrs_fromtuple`
-- {meth}`cattrs.structure_attrs_fromdict`
-
-Changes made to the global converter will affect the behavior of these functions.
-
-Larger applications are strongly encouraged to create and customize a different, private instance of {class}`cattrs.Converter`.
-
-## Converter Objects
-
-To create a private converter, simply instantiate a {class}`cattrs.Converter`.
-
-The core functionality of a converter is [structuring](structuring.md) and [unstructuring](unstructuring.md) data by composing provided and [custom handling functions](customizing.md), called _hooks_.
+Converters are registries of rules _cattrs_ uses to perform function composition and generate its un/structuring functions.
 
 Currently, a converter contains the following state:
 
@@ -62,22 +44,18 @@ This also enables converters to be chained.
 >>> parent = Converter()
 
 >>> child = Converter(
-...     unstructure_fallback_factory=parent._unstructure_func.dispatch, 
-...     structure_fallback_factory=parent._structure_func.dispatch,
+...     unstructure_fallback_factory=parent.get_unstructure_hook,
+...     structure_fallback_factory=parent.get_structure_hook,
 ... )
-```
-
-```{note}
-`Converter._structure_func.dispatch` and `Converter._unstructure_func.dispatch` are slated to become public APIs in a future release.
 ```
 
 ```{versionadded} 23.2.0
 
 ```
 
-## `cattrs.Converter`
+### `cattrs.Converter`
 
-The {class}`Converter <cattrs.Converter>` is a converter variant that automatically generates, compiles and caches specialized structuring and unstructuring hooks for _attrs_ classes, dataclasses and TypedDicts.
+The {class}`Converter` is a converter variant that automatically generates, compiles and caches specialized structuring and unstructuring hooks for _attrs_ classes, dataclasses and TypedDicts.
 
 `Converter` differs from the {class}`cattrs.BaseConverter` in the following ways:
 
@@ -87,9 +65,9 @@ The {class}`Converter <cattrs.Converter>` is a converter variant that automatica
 - support for generic _attrs_ classes
 - support for easy overriding collection unstructuring
 
-The `Converter` used to be called `GenConverter`, and that alias is still present for backwards compatibility reasons.
+The {class}`Converter` used to be called `GenConverter`, and that alias is still present for backwards compatibility.
 
-## `cattrs.BaseConverter`
+### `cattrs.BaseConverter`
 
-The {class}`BaseConverter <cattrs.BaseConverter>` is a simpler and slower `Converter` variant.
+The {class}`BaseConverter` is a simpler and slower converter variant.
 It does no code generation, so it may be faster on first-use which can be useful in specific cases, like CLI applications where startup time is more important than throughput.
