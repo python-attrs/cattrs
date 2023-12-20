@@ -762,8 +762,24 @@ def test_fallback_chaining(converter_cls: Type[BaseConverter]):
         child.structure(child.unstructure(Test()), Test)
 
     child = converter_cls(
-        unstructure_fallback_factory=parent._unstructure_func.dispatch,
-        structure_fallback_factory=parent._structure_func.dispatch,
+        unstructure_fallback_factory=parent.get_unstructure_hook,
+        structure_fallback_factory=parent.get_structure_hook,
     )
 
     assert isinstance(child.structure(child.unstructure(Test()), Test), Test)
+
+
+def test_hook_getting(converter: BaseConverter):
+    """Converters can produce their hooks."""
+
+    @define
+    class Test:
+        a: int
+
+    hook = converter.get_unstructure_hook(Test)
+
+    assert hook(Test(1)) == {"a": 1}
+
+    structure = converter.get_structure_hook(Test)
+
+    assert structure({"a": 1}, Test) == Test(1)

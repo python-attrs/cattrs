@@ -242,8 +242,15 @@ def make_dict_structure_fn(
     Generate a specialized dict structuring function for an attrs class or
     dataclass.
 
+    Any provided overrides are attached to the generated function under the
+    `overrides` attribute.
+
     :param _cattrs_forbid_extra_keys: Whether the structuring function should raise a
         `ForbiddenExtraKeysError` if unknown keys are encountered.
+    :param _cattrs_use_linecache: Whether to store the source code in the Python
+        linecache.
+    :param _cattrs_prefer_attrib_converters: If an _attrs_ converter is present on a
+        field, use it instead of processing the field normally.
     :param _cattrs_detailed_validation: Whether to use a slower mode that produces
         more detailed errors.
     :param _cattrs_use_alias: If true, the attribute alias will be used as the
@@ -629,7 +636,10 @@ def make_dict_structure_fn(
 
     eval(compile(script, fname, "exec"), globs)
 
-    return globs[fn_name]
+    res = globs[fn_name]
+    res.overrides = kwargs
+
+    return res
 
 
 IterableUnstructureFn = Callable[[Iterable[Any]], Any]

@@ -26,6 +26,7 @@ from ._compat import (
     Mapping,
     MutableMapping,
     MutableSequence,
+    NoneType,
     OriginAbstractSet,
     OriginMutableSet,
     Sequence,
@@ -48,6 +49,7 @@ from ._compat import (
     is_literal,
     is_mapping,
     is_mutable_set,
+    is_optional,
     is_protocol,
     is_sequence,
     is_tuple,
@@ -89,7 +91,6 @@ from .gen.typeddicts import make_dict_unstructure_fn as make_typeddict_dict_unst
 
 __all__ = ["UnstructureStrategy", "BaseConverter", "Converter", "GenConverter"]
 
-NoneType = type(None)
 T = TypeVar("T")
 V = TypeVar("V")
 
@@ -99,15 +100,6 @@ class UnstructureStrategy(Enum):
 
     AS_DICT = "asdict"
     AS_TUPLE = "astuple"
-
-
-def _subclass(typ: Type) -> Callable[[Type], bool]:
-    """a shortcut"""
-    return lambda cls: issubclass(cls, typ)
-
-
-def is_optional(typ: Type) -> bool:
-    return is_union_type(typ) and NoneType in typ.__args__ and len(typ.__args__) == 2
 
 
 def is_literal_containing_enums(typ: Type) -> bool:
@@ -190,7 +182,7 @@ class BaseConverter:
                 (is_sequence, self._unstructure_seq),
                 (is_mutable_set, self._unstructure_seq),
                 (is_frozenset, self._unstructure_seq),
-                (_subclass(Enum), self._unstructure_enum),
+                (lambda t: issubclass(t, Enum), self._unstructure_enum),
                 (has, self._unstructure_attrs),
                 (is_union_type, self._unstructure_union),
             ]
@@ -299,6 +291,19 @@ class BaseConverter:
         """
         self._unstructure_func.register_func_list([(predicate, factory, True)])
 
+    def get_unstructure_hook(self, type: Any) -> UnstructureHook:
+        """Get the unstructure hook for the given type.
+
+        This hook can be manually called, or composed with other functions
+        and re-registered.
+
+        If no hook is registered, the converter unstructure fallback factory
+        will be used to produce one.
+
+        .. versionadded:: 24.1
+        """
+        return self._unstructure_func.dispatch(type)
+
     def register_structure_hook(self, cl: Any, func: StructureHook) -> None:
         """Register a primitive-to-class converter function for a type.
 
@@ -344,6 +349,19 @@ class BaseConverter:
     def structure(self, obj: UnstructuredValue, cl: Type[T]) -> T:
         """Convert unstructured Python data structures to structured data."""
         return self._structure_func.dispatch(cl)(obj, cl)
+
+    def get_structure_hook(self, type: Any) -> StructureHook:
+        """Get the structure hook for the given type.
+
+        This hook can be manually called, or composed with other functions
+        and re-registered.
+
+        If no hook is registered, the converter structure fallback factory
+        will be used to produce one.
+
+        .. versionadded:: 24.1
+        """
+        return self._structure_func.dispatch(type)
 
     # Classes to Python primitives.
     def unstructure_attrs_asdict(self, obj: Any) -> Dict[str, Any]:

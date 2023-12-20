@@ -172,6 +172,7 @@ def test_unmodified_generated_structuring(cl_and_vals, dv: bool):
     converter = Converter(detailed_validation=dv)
     cl, vals, kwargs = cl_and_vals
     fn = make_dict_structure_fn(cl, converter, _cattrs_detailed_validation=dv)
+    assert fn.overrides == {}
 
     inst = cl(*vals, **kwargs)
 
@@ -202,6 +203,7 @@ def test_renaming(cl_and_vals, data):
     s_fn = make_dict_structure_fn(
         cl, converter, **{to_replace.name: override(rename="class")}
     )
+    assert s_fn.overrides == {to_replace.name: override(rename="class")}
 
     converter.register_structure_hook(cl, s_fn)
     converter.register_unstructure_hook(cl, u_fn)
