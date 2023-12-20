@@ -818,11 +818,11 @@ def make_mapping_structure_fn(
         is_bare_dict = val_type is Any and key_type is Any
         if not is_bare_dict:
             # We can do the dispatch here and now.
-            key_handler = converter._structure_func.dispatch(key_type)
+            key_handler = converter.get_structure_hook(key_type)
             if key_handler == converter._structure_call:
                 key_handler = key_type
 
-            val_handler = converter._structure_func.dispatch(val_type)
+            val_handler = converter.get_structure_hook(val_type)
             if val_handler == converter._structure_call:
                 val_handler = val_type
 

@@ -23,7 +23,7 @@ def find_structure_handler(
         # so it falls back to that.
         handler = None
     elif a.converter is not None and not prefer_attrs_converters and type is not None:
-        handler = c._structure_func.dispatch(type)
+        handler = c.get_structure_hook(type)
         if handler == raise_error:
             handler = None
     elif type is not None:
@@ -35,7 +35,7 @@ def find_structure_handler(
             # This is a special case where we can use the
             # type of the default to dispatch on.
             type = a.default.__class__
-            handler = c._structure_func.dispatch(type)
+            handler = c.get_structure_hook(type)
             if handler == c._structure_call:
                 # Finals can't really be used with _structure_call, so
                 # we wrap it so the rest of the toolchain doesn't get
@@ -45,7 +45,7 @@ def find_structure_handler(
                     return _h(v, type)
 
         else:
-            handler = c._structure_func.dispatch(type)
+            handler = c.get_structure_hook(type)
     else:
         handler = c.structure
     return handler

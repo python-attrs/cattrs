@@ -477,11 +477,11 @@ class BaseConverter:
 
     def _structure_newtype(self, val: UnstructuredValue, type) -> StructuredValue:
         base = get_newtype_base(type)
-        return self._structure_func.dispatch(base)(val, base)
+        return self.get_structure_hook(base)(val, base)
 
     def _find_type_alias_structure_hook(self, type: Any) -> StructureHook:
         base = get_type_alias_base(type)
-        res = self._structure_func.dispatch(base)
+        res = self.get_structure_hook(base)
         if res == self._structure_call:
             # we need to replace the type arg of `structure_call`
             return lambda v, _, __base=base: self._structure_call(v, __base)
@@ -489,7 +489,7 @@ class BaseConverter:
 
     def _structure_final_factory(self, type):
         base = get_final_base(type)
-        res = self._structure_func.dispatch(base)
+        res = self.get_structure_hook(base)
         return lambda v, _, __base=base: res(v, __base)
 
     # Attrs classes.
@@ -949,7 +949,7 @@ class Converter(BaseConverter):
 
     def get_structure_newtype(self, type: Type[T]) -> Callable[[Any, Any], T]:
         base = get_newtype_base(type)
-        handler = self._structure_func.dispatch(base)
+        handler = self.get_structure_hook(base)
         return lambda v, _: handler(v, base)
 
     def gen_unstructure_annotated(self, type):
@@ -959,7 +959,7 @@ class Converter(BaseConverter):
     def gen_structure_annotated(self, type) -> Callable:
         """A hook factory for annotated types."""
         origin = type.__origin__
-        hook = self._structure_func.dispatch(origin)
+        hook = self.get_structure_hook(origin)
         return lambda v, _: hook(v, origin)
 
     def gen_unstructure_typeddict(self, cl: Any) -> Callable[[Dict], Dict]:

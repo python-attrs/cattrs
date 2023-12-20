@@ -202,8 +202,8 @@ def _include_subclasses_with_union_strategy(
         converter.register_structure_hook_func(cls_is_cl, hook)
 
     union_strategy(final_union, converter)
-    unstruct_hook = converter._unstructure_func.dispatch(final_union)
-    struct_hook = converter._structure_func.dispatch(final_union)
+    unstruct_hook = converter.get_unstructure_hook(final_union)
+    struct_hook = converter.get_structure_hook(final_union)
 
     for cl in union_classes:
         # In the second pass, we overwrite the hooks with the union hook.
@@ -216,7 +216,7 @@ def _include_subclasses_with_union_strategy(
         if len(subclasses) > 1:
             u = Union[subclasses]  # type: ignore
             union_strategy(u, converter)
-            struct_hook = converter._structure_func.dispatch(u)
+            struct_hook = converter.get_structure_hook(u)
 
             def sh(payload: dict, _, _u=u, _s=struct_hook) -> cl:
                 return _s(payload, _u)
