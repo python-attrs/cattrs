@@ -65,6 +65,9 @@ def make_dict_unstructure_fn(
     Generate a specialized dict unstructuring function for an attrs class or a
     dataclass.
 
+    Any provided overrides are attached to the generated function under the
+    `overrides` attribute.
+
     :param _cattrs_omit_if_default: if true, attributes equal to their default values
         will be omitted in the result dictionary.
     :param _cattrs_use_alias: If true, the attribute alias will be used as the
@@ -221,7 +224,10 @@ def make_dict_unstructure_fn(
         if not working_set:
             del already_generating.working_set
 
-    return globs[fn_name]
+    res = globs[fn_name]
+    res.overrides = kwargs
+
+    return res
 
 
 DictStructureFn = Callable[[Mapping[str, Any], Any], T]

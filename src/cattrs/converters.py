@@ -2,7 +2,6 @@ from collections import Counter, deque
 from collections.abc import MutableSet as AbcMutableSet
 from dataclasses import Field
 from enum import Enum
-from functools import lru_cache
 from pathlib import Path
 from typing import (
     Any,
@@ -110,7 +109,6 @@ class BaseConverter:
     """Converts between structured and unstructured data."""
 
     __slots__ = (
-        "_dis_func_cache",
         "_unstructure_func",
         "_unstructure_attrs",
         "_structure_attrs",
@@ -155,8 +153,6 @@ class BaseConverter:
         else:
             self._unstructure_attrs = self.unstructure_attrs_astuple
             self._structure_attrs = self.structure_attrs_fromtuple
-
-        self._dis_func_cache = lru_cache()(self._get_dis_func)
 
         self._unstructure_func = MultiStrategyDispatch(unstructure_fallback_factory)
         self._unstructure_func.register_cls_list(
@@ -741,8 +737,9 @@ class BaseConverter:
             raise ValueError(f"{problem} values in {obj!r} to structure as {tup!r}")
         return res
 
-    @staticmethod
-    def _get_dis_func(union: Any, use_literals: bool = True) -> Callable[[Any], Type]:
+    def _get_dis_func(
+        self, union: Any, use_literals: bool = True
+    ) -> Callable[[Any], Type]:
         """Fetch or try creating a disambiguation function for a union."""
         union_types = union.__args__
         if NoneType in union_types:  # type: ignore
@@ -761,7 +758,7 @@ class BaseConverter:
                 type_=union,
             )
 
-        return create_default_dis_func(*union_types, use_literals=use_literals)
+        return create_default_dis_func(self, *union_types, use_literals=use_literals)
 
     def __deepcopy__(self, _) -> "BaseConverter":
         return self.copy()
