@@ -8,13 +8,13 @@ self
 basics
 structuring
 unstructuring
-usage
 customizing
 strategies
 validation
 preconf
 unions
-indepth.md
+usage
+indepth
 history
 benchmarking
 contributing
