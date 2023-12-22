@@ -1,4 +1,5 @@
 """Tests for auto-disambiguators."""
+from functools import partial
 from typing import Literal, Union
 
 import pytest
@@ -11,12 +12,14 @@ from cattrs.disambiguators import (
     create_uniq_field_dis_func,
     is_supported_union,
 )
+from cattrs.gen import make_dict_structure_fn, override
 
 from .untyped import simple_classes
 
 
 def test_edge_errors():
     """Edge input cases cause errors."""
+    c = Converter()
 
     @define
     class A:
@@ -24,21 +27,18 @@ def test_edge_errors():
 
     with pytest.raises(ValueError):
         # Can't generate for only one class.
-        create_uniq_field_dis_func(A)
+        create_uniq_field_dis_func(c, A)
 
     with pytest.raises(ValueError):
-        create_default_dis_func(A)
+        create_default_dis_func(c, A)
 
     @define
     class B:
         pass
 
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         # No fields on either class.
-        create_uniq_field_dis_func(A, B)
-
-    with pytest.raises(ValueError):
-        create_default_dis_func(A, B)
+        create_uniq_field_dis_func(c, A, B)
 
     @define
     class C:
@@ -48,13 +48,13 @@ def test_edge_errors():
     class D:
         a = field()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         # No unique fields on either class.
-        create_uniq_field_dis_func(C, D)
+        create_uniq_field_dis_func(c, C, D)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         # No discriminator candidates
-        create_default_dis_func(C, D)
+        create_default_dis_func(c, C, D)
 
     @define
     class E:
@@ -64,9 +64,9 @@ def test_edge_errors():
     class F:
         b = None
 
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         # no usable non-default attributes
-        create_uniq_field_dis_func(E, F)
+        create_uniq_field_dis_func(c, E, F)
 
     @define
     class G:
@@ -76,15 +76,16 @@ def test_edge_errors():
     class H:
         x: Literal[1]
 
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         # The discriminator chosen does not actually help
-        create_default_dis_func(C, D)
+        create_default_dis_func(c, C, D)
 
 
 @given(simple_classes(defaults=False))
 def test_fallback(cl_and_vals):
     """The fallback case works."""
     cl, vals, kwargs = cl_and_vals
+    c = Converter()
 
     assume(fields(cl))  # At least one field.
 
@@ -92,7 +93,7 @@ def test_fallback(cl_and_vals):
     class A:
         pass
 
-    fn = create_uniq_field_dis_func(A, cl)
+    fn = create_uniq_field_dis_func(c, A, cl)
 
     assert fn({}) is A
     assert fn(asdict(cl(*vals, **kwargs))) is cl
@@ -109,6 +110,7 @@ def test_disambiguation(cl_and_vals_a, cl_and_vals_b):
     """Disambiguation should work when there are unique required fields."""
     cl_a, vals_a, kwargs_a = cl_and_vals_a
     cl_b, vals_b, kwargs_b = cl_and_vals_b
+    c = Converter()
 
     req_a = {a.name for a in fields(cl_a)}
     req_b = {a.name for a in fields(cl_b)}
@@ -122,13 +124,15 @@ def test_disambiguation(cl_and_vals_a, cl_and_vals_b):
     for attr_name in req_b - req_a:
         assume(getattr(fields(cl_b), attr_name).default is NOTHING)
 
-    fn = create_uniq_field_dis_func(cl_a, cl_b)
+    fn = create_uniq_field_dis_func(c, cl_a, cl_b)
 
     assert fn(asdict(cl_a(*vals_a, **kwargs_a))) is cl_a
 
 
 # not too sure of properties of `create_default_dis_func`
 def test_disambiguate_from_discriminated_enum():
+    c = Converter()
+
     # can it find any discriminator?
     @define
     class A:
@@ -138,7 +142,7 @@ def test_disambiguate_from_discriminated_enum():
     class B:
         a: Literal[1]
 
-    fn = create_default_dis_func(A, B)
+    fn = create_default_dis_func(c, A, B)
     assert fn({"a": 0}) is A
     assert fn({"a": 1}) is B
 
@@ -153,7 +157,7 @@ def test_disambiguate_from_discriminated_enum():
         a: Literal[0]
         b: Literal[0]
 
-    fn = create_default_dis_func(C, D)
+    fn = create_default_dis_func(c, C, D)
     assert fn({"a": 0, "b": 1}) is C
     assert fn({"a": 0, "b": 0}) is D
 
@@ -173,7 +177,7 @@ def test_disambiguate_from_discriminated_enum():
         op: Literal[0]
         t: Literal["MESSAGE_UPDATE"]
 
-    fn = create_default_dis_func(E, F, G)
+    fn = create_default_dis_func(c, E, F, G)
     assert fn({"op": 1}) is E
     assert fn({"op": 0, "t": "MESSAGE_CREATE"}) is Union[F, G]
 
@@ -190,13 +194,14 @@ def test_disambiguate_from_discriminated_enum():
     class K:
         a: Literal[0]
 
-    fn = create_default_dis_func(H, J, K)
+    fn = create_default_dis_func(c, H, J, K)
     assert fn({"a": 1}) is Union[H, J]
     assert fn({"a": 0}) is Union[J, K]
 
 
 def test_default_no_literals():
     """The default disambiguator can skip literals."""
+    c = Converter()
 
     @define
     class A:
@@ -206,11 +211,11 @@ def test_default_no_literals():
     class B:
         a: Literal["b"] = "b"
 
-    default = create_default_dis_func(A, B)  # Should work.
+    default = create_default_dis_func(c, A, B)  # Should work.
     assert default({"a": "a"}) is A
 
-    with pytest.raises(ValueError):
-        create_default_dis_func(A, B, use_literals=False)
+    with pytest.raises(TypeError):
+        create_default_dis_func(c, A, B, use_literals=False)
 
     @define
     class C:
@@ -221,17 +226,16 @@ def test_default_no_literals():
     class D:
         a: Literal["b"] = "b"
 
-    default = create_default_dis_func(C, D)  # Should work.
+    default = create_default_dis_func(c, C, D)  # Should work.
     assert default({"a": "a"}) is C
 
-    no_lits = create_default_dis_func(C, D, use_literals=False)
+    no_lits = create_default_dis_func(c, C, D, use_literals=False)
     assert no_lits({"a": "a", "b": 1}) is C
     assert no_lits({"a": "a"}) is D
 
 
 def test_converter_no_literals(converter: Converter):
     """A converter can be configured to skip literals."""
-    from functools import partial
 
     converter.register_structure_hook_factory(
         is_supported_union,
@@ -248,3 +252,22 @@ def test_converter_no_literals(converter: Converter):
         a: Literal["b"] = "b"
 
     assert converter.structure({}, Union[C, D]) == D()
+
+
+def test_field_renaming(converter: Converter):
+    """A renamed field properly disambiguates."""
+
+    @define
+    class A:
+        a: int
+
+    @define
+    class B:
+        a: int
+
+    converter.register_structure_hook(
+        B, make_dict_structure_fn(B, converter, a=override(rename="b"))
+    )
+
+    assert converter.structure({"a": 1}, Union[A, B]) == A(1)
+    assert converter.structure({"b": 1}, Union[A, B]) == B(1)

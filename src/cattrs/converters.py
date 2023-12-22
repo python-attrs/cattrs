@@ -1,22 +1,11 @@
+from __future__ import annotations
+
 from collections import Counter, deque
 from collections.abc import MutableSet as AbcMutableSet
 from dataclasses import Field
 from enum import Enum
-from functools import lru_cache
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Deque,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar
 
 from attrs import Attribute, resolve_types
 from attrs import has as attrs_has
@@ -26,6 +15,7 @@ from ._compat import (
     Mapping,
     MutableMapping,
     MutableSequence,
+    NoneType,
     OriginAbstractSet,
     OriginMutableSet,
     Sequence,
@@ -48,6 +38,7 @@ from ._compat import (
     is_literal,
     is_mapping,
     is_mutable_set,
+    is_optional,
     is_protocol,
     is_sequence,
     is_tuple,
@@ -89,7 +80,6 @@ from .gen.typeddicts import make_dict_unstructure_fn as make_typeddict_dict_unst
 
 __all__ = ["UnstructureStrategy", "BaseConverter", "Converter", "GenConverter"]
 
-NoneType = type(None)
 T = TypeVar("T")
 V = TypeVar("V")
 
@@ -101,16 +91,7 @@ class UnstructureStrategy(Enum):
     AS_TUPLE = "astuple"
 
 
-def _subclass(typ: Type) -> Callable[[Type], bool]:
-    """a shortcut"""
-    return lambda cls: issubclass(cls, typ)
-
-
-def is_optional(typ: Type) -> bool:
-    return is_union_type(typ) and NoneType in typ.__args__ and len(typ.__args__) == 2
-
-
-def is_literal_containing_enums(typ: Type) -> bool:
+def is_literal_containing_enums(typ: type) -> bool:
     return is_literal(typ) and any(isinstance(val, Enum) for val in typ.__args__)
 
 
@@ -118,7 +99,6 @@ class BaseConverter:
     """Converts between structured and unstructured data."""
 
     __slots__ = (
-        "_dis_func_cache",
         "_unstructure_func",
         "_unstructure_attrs",
         "_structure_attrs",
@@ -164,8 +144,6 @@ class BaseConverter:
             self._unstructure_attrs = self.unstructure_attrs_astuple
             self._structure_attrs = self.structure_attrs_fromtuple
 
-        self._dis_func_cache = lru_cache()(self._get_dis_func)
-
         self._unstructure_func = MultiStrategyDispatch(unstructure_fallback_factory)
         self._unstructure_func.register_cls_list(
             [(bytes, identity), (str, identity), (Path, str)]
@@ -190,7 +168,7 @@ class BaseConverter:
                 (is_sequence, self._unstructure_seq),
                 (is_mutable_set, self._unstructure_seq),
                 (is_frozenset, self._unstructure_seq),
-                (_subclass(Enum), self._unstructure_enum),
+                (lambda t: issubclass(t, Enum), self._unstructure_enum),
                 (has, self._unstructure_attrs),
                 (is_union_type, self._unstructure_union),
             ]
@@ -243,7 +221,7 @@ class BaseConverter:
         self._dict_factory = dict_factory
 
         # Unions are instances now, not classes. We use different registries.
-        self._union_struct_registry: Dict[Any, Callable[[Any, Type[T]], T]] = {}
+        self._union_struct_registry: dict[Any, Callable[[Any, type[T]], T]] = {}
 
         self._unstruct_copy_skip = self._unstructure_func.get_num_fns()
         self._struct_copy_skip = self._structure_func.get_num_fns()
@@ -299,6 +277,27 @@ class BaseConverter:
         """
         self._unstructure_func.register_func_list([(predicate, factory, True)])
 
+    def get_unstructure_hook(
+        self, type: Any, cache_result: bool = True
+    ) -> UnstructureHook:
+        """Get the unstructure hook for the given type.
+
+        This hook can be manually called, or composed with other functions
+        and re-registered.
+
+        If no hook is registered, the converter unstructure fallback factory
+        will be used to produce one.
+
+        :param cache: Whether to cache the returned hook.
+
+        .. versionadded:: 24.1.0
+        """
+        return (
+            self._unstructure_func.dispatch(type)
+            if cache_result
+            else self._unstructure_func.dispatch_without_caching(type)
+        )
+
     def register_structure_hook(self, cl: Any, func: StructureHook) -> None:
         """Register a primitive-to-class converter function for a type.
 
@@ -321,7 +320,7 @@ class BaseConverter:
             self._structure_func.register_cls_list([(cl, func)])
 
     def register_structure_hook_func(
-        self, check_func: Callable[[Type[T]], bool], func: StructureHook
+        self, check_func: Callable[[type[T]], bool], func: StructureHook
     ) -> None:
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
@@ -341,12 +340,31 @@ class BaseConverter:
         """
         self._structure_func.register_func_list([(predicate, factory, True)])
 
-    def structure(self, obj: UnstructuredValue, cl: Type[T]) -> T:
+    def structure(self, obj: UnstructuredValue, cl: type[T]) -> T:
         """Convert unstructured Python data structures to structured data."""
         return self._structure_func.dispatch(cl)(obj, cl)
 
+    def get_structure_hook(self, type: Any, cache_result: bool = True) -> StructureHook:
+        """Get the structure hook for the given type.
+
+        This hook can be manually called, or composed with other functions
+        and re-registered.
+
+        If no hook is registered, the converter structure fallback factory
+        will be used to produce one.
+
+        :param cache: Whether to cache the returned hook.
+
+        .. versionadded:: 24.1.0
+        """
+        return (
+            self._structure_func.dispatch(type)
+            if cache_result
+            else self._structure_func.dispatch_without_caching(type)
+        )
+
     # Classes to Python primitives.
-    def unstructure_attrs_asdict(self, obj: Any) -> Dict[str, Any]:
+    def unstructure_attrs_asdict(self, obj: Any) -> dict[str, Any]:
         """Our version of `attrs.asdict`, so we can call back to us."""
         attrs = fields(obj.__class__)
         dispatch = self._unstructure_func.dispatch
@@ -357,7 +375,7 @@ class BaseConverter:
             rv[name] = dispatch(a.type or v.__class__)(v)
         return rv
 
-    def unstructure_attrs_astuple(self, obj: Any) -> Tuple[Any, ...]:
+    def unstructure_attrs_astuple(self, obj: Any) -> tuple[Any, ...]:
         """Our version of `attrs.astuple`, so we can call back to us."""
         attrs = fields(obj.__class__)
         dispatch = self._unstructure_func.dispatch
@@ -402,7 +420,7 @@ class BaseConverter:
 
     # Python primitives to classes.
 
-    def _gen_structure_generic(self, cl: Type[T]) -> DictStructureFn[T]:
+    def _gen_structure_generic(self, cl: type[T]) -> DictStructureFn[T]:
         """Create and return a hook for structuring generics."""
         return make_dict_structure_fn(
             cl, self, _cattrs_prefer_attrib_converters=self._prefer_attrib_converters
@@ -410,7 +428,7 @@ class BaseConverter:
 
     def _gen_attrs_union_structure(
         self, cl: Any, use_literals: bool = True
-    ) -> Callable[[Any, Type[T]], Optional[Type[T]]]:
+    ) -> Callable[[Any, type[T]], type[T] | None]:
         """
         Generate a structuring function for a union of attrs classes (and maybe None).
 
@@ -434,7 +452,7 @@ class BaseConverter:
         return structure_attrs_union
 
     @staticmethod
-    def _structure_call(obj: Any, cl: Type[T]) -> Any:
+    def _structure_call(obj: Any, cl: type[T]) -> Any:
         """Just call ``cl`` with the given ``obj``.
 
         This is just an optimization on the ``_structure_default`` case, when
@@ -459,11 +477,11 @@ class BaseConverter:
 
     def _structure_newtype(self, val: UnstructuredValue, type) -> StructuredValue:
         base = get_newtype_base(type)
-        return self._structure_func.dispatch(base)(val, base)
+        return self.get_structure_hook(base)(val, base)
 
     def _find_type_alias_structure_hook(self, type: Any) -> StructureHook:
         base = get_type_alias_base(type)
-        res = self._structure_func.dispatch(base)
+        res = self.get_structure_hook(base)
         if res == self._structure_call:
             # we need to replace the type arg of `structure_call`
             return lambda v, _, __base=base: self._structure_call(v, __base)
@@ -471,12 +489,12 @@ class BaseConverter:
 
     def _structure_final_factory(self, type):
         base = get_final_base(type)
-        res = self._structure_func.dispatch(base)
+        res = self.get_structure_hook(base)
         return lambda v, _, __base=base: res(v, __base)
 
     # Attrs classes.
 
-    def structure_attrs_fromtuple(self, obj: Tuple[Any, ...], cl: Type[T]) -> T:
+    def structure_attrs_fromtuple(self, obj: tuple[Any, ...], cl: type[T]) -> T:
         """Load an attrs class from a sequence (tuple)."""
         conv_obj = []  # A list of converter parameters.
         for a, value in zip(fields(cl), obj):
@@ -486,7 +504,7 @@ class BaseConverter:
 
         return cl(*conv_obj)
 
-    def _structure_attribute(self, a: Union[Attribute, Field], value: Any) -> Any:
+    def _structure_attribute(self, a: Attribute | Field, value: Any) -> Any:
         """Handle an individual attrs attribute."""
         type_ = a.type
         attrib_converter = getattr(a, "converter", None)
@@ -508,7 +526,7 @@ class BaseConverter:
                 return value
             raise
 
-    def structure_attrs_fromdict(self, obj: Mapping[str, Any], cl: Type[T]) -> T:
+    def structure_attrs_fromdict(self, obj: Mapping[str, Any], cl: type[T]) -> T:
         """Instantiate an attrs class from a mapping (dict)."""
         # For public use.
 
@@ -524,7 +542,7 @@ class BaseConverter:
 
         return cl(**conv_obj)
 
-    def _structure_list(self, obj: Iterable[T], cl: Any) -> List[T]:
+    def _structure_list(self, obj: Iterable[T], cl: Any) -> list[T]:
         """Convert an iterable to a potentially generic list."""
         if is_bare(cl) or cl.__args__[0] is Any:
             res = list(obj)
@@ -554,7 +572,7 @@ class BaseConverter:
                 res = [handler(e, elem_type) for e in obj]
         return res
 
-    def _structure_deque(self, obj: Iterable[T], cl: Any) -> Deque[T]:
+    def _structure_deque(self, obj: Iterable[T], cl: Any) -> deque[T]:
         """Convert an iterable to a potentially generic deque."""
         if is_bare(cl) or cl.__args__[0] is Any:
             res = deque(e for e in obj)
@@ -622,7 +640,7 @@ class BaseConverter:
         """Convert an iterable into a potentially generic frozenset."""
         return self._structure_set(obj, cl, structure_to=frozenset)
 
-    def _structure_dict(self, obj: Mapping[T, V], cl: Any) -> Dict[T, V]:
+    def _structure_dict(self, obj: Mapping[T, V], cl: Any) -> dict[T, V]:
         """Convert a mapping into a potentially generic dict."""
         if is_bare(cl) or cl.__args__ == (Any, Any):
             return dict(obj)
@@ -650,7 +668,7 @@ class BaseConverter:
         handler = self._union_struct_registry[union]
         return handler(obj, union)
 
-    def _structure_tuple(self, obj: Any, tup: Type[T]) -> T:
+    def _structure_tuple(self, obj: Any, tup: type[T]) -> T:
         """Deal with structuring into a tuple."""
         tup_params = None if tup in (Tuple, tuple) else tup.__args__
         has_ellipsis = tup_params and tup_params[-1] is Ellipsis
@@ -723,8 +741,12 @@ class BaseConverter:
             raise ValueError(f"{problem} values in {obj!r} to structure as {tup!r}")
         return res
 
-    @staticmethod
-    def _get_dis_func(union: Any, use_literals: bool = True) -> Callable[[Any], Type]:
+    def _get_dis_func(
+        self,
+        union: Any,
+        use_literals: bool = True,
+        overrides: dict[str, AttributeOverride] | None = None,
+    ) -> Callable[[Any], type]:
         """Fetch or try creating a disambiguation function for a union."""
         union_types = union.__args__
         if NoneType in union_types:  # type: ignore
@@ -739,22 +761,27 @@ class BaseConverter:
         if not all(has(get_origin(e) or e) for e in union_types):
             raise StructureHandlerNotFoundError(
                 "Only unions of attrs classes supported "
-                "currently. Register a loads hook manually.",
+                "currently. Register a structure hook manually.",
                 type_=union,
             )
 
-        return create_default_dis_func(*union_types, use_literals=use_literals)
+        return create_default_dis_func(
+            self,
+            *union_types,
+            use_literals=use_literals,
+            overrides=overrides if overrides is not None else "from_converter",
+        )
 
-    def __deepcopy__(self, _) -> "BaseConverter":
+    def __deepcopy__(self, _) -> BaseConverter:
         return self.copy()
 
     def copy(
         self,
-        dict_factory: Optional[Callable[[], Any]] = None,
-        unstruct_strat: Optional[UnstructureStrategy] = None,
-        prefer_attrib_converters: Optional[bool] = None,
-        detailed_validation: Optional[bool] = None,
-    ) -> "BaseConverter":
+        dict_factory: Callable[[], Any] | None = None,
+        unstruct_strat: UnstructureStrategy | None = None,
+        prefer_attrib_converters: bool | None = None,
+        detailed_validation: bool | None = None,
+    ) -> BaseConverter:
         """Create a copy of the converter, keeping all existing custom hooks.
 
         :param detailed_validation: Whether to use a slightly slower mode for detailed
@@ -799,8 +826,8 @@ class Converter(BaseConverter):
         unstruct_strat: UnstructureStrategy = UnstructureStrategy.AS_DICT,
         omit_if_default: bool = False,
         forbid_extra_keys: bool = False,
-        type_overrides: Mapping[Type, AttributeOverride] = {},
-        unstruct_collection_overrides: Mapping[Type, Callable] = {},
+        type_overrides: Mapping[type, AttributeOverride] = {},
+        unstruct_collection_overrides: Mapping[type, Callable] = {},
         prefer_attrib_converters: bool = False,
         detailed_validation: bool = True,
         unstructure_fallback_factory: HookFactory[UnstructureHook] = lambda _: identity,
@@ -929,9 +956,9 @@ class Converter(BaseConverter):
         self._struct_copy_skip = self._structure_func.get_num_fns()
         self._unstruct_copy_skip = self._unstructure_func.get_num_fns()
 
-    def get_structure_newtype(self, type: Type[T]) -> Callable[[Any, Any], T]:
+    def get_structure_newtype(self, type: type[T]) -> Callable[[Any, Any], T]:
         base = get_newtype_base(type)
-        handler = self._structure_func.dispatch(base)
+        handler = self.get_structure_hook(base)
         return lambda v, _: handler(v, base)
 
     def gen_unstructure_annotated(self, type):
@@ -941,10 +968,10 @@ class Converter(BaseConverter):
     def gen_structure_annotated(self, type) -> Callable:
         """A hook factory for annotated types."""
         origin = type.__origin__
-        hook = self._structure_func.dispatch(origin)
+        hook = self.get_structure_hook(origin)
         return lambda v, _: hook(v, origin)
 
-    def gen_unstructure_typeddict(self, cl: Any) -> Callable[[Dict], Dict]:
+    def gen_unstructure_typeddict(self, cl: Any) -> Callable[[dict], dict]:
         """Generate a TypedDict unstructure function.
 
         Also apply converter-scored modifications.
@@ -952,8 +979,8 @@ class Converter(BaseConverter):
         return make_typeddict_dict_unstruct_fn(cl, self)
 
     def gen_unstructure_attrs_fromdict(
-        self, cl: Type[T]
-    ) -> Callable[[T], Dict[str, Any]]:
+        self, cl: type[T]
+    ) -> Callable[[T], dict[str, Any]]:
         origin = get_origin(cl)
         attribs = fields(origin or cl)
         if attrs_has(cl) and any(isinstance(a.type, str) for a in attribs):
@@ -969,7 +996,7 @@ class Converter(BaseConverter):
             cl, self, _cattrs_omit_if_default=self.omit_if_default, **attrib_overrides
         )
 
-    def gen_unstructure_optional(self, cl: Type[T]) -> Callable[[T], Any]:
+    def gen_unstructure_optional(self, cl: type[T]) -> Callable[[T], Any]:
         """Generate an unstructuring hook for optional types."""
         union_params = cl.__args__
         other = union_params[0] if union_params[1] is NoneType else union_params[1]
@@ -985,7 +1012,7 @@ class Converter(BaseConverter):
 
         return unstructure_optional
 
-    def gen_structure_typeddict(self, cl: Any) -> Callable[[Dict], Dict]:
+    def gen_structure_typeddict(self, cl: Any) -> Callable[[dict], dict]:
         """Generate a TypedDict structure function.
 
         Also apply converter-scored modifications.
@@ -995,7 +1022,7 @@ class Converter(BaseConverter):
         )
 
     def gen_structure_attrs_fromdict(
-        self, cl: Type[T]
+        self, cl: type[T]
     ) -> Callable[[Mapping[str, Any], Any], T]:
         attribs = fields(get_origin(cl) or cl if is_generic(cl) else cl)
         if attrs_has(cl) and any(isinstance(a.type, str) for a in attribs):
@@ -1039,7 +1066,7 @@ class Converter(BaseConverter):
         self,
         cl: Any,
         unstructure_to: Any = None,
-        key_handler: Optional[Callable[[Any, Optional[Any]], Any]] = None,
+        key_handler: Callable[[Any, Any | None], Any] | None = None,
     ) -> MappingUnstructureFn:
         unstructure_to = self._unstruct_collection_overrides.get(
             get_origin(cl) or cl, unstructure_to or dict
@@ -1070,15 +1097,15 @@ class Converter(BaseConverter):
 
     def copy(
         self,
-        dict_factory: Optional[Callable[[], Any]] = None,
-        unstruct_strat: Optional[UnstructureStrategy] = None,
-        omit_if_default: Optional[bool] = None,
-        forbid_extra_keys: Optional[bool] = None,
-        type_overrides: Optional[Mapping[Type, AttributeOverride]] = None,
-        unstruct_collection_overrides: Optional[Mapping[Type, Callable]] = None,
-        prefer_attrib_converters: Optional[bool] = None,
-        detailed_validation: Optional[bool] = None,
-    ) -> "Converter":
+        dict_factory: Callable[[], Any] | None = None,
+        unstruct_strat: UnstructureStrategy | None = None,
+        omit_if_default: bool | None = None,
+        forbid_extra_keys: bool | None = None,
+        type_overrides: Mapping[type, AttributeOverride] | None = None,
+        unstruct_collection_overrides: Mapping[type, Callable] | None = None,
+        prefer_attrib_converters: bool | None = None,
+        detailed_validation: bool | None = None,
+    ) -> Converter:
         """Create a copy of the converter, keeping all existing custom hooks.
 
         :param detailed_validation: Whether to use a slightly slower mode for detailed

@@ -425,7 +425,7 @@ def make_dict_structure_fn(
                 # For each attribute, we try resolving the type here and now.
                 # If a type is manually overwritten, this function should be
                 # regenerated.
-                handler = converter._structure_func.dispatch(t)
+                handler = converter.get_structure_hook(t)
 
             kn = an if override.rename is None else override.rename
             allowed_fields.add(kn)
@@ -468,7 +468,7 @@ def make_dict_structure_fn(
                     # For each attribute, we try resolving the type here and now.
                     # If a type is manually overwritten, this function should be
                     # regenerated.
-                    handler = converter._structure_func.dispatch(t)
+                    handler = converter.get_structure_hook(t)
 
                 struct_handler_name = f"__c_structure_{ix}"
                 internal_arg_parts[struct_handler_name] = handler

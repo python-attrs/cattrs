@@ -17,6 +17,7 @@ from typing import (
     Optional,
     Protocol,
     Tuple,
+    Type,
     get_args,
     get_origin,
     get_type_hints,
@@ -72,6 +73,12 @@ try:
     LITERALS.add(teLiteral)
 except ImportError:  # pragma: no cover
     pass
+
+NoneType = type(None)
+
+
+def is_optional(typ: Type) -> bool:
+    return is_union_type(typ) and NoneType in typ.__args__ and len(typ.__args__) == 2
 
 
 def is_typeddict(cls):

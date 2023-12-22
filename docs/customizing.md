@@ -1,54 +1,127 @@
-# Customizing Class Un/structuring
+# Customizing Un/structuring
 
-This section deals with customizing the unstructuring and structuring processes in _cattrs_.
-
-## Using `cattrs.Converter`
-
-The default {class}`Converter <cattrs.Converter>`, upon first encountering an _attrs_ class, will use the generation functions mentioned here to generate the specialized hooks for it, register the hooks and use them.
+This section describes customizing the unstructuring and structuring processes in _cattrs_.
 
 ## Manual Un/structuring Hooks
 
-You can write your own structuring and unstructuring functions and register
-them for types using {meth}`Converter.register_structure_hook() <cattrs.BaseConverter.register_structure_hook>` and
-{meth}`Converter.register_unstructure_hook() <cattrs.BaseConverter.register_unstructure_hook>`. This approach is the most
-flexible but also requires the most amount of boilerplate.
+You can write your own structuring and unstructuring functions and register them for types using {meth}`Converter.register_structure_hook() <cattrs.BaseConverter.register_structure_hook>` and {meth}`Converter.register_unstructure_hook() <cattrs.BaseConverter.register_unstructure_hook>`.
+This approach is the most flexible but also requires the most amount of boilerplate.
+
+{meth}`register_structure_hook() <cattrs.BaseConverter.register_structure_hook>` and {meth}`register_unstructure_hook() <cattrs.BaseConverter.register_unstructure_hook>` use a Python [_singledispatch_](https://docs.python.org/3/library/functools.html#functools.singledispatch) under the hood.
+_singledispatch_ is powerful and fast but comes with some limitations; namely that it performs checks using `issubclass()` which doesn't work with many Python types.
+Some examples of this are:
+
+* various generic collections (`list[int]` is not a _subclass_ of `list`)
+* literals (`Literal[1]` is not a _subclass_ of `Literal[1]`)
+* generics (`MyClass[int]` is not a _subclass_ of `MyClass`)
+* protocols, unless they are `runtime_checkable`
+* various modifiers, such as `Final` and `NotRequired`
+* newtypes and 3.12 type aliases
+
+... and many others. In these cases, predicate functions should be used instead.
+
+### Predicate Hooks
+
+A predicate is a function that takes a type and returns true or false, depending on whether the associated hook can handle the given type.
+
+The {meth}`register_unstructure_hook_func() <cattrs.BaseConverter.register_unstructure_hook_func>` and {meth}`register_structure_hook_func() <cattrs.BaseConverter.register_structure_hook_func>` are used
+to link un/structuring hooks to arbitrary types. These hooks are then called _predicate hooks_, and are very powerful.
+
+Predicate hooks are evaluated after the _singledispatch_ hooks.
+In the case where both a _singledispatch_ hook and a predicate hook are present, the _singledispatch_ hook will be used.
+Predicate hooks are checked in reverse order of registration, one-by-one, until a match is found.
+
+The following example demonstrates a predicate that checks for the presence of an attribute on a class (`custom`), and then overrides the structuring logic.
+
+```{doctest}
+
+>>> class D:
+...     custom = True
+...     def __init__(self, a):
+...         self.a = a
+...     def __repr__(self):
+...         return f'D(a={self.a})'
+...     @classmethod
+...     def deserialize(cls, data):
+...         return cls(data["a"])
+
+>>> cattrs.register_structure_hook_func(
+...     lambda cls: getattr(cls, "custom", False), lambda d, t: t.deserialize(d)
+... )
+
+>>> cattrs.structure({'a': 2}, D)
+D(a=2)
+```
+
+### Hook Factories
+
+Hook factories are higher-order predicate hooks: they are functions that *produce* hooks.
+Hook factories are commonly used to create very optimized hooks by offloading part of the work into a separate, earlier step.
+
+Hook factories are registered using {meth}`Converter.register_unstructure_hook_factory() <cattrs.BaseConverter.register_unstructure_hook_factory>` and {meth}`Converter.register_structure_hook_factory() <cattrs.BaseConverter.register_structure_hook_factory>`.
+
+Here's an example showing how to use hook factories to apply the `forbid_extra_keys` to all attrs classes:
+
+```{doctest}
+
+>>> from attrs import define, has
+>>> from cattrs.gen import make_dict_structure_fn
+
+>>> c = cattrs.Converter()
+>>> c.register_structure_hook_factory(
+...     has,
+...     lambda cl: make_dict_structure_fn(cl, c, _cattrs_forbid_extra_keys=True)
+... )
+
+>>> @define
+... class E:
+...    an_int: int
+
+>>> c.structure({"an_int": 1, "else": 2}, E)
+Traceback (most recent call last):
+...
+cattrs.errors.ForbiddenExtraKeysError: Extra fields in constructor for E: else
+```
+
+A complex use case for hook factories is described over at {ref}`usage:Using factory hooks`.
+
 
 ## Using `cattrs.gen` Generators
 
-_cattrs_ includes a module, {mod}`cattrs.gen`, which allows for generating and compiling specialized functions for unstructuring _attrs_ classes.
+The {mod}`cattrs.gen` module allows for generating and compiling specialized hooks for unstructuring _attrs_ classes, dataclasses and typed dicts.
+The default {class}`Converter <cattrs.Converter>`, upon first encountering one of these types, will use the generation functions mentioned here to generate specialized hooks for it, register the hooks and use them.
 
-One reason for generating these functions in advance is that they can bypass a lot of _cattrs_ machinery and be significantly faster than normal _cattrs_.
+One reason for generating these hooks in advance is that they can bypass a lot of _cattrs_ machinery and be significantly faster than normal _cattrs_.
+The hooks are also good building blocks for more complex customizations.
 
-Another reason is that it's possible to override behavior on a per-attribute basis.
+Another reason is overriding behavior on a per-attribute basis.
 
-Currently, the overrides only support generating dictionary un/structuring functions (as opposed to tuples), and support `omit_if_default`, `forbid_extra_keys`, `rename` and `omit`.
+Currently, the overrides only support generating dictionary un/structuring hooks (as opposed to tuples), and support `omit_if_default`, `forbid_extra_keys`, `rename` and `omit`.
 
 ### `omit_if_default`
 
 This override can be applied on a per-class or per-attribute basis.
-The generated unstructuring function will skip unstructuring values that are equal to their default or factory values.
+The generated unstructuring hook will skip unstructuring values that are equal to their default or factory values.
 
 ```{doctest}
 
 >>> from cattrs.gen import make_dict_unstructure_fn, override
->>>
+
 >>> @define
 ... class WithDefault:
 ...    a: int
 ...    b: dict = Factory(dict)
->>>
+
 >>> c = cattrs.Converter()
 >>> c.register_unstructure_hook(WithDefault, make_dict_unstructure_fn(WithDefault, c, b=override(omit_if_default=True)))
 >>> c.unstructure(WithDefault(1))
 {'a': 1}
 ```
 
-Note that the per-attribute value overrides the per-class value. A side-effect
-of this is the ability to force the presence of a subset of fields.
-For example, consider a class with a `DateTime` field and a factory for it:
-skipping the unstructuring of the `DateTime` field would be inconsistent and
-based on the current time. So we apply the `omit_if_default` rule to the class,
-but not to the `DateTime` field.
+Note that the per-attribute value overrides the per-class value.
+A side-effect of this is the ability to force the presence of a subset of fields.
+For example, consider a class with a `dateTime` field and a factory for it: skipping the unstructuring of the `dateTime` field would be inconsistent and based on the current time.
+So we apply the `omit_if_default` rule to the class, but not to the `dateTime` field.
 
 ```{note}
     The parameter to `make_dict_unstructure_function` is named ``_cattrs_omit_if_default`` instead of just ``omit_if_default`` to avoid potential collisions with an override for a field named ``omit_if_default``.
@@ -56,14 +129,14 @@ but not to the `DateTime` field.
 
 ```{doctest}
 
->>> from pendulum import DateTime
+>>> from datetime import datetime
 >>> from cattrs.gen import make_dict_unstructure_fn, override
->>>
+
 >>> @define
 ... class TestClass:
 ...     a: Optional[int] = None
-...     b: DateTime = Factory(DateTime.utcnow)
->>>
+...     b: dateTime = Factory(datetime.utcnow)
+
 >>> c = cattrs.Converter()
 >>> hook = make_dict_unstructure_fn(TestClass, c, _cattrs_omit_if_default=True, b=override(omit_if_default=False))
 >>> c.register_unstructure_hook(TestClass, hook)
@@ -78,7 +151,7 @@ This override has no effect when generating structuring functions.
 By default _cattrs_ is lenient in accepting unstructured input.
 If extra keys are present in a dictionary, they will be ignored when generating a structured object.
 Sometimes it may be desirable to enforce a stricter contract, and to raise an error when unknown keys are present - in particular when fields have default values this may help with catching typos.
-`forbid_extra_keys` can also be enabled (or disabled) on a per-class basis when creating structure hooks with {py:func}`make_dict_structure_fn() <cattrs.gen.make_dict_structure_fn>`.
+`forbid_extra_keys` can also be enabled (or disabled) on a per-class basis when creating structure hooks with {meth}`make_dict_structure_fn() <cattrs.gen.make_dict_structure_fn>`.
 
 ```{doctest}
     :options: +SKIP
@@ -109,19 +182,18 @@ The value for the `make_dict_structure_fn._cattrs_forbid_extra_keys` parameter i
 
 ### `rename`
 
-Using the rename override makes `cattrs` simply use the provided name instead
-of the real attribute name. This is useful if an attribute name is a reserved
-keyword in Python.
+Using the rename override makes `cattrs` use the provided name instead of the real attribute name.
+This is useful if an attribute name is a reserved keyword in Python.
 
 ```{doctest}
 
 >>> from pendulum import DateTime
 >>> from cattrs.gen import make_dict_unstructure_fn, make_dict_structure_fn, override
->>>
+
 >>> @define
 ... class ExampleClass:
 ...     klass: Optional[int]
->>>
+
 >>> c = cattrs.Converter()
 >>> unst_hook = make_dict_unstructure_fn(ExampleClass, c, klass=override(rename="class"))
 >>> st_hook = make_dict_structure_fn(ExampleClass, c, klass=override(rename="class"))
@@ -135,7 +207,7 @@ ExampleClass(klass=1)
 
 ### `omit`
 
-This override can only be applied to individual attributes. 
+This override can only be applied to individual attributes.
 Using the `omit` override will simply skip the attribute completely when generating a structuring or unstructuring function.
 
 ```{doctest}
@@ -157,7 +229,7 @@ Using the `omit` override will simply skip the attribute completely when generat
 
 By default, the generators will determine the right un/structure hook for each attribute of a class at time of generation according to the type of each individual attribute.
 
-This process can be overriden by passing in the desired un/structure manually.
+This process can be overriden by passing in the desired un/structure hook manually.
 
 ```{doctest}
 
@@ -180,7 +252,7 @@ ExampleClass(an_int=2)
 ### `use_alias`
 
 By default, fields are un/structured to and from dictionary keys exactly matching the field names.
-_attrs_ classes support field aliases, which override the `__init__` parameter name for a given field.
+_attrs_ classes support _attrs_ field aliases, which override the `__init__` parameter name for a given field.
 By generating your un/structure function with `_cattrs_use_alias=True`, _cattrs_ will use the field alias instead of the field name as the un/structured dictionary key.
 
 ```{doctest}

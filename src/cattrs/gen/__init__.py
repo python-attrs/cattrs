@@ -65,6 +65,9 @@ def make_dict_unstructure_fn(
     Generate a specialized dict unstructuring function for an attrs class or a
     dataclass.
 
+    Any provided overrides are attached to the generated function under the
+    `overrides` attribute.
+
     :param _cattrs_omit_if_default: if true, attributes equal to their default values
         will be omitted in the result dictionary.
     :param _cattrs_use_alias: If true, the attribute alias will be used as the
@@ -221,7 +224,10 @@ def make_dict_unstructure_fn(
         if not working_set:
             del already_generating.working_set
 
-    return globs[fn_name]
+    res = globs[fn_name]
+    res.overrides = kwargs
+
+    return res
 
 
 DictStructureFn = Callable[[Mapping[str, Any], Any], T]
@@ -242,8 +248,15 @@ def make_dict_structure_fn(
     Generate a specialized dict structuring function for an attrs class or
     dataclass.
 
+    Any provided overrides are attached to the generated function under the
+    `overrides` attribute.
+
     :param _cattrs_forbid_extra_keys: Whether the structuring function should raise a
         `ForbiddenExtraKeysError` if unknown keys are encountered.
+    :param _cattrs_use_linecache: Whether to store the source code in the Python
+        linecache.
+    :param _cattrs_prefer_attrib_converters: If an _attrs_ converter is present on a
+        field, use it instead of processing the field normally.
     :param _cattrs_detailed_validation: Whether to use a slower mode that produces
         more detailed errors.
     :param _cattrs_use_alias: If true, the attribute alias will be used as the
@@ -629,7 +642,10 @@ def make_dict_structure_fn(
 
     eval(compile(script, fname, "exec"), globs)
 
-    return globs[fn_name]
+    res = globs[fn_name]
+    res.overrides = kwargs
+
+    return res
 
 
 IterableUnstructureFn = Callable[[Iterable[Any]], Any]
@@ -808,11 +824,11 @@ def make_mapping_structure_fn(
         is_bare_dict = val_type is Any and key_type is Any
         if not is_bare_dict:
             # We can do the dispatch here and now.
-            key_handler = converter._structure_func.dispatch(key_type)
+            key_handler = converter.get_structure_hook(key_type)
             if key_handler == converter._structure_call:
                 key_handler = key_type
 
-            val_handler = converter._structure_func.dispatch(val_type)
+            val_handler = converter.get_structure_hook(val_type)
             if val_handler == converter._structure_call:
                 val_handler = val_type
 

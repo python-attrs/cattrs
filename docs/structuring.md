@@ -1,12 +1,10 @@
 # What You Can Structure and How
 
-The philosophy of _cattrs_ structuring is simple: give it an instance of Python
-built-in types and collections, and a type describing the data you want out.
-_cattrs_ will convert the input data into the type you want, or throw an
-exception.
+The philosophy of _cattrs_ structuring is simple: give it an instance of Python built-in types and collections, and a type describing the data you want out.
+_cattrs_ will convert the input data into the type you want, or throw an exception.
 
-All structuring conversions are composable, where applicable. This is
-demonstrated further in the examples.
+All structuring conversions are composable, where applicable.
+This is demonstrated further in the examples.
 
 ## Primitive Values
 
@@ -603,63 +601,3 @@ The structuring hooks are callables that take two arguments: the object to conve
 
 When using {meth}`cattrs.register_structure_hook`, the hook will be registered on the global converter.
 If you want to avoid changing the global converter, create an instance of {class}`cattrs.Converter` and register the hook on that.
-
-In some situations, it is not possible to decide on the converter using typing mechanisms alone (such as with _attrs_ classes). In these situations,
-_cattrs_ provides a {meth}`register_unstructure_hook_func() <cattrs.BaseConverter.register_unstructure_hook_func()>` hook instead, which accepts a predicate function to determine whether that type can be handled instead.
-
-The function-based hooks are evaluated after the class-based hooks. In the case where both a class-based hook and a function-based hook are present, the class-based hook will be used.
-
-```{doctest}
-
->>> class D:
-...     custom = True
-...     def __init__(self, a):
-...         self.a = a
-...     def __repr__(self):
-...         return f'D(a={self.a})'
-...     @classmethod
-...     def deserialize(cls, data):
-...         return cls(data["a"])
-
->>> cattrs.register_structure_hook_func(
-...     lambda cls: getattr(cls, "custom", False), lambda d, t: t.deserialize(d)
-... )
-
->>> cattrs.structure({'a': 2}, D)
-D(a=2)
-```
-
-## Structuring Hook Factories
-
-Hook factories operate one level higher than structuring hooks; structuring
-hooks are functions registered to a class or predicate, and hook factories
-are functions (registered via a predicate) that produce structuring hooks.
-
-Structuring hooks factories are registered using {meth}`Converter.register_structure_hook_factory() <cattrs.BaseConverter.register_structure_hook_factory>`.
-
-Here's a small example showing how to use factory hooks to apply the `forbid_extra_keys` to all attrs classes:
-
-```{doctest}
-
->>> from attrs import define, has
->>> from cattrs.gen import make_dict_structure_fn
-
->>> c = cattrs.Converter()
->>> c.register_structure_hook_factory(
-...     has,
-...     lambda cl: make_dict_structure_fn(
-...         cl, c, _cattrs_forbid_extra_keys=True, _cattrs_detailed_validation=False
-...     )
-... )
-
->>> @define
-... class E:
-...    an_int: int
-
->>> c.structure({"an_int": 1, "else": 2}, E)
-Traceback (most recent call last):
-...
-cattrs.errors.ForbiddenExtraKeysError: Extra fields in constructor for E: else
-```
-
-A complex use case for hook factories is described over at {ref}`usage:Using factory hooks`.

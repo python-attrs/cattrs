@@ -5,8 +5,7 @@ hidden: true
 ---
 
 self
-converters
-usage
+basics
 structuring
 unstructuring
 customizing
@@ -14,6 +13,8 @@ strategies
 validation
 preconf
 unions
+usage
+indepth
 history
 benchmarking
 contributing

@@ -50,8 +50,8 @@ def configure_tagged_union(
     exact_cl_unstruct_hooks = {}
     for cl in args:
         tag = tag_generator(cl)
-        struct_handler = converter._structure_func.dispatch(cl)
-        unstruct_handler = converter._unstructure_func.dispatch(cl)
+        struct_handler = converter.get_structure_hook(cl)
+        unstruct_handler = converter.get_unstructure_hook(cl)
 
         def structure_union_member(val: dict, _cl=cl, _h=struct_handler) -> cl:
             return _h(val, _cl)
@@ -65,7 +65,7 @@ def configure_tagged_union(
     cl_to_tag = {cl: tag_generator(cl) for cl in args}
 
     if default is not NOTHING:
-        default_handler = converter._structure_func.dispatch(default)
+        default_handler = converter.get_structure_hook(default)
 
         def structure_default(val: dict, _cl=default, _h=default_handler):
             return _h(val, _cl)

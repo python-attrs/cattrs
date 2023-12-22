@@ -1,19 +1,23 @@
 """Utilities for union (sum type) disambiguation."""
-from collections import OrderedDict, defaultdict
+from __future__ import annotations
+
+from collections import defaultdict
 from functools import reduce
 from operator import or_
-from typing import Any, Callable, Dict, Mapping, Optional, Set, Type, Union
+from typing import TYPE_CHECKING, Any, Callable, Literal, Mapping, Union
 
-from attrs import NOTHING, fields, fields_dict
+from attrs import NOTHING, Attribute, AttrsInstance, fields, fields_dict
 
-from ._compat import get_args, get_origin, has, is_literal, is_union_type
+from ._compat import NoneType, get_args, get_origin, has, is_literal, is_union_type
+from .gen import AttributeOverride
 
-__all__ = ("is_supported_union", "create_default_dis_func")
+if TYPE_CHECKING:
+    from .converters import BaseConverter
 
-NoneType = type(None)
+__all__ = ["is_supported_union", "create_default_dis_func"]
 
 
-def is_supported_union(typ: Type) -> bool:
+def is_supported_union(typ: Any) -> bool:
     """Whether the type is a union of attrs classes."""
     return is_union_type(typ) and all(
         e is NoneType or has(get_origin(e) or e) for e in typ.__args__
@@ -21,17 +25,29 @@ def is_supported_union(typ: Type) -> bool:
 
 
 def create_default_dis_func(
-    *classes: Type[Any], use_literals: bool = True
-) -> Callable[[Mapping[Any, Any]], Optional[Type[Any]]]:
+    converter: BaseConverter,
+    *classes: type[AttrsInstance],
+    use_literals: bool = True,
+    overrides: dict[str, AttributeOverride]
+    | Literal["from_converter"] = "from_converter",
+) -> Callable[[Mapping[Any, Any]], type[Any] | None]:
     """Given attrs classes, generate a disambiguation function.
 
-    The function is based on unique fields or unique values.
+    The function is based on unique fields without defaults or unique values.
 
     :param use_literals: Whether to try using fields annotated as literals for
         disambiguation.
+    :param overrides: Attribute overrides to apply.
     """
     if len(classes) < 2:
         raise ValueError("At least two classes required.")
+
+    if overrides == "from_converter":
+        overrides = [
+            getattr(converter.get_structure_hook(c), "overrides", {}) for c in classes
+        ]
+    else:
+        overrides = [overrides for _ in classes]
 
     # first, attempt for unique values
     if use_literals:
@@ -44,7 +60,7 @@ def create_default_dis_func(
         ]
 
         # literal field names common to all members
-        discriminators: Set[str] = cls_candidates[0]
+        discriminators: set[str] = cls_candidates[0]
         for possible_discriminators in cls_candidates:
             discriminators &= possible_discriminators
 
@@ -76,7 +92,7 @@ def create_default_dis_func(
                 for k, v in best_result.items()
             }
 
-            def dis_func(data: Mapping[Any, Any]) -> Optional[Type]:
+            def dis_func(data: Mapping[Any, Any]) -> type | None:
                 if not isinstance(data, Mapping):
                     raise ValueError("Only input mappings are supported.")
                 return final_mapping[data[best_discriminator]]
@@ -88,45 +104,83 @@ def create_default_dis_func(
     # NOTE: This could just as well work with just field availability and not
     #  uniqueness, returning Unions ... it doesn't do that right now.
     cls_and_attrs = [
-        (cl, {at.name for at in fields(get_origin(cl) or cl)}) for cl in classes
+        (cl, *_usable_attribute_names(cl, override))
+        for cl, override in zip(classes, overrides)
     ]
-    if len([attrs for _, attrs in cls_and_attrs if len(attrs) == 0]) > 1:
-        raise ValueError("At least two classes have no attributes.")
-    # TODO: Deal with a single class having no required attrs.
     # For each class, attempt to generate a single unique required field.
-    uniq_attrs_dict: Dict[str, Type] = OrderedDict()
-    cls_and_attrs.sort(key=lambda c_a: -len(c_a[1]))
+    uniq_attrs_dict: dict[str, type] = {}
+
+    # We start from classes with the largest number of unique fields
+    # so we can do easy picks first, making later picks easier.
+    cls_and_attrs.sort(key=lambda c_a: len(c_a[1]), reverse=True)
 
     fallback = None  # If none match, try this.
 
-    for i, (cl, cl_reqs) in enumerate(cls_and_attrs):
-        other_classes = cls_and_attrs[i + 1 :]
-        if other_classes:
-            other_reqs = reduce(or_, (c_a[1] for c_a in other_classes))
-            uniq = cl_reqs - other_reqs
-            if not uniq:
-                m = f"{cl} has no usable unique attributes."
-                raise ValueError(m)
-            # We need a unique attribute with no default.
-            cl_fields = fields(get_origin(cl) or cl)
-            for attr_name in uniq:
-                if getattr(cl_fields, attr_name).default is NOTHING:
-                    break
-            else:
-                raise ValueError(f"{cl} has no usable non-default attributes.")
-            uniq_attrs_dict[attr_name] = cl
-        else:
-            fallback = cl
+    for cl, cl_reqs, back_map in cls_and_attrs:
+        # We do not have to consider classes we've already processed, since
+        # they will have been eliminated by the match dictionary already.
+        other_classes = [
+            c_and_a
+            for c_and_a in cls_and_attrs
+            if c_and_a[0] is not cl and c_and_a[0] not in uniq_attrs_dict.values()
+        ]
+        other_reqs = reduce(or_, (c_a[1] for c_a in other_classes), set())
+        uniq = cl_reqs - other_reqs
 
-    def dis_func(data: Mapping[Any, Any]) -> Optional[Type]:
-        if not isinstance(data, Mapping):
-            raise ValueError("Only input mappings are supported.")
-        for k, v in uniq_attrs_dict.items():
-            if k in data:
-                return v
-        return fallback
+        # We want a unique attribute with no default.
+        cl_fields = fields(get_origin(cl) or cl)
+        for maybe_renamed_attr_name in uniq:
+            orig_name = back_map[maybe_renamed_attr_name]
+            if getattr(cl_fields, orig_name).default is NOTHING:
+                break
+        else:
+            if fallback is None:
+                fallback = cl
+                continue
+            raise TypeError(f"{cl} has no usable non-default attributes")
+        uniq_attrs_dict[maybe_renamed_attr_name] = cl
+
+    if fallback is None:
+
+        def dis_func(data: Mapping[Any, Any]) -> type[AttrsInstance] | None:
+            if not isinstance(data, Mapping):
+                raise ValueError("Only input mappings are supported")
+            for k, v in uniq_attrs_dict.items():
+                if k in data:
+                    return v
+            raise ValueError("Couldn't disambiguate")
+
+    else:
+
+        def dis_func(data: Mapping[Any, Any]) -> type[AttrsInstance] | None:
+            if not isinstance(data, Mapping):
+                raise ValueError("Only input mappings are supported")
+            for k, v in uniq_attrs_dict.items():
+                if k in data:
+                    return v
+            return fallback
 
     return dis_func
 
 
 create_uniq_field_dis_func = create_default_dis_func
+
+
+def _overriden_name(at: Attribute, override: AttributeOverride | None) -> str:
+    if override is None or override.rename is None:
+        return at.name
+    return override.rename
+
+
+def _usable_attribute_names(
+    cl: type[AttrsInstance], overrides: dict[str, AttributeOverride]
+) -> tuple[set[str], dict[str, str]]:
+    """Return renamed fields and a mapping to original field names."""
+    res = set()
+    mapping = {}
+
+    for at in fields(get_origin(cl) or cl):
+        res.add(n := _overriden_name(at, overrides.get(at.name)))
+        mapping[n] = at.name
+
+    return res, mapping
