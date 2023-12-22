@@ -186,8 +186,8 @@ def _include_subclasses_with_union_strategy(
                 unstruct_hook = make_dict_unstructure_fn(cl, converter, **overrides)
                 struct_hook = make_dict_structure_fn(cl, converter, **overrides)
             else:
-                unstruct_hook = converter.get_unstructure_hook(cl, cache=False)
-                struct_hook = converter.get_structure_hook(cl, cache=False)
+                unstruct_hook = converter.get_unstructure_hook(cl, cache_result=False)
+                struct_hook = converter.get_structure_hook(cl, cache_result=False)
         finally:
             already_generating.working_set = set()
         original_unstruct_hooks[cl] = unstruct_hook

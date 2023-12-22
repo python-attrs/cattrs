@@ -277,7 +277,9 @@ class BaseConverter:
         """
         self._unstructure_func.register_func_list([(predicate, factory, True)])
 
-    def get_unstructure_hook(self, type: Any, cache: bool = True) -> UnstructureHook:
+    def get_unstructure_hook(
+        self, type: Any, cache_result: bool = True
+    ) -> UnstructureHook:
         """Get the unstructure hook for the given type.
 
         This hook can be manually called, or composed with other functions
@@ -288,11 +290,11 @@ class BaseConverter:
 
         :param cache: Whether to cache the returned hook.
 
-        .. versionadded:: 24.1
+        .. versionadded:: 24.1.0
         """
         return (
             self._unstructure_func.dispatch(type)
-            if cache
+            if cache_result
             else self._unstructure_func.dispatch_without_caching(type)
         )
 
@@ -342,7 +344,7 @@ class BaseConverter:
         """Convert unstructured Python data structures to structured data."""
         return self._structure_func.dispatch(cl)(obj, cl)
 
-    def get_structure_hook(self, type: Any, cache: bool = True) -> StructureHook:
+    def get_structure_hook(self, type: Any, cache_result: bool = True) -> StructureHook:
         """Get the structure hook for the given type.
 
         This hook can be manually called, or composed with other functions
@@ -353,11 +355,11 @@ class BaseConverter:
 
         :param cache: Whether to cache the returned hook.
 
-        .. versionadded:: 24.1
+        .. versionadded:: 24.1.0
         """
         return (
             self._structure_func.dispatch(type)
-            if cache
+            if cache_result
             else self._structure_func.dispatch_without_caching(type)
         )
 
