@@ -31,7 +31,7 @@ Model(a=1)
 _cattrs_ comes with a rich library of un/structuring rules by default, but it excels at composing custom rules with built-in ones.
 
 The simplest approach to customization is wrapping an existing hook with your own function.
-A base hook can be obtained from a converter and be subjected to the very rich mechanisms of Python function composition.
+A base hook can be obtained from a converter and be subjected to the very rich machinery of function composition in Python.
 
 ```python
 >>> from cattrs import get_structure_hook
