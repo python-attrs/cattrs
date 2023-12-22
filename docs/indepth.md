@@ -8,11 +8,12 @@ Converters are registries of rules _cattrs_ uses to perform function composition
 
 Currently, a converter contains the following state:
 
-- a registry of unstructure hooks, backed by a [singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch) and a `function_dispatch`.
-- a registry of structure hooks, backed by a different singledispatch and `function_dispatch`.
-- a LRU cache of union disambiguation functions.
-- a reference to an unstructuring strategy (either AS_DICT or AS_TUPLE).
-- a `dict_factory` callable, used for creating `dicts` when dumping _attrs_ classes using `AS_DICT`.
+- a registry of unstructure hooks, backed by a [singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch) and a {class}`FunctionDispatch <cattrs.dispatch.FunctionDispatch>`, wrapped in a [cache](https://docs.python.org/3/library/functools.html#functools.cache).
+- a registry of structure hooks, backed by a different singledispatch and `FunctionDispatch`, and a different cache.
+- a `detailed_validation` flag (defaulting to true), determining whether the converter uses [detailed validation](validation.md#detailed-validation).
+- a reference to {class}`an unstructuring strategy <cattrs.UnstructureStrategy>` (either AS_DICT or AS_TUPLE).
+- a `prefer_attrib_converters` flag (defaulting to false), determining whether to favor _attrs_ converters over normal _cattrs_ machinery when structuring _attrs_ classes
+- a `dict_factory` callable, a legacy parameter used for creating `dicts` when dumping _attrs_ classes using `AS_DICT`.
 
 Converters may be cloned using the {meth}`Converter.copy() <cattrs.BaseConverter.copy>` method.
 The new copy may be changed through the `copy` arguments, but will retain all manually registered hooks from the original.
