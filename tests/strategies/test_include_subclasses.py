@@ -3,61 +3,61 @@ from copy import deepcopy
 from functools import partial
 from typing import Tuple
 
-import attr
 import pytest
+from attrs import define
 
 from cattrs import Converter, override
 from cattrs.errors import ClassValidationError
 from cattrs.strategies import configure_tagged_union, include_subclasses
 
 
-@attr.define
+@define
 class Parent:
     p: int
 
 
-@attr.define
+@define
 class Child1(Parent):
     c1: int
 
 
-@attr.define
+@define
 class GrandChild(Child1):
     g: int
 
 
-@attr.define
+@define
 class Child2(Parent):
     c2: int
 
 
-@attr.define
+@define
 class UnionCompose:
     a: typing.Union[Parent, Child1, Child2, GrandChild]
 
 
-@attr.define
+@define
 class NonUnionCompose:
     a: Parent
 
 
-@attr.define
+@define
 class UnionContainer:
     a: typing.List[typing.Union[Parent, Child1, Child2, GrandChild]]
 
 
-@attr.define
+@define
 class NonUnionContainer:
     a: typing.List[Parent]
 
 
-@attr.define
+@define
 class CircularA:
     a: int
     other: "typing.List[CircularA]"
 
 
-@attr.define
+@define
 class CircularB(CircularA):
     b: int
 
@@ -244,11 +244,11 @@ def test_unstructuring_with_inheritance(
 
 
 def test_structuring_unstructuring_unknown_subclass():
-    @attr.define
+    @define
     class A:
         a: int
 
-    @attr.define
+    @define
     class A1(A):
         a1: int
 
@@ -256,7 +256,7 @@ def test_structuring_unstructuring_unknown_subclass():
     include_subclasses(A, converter)
 
     # We define A2 after having created the custom un/structuring functions for A and A1
-    @attr.define
+    @define
     class A2(A1):
         a2: int
 

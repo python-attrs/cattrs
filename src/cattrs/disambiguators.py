@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import defaultdict
 from functools import reduce
 from operator import or_
-from typing import TYPE_CHECKING, Any, Callable, Mapping, Union
+from typing import TYPE_CHECKING, Any, Callable, Literal, Mapping, Union
 
 from attrs import NOTHING, Attribute, AttrsInstance, fields, fields_dict
 
@@ -25,7 +25,11 @@ def is_supported_union(typ: Any) -> bool:
 
 
 def create_default_dis_func(
-    converter: BaseConverter, *classes: type[AttrsInstance], use_literals: bool = True
+    converter: BaseConverter,
+    *classes: type[AttrsInstance],
+    use_literals: bool = True,
+    overrides: dict[str, AttributeOverride]
+    | Literal["from_converter"] = "from_converter",
 ) -> Callable[[Mapping[Any, Any]], type[Any] | None]:
     """Given attrs classes, generate a disambiguation function.
 
@@ -33,13 +37,17 @@ def create_default_dis_func(
 
     :param use_literals: Whether to try using fields annotated as literals for
         disambiguation.
+    :param overrides: Attribute overrides to apply.
     """
     if len(classes) < 2:
         raise ValueError("At least two classes required.")
 
-    overrides = [
-        getattr(converter.get_structure_hook(c), "overrides", {}) for c in classes
-    ]
+    if overrides == "from_converter":
+        overrides = [
+            getattr(converter.get_structure_hook(c), "overrides", {}) for c in classes
+        ]
+    else:
+        overrides = [overrides for _ in classes]
 
     # first, attempt for unique values
     if use_literals:
@@ -96,20 +104,27 @@ def create_default_dis_func(
     # NOTE: This could just as well work with just field availability and not
     #  uniqueness, returning Unions ... it doesn't do that right now.
     cls_and_attrs = [
-        (cl, _usable_attribute_names(cl, override))
+        (cl, *_usable_attribute_names(cl, override))
         for cl, override in zip(classes, overrides)
     ]
     # For each class, attempt to generate a single unique required field.
     uniq_attrs_dict: dict[str, type] = {}
 
-    # We start from classes with fewest unique fields.
-    cls_and_attrs.sort(key=lambda c_a: len(c_a[1]))
+    # We start from classes with the largest number of unique fields
+    # so we can do easy picks first, making later picks easier.
+    cls_and_attrs.sort(key=lambda c_a: len(c_a[1]), reverse=True)
 
     fallback = None  # If none match, try this.
 
-    for cl, (cl_reqs, back_map) in cls_and_attrs:
-        other_classes = [c_and_a for c_and_a in cls_and_attrs if c_and_a[0] is not cl]
-        other_reqs = reduce(or_, (c_a[1][0] for c_a in other_classes))
+    for cl, cl_reqs, back_map in cls_and_attrs:
+        # We do not have to consider classes we've already processed, since
+        # they will have been eliminated by the match dictionary already.
+        other_classes = [
+            c_and_a
+            for c_and_a in cls_and_attrs
+            if c_and_a[0] is not cl and c_and_a[0] not in uniq_attrs_dict.values()
+        ]
+        other_reqs = reduce(or_, (c_a[1] for c_a in other_classes), set())
         uniq = cl_reqs - other_reqs
 
         # We want a unique attribute with no default.
@@ -125,13 +140,25 @@ def create_default_dis_func(
             raise TypeError(f"{cl} has no usable non-default attributes")
         uniq_attrs_dict[maybe_renamed_attr_name] = cl
 
-    def dis_func(data: Mapping[Any, Any]) -> type[AttrsInstance] | None:
-        if not isinstance(data, Mapping):
-            raise ValueError("Only input mappings are supported")
-        for k, v in uniq_attrs_dict.items():
-            if k in data:
-                return v
-        return fallback
+    if fallback is None:
+
+        def dis_func(data: Mapping[Any, Any]) -> type[AttrsInstance] | None:
+            if not isinstance(data, Mapping):
+                raise ValueError("Only input mappings are supported")
+            for k, v in uniq_attrs_dict.items():
+                if k in data:
+                    return v
+            raise ValueError("Couldn't disambiguate")
+
+    else:
+
+        def dis_func(data: Mapping[Any, Any]) -> type[AttrsInstance] | None:
+            if not isinstance(data, Mapping):
+                raise ValueError("Only input mappings are supported")
+            for k, v in uniq_attrs_dict.items():
+                if k in data:
+                    return v
+            return fallback
 
     return dis_func
 

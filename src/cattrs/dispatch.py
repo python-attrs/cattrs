@@ -85,7 +85,7 @@ class MultiStrategyDispatch(Generic[Hook]):
     """
 
     _fallback_factory: HookFactory[Hook]
-    _direct_dispatch: Dict = field(init=False, factory=dict)
+    _direct_dispatch: Dict[TargetType, Hook] = field(init=False, factory=dict)
     _function_dispatch: FunctionDispatch = field(init=False, factory=FunctionDispatch)
     _single_dispatch: Any = field(
         init=False, factory=partial(singledispatch, _DispatchNotFound)
@@ -93,11 +93,13 @@ class MultiStrategyDispatch(Generic[Hook]):
     dispatch: Callable[[TargetType], Hook] = field(
         init=False,
         default=Factory(
-            lambda self: lru_cache(maxsize=None)(self._dispatch), takes_self=True
+            lambda self: lru_cache(maxsize=None)(self.dispatch_without_caching),
+            takes_self=True,
         ),
     )
 
-    def _dispatch(self, typ: TargetType) -> Hook:
+    def dispatch_without_caching(self, typ: TargetType) -> Hook:
+        """Dispatch on the type but without caching the result."""
         try:
             dispatch = self._single_dispatch.dispatch(typ)
             if dispatch is not _DispatchNotFound:

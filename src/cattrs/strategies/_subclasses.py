@@ -1,37 +1,39 @@
 """Strategies for customizing subclass behaviors."""
+from __future__ import annotations
+
 from gc import collect
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Union
 
 from ..converters import BaseConverter, Converter
 from ..gen import AttributeOverride, make_dict_structure_fn, make_dict_unstructure_fn
 from ..gen._consts import already_generating
 
 
-def _make_subclasses_tree(cl: Type) -> List[Type]:
+def _make_subclasses_tree(cl: type) -> list[type]:
     return [cl] + [
         sscl for scl in cl.__subclasses__() for sscl in _make_subclasses_tree(scl)
     ]
 
 
-def _has_subclasses(cl: Type, given_subclasses: Tuple[Type, ...]) -> bool:
+def _has_subclasses(cl: type, given_subclasses: tuple[type, ...]) -> bool:
     """Whether the given class has subclasses from `given_subclasses`."""
     actual = set(cl.__subclasses__())
     given = set(given_subclasses)
     return bool(actual & given)
 
 
-def _get_union_type(cl: Type, given_subclasses_tree: Tuple[Type]) -> Optional[Type]:
+def _get_union_type(cl: type, given_subclasses_tree: tuple[type]) -> type | None:
     actual_subclass_tree = tuple(_make_subclasses_tree(cl))
     class_tree = tuple(set(actual_subclass_tree) & set(given_subclasses_tree))
     return Union[class_tree] if len(class_tree) >= 2 else None
 
 
 def include_subclasses(
-    cl: Type,
+    cl: type,
     converter: Converter,
-    subclasses: Optional[Tuple[Type, ...]] = None,
-    union_strategy: Optional[Callable[[Any, BaseConverter], Any]] = None,
-    overrides: Optional[Dict[str, AttributeOverride]] = None,
+    subclasses: tuple[type, ...] | None = None,
+    union_strategy: Callable[[Any, BaseConverter], Any] | None = None,
+    overrides: dict[str, AttributeOverride] | None = None,
 ) -> None:
     """
     Configure the converter so that the attrs/dataclass `cl` is un/structured as if it
@@ -54,6 +56,9 @@ def include_subclasses(
         :func:`cattrs.gen.override`) to customize un/structuring.
 
     .. versionadded:: 23.1.0
+    .. versionchanged:: 24.1.0
+       When overrides are not provided, hooks for individual classes are retrieved from
+       the converter instead of generated with no overrides, using converter defaults.
     """
     # Due to https://github.com/python-attrs/attrs/issues/1047
     collect()
@@ -61,9 +66,6 @@ def include_subclasses(
         parent_subclass_tree = (cl, *subclasses)
     else:
         parent_subclass_tree = tuple(_make_subclasses_tree(cl))
-
-    if overrides is None:
-        overrides = {}
 
     if union_strategy is None:
         _include_subclasses_without_union_strategy(
@@ -78,8 +80,8 @@ def include_subclasses(
 def _include_subclasses_without_union_strategy(
     cl,
     converter: Converter,
-    parent_subclass_tree: Tuple[Type],
-    overrides: Dict[str, AttributeOverride],
+    parent_subclass_tree: tuple[type],
+    overrides: dict[str, AttributeOverride] | None,
 ):
     # The iteration approach is required if subclasses are more than one level deep:
     for cl in parent_subclass_tree:
@@ -95,8 +97,12 @@ def _include_subclasses_without_union_strategy(
         def cls_is_cl(cls, _cl=cl):
             return cls is _cl
 
-        base_struct_hook = make_dict_structure_fn(cl, converter, **overrides)
-        base_unstruct_hook = make_dict_unstructure_fn(cl, converter, **overrides)
+        if overrides is not None:
+            base_struct_hook = make_dict_structure_fn(cl, converter, **overrides)
+            base_unstruct_hook = make_dict_unstructure_fn(cl, converter, **overrides)
+        else:
+            base_struct_hook = converter.get_structure_hook(cl)
+            base_unstruct_hook = converter.get_unstructure_hook(cl)
 
         if subclass_union is None:
 
@@ -104,7 +110,7 @@ def _include_subclasses_without_union_strategy(
                 return _base_hook(val, _cl)
 
         else:
-            dis_fn = converter._get_dis_func(subclass_union)
+            dis_fn = converter._get_dis_func(subclass_union, overrides=overrides)
 
             def struct_hook(
                 val: dict,
@@ -130,7 +136,7 @@ def _include_subclasses_without_union_strategy(
             _c=converter,
             _cl=cl,
             _base_hook=base_unstruct_hook,
-        ) -> Dict:
+        ) -> dict:
             """
             If val is an instance of the class `cl`, use the hook.
 
@@ -148,9 +154,9 @@ def _include_subclasses_without_union_strategy(
 
 def _include_subclasses_with_union_strategy(
     converter: Converter,
-    union_classes: Tuple[Type, ...],
+    union_classes: tuple[type, ...],
     union_strategy: Callable[[Any, BaseConverter], Any],
-    overrides: Dict[str, AttributeOverride],
+    overrides: dict[str, AttributeOverride] | None,
 ):
     """
     This function is tricky because we're dealing with what is essentially a circular
@@ -176,8 +182,12 @@ def _include_subclasses_with_union_strategy(
         # manipulate the _already_generating set to force runtime dispatch.
         already_generating.working_set = set(union_classes) - {cl}
         try:
-            unstruct_hook = make_dict_unstructure_fn(cl, converter, **overrides)
-            struct_hook = make_dict_structure_fn(cl, converter, **overrides)
+            if overrides is not None:
+                unstruct_hook = make_dict_unstructure_fn(cl, converter, **overrides)
+                struct_hook = make_dict_structure_fn(cl, converter, **overrides)
+            else:
+                unstruct_hook = converter.get_unstructure_hook(cl, cache=False)
+                struct_hook = converter.get_structure_hook(cl, cache=False)
         finally:
             already_generating.working_set = set()
         original_unstruct_hooks[cl] = unstruct_hook

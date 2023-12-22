@@ -10,6 +10,8 @@
   ([#472](https://github.com/python-attrs/cattrs/pull/472))
 - Add support for [PEP 695](https://peps.python.org/pep-0695/) type aliases.
   ([#452](https://github.com/python-attrs/cattrs/pull/452))
+- The `include_subclasses` strategy now fetches the member hooks from the converter (making use of converter defaults) if overrides are not provided, instead of generating new hooks with no overrides.
+  ([#472](https://github.com/python-attrs/cattrs/pull/472))
 - The {class}`orjson preconf converter <cattrs.preconf.orjson.OrjsonConverter>` now passes through dates and datetimes to orjson while unstructuring, greatly improving speed.
   ([#463](https://github.com/python-attrs/cattrs/pull/463))
 - `cattrs.gen` generators now attach metadata to the generated functions, making them introspectable.
