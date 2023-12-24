@@ -6,8 +6,7 @@ hidden: true
 
 self
 basics
-structuring
-unstructuring
+defaulthooks
 customizing
 strategies
 validation

@@ -2,8 +2,6 @@
 ```{currentmodule} cattrs
 ```
 
-## Converters
-
 Converters are registries of rules _cattrs_ uses to perform function composition and generate its un/structuring functions.
 
 Currently, a converter contains the following state:
@@ -18,7 +16,57 @@ Currently, a converter contains the following state:
 Converters may be cloned using the {meth}`Converter.copy() <cattrs.BaseConverter.copy>` method.
 The new copy may be changed through the `copy` arguments, but will retain all manually registered hooks from the original.
 
-### Fallback Hook Factories
+
+## Customizing Collection Unstructuring
+
+```{important}
+This feature is supported for Python 3.9 and later.
+```
+
+Overriding collection unstructuring in a generic way can be a very useful feature.
+A common example is using a JSON library that doesn't support sets, but expects lists and tuples instead.
+
+Using ordinary unstructuring hooks for this is unwieldy due to the semantics of
+[singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch);
+in other words, you'd need to register hooks for all specific types of set you're using (`set[int]`, `set[float]`,
+`set[str]`...), which is not useful.
+
+Function-based hooks can be used instead, but come with their own set of challenges - they're complicated to write efficiently.
+
+The {class}`Converter` supports easy customizations of collection unstructuring using its `unstruct_collection_overrides` parameter.
+For example, to unstructure all sets into lists, use the following:
+
+```{doctest}
+
+>>> from collections.abc import Set
+>>> converter = cattrs.Converter(unstruct_collection_overrides={Set: list})
+
+>>> converter.unstructure({1, 2, 3})
+[1, 2, 3]
+```
+
+Going even further, the `Converter` contains heuristics to support the following Python types, in order of decreasing generality:
+
+- `typing.Sequence`, `typing.MutableSequence`, `list`, `deque`, `tuple`
+- `typing.Set`, `frozenset`, `typing.MutableSet`, `set`
+- `typing.Mapping`, `typing.MutableMapping`, `dict`, `defaultdict`, `collections.OrderedDict`, `collections.Counter`
+
+For example, if you override the unstructure type for `Sequence`, but not for `MutableSequence`, `list` or `tuple`, the override will also affect those types.
+An easy way to remember the rule:
+
+- all `MutableSequence` s are `Sequence` s, so the override will apply
+- all `list` s are `MutableSequence` s, so the override will apply
+- all `tuple` s are `Sequence` s, so the override will apply
+
+If, however, you override only `MutableSequence`, fields annotated as `Sequence` will not be affected (since not all sequences are mutable sequences), and fields annotated as tuples will not be affected (since tuples
+are not mutable sequences in the first place).
+
+Similar logic applies to the set and mapping hierarchies.
+
+Make sure you're using the types from `collections.abc` on Python 3.9+, and from `typing` on older Python versions.
+
+
+## Fallback Hook Factories
 
 By default, when a {class}`converter <cattrs.BaseConverter>` cannot handle a type it will:
 
@@ -54,7 +102,7 @@ This also enables converters to be chained.
 
 ```
 
-### `cattrs.Converter`
+## `cattrs.Converter`
 
 The {class}`Converter` is a converter variant that automatically generates, compiles and caches specialized structuring and unstructuring hooks for _attrs_ classes, dataclasses and TypedDicts.
 
@@ -68,7 +116,7 @@ The {class}`Converter` is a converter variant that automatically generates, comp
 
 The {class}`Converter` used to be called `GenConverter`, and that alias is still present for backwards compatibility.
 
-### `cattrs.BaseConverter`
+## `cattrs.BaseConverter`
 
 The {class}`BaseConverter` is a simpler and slower converter variant.
 It does no code generation, so it may be faster on first-use which can be useful in specific cases, like CLI applications where startup time is more important than throughput.

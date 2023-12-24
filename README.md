@@ -1,5 +1,9 @@
 # cattrs
 
+<p>
+  <em>Great software needs great data structures.</em>
+</p>
+
 <a href="https://pypi.python.org/pypi/cattrs"><img src="https://img.shields.io/pypi/v/cattrs.svg"/></a>
 <a href="https://github.com/python-attrs/cattrs/actions?workflow=CI"><img src="https://github.com/python-attrs/cattrs/workflows/CI/badge.svg"/></a>
 <a href="https://catt.rs/en/latest/?badge=latest"><img src="https://readthedocs.org/projects/cattrs/badge/?version=latest" alt="Documentation Status"/></a>
@@ -103,7 +107,7 @@ When you're done, `unstructure` the data to its unstructured form and pass it al
 Use [attrs type metadata](http://attrs.readthedocs.io/en/stable/examples.html#types) to add type metadata to attributes, so _cattrs_ will know how to structure and destructure them.
 
 - Free software: MIT license
-- Documentation: https://catt.rs
+- Documentation: [https://catt.rs](https://catt.rs)
 - Python versions supported: 3.8 and up. (Older Python versions are supported by older versions; see the changelog.)
 
 ## Features
