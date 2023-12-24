@@ -26,6 +26,8 @@
 - Tests are run with the pytest-xdist plugin by default.
 - Rework the introductory parts of the documentation, introducing the Basics section.
   ([#472](https://github.com/python-attrs/cattrs/pull/472))
+- The documentation has been significantly reworked.
+  ([#473](https://github.com/python-attrs/cattrs/pull/473))
 - The docs now use the Inter font.
 
 ## 23.2.3 (2023-11-30)

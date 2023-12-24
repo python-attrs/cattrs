@@ -432,41 +432,27 @@ If an _attrs_ or dataclass class uses inheritance and as such has one or several
 
 Unions of `NoneType` and a single other type (also known as optionals) are supported by a [special case](#optionals).
 
+
 ### Automatic Disambiguation
 
-When structuring a union consisting exclusively of _attrs_ classes, _cattrs_ will attempt to generate a disambiguation function automatically; this will
-succeed only if each class has a unique field without a default.
-Given the following classes:
-
-```python
->>> @define
-... class A:
-...     a = field()
-...     x = field()
-
->>> @define
-... class B:
-...     a = field()
-...     y = field()
-
->>> @define
-... class C:
-...     a = field()
-...     z = field()
-```
-
-_cattrs_ can deduce only instances of `A` will contain `x`, only instances of `B` will contain `y`, etc.
-A disambiguation function using this information will then be generated and cached.
-This will happen automatically, the first time an appropriate union is structured.
+_cattrs_ includes an opinionated strategy for automatically handling unions of _attrs_ classes; see [](unions.md#default-union-strategy) for details.
 
 When unstructuring these kinds of unions, each union member will be unstructured according to the hook for that type.
 
+
+### Unions of Simple Types
+
+_cattrs_ comes with the [](strategies.md#union-passthrough), which enables converters to structure unions of many primitive types and literals.
+This strategy can be applied to any converter, and is pre-applied to all [preconf](preconf.md) converters according to their underlying protocols.
+
+
 ### Manual Disambiguation
 
-To support arbitrary unions, register a custom structuring hook for the union
-(see [Registering custom structuring hooks](structuring.md#registering-custom-structuring-hooks)).
+To support arbitrary unions, register a custom hooks for the union like any other type.
+Due to special handling, both [](customizing.md#manual-unstructuring-hooks) and [](customizing.md#predicate-hooks) support unions.
 
 Another option is to use a custom tagged union strategy (see [Strategies - Tagged Unions](strategies.md#tagged-unions-strategy)).
+
 
 ## Special Typing Forms
 
