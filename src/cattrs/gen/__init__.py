@@ -754,11 +754,9 @@ def make_mapping_unstructure_fn(
         if kh == identity:
             kh = None
 
-        if val_arg is not Any:
-            # TODO: Remove this once we have more consistent Any handling in place.
-            val_handler = converter._unstructure_func.dispatch(val_arg)
-            if val_handler == identity:
-                val_handler = None
+        val_handler = converter._unstructure_func.dispatch(val_arg)
+        if val_handler == identity:
+            val_handler = None
 
     globs = {
         "__cattr_mapping_cl": unstructure_to or cl,

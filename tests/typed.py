@@ -125,7 +125,7 @@ def simple_typed_attrs(
 ) -> SearchStrategy[Tuple[_CountingAttr, SearchStrategy[PosArgs]]]:
     if not is_39_or_later:
         res = (
-            bare_typed_attrs(defaults, kw_only)
+            any_typed_attrs(defaults, kw_only)
             | int_typed_attrs(defaults, kw_only)
             | str_typed_attrs(defaults, kw_only)
             | float_typed_attrs(defaults, kw_only)
@@ -170,7 +170,7 @@ def simple_typed_attrs(
             )
     else:
         res = (
-            bare_typed_attrs(defaults, kw_only)
+            any_typed_attrs(defaults, kw_only)
             | int_typed_attrs(defaults, kw_only)
             | str_typed_attrs(defaults, kw_only)
             | float_typed_attrs(defaults, kw_only)
@@ -316,11 +316,10 @@ def _create_hyp_class_and_strat(
 
 
 @composite
-def bare_typed_attrs(draw, defaults=None, kw_only=None):
-    """
-    Generate a tuple of an attribute and a strategy that yields values
-    appropriate for that attribute.
-    """
+def any_typed_attrs(
+    draw: DrawFn, defaults=None, kw_only=None
+) -> Tuple[_CountingAttr, SearchStrategy[None]]:
+    """Attributes typed as `Any`, having values of `None`."""
     default = NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
         default = None

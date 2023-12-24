@@ -470,6 +470,11 @@ When structuring, use `typing.Any` to avoid applying any conversions to the obje
 True
 ```
 
+When unstructuring, `typing.Any` will make the value be unstructured according to its runtime class.
+
+```{versionchanged} 24.1.0
+Previously, the unstructuring rules for `Any` were underspecified, leading to inconsistent behavior.
+```
 
 ### `typing.Literal`
 

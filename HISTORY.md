@@ -4,6 +4,8 @@
 
 ## 24.1.0 (UNRELEASED)
 
+- **Potentially breaking**: Unstructuring hooks for `typing.Any` are consistent now: values are unstructured using their runtime type.
+  Previously this behavior was underspecified and inconsistent, but followed this rule in the majority of cases.
 - Introduce {meth}`BaseConverter.get_structure_hook` and {meth}`BaseConverter.get_unstructure_hook` methods.
   ([#432](https://github.com/python-attrs/cattrs/issues/432) [#472](https://github.com/python-attrs/cattrs/pull/472))
 - The default union handler now properly takes renamed fields into account.
