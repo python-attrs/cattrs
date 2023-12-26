@@ -1,18 +1,19 @@
 # Validation
 
 _cattrs_ has a detailed validation mode since version 22.1.0, and this mode is enabled by default.
-When running under detailed validation, the un/structuring hooks are slightly slower but produce more precise and exhaustive error messages.
+When running under detailed validation, the structuring hooks are slightly slower but produce richer and more precise error messages.
+Unstructuring hooks are not affected.
 
 ## Detailed Validation
 
 ```{versionadded} 22.1.0
 
 ```
-In detailed validation mode, any un/structuring errors will be grouped and raised together as a {class}`cattrs.BaseValidationError`, which is a [PEP 654 ExceptionGroup](https://www.python.org/dev/peps/pep-0654/).
+In detailed validation mode, any structuring errors will be grouped and raised together as a {class}`cattrs.BaseValidationError`, which is a [PEP 654 ExceptionGroup](https://www.python.org/dev/peps/pep-0654/).
 ExceptionGroups are special exceptions which contain lists of other exceptions, which may themselves be other ExceptionGroups.
 In essence, ExceptionGroups are trees of exceptions.
 
-When un/structuring a class, _cattrs_ will gather any exceptions on a field-by-field basis and raise them as a {class}`cattrs.ClassValidationError`, which is a subclass of {class}`BaseValidationError <cattrs.BaseValidationError>`.
+When structuring a class, _cattrs_ will gather any exceptions on a field-by-field basis and raise them as a {class}`cattrs.ClassValidationError`, which is a subclass of {class}`BaseValidationError <cattrs.BaseValidationError>`.
 
 When structuring sequences and mappings, _cattrs_ will gather any exceptions on a key- or index-basis and raise them as a {class}`cattrs.IterableValidationError`, which is a subclass of {class}`BaseValidationError <cattrs.BaseValidationError>`.
 
@@ -72,23 +73,27 @@ class Class:
 
 ```
 
-ExceptionGroup stack traces are great while you're developing, but sometimes a more compact representation of validation errors is better.
+ExceptionGroup stack traces are useful while developing, but sometimes a more compact representation of validation errors is required.
 _cattrs_ provides a helper function, {func}`cattrs.transform_error`, which transforms validation errors into lists of error messages.
 
 The example from the previous paragraph produces the following error messages:
 
-```python
->>> from cattrs import transform_error
+```{testsetup} class
+@define
+class Class:
+    a_list: list[int]
+    a_dict: dict[str, int]
+```
+
+```{doctest} class
+
+>>> from cattrs import structure, transform_error
 
 >>> try:
 ...     structure({"a_list": ["a"], "a_dict": {"str": "a"}}, Class)
 ... except Exception as exc:
 ...     print(transform_error(exc))
-
-[
-    'invalid value for type, expected int @ $.a_list[0]',
-    "invalid value for type, expected int @ $.a_dict['str']"
-]
+['invalid value for type, expected int @ $.a_list[0]', "invalid value for type, expected int @ $.a_dict['str']"]
 ```
 
 A small number of built-in exceptions are converted into error messages automatically.

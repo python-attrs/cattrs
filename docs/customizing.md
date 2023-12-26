@@ -62,8 +62,7 @@ Hook factories are registered using {meth}`Converter.register_unstructure_hook_f
 
 Here's an example showing how to use hook factories to apply the `forbid_extra_keys` to all attrs classes:
 
-```{doctest}
-
+```python
 >>> from attrs import define, has
 >>> from cattrs.gen import make_dict_structure_fn
 
@@ -135,7 +134,7 @@ So we apply the `omit_if_default` rule to the class, but not to the `dateTime` f
 >>> @define
 ... class TestClass:
 ...     a: Optional[int] = None
-...     b: dateTime = Factory(datetime.utcnow)
+...     b: datetime = Factory(datetime.utcnow)
 
 >>> c = cattrs.Converter()
 >>> hook = make_dict_unstructure_fn(TestClass, c, _cattrs_omit_if_default=True, b=override(omit_if_default=False))

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # cattrs documentation build configuration file, created by
 # sphinx-quickstart on Tue Jul  9 22:26:36 2013.
 #
@@ -289,6 +287,7 @@ doctest_global_setup = (
     "from typing import *;"
     "from enum import Enum, unique"
 )
+autodoc_member_order = "bysource"
 autodoc_typehints = "description"
 autosectionlabel_prefix_document = True
 copybutton_prompt_text = r">>> |\.\.\. "

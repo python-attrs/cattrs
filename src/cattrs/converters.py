@@ -171,6 +171,7 @@ class BaseConverter:
                 (lambda t: issubclass(t, Enum), self._unstructure_enum),
                 (has, self._unstructure_attrs),
                 (is_union_type, self._unstructure_union),
+                (lambda t: t is Any, self.unstructure),
             ]
         )
 
@@ -1001,8 +1002,7 @@ class Converter(BaseConverter):
         union_params = cl.__args__
         other = union_params[0] if union_params[1] is NoneType else union_params[1]
 
-        # TODO: Remove this special case when we make unstructuring Any consistent.
-        if other is Any or isinstance(other, TypeVar):
+        if isinstance(other, TypeVar):
             handler = self.unstructure
         else:
             handler = self._unstructure_func.dispatch(other)

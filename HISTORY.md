@@ -4,6 +4,9 @@
 
 ## 24.1.0 (UNRELEASED)
 
+- **Potentially breaking**: Unstructuring hooks for `typing.Any` are consistent now: values are unstructured using their runtime type.
+  Previously this behavior was underspecified and inconsistent, but followed this rule in the majority of cases.
+  ([#473](https://github.com/python-attrs/cattrs/pull/473))
 - Introduce {meth}`BaseConverter.get_structure_hook` and {meth}`BaseConverter.get_unstructure_hook` methods.
   ([#432](https://github.com/python-attrs/cattrs/issues/432) [#472](https://github.com/python-attrs/cattrs/pull/472))
 - The default union handler now properly takes renamed fields into account.
@@ -26,6 +29,8 @@
 - Tests are run with the pytest-xdist plugin by default.
 - Rework the introductory parts of the documentation, introducing the Basics section.
   ([#472](https://github.com/python-attrs/cattrs/pull/472))
+- The documentation has been significantly reworked.
+  ([#473](https://github.com/python-attrs/cattrs/pull/473))
 - The docs now use the Inter font.
 
 ## 23.2.3 (2023-11-30)

@@ -37,8 +37,8 @@ def test_unstructure_bare_final(genconverter: Converter) -> None:
     assert genconverter.unstructure(D(1)) == {"a": 1, "b": 5, "c": 3}
 
     genconverter.register_unstructure_hook(int, lambda i: str(i))
-    # Bare finals don't work with factories.
-    assert genconverter.unstructure(D(1)) == {"a": "1", "b": "5", "c": 3}
+    # Bare finals resolve to `Final[Any]`, so the custom hook works.
+    assert genconverter.unstructure(D(1)) == {"a": "1", "b": "5", "c": "3"}
 
 
 def test_structure_bare_final(genconverter: Converter) -> None:

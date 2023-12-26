@@ -13,38 +13,32 @@ from .errors import (
 from .gen import override
 from .v import transform_error
 
-__all__ = (
-    "AttributeValidationNote",
-    "BaseConverter",
-    "BaseValidationError",
-    "ClassValidationError",
-    "Converter",
-    "converters",
-    "disambiguators",
-    "dispatch",
-    "errors",
-    "ForbiddenExtraKeysError",
-    "gen",
-    "GenConverter",
-    "global_converter",
-    "IterableValidationError",
-    "IterableValidationNote",
-    "override",
-    "preconf",
+__all__ = [
+    "structure",
+    "unstructure",
+    "get_structure_hook",
+    "get_unstructure_hook",
     "register_structure_hook_func",
     "register_structure_hook",
     "register_unstructure_hook_func",
     "register_unstructure_hook",
     "structure_attrs_fromdict",
     "structure_attrs_fromtuple",
-    "structure",
+    "global_converter",
+    "BaseConverter",
+    "Converter",
+    "AttributeValidationNote",
+    "BaseValidationError",
+    "ClassValidationError",
+    "ForbiddenExtraKeysError",
+    "GenConverter",
+    "IterableValidationError",
+    "IterableValidationNote",
+    "override",
     "StructureHandlerNotFoundError",
     "transform_error",
-    "unstructure",
     "UnstructureStrategy",
-    "get_structure_hook",
-    "get_unstructure_hook",
-)
+]
 
 #: The global converter. Prefer creating your own if customizations are required.
 global_converter: Final = Converter()

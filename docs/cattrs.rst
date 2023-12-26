@@ -1,6 +1,11 @@
 cattrs package
 ==============
 
+.. automodule:: cattrs
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
@@ -13,14 +18,6 @@ Subpackages
 
 Submodules
 ----------
-
-cattrs.converters module
-------------------------
-
-.. automodule:: cattrs.converters
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 cattrs.disambiguators module
 ----------------------------
@@ -58,14 +55,6 @@ cattrs.v module
 ---------------
 
 .. automodule:: cattrs.v
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: cattrs
    :members:
    :undoc-members:
    :show-inheritance:

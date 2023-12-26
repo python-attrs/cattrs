@@ -1,8 +1,6 @@
-# Tips for Handling Unions
+# Handling Unions
 
-This sections contains information for advanced union handling.
-
-As mentioned in the structuring section, _cattrs_ is able to handle simple unions of _attrs_ classes [automatically](#default-union-strategy).
+_cattrs_ is able to handle simple unions of _attrs_ classes [automatically](#default-union-strategy).
 More complex cases require converter customization (since there are many ways of handling unions).
 
 _cattrs_ also comes with a number of strategies to help handle unions:
@@ -34,7 +32,7 @@ class ClassB:
 In this case, a payload containing `{"field_one": "one"}` will produce an instance of `ClassA`.
 
 ````{note}
-The following snippet can be used to disable the use of literal fields, restoring the previous behavior.
+The following snippet can be used to disable the use of literal fields, restoring legacy behavior.
 
 ```python
 from functools import partial
