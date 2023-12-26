@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Tuple, TypeV
 from attrs import NOTHING, Factory, resolve_types
 
 from .._compat import (
+    TypeAlias,
     adapted_fields,
     get_args,
     get_origin,
@@ -33,6 +34,15 @@ if TYPE_CHECKING:  # pragma: no cover
     from typing_extensions import Literal
 
     from cattr.converters import BaseConverter
+
+__all__ = [
+    "make_dict_unstructure_fn",
+    "make_dict_structure_fn",
+    "make_iterable_unstructure_fn",
+    "make_hetero_tuple_unstructure_fn",
+    "make_mapping_unstructure_fn",
+    "make_mapping_structure_fn",
+]
 
 
 def override(
@@ -682,7 +692,8 @@ def make_iterable_unstructure_fn(
     return globs[fn_name]
 
 
-HeteroTupleUnstructureFn = Callable[[Tuple[Any, ...]], Any]
+#: A type alias for heterogeneous tuple unstructure hooks.
+HeteroTupleUnstructureFn: TypeAlias = Callable[[Tuple[Any, ...]], Any]
 
 
 def make_hetero_tuple_unstructure_fn(
