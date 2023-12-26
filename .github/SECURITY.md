@@ -1,7 +1,7 @@
 # Security Policy
 
 
-## Supported Versions
+## Versioning and Backwards Compatibility
 
 _cattrs_ follows [*CalVer*](https://calver.org) and we only support the latest PyPI version, due to limited resources.
 We aim to support all Python versions that are not end-of-life; older versions will be dropped to ease the maintenance burden.
@@ -13,7 +13,7 @@ All breaking changes are prominently called out in the changelog, alongside any 
 APIs may be marked as provisional.
 These are not guaranteed to be stable and may change or be removed without prior notice.
 
-## Security contact information
+## Security Contact Information
 
 To report a security vulnerability, please use the [Tidelift security contact](https://tidelift.com/security).
 Tidelift will coordinate the fix and disclosure.
