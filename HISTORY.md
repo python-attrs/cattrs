@@ -2,10 +2,18 @@
 ```{currentmodule} cattrs
 ```
 
+This project adheres to [Calendar Versioning](https://calver.org/).
+The first number of the version is the year.
+The second number is incremented with each release, starting at 1 for each year.
+The third number is for emergencies when we need to start branches for older releases.
+
+Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
+
 ## 24.1.0 (UNRELEASED)
 
 - **Potentially breaking**: Unstructuring hooks for `typing.Any` are consistent now: values are unstructured using their runtime type.
   Previously this behavior was underspecified and inconsistent, but followed this rule in the majority of cases.
+  Reverting old behavior is very dependent on the actual case; ask on the issue tracker if in doubt.
   ([#473](https://github.com/python-attrs/cattrs/pull/473))
 - Introduce {meth}`BaseConverter.get_structure_hook` and {meth}`BaseConverter.get_unstructure_hook` methods.
   ([#432](https://github.com/python-attrs/cattrs/issues/432) [#472](https://github.com/python-attrs/cattrs/pull/472))
