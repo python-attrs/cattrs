@@ -446,14 +446,6 @@ _cattrs_ comes with the [](strategies.md#union-passthrough), which enables conve
 This strategy can be applied to any converter, and is pre-applied to all [preconf](preconf.md) converters according to their underlying protocols.
 
 
-### Manual Disambiguation
-
-To support arbitrary unions, register a custom hooks for the union like any other type.
-Due to special handling, both [](customizing.md#manual-unstructuring-hooks) and [](customizing.md#predicate-hooks) support unions.
-
-Another option is to use a custom tagged union strategy (see [Strategies - Tagged Unions](strategies.md#tagged-unions-strategy)).
-
-
 ## Special Typing Forms
 
 
