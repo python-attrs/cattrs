@@ -1,6 +1,11 @@
 cattrs.preconf package
 ======================
 
+.. automodule:: cattrs.preconf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -64,14 +69,6 @@ cattrs.preconf.ujson module
 ---------------------------
 
 .. automodule:: cattrs.preconf.ujson
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: cattrs.preconf
    :members:
    :undoc-members:
    :show-inheritance:

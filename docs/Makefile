@@ -171,8 +171,9 @@ pseudoxml:
 	@echo
 	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
 
+.PHONY: apidoc
 apidoc:
-	pdm run sphinx-apidoc -o . ../src/cattrs/ -f
+	pdm run sphinx-apidoc -o . ../src/cattrs/ '../**/converters.py' -f -M
 
 ## htmlview       to open the index page built by the html target in your browser
 .PHONY: htmlview
