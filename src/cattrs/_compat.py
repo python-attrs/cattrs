@@ -172,7 +172,7 @@ def is_hetero_tuple(type: Any) -> bool:
 
 
 def is_protocol(type: Any) -> bool:
-    return issubclass(type, Protocol) and getattr(type, "_is_protocol", False)
+    return is_subclass(type, Protocol) and getattr(type, "_is_protocol", False)
 
 
 def is_bare_final(type) -> bool:
@@ -245,7 +245,7 @@ if sys.version_info >= (3, 9):
     def is_tuple(type):
         return (
             type in (Tuple, tuple)
-            or (type.__class__ is _GenericAlias and issubclass(type.__origin__, Tuple))
+            or (type.__class__ is _GenericAlias and is_subclass(type.__origin__, Tuple))
             or (getattr(type, "__origin__", None) is tuple)
         )
 
@@ -324,7 +324,7 @@ if sys.version_info >= (3, 9):
                 type.__class__ is _GenericAlias
                 and (
                     (origin is not tuple)
-                    and issubclass(origin, TypingSequence)
+                    and is_subclass(origin, TypingSequence)
                     or origin is tuple
                     and type.__args__[1] is ...
                 )
@@ -336,7 +336,7 @@ if sys.version_info >= (3, 9):
     def is_deque(type):
         return (
             type in (deque, Deque)
-            or (type.__class__ is _GenericAlias and issubclass(type.__origin__, deque))
+            or (type.__class__ is _GenericAlias and is_subclass(type.__origin__, deque))
             or (getattr(type, "__origin__", None) is deque)
         )
 
@@ -345,7 +345,7 @@ if sys.version_info >= (3, 9):
             type in (TypingSet, TypingMutableSet, set)
             or (
                 type.__class__ is _GenericAlias
-                and issubclass(type.__origin__, TypingMutableSet)
+                and is_subclass(type.__origin__, TypingMutableSet)
             )
             or (getattr(type, "__origin__", None) in (set, AbcMutableSet, AbcSet))
         )
@@ -355,7 +355,7 @@ if sys.version_info >= (3, 9):
             type in (FrozenSet, frozenset)
             or (
                 type.__class__ is _GenericAlias
-                and issubclass(type.__origin__, FrozenSet)
+                and is_subclass(type.__origin__, FrozenSet)
             )
             or (getattr(type, "__origin__", None) is frozenset)
         )
@@ -370,13 +370,13 @@ if sys.version_info >= (3, 9):
             type in (dict, Dict, TypingMapping, TypingMutableMapping, AbcMutableMapping)
             or (
                 type.__class__ is _GenericAlias
-                and issubclass(type.__origin__, TypingMapping)
+                and is_subclass(type.__origin__, TypingMapping)
             )
             or (
                 getattr(type, "__origin__", None)
                 in (dict, AbcMutableMapping, AbcMapping)
             )
-            or issubclass(type, dict)
+            or is_subclass(type, dict)
         )
 
     def is_counter(type):
@@ -427,7 +427,7 @@ else:
 
     def is_tuple(type):
         return type in (Tuple, tuple) or (
-            type.__class__ is _GenericAlias and issubclass(type.__origin__, Tuple)
+            type.__class__ is _GenericAlias and is_subclass(type.__origin__, Tuple)
         )
 
     def is_union_type(obj):
@@ -450,7 +450,7 @@ else:
             type.__class__ is _GenericAlias
             and (
                 type.__origin__ not in (Union, Tuple, tuple)
-                and issubclass(type.__origin__, TypingSequence)
+                and is_subclass(type.__origin__, TypingSequence)
             )
             or (type.__origin__ in (Tuple, tuple) and type.__args__[1] is ...)
         )
@@ -458,24 +458,24 @@ else:
     def is_deque(type: Any) -> bool:
         return (
             type in (deque, Deque)
-            or (type.__class__ is _GenericAlias and issubclass(type.__origin__, deque))
+            or (type.__class__ is _GenericAlias and is_subclass(type.__origin__, deque))
             or type.__origin__ is deque
         )
 
     def is_mutable_set(type):
         return type is set or (
-            type.__class__ is _GenericAlias and issubclass(type.__origin__, MutableSet)
+            type.__class__ is _GenericAlias and is_subclass(type.__origin__, MutableSet)
         )
 
     def is_frozenset(type):
         return type is frozenset or (
-            type.__class__ is _GenericAlias and issubclass(type.__origin__, FrozenSet)
+            type.__class__ is _GenericAlias and is_subclass(type.__origin__, FrozenSet)
         )
 
     def is_mapping(type):
         return type in (TypingMapping, dict) or (
             type.__class__ is _GenericAlias
-            and issubclass(type.__origin__, TypingMapping)
+            and is_subclass(type.__origin__, TypingMapping)
         )
 
     bare_generic_args = {
