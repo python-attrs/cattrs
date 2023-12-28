@@ -12,7 +12,7 @@ test = [
     "pytest-benchmark>=4.0.0",
     "immutables>=0.20",
     "typing-extensions>=4.7.1",
-    "coverage>=7.2.7",
+    "coverage>=7.4.0",
     "pytest-xdist>=3.4.0",
 ]
 docs = [
