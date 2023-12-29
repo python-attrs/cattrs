@@ -1,4 +1,5 @@
 """Tests for auto-disambiguators."""
+from dataclasses import dataclass
 from functools import partial
 from typing import Literal, Union
 
@@ -7,11 +8,7 @@ from attrs import NOTHING, asdict, define, field, fields
 from hypothesis import HealthCheck, assume, given, settings
 
 from cattrs import Converter
-from cattrs.disambiguators import (
-    create_default_dis_func,
-    create_uniq_field_dis_func,
-    is_supported_union,
-)
+from cattrs.disambiguators import create_default_dis_func, is_supported_union
 from cattrs.gen import make_dict_structure_fn, override
 
 from .untyped import simple_classes
@@ -27,7 +24,7 @@ def test_edge_errors():
 
     with pytest.raises(ValueError):
         # Can't generate for only one class.
-        create_uniq_field_dis_func(c, A)
+        create_default_dis_func(c, A)
 
     with pytest.raises(ValueError):
         create_default_dis_func(c, A)
@@ -38,7 +35,7 @@ def test_edge_errors():
 
     with pytest.raises(TypeError):
         # No fields on either class.
-        create_uniq_field_dis_func(c, A, B)
+        create_default_dis_func(c, A, B)
 
     @define
     class C:
@@ -50,7 +47,7 @@ def test_edge_errors():
 
     with pytest.raises(TypeError):
         # No unique fields on either class.
-        create_uniq_field_dis_func(c, C, D)
+        create_default_dis_func(c, C, D)
 
     with pytest.raises(TypeError):
         # No discriminator candidates
@@ -66,7 +63,7 @@ def test_edge_errors():
 
     with pytest.raises(TypeError):
         # no usable non-default attributes
-        create_uniq_field_dis_func(c, E, F)
+        create_default_dis_func(c, E, F)
 
     @define
     class G:
@@ -93,7 +90,7 @@ def test_fallback(cl_and_vals):
     class A:
         pass
 
-    fn = create_uniq_field_dis_func(c, A, cl)
+    fn = create_default_dis_func(c, A, cl)
 
     assert fn({}) is A
     assert fn(asdict(cl(*vals, **kwargs))) is cl
@@ -124,7 +121,7 @@ def test_disambiguation(cl_and_vals_a, cl_and_vals_b):
     for attr_name in req_b - req_a:
         assume(getattr(fields(cl_b), attr_name).default is NOTHING)
 
-    fn = create_uniq_field_dis_func(c, cl_a, cl_b)
+    fn = create_default_dis_func(c, cl_a, cl_b)
 
     assert fn(asdict(cl_a(*vals_a, **kwargs_a))) is cl_a
 
@@ -271,3 +268,33 @@ def test_field_renaming(converter: Converter):
 
     assert converter.structure({"a": 1}, Union[A, B]) == A(1)
     assert converter.structure({"b": 1}, Union[A, B]) == B(1)
+
+
+def test_dataclasses(converter):
+    """The default strategy works for dataclasses too."""
+
+    @define
+    class A:
+        a: int
+
+    @dataclass
+    class B:
+        b: int
+
+    assert converter.structure({"a": 1}, Union[A, B]) == A(1)
+    assert converter.structure({"b": 1}, Union[A, B]) == B(1)
+
+
+def test_dataclasses_literals(converter):
+    """The default strategy works for dataclasses too."""
+
+    @define
+    class A:
+        a: Literal["a"] = "a"
+
+    @dataclass
+    class B:
+        b: Literal["b"]
+
+    assert converter.structure({"a": "a"}, Union[A, B]) == A()
+    assert converter.structure({"b": "b"}, Union[A, B]) == B("b")
