@@ -2,13 +2,23 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from dataclasses import MISSING
 from functools import reduce
 from operator import or_
 from typing import TYPE_CHECKING, Any, Callable, Literal, Mapping, Union
 
-from attrs import NOTHING, Attribute, AttrsInstance, fields, fields_dict
+from attrs import NOTHING, Attribute, AttrsInstance
 
-from ._compat import NoneType, get_args, get_origin, has, is_literal, is_union_type
+from ._compat import (
+    NoneType,
+    adapted_fields,
+    fields_dict,
+    get_args,
+    get_origin,
+    has,
+    is_literal,
+    is_union_type,
+)
 from .gen import AttributeOverride
 
 if TYPE_CHECKING:
@@ -31,13 +41,16 @@ def create_default_dis_func(
     overrides: dict[str, AttributeOverride]
     | Literal["from_converter"] = "from_converter",
 ) -> Callable[[Mapping[Any, Any]], type[Any] | None]:
-    """Given attrs classes, generate a disambiguation function.
+    """Given attrs classes or dataclasses, generate a disambiguation function.
 
     The function is based on unique fields without defaults or unique values.
 
     :param use_literals: Whether to try using fields annotated as literals for
         disambiguation.
     :param overrides: Attribute overrides to apply.
+
+    .. versionchanged:: 24.1.0
+        Dataclasses are now supported.
     """
     if len(classes) < 2:
         raise ValueError("At least two classes required.")
@@ -55,7 +68,11 @@ def create_default_dis_func(
         # (... TODO: a single fallback is OK)
         #  - it must always be enumerated
         cls_candidates = [
-            {at.name for at in fields(get_origin(cl) or cl) if is_literal(at.type)}
+            {
+                at.name
+                for at in adapted_fields(get_origin(cl) or cl)
+                if is_literal(at.type)
+            }
             for cl in classes
         ]
 
@@ -128,10 +145,10 @@ def create_default_dis_func(
         uniq = cl_reqs - other_reqs
 
         # We want a unique attribute with no default.
-        cl_fields = fields(get_origin(cl) or cl)
+        cl_fields = fields_dict(get_origin(cl) or cl)
         for maybe_renamed_attr_name in uniq:
             orig_name = back_map[maybe_renamed_attr_name]
-            if getattr(cl_fields, orig_name).default is NOTHING:
+            if cl_fields[orig_name].default in (NOTHING, MISSING):
                 break
         else:
             if fallback is None:
@@ -173,13 +190,13 @@ def _overriden_name(at: Attribute, override: AttributeOverride | None) -> str:
 
 
 def _usable_attribute_names(
-    cl: type[AttrsInstance], overrides: dict[str, AttributeOverride]
+    cl: type[Any], overrides: dict[str, AttributeOverride]
 ) -> tuple[set[str], dict[str, str]]:
     """Return renamed fields and a mapping to original field names."""
     res = set()
     mapping = {}
 
-    for at in fields(get_origin(cl) or cl):
+    for at in adapted_fields(get_origin(cl) or cl):
         res.add(n := _overriden_name(at, overrides.get(at.name)))
         mapping[n] = at.name
 

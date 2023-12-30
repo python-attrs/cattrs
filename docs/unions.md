@@ -1,9 +1,9 @@
 # Handling Unions
 
-_cattrs_ is able to handle simple unions of _attrs_ classes [automatically](#default-union-strategy).
+_cattrs_ is able to handle simple unions of _attrs_ classes and dataclasses [automatically](#default-union-strategy).
 More complex cases require converter customization (since there are many ways of handling unions).
 
-_cattrs_ also comes with a number of strategies to help handle unions:
+_cattrs_ also comes with a number of optional strategies to help handle unions:
 
 - [tagged unions strategy](strategies.md#tagged-unions-strategy) mentioned below
 - [union passthrough strategy](strategies.md#union-passthrough), which is preapplied to all the [preconfigured](preconf.md) converters
@@ -12,10 +12,10 @@ _cattrs_ also comes with a number of strategies to help handle unions:
 
 For convenience, _cattrs_ includes a default union structuring strategy which is a little more opinionated.
 
-Given a union of several _attrs_ classes, the default union strategy will attempt to handle it in several ways.
+Given a union of several _attrs_ classes and/or dataclasses, the default union strategy will attempt to handle it in several ways.
 
 First, it will look for `Literal` fields.
-If all members of the union contain a literal field, _cattrs_ will generate a disambiguation function based on the field.
+If _all members_ of the union contain a literal field, _cattrs_ will generate a disambiguation function based on the field.
 
 ```python
 from typing import Literal
@@ -66,6 +66,10 @@ The field `field_with_default` will not be considered since it has a default val
 
 ```{versionchanged} 23.2.0
 Literals can now be potentially used to disambiguate.
+```
+
+```{versionchanged} 24.1.0
+Dataclasses are now supported in addition to _attrs_ classes.
 ```
 
 ## Unstructuring Unions with Extra Metadata

@@ -2,7 +2,7 @@ import sys
 from collections import deque
 from collections.abc import MutableSet as AbcMutableSet
 from collections.abc import Set as AbcSet
-from dataclasses import MISSING, is_dataclass
+from dataclasses import MISSING, Field, is_dataclass
 from dataclasses import fields as dataclass_fields
 from typing import AbstractSet as TypingAbstractSet
 from typing import (
@@ -18,6 +18,7 @@ from typing import (
     Protocol,
     Tuple,
     Type,
+    Union,
     get_args,
     get_origin,
     get_type_hints,
@@ -31,9 +32,11 @@ from typing import Set as TypingSet
 
 from attrs import NOTHING, Attribute, Factory, resolve_types
 from attrs import fields as attrs_fields
+from attrs import fields_dict as attrs_fields_dict
 
 __all__ = [
     "adapted_fields",
+    "fields_dict",
     "ExceptionGroup",
     "ExtensionsTypedDict",
     "get_type_alias_base",
@@ -117,6 +120,13 @@ def fields(type):
             return dataclass_fields(type)
         except AttributeError:
             raise Exception("Not an attrs or dataclass class.") from None
+
+
+def fields_dict(type) -> Dict[str, Union[Attribute, Field]]:
+    """Return the fields_dict for attrs and dataclasses."""
+    if is_dataclass(type):
+        return {f.name: f for f in dataclass_fields(type)}
+    return attrs_fields_dict(type)
 
 
 def adapted_fields(cl) -> List[Attribute]:
