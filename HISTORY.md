@@ -20,7 +20,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - The default union handler now properly takes renamed fields into account.
   ([#472](https://github.com/python-attrs/cattrs/pull/472))
 - The default union handler now also handles dataclasses.
-  ([#](https://github.com/python-attrs/cattrs/pull/))
+  ([#426](https://github.com/python-attrs/cattrs/issues/426) [#477](https://github.com/python-attrs/cattrs/pull/477))
 - Add support for [PEP 695](https://peps.python.org/pep-0695/) type aliases.
   ([#452](https://github.com/python-attrs/cattrs/pull/452))
 - The `include_subclasses` strategy now fetches the member hooks from the converter (making use of converter defaults) if overrides are not provided, instead of generating new hooks with no overrides.
