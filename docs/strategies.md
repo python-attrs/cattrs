@@ -99,7 +99,7 @@ The `tag_generator` parameter is a callable, so we can give it the `get` method 
 ...     AppleNotification,
 ...     c,
 ...     tag_name="notificationType",
-...     tag_generator={Refund: "REFUND"},
+...     tag_generator={Refund: "REFUND"}.get,
 ...     default=OtherAppleNotification
 ... )
 
