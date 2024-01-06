@@ -750,12 +750,10 @@ class BaseConverter:
     ) -> Callable[[Any], type]:
         """Fetch or try creating a disambiguation function for a union."""
         union_types = union.__args__
-        if NoneType in union_types:  # type: ignore
+        if NoneType in union_types:
             # We support unions of attrs classes and NoneType higher in the
             # logic.
-            union_types = tuple(
-                e for e in union_types if e is not NoneType  # type: ignore
-            )
+            union_types = tuple(e for e in union_types if e is not NoneType)
 
         # TODO: technically both disambiguators could support TypedDicts and
         # dataclasses...

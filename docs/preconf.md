@@ -56,15 +56,6 @@ Found at {mod}`cattrs.preconf.json`.
 Bytes are serialized as base 85 strings. Counters are serialized as dictionaries. Sets are serialized as lists, and deserialized back into sets. `datetime` s and `date` s are serialized as ISO 8601 strings.
 
 
-## _ujson_
-
-Found at {mod}`cattrs.preconf.ujson`.
-
-Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets. `datetime` s and `date` s are serialized as ISO 8601 strings.
-
-`ujson` doesn't support integers less than -9223372036854775808, and greater than 9223372036854775807, nor does it support `float('inf')`.
-
-
 ## _orjson_
 
 Found at {mod}`cattrs.preconf.orjson`.
@@ -75,6 +66,25 @@ Sets are unstructured into lists, and structured back into sets.
 
 _orjson_ doesn't support integers less than -9223372036854775808, and greater than 9223372036854775807.
 _orjson_ only supports mappings with string keys so mappings will have their keys stringified before serialization, and destringified during deserialization.
+
+
+## _msgspec_
+
+Found at {mod}`cattrs.preconf.msgspec`.
+Only JSON functionality is currently available, other formats supported by msgspec to follow in the future.
+
+Bytes are un/structured as base 64 strings directly by msgspec.
+_msgspec_ [encodes special float values](https://jcristharif.com/msgspec/supported-types.html#float) (`NaN, Inf, -Inf`) as `null`.
+`datetime` s and `date` s are passed through to be unstructured into RFC 3339 by _msgspec_ itself.
+
+
+## _ujson_
+
+Found at {mod}`cattrs.preconf.ujson`.
+
+Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets. `datetime` s and `date` s are serialized as ISO 8601 strings.
+
+`ujson` doesn't support integers less than -9223372036854775808, and greater than 9223372036854775807, nor does it support `float('inf')`.
 
 
 ## _msgpack_
