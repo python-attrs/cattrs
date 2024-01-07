@@ -4,7 +4,6 @@ from typing import Callable, List
 from attrs import define
 from hypothesis import given
 from msgspec import Struct, to_builtins
-from msgspec.json import encode
 from pytest import fixture
 
 from cattrs.fns import identity

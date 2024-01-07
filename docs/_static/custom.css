@@ -72,7 +72,7 @@ span:target ~ h6:first-of-type {
 
 div.article-container > article {
   font-size: 17px;
-  line-height: 31px;
+  line-height: 29px;
 }
 
 div.admonition {
@@ -89,7 +89,7 @@ p.admonition-title {
 
 article > li > a {
   font-size: 19px;
-  line-height: 31px;
+  line-height: 29px;
 }
 
 div.tab-set {

@@ -24,7 +24,8 @@ __all__ = ["MsgspecJsonConverter", "configure_converter", "make_converter"]
 
 
 class MsgspecJsonConverter(Converter):
-    _encoder: Encoder = Encoder()
+    #: The msgspec encoder for dumping.
+    encoder: Encoder = Encoder()
 
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> bytes:
         """Unstructure and encode `obj` into JSON bytes."""

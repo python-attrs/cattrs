@@ -70,24 +70,30 @@ _orjson_ only supports mappings with string keys so mappings will have their key
 
 ## _msgspec_
 
-```{versionadded} 24.1.0
-
-```
-
 Found at {mod}`cattrs.preconf.msgspec`.
 Only JSON functionality is currently available, other formats supported by msgspec to follow in the future.
 
-[_msgspec_ structs](https://jcristharif.com/msgspec/structs.html) are supported, but not composable - a struct will be handed over to _msgspec_ directly, and _msgspec_ will handle it.
+[_msgspec_ structs](https://jcristharif.com/msgspec/structs.html) are supported, but not composable - a struct will be handed over to _msgspec_ directly, and _msgspec_ will handle and all of its fields, recursively.
 _cattrs_ may get more sophisticated handling of structs in the future.
 
-Bytes are un/structured as base 64 strings directly by msgspec.
-_msgspec_ [encodes special float values](https://jcristharif.com/msgspec/supported-types.html#float) (`NaN, Inf, -Inf`) as `null`.
-`datetime` s and `date` s are passed through to be unstructured into RFC 3339 by _msgspec_ itself.
+[_msgspec_ strict mode](https://jcristharif.com/msgspec/usage.html#strict-vs-lax-mode) is used by default.
+This can be customized by changing the {meth}`encoder <cattrs.preconf.msgspec.MsgspecJsonConverter.encoder>` attribute on the converter.
 
-_attrs_ classes, dataclasses and sequences are handled directly by msgspec if possible, otherwise by the normal _cattrs_ machinery.
+What _cattrs_ calls _unstructuring_ and _structuring_, _msgspec_ calls [`to_builtins` and `convert`](https://jcristharif.com/msgspec/converters.html).
+What _cattrs_ refers to as _dumping_ and _loading_, _msgspec_ refers to as [`encoding` and `decoding`](https://jcristharif.com/msgspec/usage.html).
+
+Compatibility notes:
+- Bytes are un/structured as base 64 strings directly by _msgspec_ itself.
+- _msgspec_ [encodes special float values](https://jcristharif.com/msgspec/supported-types.html#float) (`NaN, Inf, -Inf`) as `null`.
+- `datetime` s and `date` s are passed through to be unstructured into RFC 3339 by _msgspec_ itself.
+- _attrs_ classes, dataclasses and sequences are handled directly by _msgspec_ if possible, otherwise by the normal _cattrs_ machinery.
 This means it's possible the validation errors produced may be _msgspec_ validation errors instead of _cattrs_ validation errors.
 
 _msgspec_ doesn't support PyPy.
+
+```{versionadded} 24.1.0
+
+```
 
 ## _ujson_
 
@@ -111,10 +117,6 @@ When parsing msgpack data from bytes, the library needs to be passed `strict_map
 
 ## _cbor2_
 
-```{versionadded} 23.1.0
-
-```
-
 Found at {mod}`cattrs.preconf.cbor2`.
 
 _cbor2_ implements a fully featured CBOR encoder with several extensions for handling shared references, big integers, rational numbers and so on.
@@ -133,6 +135,9 @@ Use keyword argument `canonical=True` for efficient encoding to the smallest bin
 Floats can be forced to smaller output by casting to lower-precision formats by casting to `numpy` floats (and back to Python floats).
 Example: `float(np.float32(value))` or `float(np.float16(value))`
 
+```{versionadded} 23.1.0
+
+```
 
 ## _bson_
 
