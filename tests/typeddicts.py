@@ -1,5 +1,5 @@
 """Strategies for typed dicts."""
-from datetime import datetime
+from datetime import datetime, timezone
 from string import ascii_lowercase
 from typing import Any, Dict, Generic, List, Optional, Set, Tuple, TypeVar
 
@@ -94,7 +94,9 @@ def datetime_attributes(
     draw: DrawFn, total: bool = True, not_required: bool = False
 ) -> Tuple[datetime, SearchStrategy, SearchStrategy]:
     success_strat = datetimes(
-        min_value=datetime(1970, 1, 1), max_value=datetime(2038, 1, 1)
+        min_value=datetime(1970, 1, 1),
+        max_value=datetime(2038, 1, 1),
+        timezones=just(timezone.utc),
     ).map(lambda dt: dt.replace(microsecond=0))
     type = datetime
     strat = success_strat if total else success_strat | just(NOTHING)

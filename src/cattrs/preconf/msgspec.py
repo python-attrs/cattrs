@@ -8,7 +8,7 @@ from typing import Any, Callable, TypeVar, Union
 from attrs import has as attrs_has
 from attrs import resolve_types
 from msgspec import Struct, convert, to_builtins
-from msgspec.json import decode, encode
+from msgspec.json import Encoder, decode
 
 from cattrs._compat import fields, get_origin, has, is_bare, is_sequence
 from cattrs.dispatch import HookFactory, UnstructureHook
@@ -24,16 +24,21 @@ __all__ = ["MsgspecJsonConverter", "configure_converter", "make_converter"]
 
 
 class MsgspecJsonConverter(Converter):
+    _encoder: Encoder = Encoder()
+
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> bytes:
         """Unstructure and encode `obj` into JSON bytes."""
-        return encode(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
+        return self._encoder.encode(
+            self.unstructure(obj, unstructure_as=unstructure_as), **kwargs
+        )
 
     def get_dumps_hook(
         self, unstructure_as: Any, **kwargs: Any
     ) -> Callable[[Any], bytes]:
+        """Produce a `dumps` hook for the given type."""
         unstruct_hook = self.get_unstructure_hook(unstructure_as)
         if unstruct_hook in (identity, to_builtins):
-            return encode
+            return self._encoder.encode
         return self.dumps
 
     def loads(self, data: bytes, cl: type[T], **kwargs: Any) -> T:
