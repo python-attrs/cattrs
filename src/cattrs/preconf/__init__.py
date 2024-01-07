@@ -18,10 +18,10 @@ T = TypeVar("T")
 P = ParamSpec("P")
 
 
-def wrap(inner: Callable[P, Any]) -> Callable[[Callable[..., T]], Callable[P, T]]:
+def wrap(_: Callable[P, Any]) -> Callable[[Callable[..., T]], Callable[P, T]]:
     """Wrap a `Converter` `__init__` in a type-safe way."""
 
     def impl(x: Callable[..., T]) -> Callable[P, T]:
-        return inner
+        return x
 
     return impl

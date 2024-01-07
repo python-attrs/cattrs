@@ -4,8 +4,7 @@ from datetime import date, datetime
 from json import dumps, loads
 from typing import Any, Type, TypeVar, Union
 
-from cattrs._compat import AbstractSet, Counter
-
+from .._compat import AbstractSet, Counter
 from ..converters import BaseConverter, Converter
 from ..strategies import configure_union_passthrough
 from . import wrap
@@ -25,10 +24,12 @@ def configure_converter(converter: BaseConverter):
     """
     Configure the converter for use with the stdlib json module.
 
-    * bytes are serialized as base64 strings
+    * bytes are serialized as base85 strings
     * datetimes are serialized as ISO 8601
     * counters are serialized as dicts
     * sets are serialized as lists
+    * union passthrough is configured for unions of strings, bools, ints,
+      floats and None
     """
     converter.register_unstructure_hook(
         bytes, lambda v: (b85encode(v) if v else b"").decode("utf8")
@@ -38,7 +39,7 @@ def configure_converter(converter: BaseConverter):
     converter.register_structure_hook(datetime, lambda v, _: datetime.fromisoformat(v))
     converter.register_unstructure_hook(date, lambda v: v.isoformat())
     converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
-    configure_union_passthrough(Union[str, bool, int, float, None, bytes], converter)
+    configure_union_passthrough(Union[str, bool, int, float, None], converter)
 
 
 @wrap(JsonConverter)
