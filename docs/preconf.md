@@ -77,9 +77,15 @@ _orjson_ only supports mappings with string keys so mappings will have their key
 Found at {mod}`cattrs.preconf.msgspec`.
 Only JSON functionality is currently available, other formats supported by msgspec to follow in the future.
 
+[_msgspec_ structs](https://jcristharif.com/msgspec/structs.html) are supported, but not composable - a struct will be handed over to _msgspec_ directly, and _msgspec_ will handle it.
+_cattrs_ may get more sophisticated handling of structs in the future.
+
 Bytes are un/structured as base 64 strings directly by msgspec.
 _msgspec_ [encodes special float values](https://jcristharif.com/msgspec/supported-types.html#float) (`NaN, Inf, -Inf`) as `null`.
 `datetime` s and `date` s are passed through to be unstructured into RFC 3339 by _msgspec_ itself.
+
+_attrs_ classes, dataclasses and sequences are handled directly by msgspec if possible, otherwise by the normal _cattrs_ machinery.
+This means it's possible the validation errors produced may be _msgspec_ validation errors instead of _cattrs_ validation errors.
 
 _msgspec_ doesn't support PyPy.
 
@@ -89,7 +95,7 @@ Found at {mod}`cattrs.preconf.ujson`.
 
 Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets. `datetime` s and `date` s are serialized as ISO 8601 strings.
 
-`ujson` doesn't support integers less than -9223372036854775808, and greater than 9223372036854775807, nor does it support `float('inf')`.
+_ujson_ doesn't support integers less than -9223372036854775808, and greater than 9223372036854775807, nor does it support `float('inf')`.
 
 
 ## _msgpack_
