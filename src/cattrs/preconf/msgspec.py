@@ -5,6 +5,7 @@ from base64 import b64decode
 from datetime import date, datetime
 from typing import Any, TypeVar, Union
 
+from msgspec import convert
 from msgspec.json import decode, encode
 
 from ..converters import BaseConverter, Converter
@@ -34,7 +35,7 @@ def configure_converter(converter: BaseConverter) -> None:
     * union passthrough configured for str, bool, int, float and None
     """
     converter.register_structure_hook(bytes, lambda v, _: b64decode(v))
-    converter.register_structure_hook(datetime, lambda v, _: datetime.fromisoformat(v))
+    converter.register_structure_hook(datetime, lambda v, _: convert(v, datetime))
     converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
     configure_union_passthrough(Union[str, bool, int, float, None], converter)
 
