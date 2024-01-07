@@ -3,29 +3,27 @@ from __future__ import annotations
 
 from base64 import b64decode
 from datetime import date, datetime
-from typing import Any, Callable, ParamSpec, TypeVar, Union
+from typing import Any, ParamSpec, TypeVar, Union
 
 from msgspec.json import decode, encode
 
 from ..converters import BaseConverter, Converter
 from ..strategies import configure_union_passthrough
+from . import wrap
 
 T = TypeVar("T")
 P = ParamSpec("P")
 
-
-def wrap(inner: Callable[P, Any]) -> Callable[[Callable[..., T]], Callable[P, T]]:
-    def impl(x: Callable[..., T]) -> Callable[P, T]:
-        return inner
-
-    return impl
+__all__ = ["MsgspecJsonConverter", "configure_converter", "make_converter"]
 
 
 class MsgspecJsonConverter(Converter):
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> bytes:
+        """Unstructure and encode `obj` into JSON bytes."""
         return encode(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
     def loads(self, data: bytes, cl: type[T], **kwargs: Any) -> T:
+        """Decode and structure `cl` from the provided JSON bytes."""
         return self.structure(decode(data, **kwargs), cl)
 
 

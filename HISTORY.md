@@ -17,6 +17,9 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#473](https://github.com/python-attrs/cattrs/pull/473))
 - Introduce {meth}`BaseConverter.get_structure_hook` and {meth}`BaseConverter.get_unstructure_hook` methods.
   ([#432](https://github.com/python-attrs/cattrs/issues/432) [#472](https://github.com/python-attrs/cattrs/pull/472))
+- Introduce the [_msgspec_](https://jcristharif.com/msgspec/) {mod}`preconf converter <cattrs.preconf.msgspec>`.
+  Only JSON is supported for now, with other formats supported by _msgspec_ to come later.
+  ([#481](https://github.com/python-attrs/cattrs/pull/481))
 - The default union handler now properly takes renamed fields into account.
   ([#472](https://github.com/python-attrs/cattrs/pull/472))
 - The default union handler now also handles dataclasses.
@@ -25,6 +28,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#452](https://github.com/python-attrs/cattrs/pull/452))
 - The `include_subclasses` strategy now fetches the member hooks from the converter (making use of converter defaults) if overrides are not provided, instead of generating new hooks with no overrides.
   ([#429](https://github.com/python-attrs/cattrs/issues/429) [#472](https://github.com/python-attrs/cattrs/pull/472))
+- The preconf `make_converter` factories are now correctly typed.
+  ([#481](https://github.com/python-attrs/cattrs/pull/481))
 - The {class}`orjson preconf converter <cattrs.preconf.orjson.OrjsonConverter>` now passes through dates and datetimes to orjson while unstructuring, greatly improving speed.
   ([#463](https://github.com/python-attrs/cattrs/pull/463))
 - `cattrs.gen` generators now attach metadata to the generated functions, making them introspectable.

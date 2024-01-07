@@ -70,6 +70,10 @@ _orjson_ only supports mappings with string keys so mappings will have their key
 
 ## _msgspec_
 
+```{versionadded} 24.1.0
+
+```
+
 Found at {mod}`cattrs.preconf.msgspec`.
 Only JSON functionality is currently available, other formats supported by msgspec to follow in the future.
 
@@ -77,6 +81,7 @@ Bytes are un/structured as base 64 strings directly by msgspec.
 _msgspec_ [encodes special float values](https://jcristharif.com/msgspec/supported-types.html#float) (`NaN, Inf, -Inf`) as `null`.
 `datetime` s and `date` s are passed through to be unstructured into RFC 3339 by _msgspec_ itself.
 
+_msgspec_ doesn't support PyPy.
 
 ## _ujson_
 

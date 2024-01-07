@@ -41,6 +41,14 @@ cattrs.preconf.msgpack module
    :undoc-members:
    :show-inheritance:
 
+cattrs.preconf.msgspec module
+-----------------------------
+
+.. automodule:: cattrs.preconf.msgspec
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 cattrs.preconf.orjson module
 ----------------------------
 
