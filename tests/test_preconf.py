@@ -48,7 +48,6 @@ from cattrs.preconf.bson import make_converter as bson_make_converter
 from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
 from cattrs.preconf.json import make_converter as json_make_converter
 from cattrs.preconf.msgpack import make_converter as msgpack_make_converter
-from cattrs.preconf.msgspec import make_converter as msgspec_make_converter
 from cattrs.preconf.pyyaml import make_converter as pyyaml_make_converter
 from cattrs.preconf.tomlkit import make_converter as tomlkit_make_converter
 from cattrs.preconf.ujson import make_converter as ujson_make_converter
@@ -756,6 +755,8 @@ def test_cbor2_unions(union_and_val: tuple, detailed_validation: bool):
 
 @given(everythings(allow_inf=False))
 def test_msgspec_json_converter(everything: Everything):
+    from cattrs.preconf.msgspec import make_converter as msgspec_make_converter
+
     converter = msgspec_make_converter()
     raw = converter.dumps(everything)
     assert converter.loads(raw, Everything) == everything
@@ -764,6 +765,8 @@ def test_msgspec_json_converter(everything: Everything):
 @given(everythings(allow_inf=False))
 def test_msgspec_json_unstruct_collection_overrides(everything: Everything):
     """Ensure collection overrides work."""
+    from cattrs.preconf.msgspec import make_converter as msgspec_make_converter
+
     converter = msgspec_make_converter(
         unstruct_collection_overrides={AbstractSet: sorted}
     )
@@ -783,6 +786,8 @@ def test_msgspec_json_unstruct_collection_overrides(everything: Everything):
 )
 def test_msgspec_json_unions(union_and_val: tuple, detailed_validation: bool):
     """Native union passthrough works."""
+    from cattrs.preconf.msgspec import make_converter as msgspec_make_converter
+
     converter = msgspec_make_converter(detailed_validation=detailed_validation)
     type, val = union_and_val
 
