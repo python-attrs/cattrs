@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from base64 import b64decode
 from datetime import date, datetime
-from typing import Any, ParamSpec, TypeVar, Union
+from typing import Any, TypeVar, Union
 
 from msgspec.json import decode, encode
 
@@ -12,7 +12,6 @@ from ..strategies import configure_union_passthrough
 from . import wrap
 
 T = TypeVar("T")
-P = ParamSpec("P")
 
 __all__ = ["MsgspecJsonConverter", "configure_converter", "make_converter"]
 
