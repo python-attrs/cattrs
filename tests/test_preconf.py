@@ -753,6 +753,7 @@ def test_cbor2_unions(union_and_val: tuple, detailed_validation: bool):
     assert converter.structure(val, type) == val
 
 
+@pytest.mark.skipif(python_implementation() == "PyPy", reason="no msgspec on PyPy")
 @given(everythings(allow_inf=False))
 def test_msgspec_json_converter(everything: Everything):
     from cattrs.preconf.msgspec import make_converter as msgspec_make_converter
@@ -762,6 +763,7 @@ def test_msgspec_json_converter(everything: Everything):
     assert converter.loads(raw, Everything) == everything
 
 
+@pytest.mark.skipif(python_implementation() == "PyPy", reason="no msgspec on PyPy")
 @given(everythings(allow_inf=False))
 def test_msgspec_json_unstruct_collection_overrides(everything: Everything):
     """Ensure collection overrides work."""
@@ -776,6 +778,7 @@ def test_msgspec_json_unstruct_collection_overrides(everything: Everything):
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
 
 
+@pytest.mark.skipif(python_implementation() == "PyPy", reason="no msgspec on PyPy")
 @given(
     union_and_val=native_unions(
         include_datetimes=False,
