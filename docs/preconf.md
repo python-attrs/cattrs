@@ -44,6 +44,9 @@ Optional install targets should match the name of the {mod}`cattrs.preconf` modu
 # Using pip
 $ pip install cattrs[ujson]
 
+# Using pdm
+$ pdm add cattrs[orjson]
+
 # Using poetry
 $ poetry add --extras tomlkit cattrs
 ```
