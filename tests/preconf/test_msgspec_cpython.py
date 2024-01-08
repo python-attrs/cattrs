@@ -50,7 +50,7 @@ def test_unstructure_pt_attrs(converter: Conv):
 
 def test_dump_hook_attrs(converter: Conv):
     """Passthrough for dump hooks works."""
-    assert converter.get_dumps_hook(A) == converter._encoder.encode
+    assert converter.get_dumps_hook(A) == converter.encoder.encode
 
 
 def test_basic_structs(converter: Conv):
