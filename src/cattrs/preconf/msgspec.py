@@ -29,7 +29,7 @@ class MsgspecJsonConverter(Converter):
 
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> bytes:
         """Unstructure and encode `obj` into JSON bytes."""
-        return self._encoder.encode(
+        return self.encoder.encode(
             self.unstructure(obj, unstructure_as=unstructure_as), **kwargs
         )
 
@@ -39,7 +39,7 @@ class MsgspecJsonConverter(Converter):
         """Produce a `dumps` hook for the given type."""
         unstruct_hook = self.get_unstructure_hook(unstructure_as)
         if unstruct_hook in (identity, to_builtins):
-            return self._encoder.encode
+            return self.encoder.encode
         return self.dumps
 
     def loads(self, data: bytes, cl: type[T], **kwargs: Any) -> T:
