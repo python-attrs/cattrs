@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from base64 import b64decode
 from datetime import date, datetime
+from functools import partial
 from typing import Any, Callable, TypeVar, Union
 
 from attrs import has as attrs_has
@@ -24,6 +25,8 @@ __all__ = ["MsgspecJsonConverter", "configure_converter", "make_converter"]
 
 
 class MsgspecJsonConverter(Converter):
+    """A converter specialized for the _msgspec_ library."""
+
     #: The msgspec encoder for dumping.
     encoder: Encoder = Encoder()
 
@@ -45,6 +48,10 @@ class MsgspecJsonConverter(Converter):
     def loads(self, data: bytes, cl: type[T], **kwargs: Any) -> T:
         """Decode and structure `cl` from the provided JSON bytes."""
         return self.structure(decode(data, **kwargs), cl)
+
+    def get_loads_hook(self, cl: type[T]) -> Callable[[bytes], T]:
+        """Produce a `loads` hook for the given type."""
+        return partial(self.loads, cl=cl)
 
 
 def configure_converter(converter: Converter) -> None:

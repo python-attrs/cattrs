@@ -92,6 +92,23 @@ Compatibility notes:
 - _attrs_ classes, dataclasses and sequences are handled directly by _msgspec_ if possible, otherwise by the normal _cattrs_ machinery.
 This means it's possible the validation errors produced may be _msgspec_ validation errors instead of _cattrs_ validation errors.
 
+This converter supports {meth}`get_loads_hook() <cattrs.preconf.msgspec.MsgspecJsonConverter.get_loads_hook>` and {meth}`get_dumps_hook() <cattrs.preconf.msgspec.MsgspecJsonConverter.get_loads_hook>`.
+These are factories for dumping and loading functions (as opposed to unstructuring and structuring); the hooks returned by this may be further optimized to offload as much work as possible to _msgspec_.
+
+```python
+>>> from cattrs.preconf.msgspec import make_converter
+
+>>> @define
+... class Test:
+...     a: int
+
+>>> converter = make_converter()
+>>> dumps = converter.get_dumps_hook(A)
+
+>>> dumps(Test(1))  # Will use msgspec directly.
+b'{"a":1}'
+```
+
 _msgspec_ doesn't support PyPy.
 
 ```{versionadded} 24.1.0

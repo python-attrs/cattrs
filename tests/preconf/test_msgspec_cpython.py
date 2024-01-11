@@ -53,6 +53,12 @@ def test_dump_hook_attrs(converter: Conv):
     assert converter.get_dumps_hook(A) == converter.encoder.encode
 
 
+def test_get_loads_hook(converter: Conv):
+    """`Converter.get_loads_hook` works."""
+    hook = converter.get_loads_hook(A)
+    assert hook(b'{"a": 1}') == A(1)
+
+
 def test_basic_structs(converter: Conv):
     """Handling msgspec structs works."""
 
