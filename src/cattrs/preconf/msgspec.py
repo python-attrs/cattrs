@@ -120,18 +120,17 @@ def make_unstructure_mapping_factory(
     def unstructure_mapping_factory(type) -> UnstructureHook:
         if is_bare(type):
             key_arg = Any
-            value_arg = Any
+            val_arg = Any
             key_handler = converter.get_unstructure_hook(key_arg, cache_result=False)
-            value_handler = converter.get_unstructure_hook(
-                value_arg, cache_result=False
-            )
-        elif getattr(type, "__args__", None) not in (None, ()):
-            key_arg = type.__args__[0]
-            value_arg = type.__args__[1]
+            value_handler = converter.get_unstructure_hook(val_arg, cache_result=False)
+        elif (args := getattr(type, "__args__", None)) not in (None, ()):
+            if len(args) == 2:
+                key_arg, val_arg = args
+            else:
+                # Probably a Counter
+                key_arg, val_arg = args, Any
             key_handler = converter.get_unstructure_hook(key_arg, cache_result=False)
-            value_handler = converter.get_unstructure_hook(
-                value_arg, cache_result=False
-            )
+            value_handler = converter.get_unstructure_hook(val_arg, cache_result=False)
         else:
             key_handler = value_handler = None
 
@@ -140,7 +139,7 @@ def make_unstructure_mapping_factory(
             to_builtins,
         ):
             return to_builtins
-        return converter.gen_unstructure_iterable(type)
+        return converter.gen_unstructure_mapping(type)
 
     return unstructure_mapping_factory
 
