@@ -11,7 +11,7 @@ from attrs import resolve_types
 from msgspec import Struct, convert, to_builtins
 from msgspec.json import Encoder, decode
 
-from cattrs._compat import fields, get_origin, has, is_bare, is_sequence
+from cattrs._compat import fields, get_origin, has, is_bare, is_mapping, is_sequence
 from cattrs.dispatch import HookFactory, UnstructureHook
 from cattrs.fns import identity
 
@@ -86,6 +86,9 @@ def configure_passthroughs(converter: Converter) -> None:
     """
     converter.register_unstructure_hook(bytes, to_builtins)
     converter.register_unstructure_hook_factory(
+        is_mapping, make_unstructure_mapping_factory(converter)
+    )
+    converter.register_unstructure_hook_factory(
         is_sequence, make_unstructure_seq_factory(converter)
     )
     converter.register_unstructure_hook_factory(
@@ -109,6 +112,37 @@ def make_unstructure_seq_factory(converter: Converter) -> HookFactory[Unstructur
         return converter.gen_unstructure_iterable(type)
 
     return unstructure_seq_factory
+
+
+def make_unstructure_mapping_factory(
+    converter: Converter,
+) -> HookFactory[UnstructureHook]:
+    def unstructure_mapping_factory(type) -> UnstructureHook:
+        if is_bare(type):
+            key_arg = Any
+            value_arg = Any
+            key_handler = converter.get_unstructure_hook(key_arg, cache_result=False)
+            value_handler = converter.get_unstructure_hook(
+                value_arg, cache_result=False
+            )
+        elif getattr(type, "__args__", None) not in (None, ()):
+            key_arg = type.__args__[0]
+            value_arg = type.__args__[1]
+            key_handler = converter.get_unstructure_hook(key_arg, cache_result=False)
+            value_handler = converter.get_unstructure_hook(
+                value_arg, cache_result=False
+            )
+        else:
+            key_handler = value_handler = None
+
+        if key_handler in (identity, to_builtins) and value_handler in (
+            identity,
+            to_builtins,
+        ):
+            return to_builtins
+        return converter.gen_unstructure_iterable(type)
+
+    return unstructure_mapping_factory
 
 
 def make_attrs_unstruct_factory(converter: Converter) -> HookFactory[UnstructureHook]:

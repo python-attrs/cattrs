@@ -109,6 +109,8 @@ These are factories for dumping and loading functions (as opposed to unstructuri
 b'{"a":1}'
 ```
 
+Due to its complexity, this converter is currently _provisional_ and may slightly change as the best integration patterns are discovered.
+
 _msgspec_ doesn't support PyPy.
 
 ```{versionadded} 24.1.0
