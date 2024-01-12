@@ -1,3 +1,4 @@
+import platform
 import sys
 from os import environ
 
@@ -34,3 +35,5 @@ if sys.version_info < (3, 10):
     collect_ignore_glob.append("*_604.py")
 if sys.version_info < (3, 12):
     collect_ignore_glob.append("*_695.py")
+if platform.python_implementation() == "PyPy":
+    collect_ignore_glob.append("*_cpython.py")

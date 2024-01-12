@@ -296,7 +296,6 @@ def test_stdlib_json_converter_unstruct_collection_overrides(everything: Everyth
         include_bytes=False,
         include_datetimes=False,
         include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
-        include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
 )
@@ -314,7 +313,6 @@ def test_stdlib_json_unions(union_and_val: tuple, detailed_validation: bool):
         include_strings=False,
         include_bytes=False,
         include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
-        include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
 )
@@ -376,7 +374,6 @@ def test_ujson_converter_unstruct_collection_overrides(everything: Everything):
         include_bytes=False,
         include_datetimes=False,
         include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
-        include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
 )
@@ -445,7 +442,6 @@ def test_orjson_converter_unstruct_collection_overrides(everything: Everything):
         include_bytes=False,
         include_datetimes=False,
         include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
-        include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
 )
@@ -494,7 +490,6 @@ def test_msgpack_converter_unstruct_collection_overrides(everything: Everything)
     union_and_val=native_unions(
         include_datetimes=False,
         include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
-        include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
 )
@@ -569,7 +564,6 @@ def test_bson_converter_unstruct_collection_overrides(everything: Everything):
     union_and_val=native_unions(
         include_objectids=True,
         include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
-        include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
 )
@@ -609,8 +603,7 @@ def test_pyyaml_converter_unstruct_collection_overrides(everything: Everything):
 
 @given(
     union_and_val=native_unions(
-        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
-        include_literals=sys.version_info >= (3, 8),
+        include_bools=sys.version_info[:2] != (3, 8)  # Literal issues on 3.8
     ),
     detailed_validation=...,
 )
@@ -698,7 +691,6 @@ def test_tomlkit_converter_unstruct_collection_overrides(everything: Everything)
         include_bytes=False,
         include_datetimes=False,
         include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
-        include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
 )
@@ -750,13 +742,56 @@ def test_cbor2_converter_unstruct_collection_overrides(everything: Everything):
     union_and_val=native_unions(
         include_datetimes=False,
         include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
-        include_literals=sys.version_info >= (3, 8),
     ),
     detailed_validation=...,
 )
 def test_cbor2_unions(union_and_val: tuple, detailed_validation: bool):
     """Native union passthrough works."""
     converter = cbor2_make_converter(detailed_validation=detailed_validation)
+    type, val = union_and_val
+
+    assert converter.structure(val, type) == val
+
+
+@pytest.mark.skipif(python_implementation() == "PyPy", reason="no msgspec on PyPy")
+@given(everythings(allow_inf=False))
+def test_msgspec_json_converter(everything: Everything):
+    from cattrs.preconf.msgspec import make_converter as msgspec_make_converter
+
+    converter = msgspec_make_converter()
+    raw = converter.dumps(everything)
+    assert converter.loads(raw, Everything) == everything
+
+
+@pytest.mark.skipif(python_implementation() == "PyPy", reason="no msgspec on PyPy")
+@given(everythings(allow_inf=False))
+def test_msgspec_json_unstruct_collection_overrides(everything: Everything):
+    """Ensure collection overrides work."""
+    from cattrs.preconf.msgspec import make_converter as msgspec_make_converter
+
+    converter = msgspec_make_converter(
+        unstruct_collection_overrides={AbstractSet: sorted}
+    )
+    raw = converter.unstructure(everything)
+    assert raw["a_set"] == sorted(raw["a_set"])
+    assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
+    assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
+
+
+@pytest.mark.skipif(python_implementation() == "PyPy", reason="no msgspec on PyPy")
+@given(
+    union_and_val=native_unions(
+        include_datetimes=False,
+        include_bytes=False,
+        include_bools=sys.version_info[:2] != (3, 8),  # Literal issues on 3.8
+    ),
+    detailed_validation=...,
+)
+def test_msgspec_json_unions(union_and_val: tuple, detailed_validation: bool):
+    """Native union passthrough works."""
+    from cattrs.preconf.msgspec import make_converter as msgspec_make_converter
+
+    converter = msgspec_make_converter(detailed_validation=detailed_validation)
     type, val = union_and_val
 
     assert converter.structure(val, type) == val

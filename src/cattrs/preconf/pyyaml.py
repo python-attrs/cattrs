@@ -8,7 +8,7 @@ from cattrs._compat import FrozenSetSubscriptable
 
 from ..converters import BaseConverter, Converter
 from ..strategies import configure_union_passthrough
-from . import validate_datetime
+from . import validate_datetime, wrap
 
 T = TypeVar("T")
 
@@ -49,6 +49,7 @@ def configure_converter(converter: BaseConverter):
     )
 
 
+@wrap(PyyamlConverter)
 def make_converter(*args: Any, **kwargs: Any) -> PyyamlConverter:
     kwargs["unstruct_collection_overrides"] = {
         FrozenSetSubscriptable: list,

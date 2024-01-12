@@ -33,6 +33,7 @@ from hypothesis.strategies import (
     DrawFn,
     SearchStrategy,
     booleans,
+    characters,
     composite,
     dictionaries,
     fixed_dictionaries,
@@ -58,7 +59,14 @@ T = TypeVar("T")
 
 
 def simple_typed_classes(
-    defaults=None, min_attrs=0, frozen=False, kw_only=None, newtypes=True
+    defaults=None,
+    min_attrs=0,
+    frozen=False,
+    kw_only=None,
+    newtypes=True,
+    text_codec: str = "utf8",
+    allow_infinity=None,
+    allow_nan=None,
 ) -> SearchStrategy[Tuple[Type, PosArgs, KwArgs]]:
     """Yield tuples of (class, values)."""
     return lists_of_typed_attrs(
@@ -67,6 +75,9 @@ def simple_typed_classes(
         for_frozen=frozen,
         kw_only=kw_only,
         newtypes=newtypes,
+        text_codec=text_codec,
+        allow_infinity=allow_infinity,
+        allow_nan=allow_nan,
     ).flatmap(partial(_create_hyp_class, frozen=frozen))
 
 
@@ -97,6 +108,9 @@ def lists_of_typed_attrs(
     allow_mutable_defaults=True,
     kw_only=None,
     newtypes=True,
+    text_codec="utf8",
+    allow_infinity=None,
+    allow_nan=None,
 ) -> SearchStrategy[List[Tuple[_CountingAttr, SearchStrategy[PosArg]]]]:
     # Python functions support up to 255 arguments.
     return lists(
@@ -106,6 +120,9 @@ def lists_of_typed_attrs(
             allow_mutable_defaults=allow_mutable_defaults,
             kw_only=kw_only,
             newtypes=newtypes,
+            text_codec=text_codec,
+            allow_infinity=allow_infinity,
+            allow_nan=allow_nan,
         ),
         min_size=min_size,
         max_size=50,
@@ -122,13 +139,16 @@ def simple_typed_attrs(
     allow_mutable_defaults=True,
     kw_only=None,
     newtypes=True,
+    text_codec="utf8",
+    allow_infinity=None,
+    allow_nan=None,
 ) -> SearchStrategy[Tuple[_CountingAttr, SearchStrategy[PosArgs]]]:
     if not is_39_or_later:
         res = (
             any_typed_attrs(defaults, kw_only)
             | int_typed_attrs(defaults, kw_only)
-            | str_typed_attrs(defaults, kw_only)
-            | float_typed_attrs(defaults, kw_only)
+            | str_typed_attrs(defaults, kw_only, text_codec)
+            | float_typed_attrs(defaults, kw_only, allow_infinity, allow_nan)
             | frozenset_typed_attrs(defaults, legacy_types_only=True, kw_only=kw_only)
             | homo_tuple_typed_attrs(defaults, legacy_types_only=True, kw_only=kw_only)
             | path_typed_attrs(defaults, kw_only=kw_only)
@@ -172,8 +192,8 @@ def simple_typed_attrs(
         res = (
             any_typed_attrs(defaults, kw_only)
             | int_typed_attrs(defaults, kw_only)
-            | str_typed_attrs(defaults, kw_only)
-            | float_typed_attrs(defaults, kw_only)
+            | str_typed_attrs(defaults, kw_only, text_codec)
+            | float_typed_attrs(defaults, kw_only, allow_infinity, allow_nan)
             | frozenset_typed_attrs(defaults, kw_only=kw_only)
             | homo_tuple_typed_attrs(defaults, kw_only=kw_only)
             | path_typed_attrs(defaults, kw_only=kw_only)
@@ -353,7 +373,7 @@ def int_typed_attrs(draw, defaults=None, kw_only=None):
 
 
 @composite
-def str_typed_attrs(draw, defaults=None, kw_only=None):
+def str_typed_attrs(draw, defaults=None, kw_only=None, codec: str = "utf8"):
     """
     Generate a tuple of an attribute and a strategy that yields strs for that
     attribute.
@@ -367,26 +387,28 @@ def str_typed_attrs(draw, defaults=None, kw_only=None):
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
         ),
-        text(),
+        text(characters(codec=codec)),
     )
 
 
 @composite
-def float_typed_attrs(draw, defaults=None, kw_only=None):
+def float_typed_attrs(
+    draw, defaults=None, kw_only=None, allow_infinity=None, allow_nan=None
+):
     """
     Generate a tuple of an attribute and a strategy that yields floats for that
     attribute.
     """
     default = NOTHING
     if defaults is True or (defaults is None and draw(booleans())):
-        default = draw(floats())
+        default = draw(floats(allow_infinity=allow_infinity, allow_nan=allow_nan))
     return (
         field(
             type=float,
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
         ),
-        floats(),
+        floats(allow_infinity=allow_infinity, allow_nan=allow_nan),
     )
 
 

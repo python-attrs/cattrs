@@ -11,6 +11,7 @@ from cattrs._compat import AbstractSet, is_mapping
 from ..converters import BaseConverter, Converter
 from ..fns import identity
 from ..strategies import configure_union_passthrough
+from . import wrap
 
 T = TypeVar("T")
 
@@ -69,6 +70,7 @@ def configure_converter(converter: BaseConverter):
     configure_union_passthrough(Union[str, bool, int, float, None], converter)
 
 
+@wrap(OrjsonConverter)
 def make_converter(*args: Any, **kwargs: Any) -> OrjsonConverter:
     kwargs["unstruct_collection_overrides"] = {
         AbstractSet: list,

@@ -94,6 +94,9 @@ cbor2 = [
 bson = [
     "pymongo>=4.4.0",
 ]
+msgspec = [
+    "msgspec>=0.18.5",
+]
 
 [tool.pytest.ini_options]
 addopts = "-l --benchmark-sort=fullname --benchmark-warmup=true --benchmark-warmup-iterations=5  --benchmark-group-by=fullname"

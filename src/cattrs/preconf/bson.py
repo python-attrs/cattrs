@@ -11,7 +11,7 @@ from cattrs.gen import make_mapping_structure_fn
 from ..converters import BaseConverter, Converter
 from ..dispatch import StructureHook
 from ..strategies import configure_union_passthrough
-from . import validate_datetime
+from . import validate_datetime, wrap
 
 T = TypeVar("T")
 
@@ -93,6 +93,7 @@ def configure_converter(converter: BaseConverter):
     converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
 
 
+@wrap(BsonConverter)
 def make_converter(*args: Any, **kwargs: Any) -> BsonConverter:
     kwargs["unstruct_collection_overrides"] = {
         AbstractSet: list,

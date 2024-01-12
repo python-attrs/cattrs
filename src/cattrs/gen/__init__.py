@@ -166,7 +166,9 @@ def make_dict_unstructure_fn(
                             # type of the default to dispatch on.
                             t = a.default.__class__
                         try:
-                            handler = converter._unstructure_func.dispatch(t)
+                            handler = converter.get_unstructure_hook(
+                                t, cache_result=False
+                            )
                         except RecursionError:
                             # There's a circular reference somewhere down the line
                             handler = converter.unstructure
@@ -292,9 +294,6 @@ def make_dict_structure_fn(
         if is_generic(base) and not str(base).startswith("typing.Generic"):
             mapping = generate_mapping(base, mapping)
             break
-
-    if isinstance(cl, TypeVar):
-        cl = mapping.get(cl.__name__, cl)
 
     cl_name = cl.__name__
     fn_name = "structure_" + cl_name
@@ -677,7 +676,7 @@ def make_iterable_unstructure_fn(
         # We don't know how to handle the TypeVar on this level,
         # so we skip doing the dispatch here.
         if not isinstance(type_arg, TypeVar):
-            handler = converter._unstructure_func.dispatch(type_arg)
+            handler = converter.get_unstructure_hook(type_arg, cache_result=False)
 
     globs = {"__cattr_seq_cl": unstructure_to or cl, "__cattr_u": handler}
     lines = []
@@ -706,7 +705,8 @@ def make_hetero_tuple_unstructure_fn(
 
     # We can do the dispatch here and now.
     handlers = [
-        converter._unstructure_func.dispatch(type_arg) for type_arg in type_args
+        converter.get_unstructure_hook(type_arg, cache_result=False)
+        for type_arg in type_args
     ]
 
     globs = {f"__cattr_u_{i}": h for i, h in enumerate(handlers)}
@@ -761,11 +761,11 @@ def make_mapping_unstructure_fn(
             # Probably a Counter
             key_arg, val_arg = args, Any
         # We can do the dispatch here and now.
-        kh = key_handler or converter._unstructure_func.dispatch(key_arg)
+        kh = key_handler or converter.get_unstructure_hook(key_arg, cache_result=False)
         if kh == identity:
             kh = None
 
-        val_handler = converter._unstructure_func.dispatch(val_arg)
+        val_handler = converter.get_unstructure_hook(val_arg, cache_result=False)
         if val_handler == identity:
             val_handler = None
 
@@ -833,11 +833,11 @@ def make_mapping_structure_fn(
         is_bare_dict = val_type is Any and key_type is Any
         if not is_bare_dict:
             # We can do the dispatch here and now.
-            key_handler = converter.get_structure_hook(key_type)
+            key_handler = converter.get_structure_hook(key_type, cache_result=False)
             if key_handler == converter._structure_call:
                 key_handler = key_type
 
-            val_handler = converter.get_structure_hook(val_type)
+            val_handler = converter.get_structure_hook(val_type, cache_result=False)
             if val_handler == converter._structure_call:
                 val_handler = val_type
 

@@ -1,5 +1,5 @@
 """Tests for TypedDict un/structuring."""
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Generic, Set, Tuple, TypedDict, TypeVar
 
 import pytest
@@ -35,7 +35,9 @@ def mk_converter(detailed_validation: bool = True) -> Converter:
     """We can't use function-scoped fixtures with Hypothesis strats."""
     c = Converter(detailed_validation=detailed_validation)
     c.register_unstructure_hook(datetime, lambda d: d.timestamp())
-    c.register_structure_hook(datetime, lambda d, _: datetime.fromtimestamp(d))
+    c.register_structure_hook(
+        datetime, lambda d, _: datetime.fromtimestamp(d, tz=timezone.utc)
+    )
     return c
 
 

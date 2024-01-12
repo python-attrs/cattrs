@@ -44,6 +44,9 @@ Optional install targets should match the name of the {mod}`cattrs.preconf` modu
 # Using pip
 $ pip install cattrs[ujson]
 
+# Using pdm
+$ pdm add cattrs[orjson]
+
 # Using poetry
 $ poetry add --extras tomlkit cattrs
 ```
@@ -54,15 +57,6 @@ $ poetry add --extras tomlkit cattrs
 Found at {mod}`cattrs.preconf.json`.
 
 Bytes are serialized as base 85 strings. Counters are serialized as dictionaries. Sets are serialized as lists, and deserialized back into sets. `datetime` s and `date` s are serialized as ISO 8601 strings.
-
-
-## _ujson_
-
-Found at {mod}`cattrs.preconf.ujson`.
-
-Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets. `datetime` s and `date` s are serialized as ISO 8601 strings.
-
-`ujson` doesn't support integers less than -9223372036854775808, and greater than 9223372036854775807, nor does it support `float('inf')`.
 
 
 ## _orjson_
@@ -77,6 +71,61 @@ _orjson_ doesn't support integers less than -9223372036854775808, and greater th
 _orjson_ only supports mappings with string keys so mappings will have their keys stringified before serialization, and destringified during deserialization.
 
 
+## _msgspec_
+
+Found at {mod}`cattrs.preconf.msgspec`.
+Only JSON functionality is currently available, other formats supported by msgspec to follow in the future.
+
+[_msgspec_ structs](https://jcristharif.com/msgspec/structs.html) are supported, but not composable - a struct will be handed over to _msgspec_ directly, and _msgspec_ will handle and all of its fields, recursively.
+_cattrs_ may get more sophisticated handling of structs in the future.
+
+[_msgspec_ strict mode](https://jcristharif.com/msgspec/usage.html#strict-vs-lax-mode) is used by default.
+This can be customized by changing the {meth}`encoder <cattrs.preconf.msgspec.MsgspecJsonConverter.encoder>` attribute on the converter.
+
+What _cattrs_ calls _unstructuring_ and _structuring_, _msgspec_ calls [`to_builtins` and `convert`](https://jcristharif.com/msgspec/converters.html).
+What _cattrs_ refers to as _dumping_ and _loading_, _msgspec_ refers to as [`encoding` and `decoding`](https://jcristharif.com/msgspec/usage.html).
+
+Compatibility notes:
+- Bytes are un/structured as base 64 strings directly by _msgspec_ itself.
+- _msgspec_ [encodes special float values](https://jcristharif.com/msgspec/supported-types.html#float) (`NaN, Inf, -Inf`) as `null`.
+- `datetime` s and `date` s are passed through to be unstructured into RFC 3339 by _msgspec_ itself.
+- _attrs_ classes, dataclasses and sequences are handled directly by _msgspec_ if possible, otherwise by the normal _cattrs_ machinery.
+This means it's possible the validation errors produced may be _msgspec_ validation errors instead of _cattrs_ validation errors.
+
+This converter supports {meth}`get_loads_hook() <cattrs.preconf.msgspec.MsgspecJsonConverter.get_loads_hook>` and {meth}`get_dumps_hook() <cattrs.preconf.msgspec.MsgspecJsonConverter.get_loads_hook>`.
+These are factories for dumping and loading functions (as opposed to unstructuring and structuring); the hooks returned by this may be further optimized to offload as much work as possible to _msgspec_.
+
+```python
+>>> from cattrs.preconf.msgspec import make_converter
+
+>>> @define
+... class Test:
+...     a: int
+
+>>> converter = make_converter()
+>>> dumps = converter.get_dumps_hook(A)
+
+>>> dumps(Test(1))  # Will use msgspec directly.
+b'{"a":1}'
+```
+
+Due to its complexity, this converter is currently _provisional_ and may slightly change as the best integration patterns are discovered.
+
+_msgspec_ doesn't support PyPy.
+
+```{versionadded} 24.1.0
+
+```
+
+## _ujson_
+
+Found at {mod}`cattrs.preconf.ujson`.
+
+Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets. `datetime` s and `date` s are serialized as ISO 8601 strings.
+
+_ujson_ doesn't support integers less than -9223372036854775808, and greater than 9223372036854775807, nor does it support `float('inf')`.
+
+
 ## _msgpack_
 
 Found at {mod}`cattrs.preconf.msgpack`.
@@ -89,10 +138,6 @@ When parsing msgpack data from bytes, the library needs to be passed `strict_map
 
 
 ## _cbor2_
-
-```{versionadded} 23.1.0
-
-```
 
 Found at {mod}`cattrs.preconf.cbor2`.
 
@@ -112,6 +157,9 @@ Use keyword argument `canonical=True` for efficient encoding to the smallest bin
 Floats can be forced to smaller output by casting to lower-precision formats by casting to `numpy` floats (and back to Python floats).
 Example: `float(np.float32(value))` or `float(np.float16(value))`
 
+```{versionadded} 23.1.0
+
+```
 
 ## _bson_
 
