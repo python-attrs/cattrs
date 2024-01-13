@@ -803,7 +803,7 @@ def make_mapping_structure_fn(
     val_type=NOTHING,
     detailed_validation: bool = True,
 ) -> MappingStructureFn[T]:
-    """Generate a specialized unstructure function for a mapping."""
+    """Generate a specialized structure function for a mapping."""
     fn_name = "structure_mapping"
 
     globs: dict[str, type] = {"__cattr_mapping_cl": structure_to}
