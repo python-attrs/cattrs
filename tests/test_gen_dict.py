@@ -2,7 +2,7 @@
 from typing import Dict, Type
 
 import pytest
-from attrs import NOTHING, Factory, define, field
+from attrs import NOTHING, Factory, define, field, frozen
 from hypothesis import assume, given
 from hypothesis.strategies import data, just, one_of, sampled_from
 
@@ -450,12 +450,18 @@ def test_init_false(converter: BaseConverter) -> None:
 def test_init_false_overridden(converter: BaseConverter) -> None:
     """init=False handling can be overriden."""
 
+    @frozen
+    class Inner:
+        a: int
+
     @define
     class A:
         a: int
         b: int = field(init=False)
         _c: int = field(init=False)
-        d: int = field(init=False, default=4)
+        d: Inner = field(init=False)
+        e: int = field(init=False, default=4)
+        f: Inner = field(init=False, default=Inner(1))
 
     converter.register_unstructure_hook(
         A, make_dict_unstructure_fn(A, converter, _cattrs_include_init_false=True)
@@ -464,28 +470,36 @@ def test_init_false_overridden(converter: BaseConverter) -> None:
     a = A(1)
     a.b = 2
     a._c = 3
+    a.d = Inner(4)
 
-    assert converter.unstructure(a) == {"a": 1, "b": 2, "_c": 3, "d": 4}
+    assert converter.unstructure(a) == {
+        "a": 1,
+        "b": 2,
+        "_c": 3,
+        "d": {"a": 4},
+        "e": 4,
+        "f": {"a": 1},
+    }
 
     converter.register_structure_hook(
-        A,
-        make_dict_structure_fn(
-            A,
-            converter,
-            _cattrs_include_init_false=True,
-            _cattrs_detailed_validation=converter.detailed_validation,
-        ),
+        A, make_dict_structure_fn(A, converter, _cattrs_include_init_false=True)
     )
 
-    structured = converter.structure({"a": 1, "b": 2, "_c": 3}, A)
+    structured = converter.structure({"a": 1, "b": 2, "_c": 3, "d": {"a": 1}}, A)
     assert structured.b == 2
     assert structured._c == 3
-    assert structured.d == 4
+    assert structured.d == Inner(1)
+    assert structured.e == 4
+    assert structured.f == Inner(1)
 
-    structured = converter.structure({"a": 1, "b": 2, "_c": 3, "d": -4}, A)
+    structured = converter.structure(
+        {"a": 1, "b": 2, "_c": 3, "d": {"a": 5}, "e": -4, "f": {"a": 2}}, A
+    )
     assert structured.b == 2
     assert structured._c == 3
-    assert structured.d == -4
+    assert structured.d == Inner(5)
+    assert structured.e == -4
+    assert structured.f == Inner(2)
 
 
 def test_init_false_field_override(converter: BaseConverter) -> None:
