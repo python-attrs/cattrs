@@ -372,7 +372,8 @@ def make_dict_structure_fn(
                 )
 
             struct_handler_name = f"__c_structure_{an}"
-            internal_arg_parts[struct_handler_name] = handler
+            if handler is not None:
+                internal_arg_parts[struct_handler_name] = handler
 
             ian = a.alias
             if override.rename is None:
@@ -391,7 +392,7 @@ def make_dict_structure_fn(
                 i = f"{i}  "
                 type_name = f"__c_type_{an}"
                 internal_arg_parts[type_name] = t
-                if handler:
+                if handler is not None:
                     if handler == converter._structure_call:
                         internal_arg_parts[struct_handler_name] = t
                         pi_lines.append(
@@ -511,7 +512,7 @@ def make_dict_structure_fn(
             allowed_fields.add(kn)
 
             if not a.init:
-                if handler:
+                if handler is not None:
                     struct_handler_name = f"__c_structure_{an}"
                     internal_arg_parts[struct_handler_name] = handler
                     if handler == converter._structure_call:

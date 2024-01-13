@@ -552,6 +552,29 @@ def test_init_false_field_override(converter: BaseConverter) -> None:
     assert structured.d == -4
 
 
+def test_init_false_no_structure_hook(converter: BaseConverter):
+    """init=False attributes with converters and `prefer_attrs_converters` work."""
+
+    @define
+    class A:
+        a: int = field(converter=int, init=False)
+
+    converter.register_structure_hook(
+        A,
+        make_dict_structure_fn(
+            A,
+            converter,
+            _cattrs_prefer_attrib_converters=True,
+            _cattrs_include_init_false=True,
+        ),
+    )
+
+    res = A()
+    res.a = 5
+
+    assert converter.structure({"a": "5"}, A) == res
+
+
 @given(forbid_extra_keys=..., detailed_validation=...)
 def test_forbid_extra_keys_from_converter(
     forbid_extra_keys: bool, detailed_validation: bool
