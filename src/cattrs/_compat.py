@@ -262,7 +262,7 @@ if sys.version_info >= (3, 9):
     if sys.version_info >= (3, 12):
         from typing import TypeAliasType
 
-        def is_type_alias(type: Any) -> bool:  # noqa: F811
+        def is_type_alias(type: Any) -> bool:
             """Is this a PEP 695 type alias?"""
             return isinstance(type, TypeAliasType)
 

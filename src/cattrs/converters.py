@@ -486,7 +486,7 @@ class BaseConverter:
         if res == self._structure_call:
             # we need to replace the type arg of `structure_call`
             return lambda v, _, __base=base: self._structure_call(v, __base)
-        return res
+        return lambda v, _, __base=base: res(v, __base)
 
     def _structure_final_factory(self, type):
         base = get_final_base(type)
