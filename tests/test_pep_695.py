@@ -72,3 +72,19 @@ def test_type_aliases_overwrite_base_hooks(converter: BaseConverter):
 
     assert converter.structure(1, my_int) == 11
     assert converter.unstructure(100, my_int) == 80
+
+
+def test_type_alias_with_children(converter: BaseConverter):
+    """A type alias that chains to a hook that requires the type parameter works."""
+
+    class TestClass:
+        pass
+
+    def structure_testclass(val, type):
+        assert type is TestClass
+        return TestClass
+
+    converter.register_structure_hook(TestClass, structure_testclass)
+
+    type TestAlias = TestClass
+    assert converter.structure(None, TestAlias) is TestClass
