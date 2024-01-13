@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from attrs import NOTHING, Attribute, Factory
 
 from .._compat import is_bare_final
+from ..dispatch import StructureHook
 from ..fns import raise_error
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -13,7 +14,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def find_structure_handler(
     a: Attribute, type: Any, c: BaseConverter, prefer_attrs_converters: bool = False
-) -> Callable[[Any, Any], Any] | None:
+) -> StructureHook | None:
     """Find the appropriate structure handler to use.
 
     Return `None` if no handler should be used.
