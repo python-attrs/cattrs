@@ -1054,7 +1054,7 @@ class Converter(BaseConverter):
         self, cl: Any, unstructure_to: Any = None
     ) -> HeteroTupleUnstructureFn:
         unstructure_to = self._unstruct_collection_overrides.get(
-            get_origin(cl) or cl, unstructure_to or list
+            get_origin(cl) or cl, unstructure_to or tuple
         )
         h = make_hetero_tuple_unstructure_fn(cl, self, unstructure_to=unstructure_to)
         self._unstructure_func.register_cls_list([(cl, h)], direct=True)

@@ -194,6 +194,7 @@ Any type parameters set to `typing.Any` will be passed through unconverted.
 (1, '2', 3.0)
 ```
 
+When unstructuring, heterogeneous tuples unstructure into tuples since it's faster and virtually all serialization libraries support tuples natively.
 
 ### Deques
 

@@ -15,6 +15,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   Previously this behavior was underspecified and inconsistent, but followed this rule in the majority of cases.
   Reverting old behavior is very dependent on the actual case; ask on the issue tracker if in doubt.
   ([#473](https://github.com/python-attrs/cattrs/pull/473))
+- **Minor change**: Heterogeneous tuples are now unstructured into tuples instead of lists by default; this is significantly faster and widely supported by serialization libraries.
+  ([#486](https://github.com/python-attrs/cattrs/pull/486))
 - Introduce {meth}`BaseConverter.get_structure_hook` and {meth}`BaseConverter.get_unstructure_hook` methods.
   ([#432](https://github.com/python-attrs/cattrs/issues/432) [#472](https://github.com/python-attrs/cattrs/pull/472))
 - Introduce the [_msgspec_](https://jcristharif.com/msgspec/) {mod}`preconf converter <cattrs.preconf.msgspec>`.
