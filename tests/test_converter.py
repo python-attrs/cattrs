@@ -783,3 +783,28 @@ def test_hook_getting(converter: BaseConverter):
     structure = converter.get_structure_hook(Test)
 
     assert structure({"a": 1}, Test) == Test(1)
+
+
+def test_decorators(converter: BaseConverter):
+    """The decorator versions work."""
+
+    @define
+    class Test:
+        a: int
+
+    @converter.register_unstructure_hook
+    def my_hook(value: Test) -> dict:
+        res = {"a": value.a}
+
+        res["a"] += 1
+
+        return res
+
+    assert converter.unstructure(Test(1)) == {"a": 2}
+
+    @converter.register_structure_hook
+    def my_structure_hook(value, _) -> Test:
+        value["a"] += 1
+        return Test(**value)
+
+    assert converter.structure({"a": 5}, Test) == Test(6)

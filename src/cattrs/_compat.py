@@ -4,6 +4,8 @@ from collections.abc import MutableSet as AbcMutableSet
 from collections.abc import Set as AbcSet
 from dataclasses import MISSING, Field, is_dataclass
 from dataclasses import fields as dataclass_fields
+from functools import partial
+from inspect import signature as _signature
 from typing import AbstractSet as TypingAbstractSet
 from typing import (
     Any,
@@ -210,6 +212,11 @@ def get_final_base(type) -> Optional[type]:
 
 OriginAbstractSet = AbcSet
 OriginMutableSet = AbcMutableSet
+
+signature = _signature
+
+if sys.version_info >= (3, 10):
+    signature = partial(_signature, eval_str=True)
 
 if sys.version_info >= (3, 9):
     from collections import Counter

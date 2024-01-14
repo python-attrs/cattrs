@@ -5,7 +5,7 @@ from collections.abc import MutableSet as AbcMutableSet
 from dataclasses import Field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar
+from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, overload
 
 from attrs import Attribute, resolve_types
 from attrs import has as attrs_has
@@ -46,6 +46,7 @@ from ._compat import (
     is_type_alias,
     is_typeddict,
     is_union_type,
+    signature,
 )
 from .disambiguators import create_default_dis_func, is_supported_union
 from .dispatch import (
@@ -245,12 +246,38 @@ class BaseConverter:
             else UnstructureStrategy.AS_TUPLE
         )
 
+    @overload
+    def register_unstructure_hook(self) -> Callable[[UnstructureHook], None]:
+        ...
+
+    @overload
     def register_unstructure_hook(self, cls: Any, func: UnstructureHook) -> None:
+        ...
+
+    def register_unstructure_hook(
+        self, cls: Any = None, func: UnstructureHook | None = None
+    ) -> Callable[[UnstructureHook]] | None:
         """Register a class-to-primitive converter function for a class.
 
         The converter function should take an instance of the class and return
         its Python equivalent.
+
+        May also be used as a decorator. When used as a decorator, the first
+        argument annotation from the decorated function will be used as the
+        type to register the hook for.
+
+        .. versionchanged:: 24.1.0
+            This method may now be used as a decorator.
         """
+        if func is None:
+            # Autodetecting decorator.
+            func = cls
+            sig = signature(func)
+            cls = next(iter(sig.parameters.values())).annotation
+            self.register_unstructure_hook(cls, func)
+
+            return None
+
         if attrs_has(cls):
             resolve_types(cls)
         if is_union_type(cls):
@@ -260,6 +287,7 @@ class BaseConverter:
             self._unstructure_func.register_func_list([(lambda t: t is cls, func)])
         else:
             self._unstructure_func.register_cls_list([(cls, func)])
+        return None
 
     def register_unstructure_hook_func(
         self, check_func: Callable[[Any], bool], func: UnstructureHook
@@ -303,7 +331,17 @@ class BaseConverter:
             else self._unstructure_func.dispatch_without_caching(type)
         )
 
-    def register_structure_hook(self, cl: Any, func: StructureHook) -> None:
+    @overload
+    def register_structure_hook(self) -> Callable[[StructureHook], None]:
+        ...
+
+    @overload
+    def register_structure_hook(self, cl: Any, func: StructuredValue) -> None:
+        ...
+
+    def register_structure_hook(
+        self, cl: Any, func: StructureHook | None = None
+    ) -> None:
         """Register a primitive-to-class converter function for a type.
 
         The converter function should take two arguments:
@@ -312,7 +350,21 @@ class BaseConverter:
 
         and return the instance of the class. The type may seem redundant, but
         is sometimes needed (for example, when dealing with generic classes).
+
+        This method may be used as a decorator. In this case, the decorated
+        hook must have a return type annotation, and this annotation will be used
+        as the type for the hook.
+
+        .. versionchanged:: 24.1.0
+            This method may now be used as a decorator.
         """
+        if func is None:
+            # The autodetecting decorator.
+            func = cl
+            sig = signature(func)
+            self.register_structure_hook(sig.return_annotation, func)
+            return
+
         if attrs_has(cl):
             resolve_types(cl)
         if is_union_type(cl):
