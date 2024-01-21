@@ -35,6 +35,7 @@ from attrs import fields as attrs_fields
 from attrs import fields_dict as attrs_fields_dict
 
 __all__ = [
+    "ANIES",
     "adapted_fields",
     "fields_dict",
     "ExceptionGroup",
@@ -76,6 +77,15 @@ try:
     LITERALS.add(teLiteral)
 except ImportError:  # pragma: no cover
     pass
+
+# On some Python versions, `typing_extensions.Any` is different than
+# `typing.Any`.
+try:
+    from typing_extensions import Any as teAny
+
+    ANIES = frozenset([Any, teAny])
+except ImportError:  # pragma: no cover
+    ANIES = frozenset([Any])
 
 NoneType = type(None)
 
