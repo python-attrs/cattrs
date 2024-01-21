@@ -40,6 +40,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#450](https://github.com/python-attrs/cattrs/pull/450))
 - `typing_extensions.Literal` is now automatically structured, just like `typing.Literal`.
   ([#460](https://github.com/python-attrs/cattrs/issues/460) [#467](https://github.com/python-attrs/cattrs/pull/467))
+- `typing_extensions.Any` is now supported and handled like `typing.Any`.
+  ([#488](https://github.com/python-attrs/cattrs/issues/488) [#490](https://github.com/python-attrs/cattrs/pull/490))
 - [PEP 695](https://peps.python.org/pep-0695/) generics are now tested.
   ([#452](https://github.com/python-attrs/cattrs/pull/452))
 - Imports are now sorted using Ruff.

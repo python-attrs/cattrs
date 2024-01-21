@@ -469,6 +469,10 @@ When unstructuring, `typing.Any` will make the value be unstructured according t
 Previously, the unstructuring rules for `Any` were underspecified, leading to inconsistent behavior.
 ```
 
+```{versionchanged} 24.1.0
+`typing_extensions.Any` is now also supported.
+```
+
 ### `typing.Literal`
 
 When structuring, [PEP 586](https://peps.python.org/pep-0586/) literals are validated to be in the allowed set of values.

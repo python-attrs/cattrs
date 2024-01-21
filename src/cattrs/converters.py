@@ -11,6 +11,7 @@ from attrs import Attribute, resolve_types
 from attrs import has as attrs_has
 
 from ._compat import (
+    ANIES,
     FrozenSetSubscriptable,
     Mapping,
     MutableMapping,
@@ -171,7 +172,7 @@ class BaseConverter:
                 (lambda t: issubclass(t, Enum), self._unstructure_enum),
                 (has, self._unstructure_attrs),
                 (is_union_type, self._unstructure_union),
-                (lambda t: t is Any, self.unstructure),
+                (lambda t: t in ANIES, self.unstructure),
             ]
         )
 
@@ -181,7 +182,10 @@ class BaseConverter:
         self._structure_func = MultiStrategyDispatch(structure_fallback_factory)
         self._structure_func.register_func_list(
             [
-                (lambda cl: cl is Any or cl is Optional or cl is None, lambda v, _: v),
+                (
+                    lambda cl: cl in ANIES or cl is Optional or cl is None,
+                    lambda v, _: v,
+                ),
                 (is_generic_attrs, self._gen_structure_generic, True),
                 (lambda t: get_newtype_base(t) is not None, self._structure_newtype),
                 (is_type_alias, self._find_type_alias_structure_hook, True),
@@ -545,7 +549,7 @@ class BaseConverter:
 
     def _structure_list(self, obj: Iterable[T], cl: Any) -> list[T]:
         """Convert an iterable to a potentially generic list."""
-        if is_bare(cl) or cl.__args__[0] is Any:
+        if is_bare(cl) or cl.__args__[0] in ANIES:
             res = list(obj)
         else:
             elem_type = cl.__args__[0]
@@ -575,7 +579,7 @@ class BaseConverter:
 
     def _structure_deque(self, obj: Iterable[T], cl: Any) -> deque[T]:
         """Convert an iterable to a potentially generic deque."""
-        if is_bare(cl) or cl.__args__[0] is Any:
+        if is_bare(cl) or cl.__args__[0] in ANIES:
             res = deque(e for e in obj)
         else:
             elem_type = cl.__args__[0]
@@ -607,7 +611,7 @@ class BaseConverter:
         self, obj: Iterable[T], cl: Any, structure_to: type = set
     ) -> Set[T]:
         """Convert an iterable into a potentially generic set."""
-        if is_bare(cl) or cl.__args__[0] is Any:
+        if is_bare(cl) or cl.__args__[0] in ANIES:
             return structure_to(obj)
         elem_type = cl.__args__[0]
         handler = self._structure_func.dispatch(elem_type)
@@ -646,10 +650,10 @@ class BaseConverter:
         if is_bare(cl) or cl.__args__ == (Any, Any):
             return dict(obj)
         key_type, val_type = cl.__args__
-        if key_type is Any:
+        if key_type in ANIES:
             val_conv = self._structure_func.dispatch(val_type)
             return {k: val_conv(v, val_type) for k, v in obj.items()}
-        if val_type is Any:
+        if val_type in ANIES:
             key_conv = self._structure_func.dispatch(key_type)
             return {key_conv(k, key_type): v for k, v in obj.items()}
         key_conv = self._structure_func.dispatch(key_type)
@@ -673,7 +677,7 @@ class BaseConverter:
         """Deal with structuring into a tuple."""
         tup_params = None if tup in (Tuple, tuple) else tup.__args__
         has_ellipsis = tup_params and tup_params[-1] is Ellipsis
-        if tup_params is None or (has_ellipsis and tup_params[0] is Any):
+        if tup_params is None or (has_ellipsis and tup_params[0] in ANIES):
             # Just a Tuple. (No generic information.)
             return tuple(obj)
         if has_ellipsis:

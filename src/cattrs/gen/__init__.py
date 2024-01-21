@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Tuple, TypeV
 from attrs import NOTHING, Factory, resolve_types
 
 from .._compat import (
+    ANIES,
     TypeAlias,
     adapted_fields,
     get_args,
@@ -831,7 +832,7 @@ def make_mapping_structure_fn(
                 (key_type,) = args
                 val_type = Any
 
-        is_bare_dict = val_type is Any and key_type is Any
+        is_bare_dict = val_type in ANIES and key_type in ANIES
         if not is_bare_dict:
             # We can do the dispatch here and now.
             key_handler = converter.get_structure_hook(key_type, cache_result=False)

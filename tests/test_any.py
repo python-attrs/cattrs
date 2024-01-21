@@ -2,6 +2,7 @@
 from typing import Any, Dict, Optional
 
 from attrs import define
+from typing_extensions import Any as ExtendedAny
 
 
 @define
@@ -24,3 +25,12 @@ def test_unstructure_optional_any(converter):
     """Unstructuring `Optional[Any]` should use the runtime value."""
 
     assert converter.unstructure(A(), Optional[Any]) == {}
+
+
+def test_extended_any(converter):
+    """`typing_extensions.Any` works."""
+
+    assert converter.unstructure(A(), unstructure_as=ExtendedAny) == {}
+
+    d = {}
+    assert converter.structure(d, ExtendedAny) is d
