@@ -17,8 +17,39 @@ Some examples of this are:
 * protocols, unless they are `runtime_checkable`
 * various modifiers, such as `Final` and `NotRequired`
 * newtypes and 3.12 type aliases
+* `typing.Annotated`
 
 ... and many others. In these cases, predicate functions should be used instead.
+
+### Use as Decorators
+
+{meth}`register_structure_hook() <cattrs.BaseConverter.register_structure_hook>` and {meth}`register_unstructure_hook() <cattrs.BaseConverter.register_unstructure_hook>` can also be used as _decorators_.
+When used this way they behave a little differently.
+
+{meth}`register_structure_hook() <cattrs.BaseConverter.register_structure_hook>` will inspect the return type of the hook and register the hook for that type.
+
+```python
+@converter.register_structure_hook
+def my_int_hook(val: Any, _) -> int:
+    """This hook will be registered for `int`s."""
+    return int(val)
+```
+
+{meth}`register_unstructure_hook() <cattrs.BaseConverter.register_unstructure_hook>` will inspect the type of the first argument and register the hook for that type.
+
+```python
+from datetime import datetime
+
+@converter.register_unstructure_hook
+def my_datetime_hook(val: datetime) -> str:
+    """This hook will be registered for `datetime`s."""
+    return val.isoformat()
+```
+
+The non-decorator approach is still recommended when dealing with lambdas, hooks produced elsewhere, and unannotated hooks.
+
+```{versionadded} 24.1.0
+```
 
 ### Predicate Hooks
 

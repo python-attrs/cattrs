@@ -63,7 +63,7 @@ A base hook can be obtained from a converter and then be subjected to the very r
 ...     return result
 ```
 
-(`cattrs.structure({}, Model)` is shorthand for `cattrs.get_structure_hook(Model)({}, Model)`.)
+(`cattrs.structure({}, Model)` is equivalent to `cattrs.get_structure_hook(Model)({}, Model)`.)
 
 This new hook can be used directly or registered to a converter (the original instance, or a different one):
 
@@ -72,7 +72,7 @@ This new hook can be used directly or registered to a converter (the original in
 ```
 
 
-Now if we use this hook to structure a `Model`, through the ✨magic of function composition✨ that hook will use our old `int_hook`.
+Now if we use this hook to structure a `Model`, through ✨the magic of function composition✨ that hook will use our old `int_hook`.
 
 ```python
 >>> converter.structure({"a": "1"}, Model)
