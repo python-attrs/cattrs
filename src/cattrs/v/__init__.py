@@ -1,6 +1,8 @@
 """Cattrs validation."""
 
-from typing import Callable, List, Union
+from typing import Any, Callable, List, Union
+
+from attrs import frozen
 
 from .._compat import ExceptionGroup
 from ..errors import (
@@ -30,6 +32,13 @@ __all__ = [
     "transform_error",
     "V",
 ]
+
+
+@frozen
+class VAnnotation:
+    """Use this with Annotated to get validation."""
+
+    validators: tuple[Callable[[Any], Any]]
 
 
 def format_exception(exc: BaseException, type: Union[type, None]) -> str:
