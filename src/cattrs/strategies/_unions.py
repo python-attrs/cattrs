@@ -3,7 +3,7 @@ from typing import Any, Callable, Dict, Optional, Type, Union
 
 from attrs import NOTHING
 
-from cattrs import BaseConverter, Converter
+from cattrs import BaseConverter
 from cattrs._compat import get_newtype_base, is_literal, is_subclass, is_union_type
 
 __all__ = [
@@ -20,7 +20,7 @@ def default_tag_generator(typ: Type) -> str:
 
 def configure_tagged_union(
     union: Any,
-    converter: Converter,
+    converter: BaseConverter,
     tag_generator: Callable[[Type], str] = default_tag_generator,
     tag_name: str = "_type",
     default: Optional[Type] = NOTHING,
