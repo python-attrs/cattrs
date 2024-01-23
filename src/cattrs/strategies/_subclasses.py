@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from gc import collect
-from typing import Any, Callable, Union, TypeVar
+from typing import Any, Callable, TypeVar, Union
 
 from ..converters import BaseConverter
 from ..gen import AttributeOverride, make_dict_structure_fn, make_dict_unstructure_fn
