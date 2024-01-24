@@ -6,6 +6,9 @@ build:
     # Keep version in sync with tox.ini (docs and gh-actions).
     python: "3.11"
   jobs:
+    # Need the tags to calculate the version
+    post_checkout:
+      - git fetch --tags
     post_create_environment:
       - "curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -"
     post_install:
