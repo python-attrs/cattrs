@@ -46,7 +46,7 @@ def my_datetime_hook(val: datetime) -> str:
     return val.isoformat()
 ```
 
-The non-decorator approach is still recommended when dealing with lambdas, hooks produced elsewhere, and unannotated hooks.
+The non-decorator approach is still recommended when dealing with lambdas, hooks produced elsewhere, unannotated hooks and situations where type introspection doesn't work.
 
 ```{versionadded} 24.1.0
 ```
@@ -95,9 +95,10 @@ Here's an example showing how to use hook factories to apply the `forbid_extra_k
 
 ```python
 >>> from attrs import define, has
+>>> from cattrs import Converter
 >>> from cattrs.gen import make_dict_structure_fn
 
->>> c = cattrs.Converter()
+>>> c = Converter()
 >>> c.register_structure_hook_factory(
 ...     has,
 ...     lambda cl: make_dict_structure_fn(cl, c, _cattrs_forbid_extra_keys=True)
@@ -113,8 +114,32 @@ Traceback (most recent call last):
 cattrs.errors.ForbiddenExtraKeysError: Extra fields in constructor for E: else
 ```
 
-A complex use case for hook factories is described over at {ref}`usage:Using factory hooks`.
+A complex use case for hook factories is described over at [](usage.md#using-factory-hooks).
 
+#### Use as Decorators
+
+{meth}`Converter.register_unstructure_hook_factory() <cattrs.BaseConverter.register_unstructure_hook_factory>` and {meth}`Converter.register_structure_hook_factory() <cattrs.BaseConverter.register_structure_hook_factory>` can also be used as decorators.
+
+Here's an example of using an unstructure hook factory to unstructure all attrs classes using [field aliases](#use_alias).
+
+```{doctest}
+>>> from attrs import define, has
+>>> from cattrs import Converter
+>>> from cattrs.gen import make_dict_unstructure_fn
+
+>>> c = Converter()
+
+>>> @c.register_unstructure_hook_factory(has)
+... def attrs_hook_factory(cl: Any) -> Callable:
+...    return make_dict_unstructure_fn(cl, c, _cattrs_use_alias=True)
+
+>>> @define
+... class F:
+...     _a: int
+
+>>> c.unstructure(F(1))
+{'a': 1}
+```
 
 ## Using `cattrs.gen` Generators
 

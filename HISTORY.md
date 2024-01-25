@@ -20,7 +20,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - Introduce {meth}`BaseConverter.get_structure_hook` and {meth}`BaseConverter.get_unstructure_hook` methods.
   ([#432](https://github.com/python-attrs/cattrs/issues/432) [#472](https://github.com/python-attrs/cattrs/pull/472))
 - {meth}`BaseConverter.register_structure_hook` and {meth}`BaseConverter.register_unstructure_hook` can now be used as decorators.
-  See [here](https://catt.rs/en/latest/customizing.html#custom-un-structuring-hooks) for more details.
+  See [here](https://catt.rs/en/latest/customizing.html#use-as-decorators) and [here](https://catt.rs/en/latest/customizing.html#id1) for more details.
   ([#487](https://github.com/python-attrs/cattrs/pull/487))
 - Introduce the [_msgspec_](https://jcristharif.com/msgspec/) {mod}`preconf converter <cattrs.preconf.msgspec>`.
   Only JSON is supported for now, with other formats supported by _msgspec_ to come later.

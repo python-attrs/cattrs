@@ -4,6 +4,7 @@ from collections import Counter, deque
 from collections.abc import MutableSet as AbcMutableSet
 from dataclasses import Field
 from enum import Enum
+from functools import partial
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, overload
 
@@ -84,6 +85,10 @@ __all__ = ["UnstructureStrategy", "BaseConverter", "Converter", "GenConverter"]
 
 T = TypeVar("T")
 V = TypeVar("V")
+UnstructureHookFactory = TypeVar(
+    "UnstructureHookFactory", bound=HookFactory[UnstructureHook]
+)
+StructureHookFactory = TypeVar("StructureHookFactory", bound=HookFactory[StructureHook])
 
 
 class UnstructureStrategy(Enum):
@@ -297,18 +302,43 @@ class BaseConverter:
         """
         self._unstructure_func.register_func_list([(check_func, func)])
 
+    @overload
     def register_unstructure_hook_factory(
-        self, predicate: Callable[[Any], bool], factory: HookFactory[UnstructureHook]
-    ) -> None:
+        self, predicate: Callable[[Any], bool]
+    ) -> Callable[[UnstructureHookFactory], UnstructureHookFactory]:
+        ...
+
+    @overload
+    def register_unstructure_hook_factory(
+        self, predicate: Callable[[Any], bool], factory: UnstructureHookFactory
+    ) -> UnstructureHookFactory:
+        ...
+
+    def register_unstructure_hook_factory(
+        self,
+        predicate: Callable[[Any], bool],
+        factory: UnstructureHookFactory | None = None,
+    ) -> (
+        Callable[[UnstructureHookFactory], UnstructureHookFactory]
+        | UnstructureHookFactory
+    ):
         """
         Register a hook factory for a given predicate.
+
+        May also be used as a decorator.
 
         :param predicate: A function that, given a type, returns whether the factory
             can produce a hook for that type.
         :param factory: A callable that, given a type, produces an unstructuring
             hook for that type. This unstructuring hook will be cached.
+
+        .. versionchanged:: 24.1.0
+            This method may now be used as a decorator.
         """
+        if factory is None:
+            return partial(self.register_unstructure_hook_factory, predicate)
         self._unstructure_func.register_func_list([(predicate, factory, True)])
+        return factory
 
     def get_unstructure_hook(
         self, type: Any, cache_result: bool = True
@@ -384,18 +414,40 @@ class BaseConverter:
         """
         self._structure_func.register_func_list([(check_func, func)])
 
+    @overload
     def register_structure_hook_factory(
-        self, predicate: Callable[[Any], bool], factory: HookFactory[StructureHook]
-    ) -> None:
+        self, predicate: Callable[[Any, bool]]
+    ) -> Callable[[StructureHookFactory, StructureHookFactory]]:
+        ...
+
+    @overload
+    def register_structure_hook_factory(
+        self, predicate: Callable[[Any], bool], factory: StructureHookFactory
+    ) -> StructureHookFactory:
+        ...
+
+    def register_structure_hook_factory(
+        self,
+        predicate: Callable[[Any], bool],
+        factory: HookFactory[StructureHook] | None = None,
+    ) -> Callable[[StructureHookFactory, StructureHookFactory]] | StructureHookFactory:
         """
         Register a hook factory for a given predicate.
+
+        May also be used as a decorator.
 
         :param predicate: A function that, given a type, returns whether the factory
             can produce a hook for that type.
         :param factory: A callable that, given a type, produces a structuring
             hook for that type. This structuring hook will be cached.
+
+        .. versionchanged:: 24.1.0
+            This method may now be used as a decorator.
         """
+        if factory is None:
+            return partial(self.register_structure_hook_factory, predicate)
         self._structure_func.register_func_list([(predicate, factory, True)])
+        return factory
 
     def structure(self, obj: UnstructuredValue, cl: type[T]) -> T:
         """Convert unstructured Python data structures to structured data."""
