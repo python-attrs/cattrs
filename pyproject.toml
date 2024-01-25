@@ -112,6 +112,11 @@ source = [
    ".tox/pypy*/site-packages",
 ]
 
+[tool.coverage.report]
+exclude_also = [
+    "@overload",
+]
+
 [tool.ruff]
 src = ["src", "tests"]
 select = [
