@@ -4,7 +4,6 @@ from collections import Counter, deque
 from collections.abc import MutableSet as AbcMutableSet
 from dataclasses import Field
 from enum import Enum
-from functools import partial
 from inspect import Signature
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, overload
