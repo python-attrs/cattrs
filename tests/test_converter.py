@@ -830,3 +830,29 @@ def test_hook_factory_decorators(converter: BaseConverter):
         return lambda v, _: Test(v)
 
     assert converter.structure(1, Test) == Test(1)
+
+
+def test_hook_factory_decorators_with_converters(converter: BaseConverter):
+    """Hook factory decorators with converters work."""
+
+    @define
+    class Test:
+        a: int
+
+    converter.register_unstructure_hook(int, lambda v: v + 1)
+
+    @converter.register_unstructure_hook_factory(has)
+    def my_hook_factory(type: Any, converter: BaseConverter) -> UnstructureHook:
+        int_handler = converter.get_unstructure_hook(int)
+        return lambda v: (int_handler(v.a),)
+
+    assert converter.unstructure(Test(1)) == (2,)
+
+    converter.register_structure_hook(int, lambda v: v - 1)
+
+    @converter.register_structure_hook_factory(has)
+    def my_structure_hook_factory(type: Any, converter: BaseConverter) -> StructureHook:
+        int_handler = converter.get_structure_hook(int)
+        return lambda v, _: Test(int_handler(v[0]))
+
+    assert converter.structure((2,), Test) == Test(1)

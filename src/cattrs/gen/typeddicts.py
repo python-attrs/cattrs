@@ -139,7 +139,7 @@ def make_dict_unstructure_fn(
                 if nrb is not NOTHING:
                     t = nrb
                 try:
-                    handler = converter._unstructure_func.dispatch(t)
+                    handler = converter.get_unstructure_hook(t)
                 except RecursionError:
                     # There's a circular reference somewhere down the line
                     handler = converter.unstructure
@@ -185,7 +185,7 @@ def make_dict_unstructure_fn(
                     if nrb is not NOTHING:
                         t = nrb
                     try:
-                        handler = converter._unstructure_func.dispatch(t)
+                        handler = converter.get_unstructure_hook(t)
                     except RecursionError:
                         # There's a circular reference somewhere down the line
                         handler = converter.unstructure

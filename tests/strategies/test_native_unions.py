@@ -58,7 +58,7 @@ def test_skip_optionals() -> None:
 
     configure_union_passthrough(Union[int, str, None], c)
 
-    h = c._structure_func.dispatch(Optional[int])
+    h = c.get_structure_hook(Optional[int])
     assert h.__name__ != "structure_native_union"
 
 
