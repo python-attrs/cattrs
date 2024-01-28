@@ -425,6 +425,9 @@ if sys.version_info >= (3, 9):
         if is_annotated(type):
             # typing.Annotated requires a special case.
             return Annotated[args]
+        if len(args) == 1:
+            # Some annotations can't handle 1-tuples.
+            args = args[0]
         return type.__origin__[args]
 
     def get_full_type_hints(obj, globalns=None, localns=None):

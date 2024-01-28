@@ -3,13 +3,14 @@ from datetime import datetime, timezone
 from typing import Dict, Generic, Set, Tuple, TypedDict, TypeVar
 
 import pytest
+from attrs import NOTHING
 from hypothesis import assume, given
 from hypothesis.strategies import booleans
 from pytest import raises
 from typing_extensions import NotRequired
 
 from cattrs import BaseConverter, Converter
-from cattrs._compat import ExtensionsTypedDict, is_generic
+from cattrs._compat import ExtensionsTypedDict, get_notrequired_base, is_generic
 from cattrs.errors import (
     ClassValidationError,
     ForbiddenExtraKeysError,
@@ -51,17 +52,27 @@ def get_annot(t) -> dict:
             args = t.__args__
             params = origin.__parameters__
             param_to_args = dict(zip(params, args))
-            return {
-                k: param_to_args[v] if v in param_to_args else v
-                for k, v in origin_annotations.items()
-            }
+            res = {}
+            for k, v in origin_annotations.items():
+                if (nrb := get_notrequired_base(v)) is not NOTHING:
+                    res[k] = (
+                        NotRequired[param_to_args[nrb]] if nrb in param_to_args else v
+                    )
+                else:
+                    res[k] = param_to_args[v] if v in param_to_args else v
+            return res
 
         # Origin is `None`, so this is a subclass for a generic typeddict.
         mapping = generate_mapping(t)
-        return {
-            k: mapping[v.__name__] if v.__name__ in mapping else v
-            for k, v in get_annots(t).items()
-        }
+        res = {}
+        for k, v in get_annots(t).items():
+            if (nrb := get_notrequired_base(v)) is not NOTHING:
+                res[k] = (
+                    NotRequired[mapping[nrb.__name__]] if nrb.__name__ in mapping else v
+                )
+            else:
+                res[k] = mapping[v.__name__] if v.__name__ in mapping else v
+        return res
     return get_annots(t)
 
 

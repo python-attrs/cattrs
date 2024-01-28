@@ -4,6 +4,7 @@ from string import ascii_lowercase
 from typing import Any, Dict, Generic, List, Optional, Set, Tuple, TypeVar
 
 from attrs import NOTHING
+from hypothesis import note
 from hypothesis.strategies import (
     DrawFn,
     SearchStrategy,
@@ -240,9 +241,8 @@ def generic_typeddicts(
             generics.append(typevar)
             if total and draw(booleans()):
                 # We might decide to make these NotRequired
-                actual_types.append(NotRequired[attr_type])
-            else:
-                actual_types.append(attr_type)
+                typevar = NotRequired[typevar]
+            actual_types.append(attr_type)
             attrs_dict[attr_name] = typevar
 
     cls = make_typeddict(
@@ -282,6 +282,14 @@ def make_typeddict(
         lines.append(f"  {n}: _{trimmed}_type")
 
     script = "\n".join(lines)
+
+    note_lines = script
+    for n, t in globs.items():
+        if n == "TypedDict":
+            continue
+        note_lines = note_lines.replace(n, repr(t))
+    note(note_lines)
+
     eval(compile(script, "name", "exec"), globs)
 
     return globs[cls_name]
