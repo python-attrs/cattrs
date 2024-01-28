@@ -34,7 +34,7 @@ from ._shared import find_structure_handler
 if TYPE_CHECKING:  # pragma: no cover
     from typing_extensions import Literal
 
-    from cattr.converters import BaseConverter
+    from ..converters import BaseConverter
 
 __all__ = [
     "make_dict_unstructure_fn",
@@ -698,18 +698,21 @@ HeteroTupleUnstructureFn: TypeAlias = Callable[[Tuple[Any, ...]], Any]
 
 
 def make_hetero_tuple_unstructure_fn(
-    cl: Any, converter: BaseConverter, unstructure_to: Any = None
+    cl: Any,
+    converter: BaseConverter,
+    unstructure_to: Any = None,
+    type_args: tuple | None = None,
 ) -> HeteroTupleUnstructureFn:
-    """Generate a specialized unstructure function for a heterogenous tuple."""
+    """Generate a specialized unstructure function for a heterogenous tuple.
+
+    :param type_args: If provided, override the type arguments.
+    """
     fn_name = "unstructure_tuple"
 
-    type_args = get_args(cl)
+    type_args = get_args(cl) if type_args is None else type_args
 
     # We can do the dispatch here and now.
-    handlers = [
-        converter.get_unstructure_hook(type_arg, cache_result=False)
-        for type_arg in type_args
-    ]
+    handlers = [converter.get_unstructure_hook(type_arg) for type_arg in type_args]
 
     globs = {f"__cattr_u_{i}": h for i, h in enumerate(handlers)}
     if unstructure_to is not tuple:

@@ -4,7 +4,7 @@ from enum import Enum, IntEnum, unique
 from json import dumps as json_dumps
 from json import loads as json_loads
 from platform import python_implementation
-from typing import Any, Dict, List, NewType, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, NewType, Tuple, Union
 
 import pytest
 from attrs import define
@@ -63,6 +63,10 @@ class B:
     b: str
 
 
+class C(NamedTuple):
+    c: float
+
+
 @define
 class Everything:
     @unique
@@ -98,6 +102,7 @@ class Everything:
     native_union: Union[int, float, str]
     native_union_with_spillover: Union[int, str, Set[str]]
     native_union_with_union_spillover: Union[int, str, A, B]
+    a_namedtuple: C
 
 
 @composite
@@ -166,6 +171,7 @@ def everythings(
         draw(one_of(ints, fs, strings)),
         draw(one_of(ints, strings, sets(strings))),
         draw(one_of(ints, strings, ints.map(A), strings.map(B))),
+        draw(fs.map(C)),
     )
 
 

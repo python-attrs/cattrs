@@ -196,6 +196,10 @@ Any type parameters set to `typing.Any` will be passed through unconverted.
 
 When unstructuring, heterogeneous tuples unstructure into tuples since it's faster and virtually all serialization libraries support tuples natively.
 
+```{note}
+Structuring heterogenous tuples are not supported by the BaseConverter.
+```
+
 ### Deques
 
 Deques can be structured from any iterable object.
@@ -490,6 +494,13 @@ When unstructuring, literals are passed through.
 
 ```
 
+### `typing.NamedTuple`
+
+Named tuples with type hints (created from [`typing.NamedTuple`](https://docs.python.org/3/library/typing.html#typing.NamedTuple)) are supported.
+
+```{versionadded} 24.1.0
+
+```
 
 ### `typing.Final`
 
