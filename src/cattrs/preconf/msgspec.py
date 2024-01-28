@@ -12,7 +12,7 @@ from msgspec import Struct, convert, to_builtins
 from msgspec.json import Encoder, decode
 
 from cattrs._compat import fields, get_origin, has, is_bare, is_mapping, is_sequence
-from cattrs.dispatch import HookFactory, UnstructureHook
+from cattrs.dispatch import UnstructureHook
 from cattrs.fns import identity
 
 from ..converters import BaseConverter, Converter
@@ -87,92 +87,73 @@ def configure_passthroughs(converter: Converter) -> None:
     A passthrough is when we let msgspec handle something automatically.
     """
     converter.register_unstructure_hook(bytes, to_builtins)
-    converter.register_unstructure_hook_factory(
-        is_mapping, make_unstructure_mapping_factory(converter)
-    )
-    converter.register_unstructure_hook_factory(
-        is_sequence, make_unstructure_seq_factory(converter)
-    )
-    converter.register_unstructure_hook_factory(
-        has, make_attrs_unstruct_factory(converter)
-    )
+    converter.register_unstructure_hook_factory(is_mapping)(mapping_unstructure_factory)
+    converter.register_unstructure_hook_factory(is_sequence)(seq_unstructure_factory)
+    converter.register_unstructure_hook_factory(has)(attrs_unstructure_factory)
     converter.register_unstructure_hook_factory(is_namedtuple)(
         namedtuple_unstructure_factory
     )
 
 
-def make_unstructure_seq_factory(converter: Converter) -> HookFactory[UnstructureHook]:
-    def unstructure_seq_factory(type) -> UnstructureHook:
-        if is_bare(type):
-            type_arg = Any
-            handler = converter.get_unstructure_hook(type_arg, cache_result=False)
-        elif getattr(type, "__args__", None) not in (None, ()):
-            type_arg = type.__args__[0]
-            handler = converter.get_unstructure_hook(type_arg, cache_result=False)
+def seq_unstructure_factory(type, converter: BaseConverter) -> UnstructureHook:
+    if is_bare(type):
+        type_arg = Any
+        handler = converter.get_unstructure_hook(type_arg, cache_result=False)
+    elif getattr(type, "__args__", None) not in (None, ()):
+        type_arg = type.__args__[0]
+        handler = converter.get_unstructure_hook(type_arg, cache_result=False)
+    else:
+        handler = None
+
+    if handler in (identity, to_builtins):
+        return handler
+    return converter.gen_unstructure_iterable(type)
+
+
+def mapping_unstructure_factory(type, converter: BaseConverter) -> UnstructureHook:
+    if is_bare(type):
+        key_arg = Any
+        val_arg = Any
+        key_handler = converter.get_unstructure_hook(key_arg, cache_result=False)
+        value_handler = converter.get_unstructure_hook(val_arg, cache_result=False)
+    elif (args := getattr(type, "__args__", None)) not in (None, ()):
+        if len(args) == 2:
+            key_arg, val_arg = args
         else:
-            handler = None
+            # Probably a Counter
+            key_arg, val_arg = args, Any
+        key_handler = converter.get_unstructure_hook(key_arg, cache_result=False)
+        value_handler = converter.get_unstructure_hook(val_arg, cache_result=False)
+    else:
+        key_handler = value_handler = None
 
-        if handler in (identity, to_builtins):
-            return handler
-        return converter.gen_unstructure_iterable(type)
-
-    return unstructure_seq_factory
-
-
-def make_unstructure_mapping_factory(
-    converter: Converter,
-) -> HookFactory[UnstructureHook]:
-    def unstructure_mapping_factory(type) -> UnstructureHook:
-        if is_bare(type):
-            key_arg = Any
-            val_arg = Any
-            key_handler = converter.get_unstructure_hook(key_arg, cache_result=False)
-            value_handler = converter.get_unstructure_hook(val_arg, cache_result=False)
-        elif (args := getattr(type, "__args__", None)) not in (None, ()):
-            if len(args) == 2:
-                key_arg, val_arg = args
-            else:
-                # Probably a Counter
-                key_arg, val_arg = args, Any
-            key_handler = converter.get_unstructure_hook(key_arg, cache_result=False)
-            value_handler = converter.get_unstructure_hook(val_arg, cache_result=False)
-        else:
-            key_handler = value_handler = None
-
-        if key_handler in (identity, to_builtins) and value_handler in (
-            identity,
-            to_builtins,
-        ):
-            return to_builtins
-        return converter.gen_unstructure_mapping(type)
-
-    return unstructure_mapping_factory
-
-
-def make_attrs_unstruct_factory(converter: Converter) -> HookFactory[UnstructureHook]:
-    """Short-circuit attrs and dataclass handling if it matches msgspec."""
-
-    def attrs_factory(type: Any) -> UnstructureHook:
-        """Choose whether to use msgspec handling or our own."""
-        origin = get_origin(type)
-        attribs = fields(origin or type)
-        if attrs_has(type) and any(isinstance(a.type, str) for a in attribs):
-            resolve_types(type)
-            attribs = fields(origin or type)
-
-        if any(
-            attr.name.startswith("_")
-            or (
-                converter.get_unstructure_hook(attr.type, cache_result=False)
-                not in (identity, to_builtins)
-            )
-            for attr in attribs
-        ):
-            return converter.gen_unstructure_attrs_fromdict(type)
-
+    if key_handler in (identity, to_builtins) and value_handler in (
+        identity,
+        to_builtins,
+    ):
         return to_builtins
+    return converter.gen_unstructure_mapping(type)
 
-    return attrs_factory
+
+def attrs_unstructure_factory(type: Any, converter: BaseConverter) -> UnstructureHook:
+    """Choose whether to use msgspec handling or our own."""
+    origin = get_origin(type)
+    attribs = fields(origin or type)
+    if attrs_has(type) and any(isinstance(a.type, str) for a in attribs):
+        resolve_types(type)
+        attribs = fields(origin or type)
+
+    if any(
+        attr.name.startswith("_")
+        or (
+            converter.get_unstructure_hook(attr.type, cache_result=False)
+            not in (identity, to_builtins)
+        )
+        for attr in attribs
+    ):
+        return converter.gen_unstructure_attrs_fromdict(type)
+
+    return to_builtins
 
 
 def namedtuple_unstructure_factory(
