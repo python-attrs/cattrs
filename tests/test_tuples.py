@@ -20,7 +20,7 @@ def test_simple_hetero_tuples(genconverter: Converter):
 
     genconverter.register_structure_hook(int, lambda v, _: v - 1)
 
-    assert genconverter.structure([2, "2"], tuple[int, str]) == (1, "2")
+    assert genconverter.structure([2, "2"], Tuple[int, str]) == (1, "2")
 
 
 def test_named_tuple_predicate():
