@@ -53,7 +53,8 @@ The non-decorator approach is still recommended when dealing with lambdas, hooks
 
 ### Predicate Hooks
 
-A predicate is a function that takes a type and returns true or false, depending on whether the associated hook can handle the given type.
+A _predicate_ is a function that takes a type and returns true or false
+depending on whether the associated hook can handle the given type.
 
 The {meth}`register_unstructure_hook_func() <cattrs.BaseConverter.register_unstructure_hook_func>` and {meth}`register_structure_hook_func() <cattrs.BaseConverter.register_structure_hook_func>` are used
 to link un/structuring hooks to arbitrary types. These hooks are then called _predicate hooks_, and are very powerful.
@@ -99,6 +100,7 @@ Here's an example showing how to use hook factories to apply the `forbid_extra_k
 >>> from cattrs.gen import make_dict_structure_fn
 
 >>> c = Converter()
+
 >>> c.register_structure_hook_factory(
 ...     has,
 ...     lambda cl: make_dict_structure_fn(cl, c, _cattrs_forbid_extra_keys=True)
@@ -118,11 +120,12 @@ A complex use case for hook factories is described over at [](usage.md#using-fac
 
 #### Use as Decorators
 
-{meth}`Converter.register_unstructure_hook_factory() <cattrs.BaseConverter.register_unstructure_hook_factory>` and {meth}`Converter.register_structure_hook_factory() <cattrs.BaseConverter.register_structure_hook_factory>` can also be used as decorators.
+{meth}`register_unstructure_hook_factory() <cattrs.BaseConverter.register_unstructure_hook_factory>` and
+{meth}`register_structure_hook_factory() <cattrs.BaseConverter.register_structure_hook_factory>` can also be used as decorators.
 
-When registered via decorators, factory hooks can receive the current converter by exposing an additional required parameter.
+When registered via decorators, hook factories can receive the current converter by exposing an additional required parameter.
 
-Here's an example of using an unstructure hook factory to handle unstructuring queues.
+Here's an example of using an unstructure hook factory to handle unstructuring [queues](https://docs.python.org/3/library/queue.html#queue.Queue).
 
 ```{doctest}
 >>> from queue import Queue
