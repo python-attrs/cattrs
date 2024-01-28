@@ -56,7 +56,7 @@ def configure_converter(converter: BaseConverter):
                 # (For example base85 encoding for bytes.)
                 # In that case, we want to use the override.
 
-                kh = converter._unstructure_func.dispatch(args[0])
+                kh = converter.get_unstructure_hook(args[0])
                 if kh != identity:
                     key_handler = kh
 

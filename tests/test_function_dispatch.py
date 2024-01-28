@@ -1,8 +1,9 @@
+from cattrs import BaseConverter
 from cattrs.dispatch import FunctionDispatch
 
 
 def test_function_dispatch():
-    dispatch = FunctionDispatch()
+    dispatch = FunctionDispatch(BaseConverter())
 
     assert dispatch.dispatch(float) is None
 
@@ -14,7 +15,7 @@ def test_function_dispatch():
 
 
 def test_function_clears_cache_after_function_added():
-    dispatch = FunctionDispatch()
+    dispatch = FunctionDispatch(BaseConverter())
 
     class Foo:
         pass

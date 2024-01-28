@@ -17,12 +17,44 @@ Some examples of this are:
 * protocols, unless they are `runtime_checkable`
 * various modifiers, such as `Final` and `NotRequired`
 * newtypes and 3.12 type aliases
+* `typing.Annotated`
 
 ... and many others. In these cases, predicate functions should be used instead.
 
+### Use as Decorators
+
+{meth}`register_structure_hook() <cattrs.BaseConverter.register_structure_hook>` and {meth}`register_unstructure_hook() <cattrs.BaseConverter.register_unstructure_hook>` can also be used as _decorators_.
+When used this way they behave a little differently.
+
+{meth}`register_structure_hook() <cattrs.BaseConverter.register_structure_hook>` will inspect the return type of the hook and register the hook for that type.
+
+```python
+@converter.register_structure_hook
+def my_int_hook(val: Any, _) -> int:
+    """This hook will be registered for `int`s."""
+    return int(val)
+```
+
+{meth}`register_unstructure_hook() <cattrs.BaseConverter.register_unstructure_hook>` will inspect the type of the first argument and register the hook for that type.
+
+```python
+from datetime import datetime
+
+@converter.register_unstructure_hook
+def my_datetime_hook(val: datetime) -> str:
+    """This hook will be registered for `datetime`s."""
+    return val.isoformat()
+```
+
+The non-decorator approach is still recommended when dealing with lambdas, hooks produced elsewhere, unannotated hooks and situations where type introspection doesn't work.
+
+```{versionadded} 24.1.0
+```
+
 ### Predicate Hooks
 
-A predicate is a function that takes a type and returns true or false, depending on whether the associated hook can handle the given type.
+A _predicate_ is a function that takes a type and returns true or false
+depending on whether the associated hook can handle the given type.
 
 The {meth}`register_unstructure_hook_func() <cattrs.BaseConverter.register_unstructure_hook_func>` and {meth}`register_structure_hook_func() <cattrs.BaseConverter.register_structure_hook_func>` are used
 to link un/structuring hooks to arbitrary types. These hooks are then called _predicate hooks_, and are very powerful.
@@ -64,9 +96,11 @@ Here's an example showing how to use hook factories to apply the `forbid_extra_k
 
 ```python
 >>> from attrs import define, has
+>>> from cattrs import Converter
 >>> from cattrs.gen import make_dict_structure_fn
 
->>> c = cattrs.Converter()
+>>> c = Converter()
+
 >>> c.register_structure_hook_factory(
 ...     has,
 ...     lambda cl: make_dict_structure_fn(cl, c, _cattrs_forbid_extra_keys=True)
@@ -82,8 +116,44 @@ Traceback (most recent call last):
 cattrs.errors.ForbiddenExtraKeysError: Extra fields in constructor for E: else
 ```
 
-A complex use case for hook factories is described over at {ref}`usage:Using factory hooks`.
+A complex use case for hook factories is described over at [](usage.md#using-factory-hooks).
 
+#### Use as Decorators
+
+{meth}`register_unstructure_hook_factory() <cattrs.BaseConverter.register_unstructure_hook_factory>` and
+{meth}`register_structure_hook_factory() <cattrs.BaseConverter.register_structure_hook_factory>` can also be used as decorators.
+
+When registered via decorators, hook factories can receive the current converter by exposing an additional required parameter.
+
+Here's an example of using an unstructure hook factory to handle unstructuring [queues](https://docs.python.org/3/library/queue.html#queue.Queue).
+
+```{doctest}
+>>> from queue import Queue
+>>> from typing import get_origin
+>>> from cattrs import Converter
+
+>>> c = Converter()
+
+>>> @c.register_unstructure_hook_factory(lambda t: get_origin(t) is Queue)
+... def queue_hook_factory(cl: Any, converter: Converter) -> Callable:
+...     type_arg = get_args(cl)[0]
+...     elem_handler = converter.get_unstructure_hook(type_arg)
+...
+...     def unstructure_hook(v: Queue) -> list:
+...         res = []
+...         while not v.empty():
+...             res.append(elem_handler(v.get_nowait()))
+...         return res
+...
+...     return unstructure_hook
+
+>>> q = Queue()
+>>> q.put(1)
+>>> q.put(2)
+
+>>> c.unstructure(q, unstructure_as=Queue[int])
+[1, 2]
+```
 
 ## Using `cattrs.gen` Generators
 

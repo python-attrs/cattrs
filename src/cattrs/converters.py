@@ -4,8 +4,9 @@ from collections import Counter, deque
 from collections.abc import MutableSet as AbcMutableSet
 from dataclasses import Field
 from enum import Enum
+from inspect import Signature
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar
+from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, overload
 
 from attrs import Attribute, resolve_types
 from attrs import has as attrs_has
@@ -46,6 +47,7 @@ from ._compat import (
     is_type_alias,
     is_typeddict,
     is_union_type,
+    signature,
 )
 from .disambiguators import create_default_dis_func, is_supported_union
 from .dispatch import (
@@ -53,6 +55,7 @@ from .dispatch import (
     MultiStrategyDispatch,
     StructuredValue,
     StructureHook,
+    TargetType,
     UnstructuredValue,
     UnstructureHook,
 )
@@ -83,6 +86,24 @@ __all__ = ["UnstructureStrategy", "BaseConverter", "Converter", "GenConverter"]
 
 T = TypeVar("T")
 V = TypeVar("V")
+
+UnstructureHookFactory = TypeVar(
+    "UnstructureHookFactory", bound=HookFactory[UnstructureHook]
+)
+
+# The Extended factory also takes a converter.
+ExtendedUnstructureHookFactory = TypeVar(
+    "ExtendedUnstructureHookFactory",
+    bound=Callable[[TargetType, "BaseConverter"], UnstructureHook],
+)
+
+StructureHookFactory = TypeVar("StructureHookFactory", bound=HookFactory[StructureHook])
+
+# The Extended factory also takes a converter.
+ExtendedStructureHookFactory = TypeVar(
+    "ExtendedStructureHookFactory",
+    bound=Callable[[TargetType, "BaseConverter"], StructureHook],
+)
 
 
 class UnstructureStrategy(Enum):
@@ -145,7 +166,9 @@ class BaseConverter:
             self._unstructure_attrs = self.unstructure_attrs_astuple
             self._structure_attrs = self.structure_attrs_fromtuple
 
-        self._unstructure_func = MultiStrategyDispatch(unstructure_fallback_factory)
+        self._unstructure_func = MultiStrategyDispatch(
+            unstructure_fallback_factory, self
+        )
         self._unstructure_func.register_cls_list(
             [(bytes, identity), (str, identity), (Path, str)]
         )
@@ -157,12 +180,12 @@ class BaseConverter:
                 ),
                 (
                     lambda t: get_final_base(t) is not None,
-                    lambda t: self._unstructure_func.dispatch(get_final_base(t)),
+                    lambda t: self.get_unstructure_hook(get_final_base(t)),
                     True,
                 ),
                 (
                     is_type_alias,
-                    lambda t: self._unstructure_func.dispatch(get_type_alias_base(t)),
+                    lambda t: self.get_unstructure_hook(get_type_alias_base(t)),
                     True,
                 ),
                 (is_mapping, self._unstructure_mapping),
@@ -179,7 +202,7 @@ class BaseConverter:
         # Per-instance register of to-attrs converters.
         # Singledispatch dispatches based on the first argument, so we
         # store the function and switch the arguments in self.loads.
-        self._structure_func = MultiStrategyDispatch(structure_fallback_factory)
+        self._structure_func = MultiStrategyDispatch(structure_fallback_factory, self)
         self._structure_func.register_func_list(
             [
                 (
@@ -245,12 +268,38 @@ class BaseConverter:
             else UnstructureStrategy.AS_TUPLE
         )
 
+    @overload
+    def register_unstructure_hook(self) -> Callable[[UnstructureHook], None]:
+        ...
+
+    @overload
     def register_unstructure_hook(self, cls: Any, func: UnstructureHook) -> None:
+        ...
+
+    def register_unstructure_hook(
+        self, cls: Any = None, func: UnstructureHook | None = None
+    ) -> Callable[[UnstructureHook]] | None:
         """Register a class-to-primitive converter function for a class.
 
         The converter function should take an instance of the class and return
         its Python equivalent.
+
+        May also be used as a decorator. When used as a decorator, the first
+        argument annotation from the decorated function will be used as the
+        type to register the hook for.
+
+        .. versionchanged:: 24.1.0
+            This method may now be used as a decorator.
         """
+        if func is None:
+            # Autodetecting decorator.
+            func = cls
+            sig = signature(func)
+            cls = next(iter(sig.parameters.values())).annotation
+            self.register_unstructure_hook(cls, func)
+
+            return None
+
         if attrs_has(cls):
             resolve_types(cls)
         if is_union_type(cls):
@@ -260,6 +309,7 @@ class BaseConverter:
             self._unstructure_func.register_func_list([(lambda t: t is cls, func)])
         else:
             self._unstructure_func.register_cls_list([(cls, func)])
+        return None
 
     def register_unstructure_hook_func(
         self, check_func: Callable[[Any], bool], func: UnstructureHook
@@ -269,18 +319,68 @@ class BaseConverter:
         """
         self._unstructure_func.register_func_list([(check_func, func)])
 
+    @overload
     def register_unstructure_hook_factory(
-        self, predicate: Callable[[Any], bool], factory: HookFactory[UnstructureHook]
-    ) -> None:
+        self, predicate: Callable[[Any], bool]
+    ) -> Callable[[UnstructureHookFactory], UnstructureHookFactory]:
+        ...
+
+    @overload
+    def register_unstructure_hook_factory(
+        self, predicate: Callable[[Any], bool]
+    ) -> Callable[[ExtendedUnstructureHookFactory], ExtendedUnstructureHookFactory]:
+        ...
+
+    @overload
+    def register_unstructure_hook_factory(
+        self, predicate: Callable[[Any], bool], factory: UnstructureHookFactory
+    ) -> UnstructureHookFactory:
+        ...
+
+    def register_unstructure_hook_factory(
+        self,
+        predicate: Callable[[Any], bool],
+        factory: UnstructureHookFactory | None = None,
+    ) -> (
+        Callable[[UnstructureHookFactory], UnstructureHookFactory]
+        | UnstructureHookFactory
+    ):
         """
         Register a hook factory for a given predicate.
+
+        May also be used as a decorator. When used as a decorator, the hook
+        factory may expose an additional required parameter. In this case,
+        the current converter will be provided to the hook factory as that
+        parameter.
 
         :param predicate: A function that, given a type, returns whether the factory
             can produce a hook for that type.
         :param factory: A callable that, given a type, produces an unstructuring
             hook for that type. This unstructuring hook will be cached.
+
+        .. versionchanged:: 24.1.0
+            This method may now be used as a decorator.
         """
+        if factory is None:
+
+            def decorator(factory):
+                # Is this an extended factory (takes a converter too)?
+                sig = signature(factory)
+                if (
+                    len(sig.parameters) >= 2
+                    and (list(sig.parameters.values())[1]).default is Signature.empty
+                ):
+                    self._unstructure_func.register_func_list(
+                        [(predicate, factory, "extended")]
+                    )
+                else:
+                    self._unstructure_func.register_func_list(
+                        [(predicate, factory, True)]
+                    )
+
+            return decorator
         self._unstructure_func.register_func_list([(predicate, factory, True)])
+        return factory
 
     def get_unstructure_hook(
         self, type: Any, cache_result: bool = True
@@ -303,7 +403,17 @@ class BaseConverter:
             else self._unstructure_func.dispatch_without_caching(type)
         )
 
-    def register_structure_hook(self, cl: Any, func: StructureHook) -> None:
+    @overload
+    def register_structure_hook(self) -> Callable[[StructureHook], None]:
+        ...
+
+    @overload
+    def register_structure_hook(self, cl: Any, func: StructuredValue) -> None:
+        ...
+
+    def register_structure_hook(
+        self, cl: Any, func: StructureHook | None = None
+    ) -> None:
         """Register a primitive-to-class converter function for a type.
 
         The converter function should take two arguments:
@@ -312,7 +422,21 @@ class BaseConverter:
 
         and return the instance of the class. The type may seem redundant, but
         is sometimes needed (for example, when dealing with generic classes).
+
+        This method may be used as a decorator. In this case, the decorated
+        hook must have a return type annotation, and this annotation will be used
+        as the type for the hook.
+
+        .. versionchanged:: 24.1.0
+            This method may now be used as a decorator.
         """
+        if func is None:
+            # The autodetecting decorator.
+            func = cl
+            sig = signature(func)
+            self.register_structure_hook(sig.return_annotation, func)
+            return
+
         if attrs_has(cl):
             resolve_types(cl)
         if is_union_type(cl):
@@ -332,18 +456,65 @@ class BaseConverter:
         """
         self._structure_func.register_func_list([(check_func, func)])
 
+    @overload
     def register_structure_hook_factory(
-        self, predicate: Callable[[Any], bool], factory: HookFactory[StructureHook]
-    ) -> None:
+        self, predicate: Callable[[Any, bool]]
+    ) -> Callable[[StructureHookFactory, StructureHookFactory]]:
+        ...
+
+    @overload
+    def register_structure_hook_factory(
+        self, predicate: Callable[[Any, bool]]
+    ) -> Callable[[ExtendedStructureHookFactory, ExtendedStructureHookFactory]]:
+        ...
+
+    @overload
+    def register_structure_hook_factory(
+        self, predicate: Callable[[Any], bool], factory: StructureHookFactory
+    ) -> StructureHookFactory:
+        ...
+
+    def register_structure_hook_factory(
+        self,
+        predicate: Callable[[Any], bool],
+        factory: HookFactory[StructureHook] | None = None,
+    ) -> Callable[[StructureHookFactory, StructureHookFactory]] | StructureHookFactory:
         """
         Register a hook factory for a given predicate.
+
+        May also be used as a decorator. When used as a decorator, the hook
+        factory may expose an additional required parameter. In this case,
+        the current converter will be provided to the hook factory as that
+        parameter.
 
         :param predicate: A function that, given a type, returns whether the factory
             can produce a hook for that type.
         :param factory: A callable that, given a type, produces a structuring
             hook for that type. This structuring hook will be cached.
+
+        .. versionchanged:: 24.1.0
+            This method may now be used as a decorator.
         """
+        if factory is None:
+            # Decorator use.
+            def decorator(factory):
+                # Is this an extended factory (takes a converter too)?
+                sig = signature(factory)
+                if (
+                    len(sig.parameters) >= 2
+                    and (list(sig.parameters.values())[1]).default is Signature.empty
+                ):
+                    self._structure_func.register_func_list(
+                        [(predicate, factory, "extended")]
+                    )
+                else:
+                    self._structure_func.register_func_list(
+                        [(predicate, factory, True)]
+                    )
+
+            return decorator
         self._structure_func.register_func_list([(predicate, factory, True)])
+        return factory
 
     def structure(self, obj: UnstructuredValue, cl: type[T]) -> T:
         """Convert unstructured Python data structures to structured data."""
@@ -580,7 +751,7 @@ class BaseConverter:
     def _structure_deque(self, obj: Iterable[T], cl: Any) -> deque[T]:
         """Convert an iterable to a potentially generic deque."""
         if is_bare(cl) or cl.__args__[0] in ANIES:
-            res = deque(e for e in obj)
+            res = deque(obj)
         else:
             elem_type = cl.__args__[0]
             handler = self._structure_func.dispatch(elem_type)
@@ -944,7 +1115,7 @@ class Converter(BaseConverter):
         )
         self.register_unstructure_hook_factory(
             lambda t: get_newtype_base(t) is not None,
-            lambda t: self._unstructure_func.dispatch(get_newtype_base(t)),
+            lambda t: self.get_unstructure_hook(get_newtype_base(t)),
         )
 
         self.register_structure_hook_factory(is_annotated, self.gen_structure_annotated)
@@ -966,7 +1137,7 @@ class Converter(BaseConverter):
 
     def gen_unstructure_annotated(self, type):
         origin = type.__origin__
-        return self._unstructure_func.dispatch(origin)
+        return self.get_unstructure_hook(origin)
 
     def gen_structure_annotated(self, type) -> Callable:
         """A hook factory for annotated types."""
@@ -1007,7 +1178,7 @@ class Converter(BaseConverter):
         if isinstance(other, TypeVar):
             handler = self.unstructure
         else:
-            handler = self._unstructure_func.dispatch(other)
+            handler = self.get_unstructure_hook(other)
 
         def unstructure_optional(val, _handler=handler):
             return None if val is None else _handler(val)

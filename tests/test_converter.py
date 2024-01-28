@@ -1,6 +1,7 @@
 """Test both structuring and unstructuring."""
 from collections import deque
 from typing import (
+    Any,
     Deque,
     FrozenSet,
     List,
@@ -14,11 +15,12 @@ from typing import (
 )
 
 import pytest
-from attrs import Factory, define, fields, make_class
+from attrs import Factory, define, fields, has, make_class
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis.strategies import booleans, just, lists, one_of, sampled_from
 
 from cattrs import BaseConverter, Converter, UnstructureStrategy
+from cattrs.dispatch import StructureHook, UnstructureHook
 from cattrs.errors import (
     ClassValidationError,
     ForbiddenExtraKeysError,
@@ -783,3 +785,74 @@ def test_hook_getting(converter: BaseConverter):
     structure = converter.get_structure_hook(Test)
 
     assert structure({"a": 1}, Test) == Test(1)
+
+
+def test_decorators(converter: BaseConverter):
+    """The decorator versions work."""
+
+    @define
+    class Test:
+        a: int
+
+    @converter.register_unstructure_hook
+    def my_hook(value: Test) -> dict:
+        res = {"a": value.a}
+
+        res["a"] += 1
+
+        return res
+
+    assert converter.unstructure(Test(1)) == {"a": 2}
+
+    @converter.register_structure_hook
+    def my_structure_hook(value, _) -> Test:
+        value["a"] += 1
+        return Test(**value)
+
+    assert converter.structure({"a": 5}, Test) == Test(6)
+
+
+def test_hook_factory_decorators(converter: BaseConverter):
+    """Hook factory decorators work."""
+
+    @define
+    class Test:
+        a: int
+
+    @converter.register_unstructure_hook_factory(has)
+    def my_hook_factory(type: Any) -> UnstructureHook:
+        return lambda v: v.a
+
+    assert converter.unstructure(Test(1)) == 1
+
+    @converter.register_structure_hook_factory(has)
+    def my_structure_hook_factory(type: Any) -> StructureHook:
+        return lambda v, _: Test(v)
+
+    assert converter.structure(1, Test) == Test(1)
+
+
+def test_hook_factory_decorators_with_converters(converter: BaseConverter):
+    """Hook factory decorators with converters work."""
+
+    @define
+    class Test:
+        a: int
+
+    converter.register_unstructure_hook(int, lambda v: v + 1)
+
+    @converter.register_unstructure_hook_factory(has)
+    def my_hook_factory(type: Any, converter: BaseConverter) -> UnstructureHook:
+        int_handler = converter.get_unstructure_hook(int)
+        return lambda v: (int_handler(v.a),)
+
+    assert converter.unstructure(Test(1)) == (2,)
+
+    converter.register_structure_hook(int, lambda v: v - 1)
+
+    @converter.register_structure_hook_factory(has)
+    def my_structure_hook_factory(type: Any, converter: BaseConverter) -> StructureHook:
+        int_handler = converter.get_structure_hook(int)
+        return lambda v, _: Test(int_handler(v[0]))
+
+    assert converter.structure((2,), Test) == Test(1)
