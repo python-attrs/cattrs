@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, TypeVar
 
 from attrs import Factory, define
 
-from cattrs._compat import TypeAlias
+from ._compat import TypeAlias
 
 if TYPE_CHECKING:
     from .converters import BaseConverter
@@ -36,6 +36,12 @@ class FunctionDispatch:
     first argument in the method, and return True or False.
 
     objects that help determine dispatch should be instantiated objects.
+
+    :param converter: A converter to be used for factories that require converters.
+
+    ..  versionchanged:: 24.1.0
+        Support for factories that require converters, hence this requires a
+        converter when creating.
     """
 
     _converter: BaseConverter
@@ -86,11 +92,15 @@ class MultiStrategyDispatch(Generic[Hook]):
     MultiStrategyDispatch uses a combination of exact-match dispatch,
     singledispatch, and FunctionDispatch.
 
+    :param converter: A converter to be used for factories that require converters.
     :param fallback_factory: A hook factory to be called when a hook cannot be
         produced.
 
-    ..  versionchanged:: 23.2.0
+    .. versionchanged:: 23.2.0
         Fallbacks are now factories.
+    .. versionchanged:: 24.1.0
+        Support for factories that require converters, hence this requires a
+        converter when creating.
     """
 
     _fallback_factory: HookFactory[Hook]
@@ -150,6 +160,10 @@ class MultiStrategyDispatch(Generic[Hook]):
         """
         Register a predicate function to determine if the handler
         should be used for the type.
+
+        :param pred_and_handler: The list of predicates and their associated
+            handlers. If a handler is registered in `extended` mode, it's a
+            factory that requires a converter.
         """
         for tup in pred_and_handler:
             if len(tup) == 2:

@@ -5,6 +5,7 @@ from collections.abc import MutableSet as AbcMutableSet
 from dataclasses import Field
 from enum import Enum
 from inspect import Signature
+from inspect import signature as inspect_signature
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, overload
 
@@ -81,6 +82,11 @@ from .gen import (
 )
 from .gen.typeddicts import make_dict_structure_fn as make_typeddict_dict_struct_fn
 from .gen.typeddicts import make_dict_unstructure_fn as make_typeddict_dict_unstruct_fn
+from .tuples import (
+    is_namedtuple,
+    namedtuple_structure_factory,
+    namedtuple_unstructure_factory,
+)
 
 __all__ = ["UnstructureStrategy", "BaseConverter", "Converter", "GenConverter"]
 
@@ -224,6 +230,7 @@ class BaseConverter:
                 (is_mutable_set, self._structure_set),
                 (is_frozenset, self._structure_frozenset),
                 (is_tuple, self._structure_tuple),
+                (is_namedtuple, namedtuple_structure_factory, "extended"),
                 (is_mapping, self._structure_dict),
                 (is_supported_union, self._gen_attrs_union_structure, True),
                 (
@@ -365,7 +372,9 @@ class BaseConverter:
 
             def decorator(factory):
                 # Is this an extended factory (takes a converter too)?
-                sig = signature(factory)
+                # We use the original `inspect.signature` to not evaluate string
+                # annotations.
+                sig = inspect_signature(factory)
                 if (
                     len(sig.parameters) >= 2
                     and (list(sig.parameters.values())[1]).default is Signature.empty
@@ -1094,6 +1103,9 @@ class Converter(BaseConverter):
         )
         self.register_unstructure_hook_factory(
             is_hetero_tuple, self.gen_unstructure_hetero_tuple
+        )
+        self.register_unstructure_hook_factory(is_namedtuple)(
+            namedtuple_unstructure_factory
         )
         self.register_unstructure_hook_factory(
             is_sequence, self.gen_unstructure_iterable

@@ -2,15 +2,16 @@
 from base64 import b85decode, b85encode
 from datetime import date, datetime
 from enum import Enum
+from functools import partial
 from typing import Any, Type, TypeVar, Union
 
 from orjson import dumps, loads
 
-from cattrs._compat import AbstractSet, is_mapping
-
+from .._compat import AbstractSet, is_mapping
 from ..converters import BaseConverter, Converter
 from ..fns import identity
 from ..strategies import configure_union_passthrough
+from ..tuples import is_namedtuple, namedtuple_unstructure_factory
 from . import wrap
 
 T = TypeVar("T")
@@ -30,9 +31,13 @@ def configure_converter(converter: BaseConverter):
 
     * bytes are serialized as base85 strings
     * datetimes and dates are passed through to be serialized as RFC 3339 by orjson
+    * typed namedtuples are serialized as lists
     * sets are serialized as lists
     * string enum mapping keys have special handling
     * mapping keys are coerced into strings when unstructuring
+
+    .. versionchanged: 24.1.0
+        Add support for typed namedtuples.
     """
     converter.register_unstructure_hook(
         bytes, lambda v: (b85encode(v) if v else b"").decode("utf8")
@@ -65,7 +70,14 @@ def configure_converter(converter: BaseConverter):
         )
 
     converter._unstructure_func.register_func_list(
-        [(is_mapping, gen_unstructure_mapping, True)]
+        [
+            (is_mapping, gen_unstructure_mapping, True),
+            (
+                is_namedtuple,
+                partial(namedtuple_unstructure_factory, unstructure_to=tuple),
+                "extended",
+            ),
+        ]
     )
     configure_union_passthrough(Union[str, bool, int, float, None], converter)
 

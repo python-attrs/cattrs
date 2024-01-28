@@ -13,7 +13,9 @@ For example, to get a converter configured for BSON:
 
 Converters obtained this way can be customized further, just like any other converter.
 
-These converters support the following additional classes and type annotations, both for structuring and unstructuring:
+These converters support all [default hooks](defaulthooks.md)
+and the following additional classes and type annotations,
+both for structuring and unstructuring:
 
 - `datetime.datetime`, `datetime.date`
 
@@ -66,6 +68,7 @@ Found at {mod}`cattrs.preconf.orjson`.
 Bytes are un/structured as base 85 strings.
 Sets are unstructured into lists, and structured back into sets.
 `datetime` s and `date` s are passed through to be unstructured into RFC 3339 by _orjson_ itself.
+Typed named tuples are unstructured into ordinary tuples, and then into JSON arrays by _orjson_.
 
 _orjson_ doesn't support integers less than -9223372036854775808, and greater than 9223372036854775807.
 _orjson_ only supports mappings with string keys so mappings will have their keys stringified before serialization, and destringified during deserialization.
@@ -180,8 +183,9 @@ When encoding and decoding, the library needs to be passed `codec_options=bson.C
 
 Found at {mod}`cattrs.preconf.pyyaml`.
 
-Frozensets are serialized as lists, and deserialized back into frozensets. `date` s are serialized as ISO 8601 strings.
-
+Frozensets are serialized as lists, and deserialized back into frozensets.
+`date` s are serialized as ISO 8601 strings.
+Typed named tuples are unstructured into ordinary tuples, and then into YAML arrays by _pyyaml_.
 
 ## _tomlkit_
 
