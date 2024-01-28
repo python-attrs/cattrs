@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from sys import version_info
 from typing import TYPE_CHECKING, Any, NamedTuple, Tuple
 
 from ._compat import is_subclass
@@ -10,19 +11,34 @@ from .gen import make_hetero_tuple_unstructure_fn
 if TYPE_CHECKING:
     from .converters import BaseConverter
 
+if version_info[:2] >= (3, 9):
 
-def is_namedtuple(type: Any) -> bool:
-    """A predicate function for named tuples."""
-    # This is tricky. It may not be possible for this function to be 100%
-    # accurate, since it doesn't seem like we can distinguish between tuple
-    # subclasses and named tuples reliably.
+    def is_namedtuple(type: Any) -> bool:
+        """A predicate function for named tuples."""
 
-    if is_subclass(type, tuple):
-        for cl in type.mro():
-            orig_bases = cl.__dict__.get("__orig_bases__", ())
-            if NamedTuple in orig_bases:
-                return True
-    return False
+        if is_subclass(type, tuple):
+            for cl in type.mro():
+                orig_bases = cl.__dict__.get("__orig_bases__", ())
+                if NamedTuple in orig_bases:
+                    return True
+        return False
+
+else:
+
+    def is_namedtuple(type: Any) -> bool:
+        """A predicate function for named tuples."""
+        # This is tricky. It may not be possible for this function to be 100%
+        # accurate, since it doesn't seem like we can distinguish between tuple
+        # subclasses and named tuples reliably.
+
+        if is_subclass(type, tuple):
+            for cl in type.mro():
+                if cl is tuple:
+                    # No point going further.
+                    break
+                if "_fields" in cl.__dict__:
+                    return True
+        return False
 
 
 def is_passthrough(type: type[tuple], converter: BaseConverter) -> bool:

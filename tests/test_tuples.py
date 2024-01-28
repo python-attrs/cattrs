@@ -35,7 +35,7 @@ def test_named_tuple_predicate():
 
     assert is_namedtuple(Test)
 
-    class Test2(tuple[int, int]):
+    class Test2(Tuple[int, int]):
         pass
 
     assert not is_namedtuple(Test2)
