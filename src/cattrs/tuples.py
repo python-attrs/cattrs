@@ -59,6 +59,6 @@ def namedtuple_structure_factory(
 ) -> StructureHook:
     """A hook factory for structuring namedtuples."""
     # We delegate to the existing infrastructure for heterogenous tuples.
-    hetero_tuple_type = Tuple[*type.__annotations__.values()]
+    hetero_tuple_type = Tuple[tuple(type.__annotations__.values())]
     base_hook = converter.get_structure_hook(hetero_tuple_type)
     return lambda v, _: type(*base_hook(v, hetero_tuple_type))
