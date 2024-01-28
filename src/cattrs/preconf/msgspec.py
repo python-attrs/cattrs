@@ -15,8 +15,10 @@ from cattrs._compat import fields, get_origin, has, is_bare, is_mapping, is_sequ
 from cattrs.dispatch import HookFactory, UnstructureHook
 from cattrs.fns import identity
 
-from ..converters import Converter
+from ..converters import BaseConverter, Converter
+from ..gen import make_hetero_tuple_unstructure_fn
 from ..strategies import configure_union_passthrough
+from ..tuples import is_namedtuple
 from . import wrap
 
 T = TypeVar("T")
@@ -94,6 +96,9 @@ def configure_passthroughs(converter: Converter) -> None:
     converter.register_unstructure_hook_factory(
         has, make_attrs_unstruct_factory(converter)
     )
+    converter.register_unstructure_hook_factory(is_namedtuple)(
+        namedtuple_unstructure_factory
+    )
 
 
 def make_unstructure_seq_factory(converter: Converter) -> HookFactory[UnstructureHook]:
@@ -168,3 +173,22 @@ def make_attrs_unstruct_factory(converter: Converter) -> HookFactory[Unstructure
         return to_builtins
 
     return attrs_factory
+
+
+def namedtuple_unstructure_factory(
+    type: type[tuple], converter: BaseConverter
+) -> UnstructureHook:
+    """A hook factory for unstructuring namedtuples, modified for msgspec."""
+
+    if all(
+        converter.get_unstructure_hook(t) in (identity, to_builtins)
+        for t in type.__annotations__.values()
+    ):
+        return identity
+
+    return make_hetero_tuple_unstructure_fn(
+        type,
+        converter,
+        unstructure_to=tuple,
+        type_args=tuple(type.__annotations__.values()),
+    )

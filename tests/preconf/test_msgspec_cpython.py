@@ -7,6 +7,7 @@ from typing import (
     Mapping,
     MutableMapping,
     MutableSequence,
+    NamedTuple,
     Sequence,
 )
 
@@ -37,9 +38,25 @@ class B:
 
 @define
 class C:
-    """This class should not be passed through to msgspec."""
+    """This class should not be passed through due to a private attribute."""
 
     _a: int
+
+
+class N(NamedTuple):
+    a: int
+
+
+class NA(NamedTuple):
+    """A complex namedtuple."""
+
+    a: A
+
+
+class NC(NamedTuple):
+    """A complex namedtuple."""
+
+    a: C
 
 
 @fixture
@@ -68,11 +85,15 @@ def test_unstructure_passthrough(converter: Conv):
     assert is_passthrough(converter.get_unstructure_hook(MutableSequence[int]))
 
 
-def test_unstructure_pt_attrs(converter: Conv):
-    """Passthrough for attrs works."""
+def test_unstructure_pt_product_types(converter: Conv):
+    """Passthrough for product types (attrs, dataclasses...) works."""
     assert is_passthrough(converter.get_unstructure_hook(A))
     assert not is_passthrough(converter.get_unstructure_hook(B))
     assert not is_passthrough(converter.get_unstructure_hook(C))
+
+    assert is_passthrough(converter.get_unstructure_hook(N))
+    assert is_passthrough(converter.get_unstructure_hook(NA))
+    assert not is_passthrough(converter.get_unstructure_hook(NC))
 
 
 def test_unstructure_pt_mappings(converter: Conv):
