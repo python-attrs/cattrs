@@ -120,25 +120,36 @@ A complex use case for hook factories is described over at [](usage.md#using-fac
 
 {meth}`Converter.register_unstructure_hook_factory() <cattrs.BaseConverter.register_unstructure_hook_factory>` and {meth}`Converter.register_structure_hook_factory() <cattrs.BaseConverter.register_structure_hook_factory>` can also be used as decorators.
 
-Here's an example of using an unstructure hook factory to unstructure all attrs classes using [field aliases](#use_alias).
+When registered via decorators, factory hooks can receive the current converter by exposing an additional required parameter.
+
+Here's an example of using an unstructure hook factory to handle unstructuring queues.
 
 ```{doctest}
->>> from attrs import define, has
+>>> from queue import Queue
+>>> from typing import get_origin
 >>> from cattrs import Converter
->>> from cattrs.gen import make_dict_unstructure_fn
 
 >>> c = Converter()
 
->>> @c.register_unstructure_hook_factory(has)
-... def attrs_hook_factory(cl: Any) -> Callable:
-...    return make_dict_unstructure_fn(cl, c, _cattrs_use_alias=True)
+>>> @c.register_unstructure_hook_factory(lambda t: get_origin(t) is Queue)
+... def queue_hook_factory(cl: Any, converter: Converter) -> Callable:
+...     type_arg = get_args(cl)[0]
+...     elem_handler = converter.get_unstructure_hook(type_arg)
+...
+...     def unstructure_hook(v: Queue) -> list:
+...         res = []
+...         while not v.empty():
+...             res.append(elem_handler(v.get_nowait()))
+...         return res
+...
+...     return unstructure_hook
 
->>> @define
-... class F:
-...     _a: int
+>>> q = Queue()
+>>> q.put(1)
+>>> q.put(2)
 
->>> c.unstructure(F(1))
-{'a': 1}
+>>> c.unstructure(q, unstructure_as=Queue[int])
+[1, 2]
 ```
 
 ## Using `cattrs.gen` Generators
