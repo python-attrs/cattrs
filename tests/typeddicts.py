@@ -177,6 +177,15 @@ def simple_typeddicts(
         else typeddict_cls
     )("HypTypedDict", attrs_dict, total=total)
 
+    note(
+        "\n".join(
+            [
+                "class HypTypedDict(TypedDict):",
+                *[f"    {n}: {a}" for n, a in attrs_dict.items()],
+            ]
+        )
+    )
+
     if draw(booleans()):
 
         class InheritedTypedDict(cls):

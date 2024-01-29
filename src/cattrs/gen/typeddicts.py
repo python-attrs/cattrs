@@ -209,7 +209,7 @@ def make_dict_unstructure_fn(
                 # No default or no override.
                 lines.append(f"  res['{kn}'] = {invoke}")
             else:
-                lines.append(f"  if '{kn}' in instance: res['{kn}'] = {invoke}")
+                lines.append(f"  if '{attr_name}' in instance: res['{kn}'] = {invoke}")
 
         internal_arg_line = ", ".join([f"{i}={i}" for i in internal_arg_parts])
         if internal_arg_line:
