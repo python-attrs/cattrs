@@ -6,7 +6,8 @@ from .._compat import get_args, get_origin, is_generic
 
 
 def generate_mapping(cl: type, old_mapping: dict[str, type] = {}) -> dict[str, type]:
-    mapping = {}
+    """Generate a mapping of typevars to actual types for a generic class."""
+    mapping = dict(old_mapping)
 
     origin = get_origin(cl)
 
@@ -25,8 +26,6 @@ def generate_mapping(cl: type, old_mapping: dict[str, type] = {}) -> dict[str, t
                 continue
             mapping[p.__name__] = t
 
-        if not mapping:
-            return dict(old_mapping)
     elif is_generic(cl):
         # Origin is None, so this may be a subclass of a generic class.
         orig_bases = cl.__orig_bases__

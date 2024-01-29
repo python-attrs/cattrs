@@ -1,6 +1,6 @@
 """Tests for TypedDict un/structuring."""
 from datetime import datetime, timezone
-from typing import Dict, Generic, Set, Tuple, TypedDict, TypeVar
+from typing import Dict, Generic, NewType, Set, Tuple, TypedDict, TypeVar
 
 import pytest
 from attrs import NOTHING
@@ -205,6 +205,27 @@ def test_generics_with_unbound(detailed_validation: bool):
     with pytest.raises(StructureHandlerNotFoundError):
         # This doesn't work since we refuse the temptation to guess.
         c.structure({"a": 1}, GenericTypedDict)
+
+
+@pytest.mark.skipif(not is_py311_plus, reason="3.11+ only")
+@given(detailed_validation=...)
+def test_deep_generics(detailed_validation: bool):
+    c = mk_converter(detailed_validation=detailed_validation)
+
+    Int = NewType("Int", int)
+
+    c.register_unstructure_hook_func(lambda t: t is Int, lambda v: v - 1)
+
+    T = TypeVar("T")
+    T1 = TypeVar("T1")
+
+    class GenericParent(TypedDict, Generic[T]):
+        a: T
+
+    class GenericChild(GenericParent[Int], Generic[T1]):
+        b: T1
+
+    assert c.unstructure({"b": 2, "a": 2}, GenericChild[Int]) == {"a": 1, "b": 1}
 
 
 @given(simple_typeddicts(total=True, not_required=True), booleans())
