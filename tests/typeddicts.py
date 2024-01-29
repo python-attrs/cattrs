@@ -1,9 +1,10 @@
 """Strategies for typed dicts."""
 from datetime import datetime, timezone
 from string import ascii_lowercase
-from typing import Any, Dict, Generic, List, Optional, Set, Tuple, TypeVar
+from typing import Any, Dict, Generic, List, Optional, Set, Tuple, Type, TypeVar
 
 from attrs import NOTHING
+from hypothesis import note
 from hypothesis.strategies import (
     DrawFn,
     SearchStrategy,
@@ -49,7 +50,7 @@ def gen_typeddict_attr_names():
 @composite
 def int_attributes(
     draw: DrawFn, total: bool = True, not_required: bool = False
-) -> Tuple[int, SearchStrategy, SearchStrategy]:
+) -> Tuple[Type[int], SearchStrategy, SearchStrategy]:
     if total:
         if not_required and draw(booleans()):
             return (NotRequired[int], integers() | just(NOTHING), text(ascii_lowercase))
@@ -176,6 +177,15 @@ def simple_typeddicts(
         else typeddict_cls
     )("HypTypedDict", attrs_dict, total=total)
 
+    note(
+        "\n".join(
+            [
+                "class HypTypedDict(TypedDict):",
+                *[f"    {n}: {a}" for n, a in attrs_dict.items()],
+            ]
+        )
+    )
+
     if draw(booleans()):
 
         class InheritedTypedDict(cls):
@@ -240,9 +250,8 @@ def generic_typeddicts(
             generics.append(typevar)
             if total and draw(booleans()):
                 # We might decide to make these NotRequired
-                actual_types.append(NotRequired[attr_type])
-            else:
-                actual_types.append(attr_type)
+                typevar = NotRequired[typevar]
+            actual_types.append(attr_type)
             attrs_dict[attr_name] = typevar
 
     cls = make_typeddict(
@@ -282,6 +291,14 @@ def make_typeddict(
         lines.append(f"  {n}: _{trimmed}_type")
 
     script = "\n".join(lines)
+
+    note_lines = script
+    for n, t in globs.items():
+        if n == "TypedDict":
+            continue
+        note_lines = note_lines.replace(n, repr(t))
+    note(note_lines)
+
     eval(compile(script, "name", "exec"), globs)
 
     return globs[cls_name]

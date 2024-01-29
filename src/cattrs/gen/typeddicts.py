@@ -53,7 +53,7 @@ from ._shared import find_structure_handler
 if TYPE_CHECKING:  # pragma: no cover
     from typing_extensions import Literal
 
-    from cattr.converters import BaseConverter
+    from ..converters import BaseConverter
 
 __all__ = ["make_dict_unstructure_fn", "make_dict_structure_fn"]
 
@@ -209,7 +209,7 @@ def make_dict_unstructure_fn(
                 # No default or no override.
                 lines.append(f"  res['{kn}'] = {invoke}")
             else:
-                lines.append(f"  if '{kn}' in instance: res['{kn}'] = {invoke}")
+                lines.append(f"  if '{attr_name}' in instance: res['{kn}'] = {invoke}")
 
         internal_arg_line = ", ".join([f"{i}={i}" for i in internal_arg_parts])
         if internal_arg_line:
@@ -340,9 +340,7 @@ def make_dict_structure_fn(
             if nrb is not NOTHING:
                 t = nrb
 
-            if isinstance(t, TypeVar):
-                t = mapping.get(t.__name__, t)
-            elif is_generic(t) and not is_bare(t) and not is_annotated(t):
+            if is_generic(t) and not is_bare(t) and not is_annotated(t):
                 t = deep_copy_with(t, mapping)
 
             # For each attribute, we try resolving the type here and now.
@@ -554,8 +552,12 @@ if sys.version_info >= (3, 11):
 elif sys.version_info >= (3, 9):
     from typing_extensions import Annotated, NotRequired, Required, get_args
 
+    # Note that there is no `typing.Required` on 3.9 and 3.10, only in
+    # `typing_extensions`. Therefore, `typing.TypedDict` will not honor this
+    # annotation, only `typing_extensions.TypedDict`.
+
     def _required_keys(cls: type) -> set[str]:
-        """Own own processor for required keys."""
+        """Our own processor for required keys."""
         if _is_extensions_typeddict(cls):
             return cls.__required_keys__
 
@@ -564,6 +566,9 @@ elif sys.version_info >= (3, 9):
         own_annotations = cls.__dict__.get("__annotations__", {})
         required_keys = set()
         for base in cls.__mro__[1:]:
+            if base in (object, dict):
+                # These have no required keys for sure.
+                continue
             required_keys |= _required_keys(base)
         for key in getattr(cls, "__required_keys__", []):
             annotation_type = own_annotations[key]
@@ -574,9 +579,7 @@ elif sys.version_info >= (3, 9):
                     annotation_type = annotation_args[0]
                     annotation_origin = get_origin(annotation_type)
 
-            if annotation_origin is Required:
-                required_keys.add(key)
-            elif annotation_origin is NotRequired:
+            if annotation_origin is NotRequired:
                 pass
             elif cls.__total__:
                 required_keys.add(key)
@@ -588,7 +591,7 @@ else:
     # On 3.8, typing.TypedDicts do not have __required_keys__.
 
     def _required_keys(cls: type) -> set[str]:
-        """Own own processor for required keys."""
+        """Our own processor for required keys."""
         if _is_extensions_typeddict(cls):
             return cls.__required_keys__
 

@@ -412,12 +412,12 @@ if sys.version_info >= (3, 9):
             or getattr(type, "__origin__", None) is Counter
         )
 
-    def is_generic(obj) -> bool:
-        """Whether obj is a generic type."""
+    def is_generic(type) -> bool:
+        """Whether `type` is a generic type."""
         # Inheriting from protocol will inject `Generic` into the MRO
         # without `__orig_bases__`.
-        return isinstance(obj, (_GenericAlias, GenericAlias)) or (
-            is_subclass(obj, Generic) and hasattr(obj, "__orig_bases__")
+        return isinstance(type, (_GenericAlias, GenericAlias)) or (
+            is_subclass(type, Generic) and hasattr(type, "__orig_bases__")
         )
 
     def copy_with(type, args):
@@ -425,6 +425,9 @@ if sys.version_info >= (3, 9):
         if is_annotated(type):
             # typing.Annotated requires a special case.
             return Annotated[args]
+        if isinstance(args, tuple) and len(args) == 1:
+            # Some annotations can't handle 1-tuples.
+            args = args[0]
         return type.__origin__[args]
 
     def get_full_type_hints(obj, globalns=None, localns=None):

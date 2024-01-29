@@ -1,15 +1,16 @@
 """Tests for TypedDict un/structuring."""
 from datetime import datetime, timezone
-from typing import Dict, Generic, Set, Tuple, TypedDict, TypeVar
+from typing import Dict, Generic, NewType, Set, Tuple, TypedDict, TypeVar
 
 import pytest
+from attrs import NOTHING
 from hypothesis import assume, given
 from hypothesis.strategies import booleans
 from pytest import raises
 from typing_extensions import NotRequired
 
 from cattrs import BaseConverter, Converter
-from cattrs._compat import ExtensionsTypedDict, is_generic
+from cattrs._compat import ExtensionsTypedDict, get_notrequired_base, is_generic
 from cattrs.errors import (
     ClassValidationError,
     ForbiddenExtraKeysError,
@@ -51,17 +52,27 @@ def get_annot(t) -> dict:
             args = t.__args__
             params = origin.__parameters__
             param_to_args = dict(zip(params, args))
-            return {
-                k: param_to_args[v] if v in param_to_args else v
-                for k, v in origin_annotations.items()
-            }
+            res = {}
+            for k, v in origin_annotations.items():
+                if (nrb := get_notrequired_base(v)) is not NOTHING:
+                    res[k] = (
+                        NotRequired[param_to_args[nrb]] if nrb in param_to_args else v
+                    )
+                else:
+                    res[k] = param_to_args[v] if v in param_to_args else v
+            return res
 
         # Origin is `None`, so this is a subclass for a generic typeddict.
         mapping = generate_mapping(t)
-        return {
-            k: mapping[v.__name__] if v.__name__ in mapping else v
-            for k, v in get_annots(t).items()
-        }
+        res = {}
+        for k, v in get_annots(t).items():
+            if (nrb := get_notrequired_base(v)) is not NOTHING:
+                res[k] = (
+                    NotRequired[mapping[nrb.__name__]] if nrb.__name__ in mapping else v
+                )
+            else:
+                res[k] = mapping[v.__name__] if v.__name__ in mapping else v
+        return res
     return get_annots(t)
 
 
@@ -196,6 +207,27 @@ def test_generics_with_unbound(detailed_validation: bool):
         c.structure({"a": 1}, GenericTypedDict)
 
 
+@pytest.mark.skipif(not is_py311_plus, reason="3.11+ only")
+@given(detailed_validation=...)
+def test_deep_generics(detailed_validation: bool):
+    c = mk_converter(detailed_validation=detailed_validation)
+
+    Int = NewType("Int", int)
+
+    c.register_unstructure_hook_func(lambda t: t is Int, lambda v: v - 1)
+
+    T = TypeVar("T")
+    T1 = TypeVar("T1")
+
+    class GenericParent(TypedDict, Generic[T]):
+        a: T
+
+    class GenericChild(GenericParent[Int], Generic[T1]):
+        b: T1
+
+    assert c.unstructure({"b": 2, "a": 2}, GenericChild[Int]) == {"a": 1, "b": 1}
+
+
 @given(simple_typeddicts(total=True, not_required=True), booleans())
 def test_not_required(
     cls_and_instance: Tuple[type, Dict], detailed_validation: bool
@@ -273,7 +305,7 @@ def test_omit(cls_and_instance: Tuple[type, Dict], detailed_validation: bool) ->
     assert restructured == instance
 
 
-@given(simple_typeddicts(min_attrs=1, total=True), booleans())
+@given(simple_typeddicts(min_attrs=1, total=True, not_required=True), booleans())
 def test_rename(cls_and_instance: Tuple[type, Dict], detailed_validation: bool) -> None:
     """`override(rename=...)` works."""
     c = mk_converter(detailed_validation=detailed_validation)
@@ -281,28 +313,17 @@ def test_rename(cls_and_instance: Tuple[type, Dict], detailed_validation: bool) 
     cls, instance = cls_and_instance
     key = next(iter(get_annot(cls)))
     c.register_unstructure_hook(
-        cls,
-        make_dict_unstructure_fn(
-            cls,
-            c,
-            _cattrs_detailed_validation=detailed_validation,
-            **{key: override(rename="renamed")},
-        ),
+        cls, make_dict_unstructure_fn(cls, c, **{key: override(rename="renamed")})
     )
 
     unstructured = c.unstructure(instance, unstructure_as=cls)
 
     assert key not in unstructured
-    assert "renamed" in unstructured
+    if key in instance:
+        assert "renamed" in unstructured
 
     c.register_structure_hook(
-        cls,
-        make_dict_structure_fn(
-            cls,
-            c,
-            _cattrs_detailed_validation=detailed_validation,
-            **{key: override(rename="renamed")},
-        ),
+        cls, make_dict_structure_fn(cls, c, **{key: override(rename="renamed")})
     )
     restructured = c.structure(unstructured, cls)
 
