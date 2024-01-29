@@ -53,7 +53,7 @@ from ._shared import find_structure_handler
 if TYPE_CHECKING:  # pragma: no cover
     from typing_extensions import Literal
 
-    from cattr.converters import BaseConverter
+    from ..converters import BaseConverter
 
 __all__ = ["make_dict_unstructure_fn", "make_dict_structure_fn"]
 
@@ -340,9 +340,7 @@ def make_dict_structure_fn(
             if nrb is not NOTHING:
                 t = nrb
 
-            if isinstance(t, TypeVar):
-                t = mapping.get(t.__name__, t)
-            elif is_generic(t) and not is_bare(t) and not is_annotated(t):
+            if is_generic(t) and not is_bare(t) and not is_annotated(t):
                 t = deep_copy_with(t, mapping)
 
             # For each attribute, we try resolving the type here and now.

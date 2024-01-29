@@ -412,12 +412,12 @@ if sys.version_info >= (3, 9):
             or getattr(type, "__origin__", None) is Counter
         )
 
-    def is_generic(obj) -> bool:
-        """Whether obj is a generic type."""
+    def is_generic(type) -> bool:
+        """Whether `type` is a generic type."""
         # Inheriting from protocol will inject `Generic` into the MRO
         # without `__orig_bases__`.
-        return isinstance(obj, (_GenericAlias, GenericAlias)) or (
-            is_subclass(obj, Generic) and hasattr(obj, "__orig_bases__")
+        return isinstance(type, (_GenericAlias, GenericAlias)) or (
+            is_subclass(type, Generic) and hasattr(type, "__orig_bases__")
         )
 
     def copy_with(type, args):
