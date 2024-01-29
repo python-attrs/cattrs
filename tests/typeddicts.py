@@ -1,7 +1,7 @@
 """Strategies for typed dicts."""
 from datetime import datetime, timezone
 from string import ascii_lowercase
-from typing import Any, Dict, Generic, List, Optional, Set, Tuple, TypeVar
+from typing import Any, Dict, Generic, List, Optional, Set, Tuple, Type, TypeVar
 
 from attrs import NOTHING
 from hypothesis import note
@@ -50,7 +50,7 @@ def gen_typeddict_attr_names():
 @composite
 def int_attributes(
     draw: DrawFn, total: bool = True, not_required: bool = False
-) -> Tuple[int, SearchStrategy, SearchStrategy]:
+) -> Tuple[Type[int], SearchStrategy, SearchStrategy]:
     if total:
         if not_required and draw(booleans()):
             return (NotRequired[int], integers() | just(NOTHING), text(ascii_lowercase))
