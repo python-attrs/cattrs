@@ -101,7 +101,7 @@ This can be further customized by providing {func}`cattrs.transform_error` with 
 A useful pattern is wrapping the default, {func}`cattrs.v.format_exception` function.
 
 ```
->>> from cattrs.v iomport format_exception
+>>> from cattrs.v import format_exception
 
 >>> def my_exception_formatter(exc: BaseException, type) -> str:
 ...     if isinstance(exc, MyInterestingException):
