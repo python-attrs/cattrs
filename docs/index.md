@@ -19,6 +19,7 @@ caption: User Guide
 
 customizing
 strategies
+recipes
 validation
 preconf
 unions
