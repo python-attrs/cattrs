@@ -1,0 +1,9 @@
+- case: sequence_structuring
+  main: |
+    from typing import Sequence
+    from cattrs import Converter
+
+    c = Converter()
+
+    # Maybe one day!
+    c.structure([], Sequence[int])  # E: Only concrete class can be given where "type[Sequence[int]]" is expected  [type-abstract]

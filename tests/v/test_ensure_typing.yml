@@ -1,0 +1,49 @@
+- case: int_validation
+  main: |
+    from cattrs import v, Converter, ensure
+
+    c = Converter()
+
+    reveal_type(c.structure("5", ensure(int)))  # N: Revealed type is "builtins.int"
+
+    reveal_type(c.structure("5", ensure(int, lambda i: i > 5)))  # N: Revealed type is "builtins.int"
+
+    reveal_type(c.structure("5", ensure(int, v.greater_than(5))))  # N: Revealed type is "builtins.int"
+
+    c.structure("5", ensure(int, lambda i: len(i) > 5))  # E: Argument 1 to "len" has incompatible type "int"; expected "Sized"  [arg-type]
+- case: list_validation
+  main: |
+    from typing import List
+
+    from cattrs import v, Converter, ensure
+
+    c = Converter()
+
+    reveal_type(c.structure([], ensure(List[int])))  # N: Revealed type is "builtins.list[builtins.int]"
+
+    reveal_type(c.structure([], ensure(List[int], lambda lst: len(lst) > 0)))  # N: Revealed type is "builtins.list[builtins.int]"
+
+    reveal_type(c.structure([], ensure(List[int], v.len_between(1, 5))))  # N: Revealed type is "builtins.list[builtins.int]"
+- case: list_and_int_validation
+  main: |
+    from typing import List
+
+    from cattrs import Converter, ensure
+
+    c = Converter()
+
+    reveal_type(c.structure([], ensure(List, elems=ensure(int))))  # N: Revealed type is "builtins.list[builtins.int]"
+    reveal_type(c.structure([], ensure(List, elems=ensure(int, lambda i: i > 5))))  # N: Revealed type is "builtins.list[builtins.int]"
+
+    # Quite unfortunate this doesn't work.
+    c.structure([], List[ensure(int), lambda i: i > 5])  # E: Type expected within [...]  [misc]  # E: The type "type[list[Any]]" is not generic and not indexable  [misc]
+- case: sequence_and_int_validation
+  main: |
+    from typing import Sequence
+
+    from cattrs import Converter, ensure
+
+    c = Converter()
+
+    # This doesn't work because of no TypeForm.
+    c.structure([], ensure(Sequence, elems=ensure(int)))  # E: Argument 1 to "ensure" has incompatible type "type[Sequence[Any]]"; expected "type[list[Never]]"  [arg-type]

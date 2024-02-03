@@ -1,8 +1,8 @@
 """Cattrs validation."""
 
-from typing import Any, Callable, List, Union
+from typing import Annotated, Any, Callable, List, TypeVar, Union, overload
 
-from attrs import frozen
+from attrs import NOTHING, frozen
 
 from .._compat import ExceptionGroup
 from ..errors import (
@@ -146,3 +146,26 @@ def transform_error(
     else:
         errors.append(f"{format_exception(exc, None)} @ {path}")
     return errors
+
+
+T = TypeVar("T")
+E = TypeVar("E")
+
+
+@overload
+def ensure(
+    type: type[list[T]], *validators: Callable[[list[T]], Any], elems: type[E]
+) -> type[list[E]]: ...
+
+
+@overload
+def ensure(type: type[T], *validators: Callable[[T], Any]) -> type[T]: ...
+
+
+def ensure(type: Any, *validators: Any, elems: Any = NOTHING) -> Any:
+    if elems is not NOTHING:
+        # These are lists.
+        if not validators:
+            return type[elems]
+        return Annotated[type, VAnnotation(validators)]
+    return Annotated[type, VAnnotation(validators)]
