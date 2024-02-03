@@ -1182,7 +1182,7 @@ class Converter(BaseConverter):
             cl, self, _cattrs_omit_if_default=self.omit_if_default, **attrib_overrides
         )
 
-    def gen_unstructure_optional(self, cl: type[T]) -> Callable[[T], Any]:
+    def gen_unstructure_optional(self, cl: type[T] | None) -> Callable[[T | None], Any]:
         """Generate an unstructuring hook for optional types."""
         union_params = cl.__args__
         other = union_params[0] if union_params[1] is NoneType else union_params[1]
@@ -1192,7 +1192,7 @@ class Converter(BaseConverter):
         else:
             handler = self.get_unstructure_hook(other)
 
-        def unstructure_optional(val, _handler=handler):
+        def unstructure_optional(val: T, _handler=handler) -> T | None:
             return None if val is None else _handler(val)
 
         return unstructure_optional

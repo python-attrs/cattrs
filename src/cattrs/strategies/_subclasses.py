@@ -183,7 +183,11 @@ def _include_subclasses_with_union_strategy(
         # the overrides.
         # We just generate the hooks, and do not register them. This allows us to
         # manipulate the _already_generating set to force runtime dispatch.
-        already_generating.working_set = set(union_classes) - {cl}
+        affected_classes = set(union_classes) - {cl}
+        already_generating.working_set = affected_classes
+        already_generating.working_dict = {
+            ("unstructure", cl): converter.unstructure for cl in affected_classes
+        }
         try:
             if overrides is not None:
                 unstruct_hook = make_dict_unstructure_fn(cl, converter, **overrides)
@@ -192,7 +196,8 @@ def _include_subclasses_with_union_strategy(
                 unstruct_hook = converter.get_unstructure_hook(cl, cache_result=False)
                 struct_hook = converter.get_structure_hook(cl, cache_result=False)
         finally:
-            already_generating.working_set = set()
+            del already_generating.working_set
+            del already_generating.working_dict
         original_unstruct_hooks[cl] = unstruct_hook
         original_struct_hooks[cl] = struct_hook
 

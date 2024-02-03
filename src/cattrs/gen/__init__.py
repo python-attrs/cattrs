@@ -117,14 +117,21 @@ def make_dict_unstructure_fn(
     # We keep track of what we're generating to help with recursive
     # class graphs.
     try:
-        working_set = already_generating.working_set
+        working_dict = already_generating.working_dict
     except AttributeError:
-        working_set = set()
-        already_generating.working_set = working_set
-    if cl in working_set:
-        raise RecursionError()
+        working_dict = {}
+        already_generating.working_dict = working_dict
 
-    working_set.add(cl)
+    working_dict_key = ("unstructure", cl)
+    if working_dict_key in working_dict:
+        return working_dict[working_dict_key]
+
+    def unstructure_cl(instance):
+        pass
+
+    unstructure_cl.__name__ = fn_name
+
+    working_dict[working_dict_key] = unstructure_cl
 
     try:
         for a in attrs:
@@ -233,11 +240,15 @@ def make_dict_unstructure_fn(
 
         eval(compile(script, fname, "exec"), globs)
     finally:
-        working_set.remove(cl)
-        if not working_set:
-            del already_generating.working_set
+        working_dict.pop(working_dict_key)
+        if not working_dict:
+            del already_generating.working_dict
 
     res = globs[fn_name]
+
+    unstructure_cl.__code__ = res.__code__
+    unstructure_cl.__defaults__ = res.__defaults__
+    unstructure_cl.__kwdefaults__ = res.__kwdefaults__
     res.overrides = kwargs
 
     return res
