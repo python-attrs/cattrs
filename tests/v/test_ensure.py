@@ -32,10 +32,10 @@ def test_ensured_ints(valconv: BaseConverter):
 
 def test_ensured_lists(valconv: BaseConverter):
     """Validation for lists works."""
-    assert valconv.structure([1, 2], ensure(list[int], lambda lst: len(lst) > 0))
+    assert valconv.structure([1, 2], ensure(List[int], lambda lst: len(lst) > 0))
 
     with raises(Exception) as exc:
-        valconv.structure([], ensure(list[int], lambda lst: len(lst) > 0))
+        valconv.structure([], ensure(List[int], lambda lst: len(lst) > 0))
 
     if valconv.detailed_validation:
         assert isinstance(exc.value, ExceptionGroup)
@@ -63,10 +63,10 @@ def test_ensured_list_elements(valconv: BaseConverter, type):
 @mark.skipif(sys.version_info[:2] < (3, 10), reason="Not supported on older Pythons")
 def test_ensured_list(valconv: BaseConverter):
     """Ensure works for builtin lists."""
-    assert valconv.structure([1, 2], ensure(list, elems=ensure(int, lambda i: i > 0)))
+    assert valconv.structure([1, 2], ensure(List, elems=ensure(int, lambda i: i > 0)))
 
     with raises(Exception) as exc:
-        valconv.structure([1, -2], ensure(list, elems=ensure(int, lambda i: i > 0)))
+        valconv.structure([1, -2], ensure(List, elems=ensure(int, lambda i: i > 0)))
 
     if valconv.detailed_validation:
         assert isinstance(exc.value, ExceptionGroup)
