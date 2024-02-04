@@ -1,10 +1,10 @@
 """Cattrs validation."""
 
-from typing import Annotated, Any, Callable, List, TypeVar, Union, overload
+from typing import Any, Callable, List, TypeVar, Union, overload
 
 from attrs import NOTHING, frozen
 
-from .._compat import ExceptionGroup
+from .._compat import Annotated, ExceptionGroup
 from ..errors import (
     ClassValidationError,
     ForbiddenExtraKeysError,
