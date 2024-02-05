@@ -355,14 +355,13 @@ class BaseConverter:
     ) -> UnstructureHookFactory:
         ...
 
+    @overload
     def register_unstructure_hook_factory(
-        self,
-        predicate: Callable[[Any], bool],
-        factory: UnstructureHookFactory | None = None,
-    ) -> (
-        Callable[[UnstructureHookFactory], UnstructureHookFactory]
-        | UnstructureHookFactory
-    ):
+        self, predicate: Callable[[Any], bool], factory: ExtendedUnstructureHookFactory
+    ) -> ExtendedUnstructureHookFactory:
+        ...
+
+    def register_unstructure_hook_factory(self, predicate, factory=None):
         """
         Register a hook factory for a given predicate.
 
@@ -499,11 +498,13 @@ class BaseConverter:
     ) -> StructureHookFactory:
         ...
 
+    @overload
     def register_structure_hook_factory(
-        self,
-        predicate: Callable[[Any], bool],
-        factory: HookFactory[StructureHook] | None = None,
-    ) -> Callable[[StructureHookFactory, StructureHookFactory]] | StructureHookFactory:
+        self, predicate: Callable[[Any], bool], factory: ExtendedStructureHookFactory
+    ) -> ExtendedStructureHookFactory:
+        ...
+
+    def register_structure_hook_factory(self, predicate, factory=None):
         """
         Register a hook factory for a given predicate.
 
