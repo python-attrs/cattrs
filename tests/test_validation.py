@@ -1,6 +1,6 @@
 """Tests for the extended validation mode."""
 import pickle
-from typing import Dict, FrozenSet, List, Set, Tuple
+from typing import Deque, Dict, FrozenSet, List, Set, Tuple
 
 import pytest
 from attrs import define, field
@@ -79,6 +79,28 @@ def test_list_validation():
     )
     assert exc.value.exceptions[1].__notes__ == [
         "Structuring typing.List[int] @ index 4"
+    ]
+
+
+def test_deque_validation():
+    """Proper validation errors are raised structuring deques."""
+    c = Converter(detailed_validation=True)
+
+    with pytest.raises(IterableValidationError) as exc:
+        c.structure(["1", 2, "a", 3.0, "c"], Deque[int])
+
+    assert repr(exc.value.exceptions[0]) == repr(
+        ValueError("invalid literal for int() with base 10: 'a'")
+    )
+    assert exc.value.exceptions[0].__notes__ == [
+        "Structuring typing.Deque[int] @ index 2"
+    ]
+
+    assert repr(exc.value.exceptions[1]) == repr(
+        ValueError("invalid literal for int() with base 10: 'c'")
+    )
+    assert exc.value.exceptions[1].__notes__ == [
+        "Structuring typing.Deque[int] @ index 4"
     ]
 
 
