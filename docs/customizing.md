@@ -116,14 +116,14 @@ Traceback (most recent call last):
 cattrs.errors.ForbiddenExtraKeysError: Extra fields in constructor for E: else
 ```
 
+Hook factories can receive the current converter by exposing an additional required parameter.
+
 A complex use case for hook factories is described over at [](usage.md#using-factory-hooks).
 
 #### Use as Decorators
 
 {meth}`register_unstructure_hook_factory() <cattrs.BaseConverter.register_unstructure_hook_factory>` and
 {meth}`register_structure_hook_factory() <cattrs.BaseConverter.register_structure_hook_factory>` can also be used as decorators.
-
-When registered via decorators, hook factories can receive the current converter by exposing an additional required parameter.
 
 Here's an example of using an unstructure hook factory to handle unstructuring [queues](https://docs.python.org/3/library/queue.html#queue.Queue).
 
@@ -158,7 +158,9 @@ Here's an example of using an unstructure hook factory to handle unstructuring [
 ## Using `cattrs.gen` Generators
 
 The {mod}`cattrs.gen` module allows for generating and compiling specialized hooks for unstructuring _attrs_ classes, dataclasses and typed dicts.
-The default {class}`Converter <cattrs.Converter>`, upon first encountering one of these types, will use the generation functions mentioned here to generate specialized hooks for it, register the hooks and use them.
+The default {class}`Converter <cattrs.Converter>`, upon first encountering one of these types,
+will use the generation functions mentioned here to generate specialized hooks for it,
+register the hooks and use them.
 
 One reason for generating these hooks in advance is that they can bypass a lot of _cattrs_ machinery and be significantly faster than normal _cattrs_.
 The hooks are also good building blocks for more complex customizations.

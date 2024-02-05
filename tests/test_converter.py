@@ -856,3 +856,67 @@ def test_hook_factory_decorators_with_converters(converter: BaseConverter):
         return lambda v, _: Test(int_handler(v[0]))
 
     assert converter.structure((2,), Test) == Test(1)
+
+
+def test_hook_factories_with_converters(converter: BaseConverter):
+    """Hook factories with converters work."""
+
+    @define
+    class Test:
+        a: int
+
+    converter.register_unstructure_hook(int, lambda v: v + 1)
+
+    def my_hook_factory(type: Any, converter: BaseConverter) -> UnstructureHook:
+        int_handler = converter.get_unstructure_hook(int)
+        return lambda v: (int_handler(v.a),)
+
+    converter.register_unstructure_hook_factory(has, my_hook_factory)
+
+    assert converter.unstructure(Test(1)) == (2,)
+
+    converter.register_structure_hook(int, lambda v: v - 1)
+
+    def my_structure_hook_factory(type: Any, converter: BaseConverter) -> StructureHook:
+        int_handler = converter.get_structure_hook(int)
+        return lambda v, _: Test(int_handler(v[0]))
+
+    converter.register_structure_hook_factory(has, my_structure_hook_factory)
+
+    assert converter.structure((2,), Test) == Test(1)
+
+
+def test_hook_factories_with_converter_methods(converter: BaseConverter):
+    """What if the hook factories are methods (have `self`)?"""
+
+    @define
+    class Test:
+        a: int
+
+    converter.register_unstructure_hook(int, lambda v: v + 1)
+
+    class Converters:
+        @classmethod
+        def my_hook_factory(
+            cls, type: Any, converter: BaseConverter
+        ) -> UnstructureHook:
+            int_handler = converter.get_unstructure_hook(int)
+            return lambda v: (int_handler(v.a),)
+
+        def my_structure_hook_factory(
+            self, type: Any, converter: BaseConverter
+        ) -> StructureHook:
+            int_handler = converter.get_structure_hook(int)
+            return lambda v, _: Test(int_handler(v[0]))
+
+    converter.register_unstructure_hook_factory(has, Converters.my_hook_factory)
+
+    assert converter.unstructure(Test(1)) == (2,)
+
+    converter.register_structure_hook(int, lambda v: v - 1)
+
+    converter.register_structure_hook_factory(
+        has, Converters().my_structure_hook_factory
+    )
+
+    assert converter.structure((2,), Test) == Test(1)
