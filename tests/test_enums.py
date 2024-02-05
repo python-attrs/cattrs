@@ -22,7 +22,7 @@ def test_structuring_enums(data, enum):
 def test_enum_failure(enum):
     """Structuring literals with enums fails properly."""
     converter = BaseConverter()
-    type = Literal[list(enum)[0]]
+    type = Literal[next(iter(enum))]
 
     with raises(Exception) as exc_info:
         converter.structure("", type)
