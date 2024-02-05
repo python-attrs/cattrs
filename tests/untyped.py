@@ -38,7 +38,7 @@ primitive_strategies = st.sampled_from(
 
 
 @st.composite
-def enums_of_primitives(draw):
+def enums_of_primitives(draw: st.DrawFn) -> Enum:
     """Generate enum classes with primitive values."""
     names = draw(
         st.sets(st.text(min_size=1).filter(lambda s: not s.endswith("_")), min_size=1)
