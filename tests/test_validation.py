@@ -104,14 +104,12 @@ def test_deque_validation():
     ]
 
 
-@given(...)
-def test_mapping_validation(detailed_validation: bool):
+def test_mapping_validation(converter):
     """Proper validation errors are raised structuring mappings."""
-    c = Converter(detailed_validation=detailed_validation)
 
-    if detailed_validation:
+    if converter.detailed_validation:
         with pytest.raises(IterableValidationError) as exc:
-            c.structure({"1": 1, "2": "b", "c": 3}, Dict[int, int])
+            converter.structure({"1": 1, "2": "b", "c": 3}, Dict[int, int])
 
         assert repr(exc.value.exceptions[0]) == repr(
             ValueError("invalid literal for int() with base 10: 'b'")
@@ -128,7 +126,7 @@ def test_mapping_validation(detailed_validation: bool):
         ]
     else:
         with pytest.raises(ValueError):
-            c.structure({"1": 1, "2": "b", "c": 3}, Dict[int, int])
+            converter.structure({"1": 1, "2": "b", "c": 3}, Dict[int, int])
 
 
 @given(...)

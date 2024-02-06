@@ -49,6 +49,7 @@ can now be used as decorators and have gained new features.
   ([#460](https://github.com/python-attrs/cattrs/issues/460) [#467](https://github.com/python-attrs/cattrs/pull/467))
 - `typing_extensions.Any` is now supported and handled like `typing.Any`.
   ([#488](https://github.com/python-attrs/cattrs/issues/488) [#490](https://github.com/python-attrs/cattrs/pull/490))
+- The BaseConverter now properly generates detailed validation errors for mappings.
 - [PEP 695](https://peps.python.org/pep-0695/) generics are now tested.
   ([#452](https://github.com/python-attrs/cattrs/pull/452))
 - Imports are now sorted using Ruff.

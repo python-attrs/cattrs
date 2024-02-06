@@ -853,6 +853,38 @@ class BaseConverter:
         if is_bare(cl) or cl.__args__ == (Any, Any):
             return dict(obj)
         key_type, val_type = cl.__args__
+
+        if self.detailed_validation:
+            key_handler = self._structure_func.dispatch(key_type)
+            val_handler = self._structure_func.dispatch(val_type)
+            errors = []
+            res = {}
+
+            for k, v in obj.items():
+                try:
+                    value = val_handler(v, val_type)
+                except Exception as exc:
+                    msg = IterableValidationNote(
+                        f"Structuring mapping value @ key {k!r}", k, val_type
+                    )
+                    exc.__notes__ = [*getattr(exc, "__notes__", []), msg]
+                    errors.append(exc)
+                    continue
+
+                try:
+                    key = key_handler(k, key_type)
+                    res[key] = value
+                except Exception as exc:
+                    msg = IterableValidationNote(
+                        f"Structuring mapping key @ key {k!r}", k, key_type
+                    )
+                    exc.__notes__ = [*getattr(exc, "__notes__", []), msg]
+                    errors.append(exc)
+
+            if errors:
+                raise IterableValidationError(f"While structuring {cl!r}", errors, cl)
+            return res
+
         if key_type in ANIES:
             val_conv = self._structure_func.dispatch(val_type)
             return {k: val_conv(v, val_type) for k, v in obj.items()}

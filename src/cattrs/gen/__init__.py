@@ -879,12 +879,12 @@ def make_mapping_structure_fn(
             globs["enumerate"] = enumerate
 
             lines.append("  res = {}; errors = []")
-            lines.append("  for ix, (k, v) in enumerate(mapping.items()):")
+            lines.append("  for k, v in mapping.items():")
             lines.append("    try:")
             lines.append(f"      value = {v_s}")
             lines.append("    except Exception as e:")
             lines.append(
-                "      e.__notes__ = getattr(e, '__notes__', []) + [IterableValidationNote('Structuring mapping value @ key ' + repr(k), k, val_type)]"
+                "      e.__notes__ = getattr(e, '__notes__', []) + [IterableValidationNote(f'Structuring mapping value @ key {k!r}', k, val_type)]"
             )
             lines.append("      errors.append(e)")
             lines.append("      continue")
@@ -893,7 +893,7 @@ def make_mapping_structure_fn(
             lines.append("      res[key] = value")
             lines.append("    except Exception as e:")
             lines.append(
-                "      e.__notes__ = getattr(e, '__notes__', []) + [IterableValidationNote('Structuring mapping key @ key ' + repr(k), k, key_type)]"
+                "      e.__notes__ = getattr(e, '__notes__', []) + [IterableValidationNote(f'Structuring mapping key @ key {k!r}', k, key_type)]"
             )
             lines.append("      errors.append(e)")
             lines.append("  if errors:")
