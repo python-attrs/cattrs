@@ -1,6 +1,6 @@
 """Cattrs validation."""
 
-from typing import Any, Callable, List, Tuple, Type, TypeVar, Union, overload
+from typing import Any, Callable, Dict, List, Tuple, Type, TypeVar, Union, overload
 
 from attrs import NOTHING, frozen
 
@@ -153,6 +153,7 @@ def transform_error(
 
 T = TypeVar("T")
 E = TypeVar("E")
+TV = TypeVar("TV")
 
 
 @overload
@@ -162,13 +163,27 @@ def ensure(
 
 
 @overload
+def ensure(
+    type: Type[Dict],
+    *validators: Callable[[Dict], Any],
+    keys: Type[E],
+    values: Type[TV],
+) -> Type[Dict[E, TV]]: ...
+
+
+@overload
 def ensure(type: Type[T], *validators: Callable[[T], Any]) -> Type[T]: ...
 
 
-def ensure(type: Any, *validators: Any, elems: Any = NOTHING) -> Any:
+def ensure(type, *validators, elems=NOTHING, keys=NOTHING, values=NOTHING):
+    """Ensure validators run when structuring the given type."""
     if elems is not NOTHING:
         # These are lists.
         if not validators:
             return type[elems]
-        return Annotated[type, VAnnotation(*validators)]
+        return Annotated[type[elems], VAnnotation(*validators)]
+    if keys is not NOTHING or values is not NOTHING:
+        if not validators:
+            return type[keys, values]
+        return Annotated[type[keys, values], VAnnotation(*validators)]
     return Annotated[type, VAnnotation(*validators)]
