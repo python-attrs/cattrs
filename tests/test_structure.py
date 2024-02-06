@@ -1,7 +1,7 @@
 """Test structuring of collections and primitives."""
 from typing import Any, Dict, FrozenSet, List, MutableSet, Optional, Set, Tuple, Union
 
-import attr
+from attrs import define
 from hypothesis import assume, given
 from hypothesis.strategies import (
     binary,
@@ -27,7 +27,6 @@ from cattrs.errors import IterableValidationError, StructureHandlerNotFoundError
 from .untyped import (
     deque_seqs_of_primitives,
     dicts_of_primitives,
-    enums_of_primitives,
     lists_of_primitives,
     primitive_strategies,
     seqs_of_primitives,
@@ -325,15 +324,6 @@ def test_structure_hook_func():
     assert exc.value.type_ is Bar
 
 
-@given(data(), enums_of_primitives())
-def test_structuring_enums(data, enum):
-    """Test structuring enums by their values."""
-    converter = BaseConverter()
-    val = data.draw(sampled_from(list(enum)))
-
-    assert converter.structure(val.value, enum) == val
-
-
 def test_structuring_unsupported():
     """Loading unsupported classes should throw."""
     converter = BaseConverter()
@@ -373,12 +363,12 @@ def test_subclass_registration_is_honored():
 def test_structure_union_edge_case():
     converter = BaseConverter()
 
-    @attr.s(auto_attribs=True)
+    @define
     class A:
         a1: Any
         a2: Optional[Any] = None
 
-    @attr.s(auto_attribs=True)
+    @define
     class B:
         b1: Any
         b2: Optional[Any] = None

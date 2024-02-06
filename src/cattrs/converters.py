@@ -123,6 +123,17 @@ def is_literal_containing_enums(typ: type) -> bool:
     return is_literal(typ) and any(isinstance(val, Enum) for val in typ.__args__)
 
 
+def _is_extended_factory(factory: Callable) -> bool:
+    """Does this factory also accept a converter arg?"""
+    # We use the original `inspect.signature` to not evaluate string
+    # annotations.
+    sig = inspect_signature(factory)
+    return (
+        len(sig.parameters) >= 2
+        and (list(sig.parameters.values())[1]).default is Signature.empty
+    )
+
+
 class BaseConverter:
     """Converts between structured and unstructured data."""
 
@@ -344,21 +355,21 @@ class BaseConverter:
     ) -> UnstructureHookFactory:
         ...
 
+    @overload
     def register_unstructure_hook_factory(
-        self,
-        predicate: Callable[[Any], bool],
-        factory: UnstructureHookFactory | None = None,
-    ) -> (
-        Callable[[UnstructureHookFactory], UnstructureHookFactory]
-        | UnstructureHookFactory
-    ):
+        self, predicate: Callable[[Any], bool], factory: ExtendedUnstructureHookFactory
+    ) -> ExtendedUnstructureHookFactory:
+        ...
+
+    def register_unstructure_hook_factory(self, predicate, factory=None):
         """
         Register a hook factory for a given predicate.
 
-        May also be used as a decorator. When used as a decorator, the hook
-        factory may expose an additional required parameter. In this case,
+        The hook factory may expose an additional required parameter. In this case,
         the current converter will be provided to the hook factory as that
         parameter.
+
+        May also be used as a decorator.
 
         :param predicate: A function that, given a type, returns whether the factory
             can produce a hook for that type.
@@ -367,18 +378,13 @@ class BaseConverter:
 
         .. versionchanged:: 24.1.0
             This method may now be used as a decorator.
+            The factory may also receive the converter as a second, required argument.
         """
         if factory is None:
 
             def decorator(factory):
                 # Is this an extended factory (takes a converter too)?
-                # We use the original `inspect.signature` to not evaluate string
-                # annotations.
-                sig = inspect_signature(factory)
-                if (
-                    len(sig.parameters) >= 2
-                    and (list(sig.parameters.values())[1]).default is Signature.empty
-                ):
+                if _is_extended_factory(factory):
                     self._unstructure_func.register_func_list(
                         [(predicate, factory, "extended")]
                     )
@@ -388,7 +394,16 @@ class BaseConverter:
                     )
 
             return decorator
-        self._unstructure_func.register_func_list([(predicate, factory, True)])
+
+        self._unstructure_func.register_func_list(
+            [
+                (
+                    predicate,
+                    factory,
+                    "extended" if _is_extended_factory(factory) else True,
+                )
+            ]
+        )
         return factory
 
     def get_unstructure_hook(
@@ -483,18 +498,21 @@ class BaseConverter:
     ) -> StructureHookFactory:
         ...
 
+    @overload
     def register_structure_hook_factory(
-        self,
-        predicate: Callable[[Any], bool],
-        factory: HookFactory[StructureHook] | None = None,
-    ) -> Callable[[StructureHookFactory, StructureHookFactory]] | StructureHookFactory:
+        self, predicate: Callable[[Any], bool], factory: ExtendedStructureHookFactory
+    ) -> ExtendedStructureHookFactory:
+        ...
+
+    def register_structure_hook_factory(self, predicate, factory=None):
         """
         Register a hook factory for a given predicate.
 
-        May also be used as a decorator. When used as a decorator, the hook
-        factory may expose an additional required parameter. In this case,
+        The hook factory may expose an additional required parameter. In this case,
         the current converter will be provided to the hook factory as that
         parameter.
+
+        May also be used as a decorator.
 
         :param predicate: A function that, given a type, returns whether the factory
             can produce a hook for that type.
@@ -503,16 +521,13 @@ class BaseConverter:
 
         .. versionchanged:: 24.1.0
             This method may now be used as a decorator.
+            The factory may also receive the converter as a second, required argument.
         """
         if factory is None:
             # Decorator use.
             def decorator(factory):
                 # Is this an extended factory (takes a converter too)?
-                sig = signature(factory)
-                if (
-                    len(sig.parameters) >= 2
-                    and (list(sig.parameters.values())[1]).default is Signature.empty
-                ):
+                if _is_extended_factory(factory):
                     self._structure_func.register_func_list(
                         [(predicate, factory, "extended")]
                     )
@@ -522,7 +537,15 @@ class BaseConverter:
                     )
 
             return decorator
-        self._structure_func.register_func_list([(predicate, factory, True)])
+        self._structure_func.register_func_list(
+            [
+                (
+                    predicate,
+                    factory,
+                    "extended" if _is_extended_factory(factory) else True,
+                )
+            ]
+        )
         return factory
 
     def structure(self, obj: UnstructuredValue, cl: type[T]) -> T:
