@@ -565,11 +565,9 @@ elif sys.version_info >= (3, 9):
         # gathering required keys. *sigh*
         own_annotations = cls.__dict__.get("__annotations__", {})
         required_keys = set()
-        for base in cls.__mro__[1:]:
-            if base in (object, dict):
-                # These have no required keys for sure.
-                continue
-            required_keys |= _required_keys(base)
+        # On 3.8 - 3.10, typing.TypedDict doesn't put typeddict superclasses
+        # in the MRO, therefore we cannot handle non-required keys properly
+        # in some situations. Oh well.
         for key in getattr(cls, "__required_keys__", []):
             annotation_type = own_annotations[key]
             annotation_origin = get_origin(annotation_type)
@@ -597,13 +595,7 @@ else:
 
         own_annotations = cls.__dict__.get("__annotations__", {})
         required_keys = set()
-        superclass_keys = set()
-        for base in cls.__mro__[1:]:
-            required_keys |= _required_keys(base)
-            superclass_keys |= base.__dict__.get("__annotations__", {}).keys()
         for key in own_annotations:
-            if key in superclass_keys:
-                continue
             annotation_type = own_annotations[key]
 
             if is_annotated(annotation_type):
