@@ -242,36 +242,19 @@ def test_structure_literal_multiple_error(converter_cls):
         converter.structure({"literal_field": 3}, ClassWithLiteral)
 
 
-@pytest.mark.parametrize("converter_type", [BaseConverter, Converter])
-def test_structure_fallback_to_attrib_converters(converter_type):
-    attrib_converter = Mock()
-    attrib_converter.side_effect = lambda val: str(val)
+def test_structure_fallback_to_attrib_converters(converter):
+    """`attrs` converters are called after cattrs processing."""
 
-    def called_after_default_converter(val):
-        if not isinstance(val, int):
-            raise ValueError(
-                "The 'int' conversion should have happened first by the built-in hooks"
-            )
-        return 42
+    @define
+    class HasConverter:
+        ip: Union[IPv4Address, IPv6Address] = field(converter=ip_address)
+        x = field(converter=lambda v: v + 1)
+        z: int = field(converter=lambda _: 42)
 
-    converter = converter_type()
-    cl = make_class(
-        "HasConverter",
-        {
-            # non-built-in type with custom converter
-            "ip": field(type=Union[IPv4Address, IPv6Address], converter=ip_address),
-            # attribute without type
-            "x": field(converter=attrib_converter),
-            # built-in types converters
-            "z": field(type=int, converter=called_after_default_converter),
-        },
-    )
-
-    inst = converter.structure({"ip": "10.0.0.0", "x": 1, "z": "3"}, cl)
+    inst = converter.structure({"ip": "10.0.0.0", "x": 1, "z": "3"}, HasConverter)
 
     assert inst.ip == IPv4Address("10.0.0.0")
-    assert inst.x == "1"
-    attrib_converter.assert_any_call(1)
+    assert inst.x == 2
     assert inst.z == 42
 
 

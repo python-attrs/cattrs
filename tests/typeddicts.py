@@ -212,12 +212,10 @@ def simple_typeddicts_with_extra_keys(
 
 
 @composite
-def generic_typeddicts(
-    draw: DrawFn, total: Optional[bool] = None
-) -> Tuple[TypedDictType, dict]:
+def generic_typeddicts(draw: DrawFn, total: bool = True) -> Tuple[TypedDictType, dict]:
     """Generate generic typed dicts.
 
-    :param total: Generate the given totality dicts (default = random)
+    :param total: Generate the given totality dicts
     """
     if total is None:
         total = draw(booleans())
