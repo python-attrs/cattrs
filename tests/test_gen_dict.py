@@ -150,10 +150,7 @@ def test_individual_overrides(converter_cls, cl_and_vals):
                     assert attr.name in res
             else:
                 if attr.default.takes_self:
-                    if val == attr.default.factory(inst):
-                        assert attr.name not in res
-                    else:
-                        assert attr.name in res
+                    assert attr.name not in res
                 else:
                     if val == attr.default.factory():
                         assert attr.name not in res

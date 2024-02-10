@@ -217,9 +217,6 @@ def generic_typeddicts(draw: DrawFn, total: bool = True) -> Tuple[TypedDictType,
 
     :param total: Generate the given totality dicts
     """
-    if total is None:
-        total = draw(booleans())
-
     attrs = draw(
         lists(
             int_attributes(total)
