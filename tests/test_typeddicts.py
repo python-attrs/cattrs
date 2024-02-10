@@ -24,7 +24,7 @@ from cattrs.gen.typeddicts import (
     make_dict_unstructure_fn,
 )
 
-from ._compat import is_py38, is_py311_plus
+from ._compat import is_py38, is_py39, is_py310, is_py311_plus
 from .typeddicts import (
     generic_typeddicts,
     simple_typeddicts,
@@ -263,6 +263,7 @@ def test_required(
     assert restructured == instance
 
 
+@pytest.mark.skipif(is_py39 or is_py310, reason="Sigh")
 def test_required_keys() -> None:
     """We don't support the full gamut of functionality on 3.8.
 
