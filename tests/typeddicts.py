@@ -180,7 +180,7 @@ def simple_typeddicts(
     note(
         "\n".join(
             [
-                "class HypTypedDict(TypedDict):",
+                f"class HypTypedDict(TypedDict{'' if total else ', total=False'}):",
                 *[f"    {n}: {a}" for n, a in attrs_dict.items()],
             ]
         )

@@ -65,7 +65,7 @@ from .errors import (
     IterableValidationNote,
     StructureHandlerNotFoundError,
 )
-from .fns import identity, raise_error
+from .fns import Predicate, identity, raise_error
 from .gen import (
     AttributeOverride,
     DictStructureFn,
@@ -174,6 +174,7 @@ class BaseConverter:
         self._prefer_attrib_converters = prefer_attrib_converters
 
         self.detailed_validation = detailed_validation
+        self._union_struct_registry: dict[Any, Callable[[Any, type[T]], T]] = {}
 
         # Create a per-instance cache.
         if unstruct_strat is UnstructureStrategy.AS_DICT:
@@ -246,7 +247,8 @@ class BaseConverter:
                 (is_supported_union, self._gen_attrs_union_structure, True),
                 (
                     lambda t: is_union_type(t) and t in self._union_struct_registry,
-                    self._structure_union,
+                    self._union_struct_registry.__getitem__,
+                    True,
                 ),
                 (is_optional, self._structure_optional),
                 (has, self._structure_attrs),
@@ -265,9 +267,6 @@ class BaseConverter:
         )
 
         self._dict_factory = dict_factory
-
-        # Unions are instances now, not classes. We use different registries.
-        self._union_struct_registry: dict[Any, Callable[[Any, type[T]], T]] = {}
 
         self._unstruct_copy_skip = self._unstructure_func.get_num_fns()
         self._struct_copy_skip = self._structure_func.get_num_fns()
@@ -330,7 +329,7 @@ class BaseConverter:
         return None
 
     def register_unstructure_hook_func(
-        self, check_func: Callable[[Any], bool], func: UnstructureHook
+        self, check_func: Predicate, func: UnstructureHook
     ) -> None:
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
@@ -339,25 +338,25 @@ class BaseConverter:
 
     @overload
     def register_unstructure_hook_factory(
-        self, predicate: Callable[[Any], bool]
+        self, predicate: Predicate
     ) -> Callable[[UnstructureHookFactory], UnstructureHookFactory]:
         ...
 
     @overload
     def register_unstructure_hook_factory(
-        self, predicate: Callable[[Any], bool]
+        self, predicate: Predicate
     ) -> Callable[[ExtendedUnstructureHookFactory], ExtendedUnstructureHookFactory]:
         ...
 
     @overload
     def register_unstructure_hook_factory(
-        self, predicate: Callable[[Any], bool], factory: UnstructureHookFactory
+        self, predicate: Predicate, factory: UnstructureHookFactory
     ) -> UnstructureHookFactory:
         ...
 
     @overload
     def register_unstructure_hook_factory(
-        self, predicate: Callable[[Any], bool], factory: ExtendedUnstructureHookFactory
+        self, predicate: Predicate, factory: ExtendedUnstructureHookFactory
     ) -> ExtendedUnstructureHookFactory:
         ...
 
@@ -473,7 +472,7 @@ class BaseConverter:
             self._structure_func.register_cls_list([(cl, func)])
 
     def register_structure_hook_func(
-        self, check_func: Callable[[type[T]], bool], func: StructureHook
+        self, check_func: Predicate, func: StructureHook
     ) -> None:
         """Register a class-to-primitive converter function for a class, using
         a function to check if it's a match.
@@ -482,25 +481,25 @@ class BaseConverter:
 
     @overload
     def register_structure_hook_factory(
-        self, predicate: Callable[[Any, bool]]
+        self, predicate: Predicate
     ) -> Callable[[StructureHookFactory, StructureHookFactory]]:
         ...
 
     @overload
     def register_structure_hook_factory(
-        self, predicate: Callable[[Any, bool]]
+        self, predicate: Predicate
     ) -> Callable[[ExtendedStructureHookFactory, ExtendedStructureHookFactory]]:
         ...
 
     @overload
     def register_structure_hook_factory(
-        self, predicate: Callable[[Any], bool], factory: StructureHookFactory
+        self, predicate: Predicate, factory: StructureHookFactory
     ) -> StructureHookFactory:
         ...
 
     @overload
     def register_structure_hook_factory(
-        self, predicate: Callable[[Any], bool], factory: ExtendedStructureHookFactory
+        self, predicate: Predicate, factory: ExtendedStructureHookFactory
     ) -> ExtendedStructureHookFactory:
         ...
 
@@ -902,11 +901,6 @@ class BaseConverter:
         other = union_params[0] if union_params[1] is NoneType else union_params[1]
         # We can't actually have a Union of a Union, so this is safe.
         return self._structure_func.dispatch(other)(obj, other)
-
-    def _structure_union(self, obj, union):
-        """Deal with structuring a union."""
-        handler = self._union_struct_registry[union]
-        return handler(obj, union)
 
     def _structure_tuple(self, obj: Any, tup: type[T]) -> T:
         """Deal with structuring into a tuple."""

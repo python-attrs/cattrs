@@ -7,7 +7,7 @@ from attrs import NOTHING
 from hypothesis import assume, given
 from hypothesis.strategies import booleans
 from pytest import raises
-from typing_extensions import NotRequired
+from typing_extensions import NotRequired, Required
 
 from cattrs import BaseConverter, Converter
 from cattrs._compat import ExtensionsTypedDict, get_notrequired_base, is_generic
@@ -24,7 +24,7 @@ from cattrs.gen.typeddicts import (
     make_dict_unstructure_fn,
 )
 
-from ._compat import is_py38, is_py311_plus
+from ._compat import is_py38, is_py39, is_py310, is_py311_plus
 from .typeddicts import (
     generic_typeddicts,
     simple_typeddicts,
@@ -261,6 +261,28 @@ def test_required(
     restructured = c.structure(unstructured, cls)
 
     assert restructured == instance
+
+
+@pytest.mark.skipif(is_py39 or is_py310, reason="Sigh")
+def test_required_keys() -> None:
+    """We don't support the full gamut of functionality on 3.8.
+
+    When using `typing.TypedDict` we have only partial functionality;
+    this test tests only a subset of this.
+    """
+    c = mk_converter()
+
+    class Base(TypedDict, total=False):
+        a: Required[datetime]
+
+    class Sub(Base):
+        b: int
+
+    fn = make_dict_unstructure_fn(Sub, c)
+
+    with raises(KeyError):
+        # This needs to raise since 'a' is missing, and it's Required.
+        fn({"b": 1})
 
 
 @given(simple_typeddicts(min_attrs=1, total=True), booleans())

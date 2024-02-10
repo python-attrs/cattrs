@@ -1,9 +1,13 @@
 """Useful internal functions."""
-from typing import NoReturn, Type, TypeVar
+from typing import Any, Callable, NoReturn, Type, TypeVar
 
+from ._compat import TypeAlias
 from .errors import StructureHandlerNotFoundError
 
 T = TypeVar("T")
+
+Predicate: TypeAlias = Callable[[Any], bool]
+"""A predicate function determines if a type can be handled."""
 
 
 def identity(obj: T) -> T:

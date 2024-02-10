@@ -6,11 +6,10 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, TypeVar
 from attrs import Factory, define
 
 from ._compat import TypeAlias
+from .fns import Predicate
 
 if TYPE_CHECKING:
     from .converters import BaseConverter
-
-T = TypeVar("T")
 
 TargetType: TypeAlias = Any
 UnstructuredValue: TypeAlias = Any
@@ -46,12 +45,12 @@ class FunctionDispatch:
 
     _converter: BaseConverter
     _handler_pairs: list[
-        tuple[Callable[[Any], bool], Callable[[Any, Any], Any], bool, bool]
+        tuple[Predicate, Callable[[Any, Any], Any], bool, bool]
     ] = Factory(list)
 
     def register(
         self,
-        predicate: Callable[[Any], bool],
+        predicate: Predicate,
         func: Callable[..., Any],
         is_generator=False,
         takes_converter=False,
@@ -148,13 +147,9 @@ class MultiStrategyDispatch(Generic[Hook]):
     def register_func_list(
         self,
         pred_and_handler: list[
-            tuple[Callable[[Any], bool], Any]
-            | tuple[Callable[[Any], bool], Any, bool]
-            | tuple[
-                Callable[[Any], bool],
-                Callable[[Any, BaseConverter], Any],
-                Literal["extended"],
-            ]
+            tuple[Predicate, Any]
+            | tuple[Predicate, Any, bool]
+            | tuple[Predicate, Callable[[Any, BaseConverter], Any], Literal["extended"]]
         ],
     ):
         """
