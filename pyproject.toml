@@ -103,14 +103,7 @@ addopts = "-l --benchmark-sort=fullname --benchmark-warmup=true --benchmark-warm
 
 [tool.coverage.run]
 parallel = true
-source_pkgs = ["cattrs"]
-
-[tool.coverage.paths]
-source = [
-   "src",
-   ".tox/*/lib/python*/site-packages",
-   ".tox/pypy*/site-packages",
-]
+source_pkgs = ["cattrs", "tests"]
 
 [tool.coverage.report]
 exclude_also = [

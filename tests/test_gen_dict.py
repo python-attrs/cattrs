@@ -93,10 +93,9 @@ def test_nodefs_generated_unstructuring_cl(
             else:
                 # The default is a factory, but might take self.
                 if attr.default.takes_self:
-                    if val == attr.default.factory(cl):
-                        assert attr.name not in res
-                    else:
-                        assert attr.name in res
+                    # Our strategies can only produce these for now.
+                    assert val == attr.default.factory(cl)
+                    assert attr.name not in res
                 else:
                     if val == attr.default.factory():
                         assert attr.name not in res
@@ -151,10 +150,7 @@ def test_individual_overrides(converter_cls, cl_and_vals):
                     assert attr.name in res
             else:
                 if attr.default.takes_self:
-                    if val == attr.default.factory(inst):
-                        assert attr.name not in res
-                    else:
-                        assert attr.name in res
+                    assert attr.name not in res
                 else:
                     if val == attr.default.factory():
                         assert attr.name not in res

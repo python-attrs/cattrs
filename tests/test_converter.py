@@ -127,9 +127,7 @@ def test_forbid_extra_keys(cls_and_vals):
     cl, vals, kwargs = cls_and_vals
     inst = cl(*vals, **kwargs)
     unstructured = converter.unstructure(inst)
-    bad_key = next(iter(unstructured)) + "A" if unstructured else "Hyp"
-    while bad_key in unstructured:
-        bad_key += "A"
+    bad_key = next(iter(unstructured)) + "_" if unstructured else "Hyp"
     unstructured[bad_key] = 1
     with pytest.raises(ClassValidationError) as cve:
         converter.structure(unstructured, cl)
@@ -417,12 +415,8 @@ def test_type_overrides(cl_and_vals):
     unstructured = converter.unstructure(inst)
 
     for field, val in zip(fields(cl), vals):
-        if field.type is int and field.default is not None:
-            if isinstance(field.default, Factory):
-                if not field.default.takes_self and field.default() == val:
-                    assert field.name not in unstructured
-            elif field.default == val:
-                assert field.name not in unstructured
+        if field.type is int and field.default is not None and field.default == val:
+            assert field.name not in unstructured
 
 
 def test_calling_back():

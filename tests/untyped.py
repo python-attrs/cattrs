@@ -16,12 +16,14 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    Type,
 )
 
 import attr
-from attr import NOTHING, make_class
 from attr._make import _CountingAttr
+from attrs import NOTHING, AttrsInstance, Factory, make_class
 from hypothesis import strategies as st
+from hypothesis.strategies import SearchStrategy
 
 PosArg = Any
 PosArgs = Tuple[PosArg]
@@ -217,9 +219,11 @@ def just_class_with_type(tup):
     return _create_hyp_class(combined_attrs)
 
 
-def just_class_with_type_takes_self(tup):
+def just_class_with_type_takes_self(
+    tup: Tuple[List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type[AttrsInstance]]]
+) -> SearchStrategy[Tuple[Type[AttrsInstance]]]:
     nested_cl = tup[1][0]
-    default = attr.Factory(lambda _: nested_cl(), takes_self=True)
+    default = Factory(lambda _: nested_cl(), takes_self=True)
     combined_attrs = list(tup[0])
     combined_attrs.append(
         (attr.ib(default=default, type=nested_cl), st.just(nested_cl()))

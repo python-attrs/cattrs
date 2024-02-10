@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: "actions/checkout@v3"
 
-      - uses: "actions/setup-python@v4"
+      - uses: "actions/setup-python@v5"
         with:
           python-version: "${{ matrix.python-version }}"
           allow-prereleases: true
@@ -47,10 +47,10 @@ jobs:
     steps:
       - uses: "actions/checkout@v3"
 
-      - uses: "actions/setup-python@v4"
+      - uses: "actions/setup-python@v5"
         with:
           cache: "pip"
-          python-version: "3.11"
+          python-version: "3.12"
 
       - run: "python -Im pip install --upgrade coverage[toml]"
 
@@ -65,7 +65,7 @@ jobs:
           python -Im coverage json
 
           # Report and write to summary.
-          python -Im coverage report | sed 's/^/    /' >> $GITHUB_STEP_SUMMARY
+          python -Im coverage report --skip-covered --skip-empty | sed 's/^/    /' >> $GITHUB_STEP_SUMMARY
 
           export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
           echo "total=$TOTAL" >> $GITHUB_ENV
@@ -100,9 +100,9 @@ jobs:
 
     steps:
       - uses: "actions/checkout@v3"
-      - uses: "actions/setup-python@v4"
+      - uses: "actions/setup-python@v5"
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: "Install pdm, check-wheel-content, and twine"
         run: "python -m pip install pdm twine check-wheel-contents"
