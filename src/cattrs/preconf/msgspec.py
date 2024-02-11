@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from base64 import b64decode
 from datetime import date, datetime
+from enum import Enum
 from functools import partial
 from typing import Any, Callable, TypeVar, Union, get_type_hints
 
@@ -69,11 +70,13 @@ def configure_converter(converter: Converter) -> None:
 
     * bytes are serialized as base64 strings, directly by msgspec
     * datetimes and dates are passed through to be serialized as RFC 3339 directly
+    * enums are passed through to msgspec directly
     * union passthrough configured for str, bool, int, float and None
     """
     configure_passthroughs(converter)
 
     converter.register_unstructure_hook(Struct, to_builtins)
+    converter.register_unstructure_hook(Enum, to_builtins)
 
     converter.register_structure_hook(Struct, convert)
     converter.register_structure_hook(bytes, lambda v, _: b64decode(v))

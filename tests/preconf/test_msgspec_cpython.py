@@ -1,11 +1,13 @@
 """Tests for msgspec functionality."""
 from __future__ import annotations
 
+from enum import Enum
 from typing import (
     Any,
     Callable,
     Dict,
     List,
+    Literal,
     Mapping,
     MutableMapping,
     MutableSequence,
@@ -61,6 +63,10 @@ class NC(NamedTuple):
     a: C
 
 
+class E(Enum):
+    TEST = "test"
+
+
 @fixture
 def converter() -> Conv:
     return make_converter()
@@ -77,6 +83,8 @@ def test_unstructure_passthrough(converter: Conv):
     assert converter.get_unstructure_hook(str) == identity
     assert is_passthrough(converter.get_unstructure_hook(bytes))
     assert converter.get_unstructure_hook(None) == identity
+    assert is_passthrough(converter.get_unstructure_hook(Literal[1]))
+    assert is_passthrough(converter.get_unstructure_hook(E))
 
     # Any is special-cased, and we cannot know if it'll match
     # the msgspec behavior.
