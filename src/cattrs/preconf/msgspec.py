@@ -3,15 +3,24 @@ from __future__ import annotations
 
 from base64 import b64decode
 from datetime import date, datetime
+from enum import Enum
 from functools import partial
-from typing import Any, Callable, TypeVar, Union
+from typing import Any, Callable, TypeVar, Union, get_type_hints
 
 from attrs import has as attrs_has
 from attrs import resolve_types
 from msgspec import Struct, convert, to_builtins
 from msgspec.json import Encoder, decode
 
-from cattrs._compat import fields, get_origin, has, is_bare, is_mapping, is_sequence
+from cattrs._compat import (
+    fields,
+    get_args,
+    get_origin,
+    has,
+    is_bare,
+    is_mapping,
+    is_sequence,
+)
 from cattrs.dispatch import UnstructureHook
 from cattrs.fns import identity
 
@@ -61,11 +70,13 @@ def configure_converter(converter: Converter) -> None:
 
     * bytes are serialized as base64 strings, directly by msgspec
     * datetimes and dates are passed through to be serialized as RFC 3339 directly
+    * enums are passed through to msgspec directly
     * union passthrough configured for str, bool, int, float and None
     """
     configure_passthroughs(converter)
 
     converter.register_unstructure_hook(Struct, to_builtins)
+    converter.register_unstructure_hook(Enum, to_builtins)
 
     converter.register_structure_hook(Struct, convert)
     converter.register_structure_hook(bytes, lambda v, _: b64decode(v))
@@ -87,23 +98,23 @@ def configure_passthroughs(converter: Converter) -> None:
     A passthrough is when we let msgspec handle something automatically.
     """
     converter.register_unstructure_hook(bytes, to_builtins)
-    converter.register_unstructure_hook_factory(is_mapping)(mapping_unstructure_factory)
-    converter.register_unstructure_hook_factory(is_sequence)(seq_unstructure_factory)
-    converter.register_unstructure_hook_factory(has)(attrs_unstructure_factory)
-    converter.register_unstructure_hook_factory(is_namedtuple)(
-        namedtuple_unstructure_factory
+    converter.register_unstructure_hook_factory(is_mapping, mapping_unstructure_factory)
+    converter.register_unstructure_hook_factory(is_sequence, seq_unstructure_factory)
+    converter.register_unstructure_hook_factory(has, attrs_unstructure_factory)
+    converter.register_unstructure_hook_factory(
+        is_namedtuple, namedtuple_unstructure_factory
     )
 
 
 def seq_unstructure_factory(type, converter: BaseConverter) -> UnstructureHook:
+    """The msgspec unstructure hook factory for sequences."""
     if is_bare(type):
         type_arg = Any
         handler = converter.get_unstructure_hook(type_arg, cache_result=False)
-    elif getattr(type, "__args__", None) not in (None, ()):
-        type_arg = type.__args__[0]
-        handler = converter.get_unstructure_hook(type_arg, cache_result=False)
     else:
-        handler = None
+        args = get_args(type)
+        type_arg = args[0]
+        handler = converter.get_unstructure_hook(type_arg, cache_result=False)
 
     if handler in (identity, to_builtins):
         return handler
@@ -111,12 +122,14 @@ def seq_unstructure_factory(type, converter: BaseConverter) -> UnstructureHook:
 
 
 def mapping_unstructure_factory(type, converter: BaseConverter) -> UnstructureHook:
+    """The msgspec unstructure hook factory for mappings."""
     if is_bare(type):
         key_arg = Any
         val_arg = Any
         key_handler = converter.get_unstructure_hook(key_arg, cache_result=False)
         value_handler = converter.get_unstructure_hook(val_arg, cache_result=False)
-    elif (args := getattr(type, "__args__", None)) not in (None, ()):
+    else:
+        args = get_args(type)
         if len(args) == 2:
             key_arg, val_arg = args
         else:
@@ -124,8 +137,6 @@ def mapping_unstructure_factory(type, converter: BaseConverter) -> UnstructureHo
             key_arg, val_arg = args, Any
         key_handler = converter.get_unstructure_hook(key_arg, cache_result=False)
         value_handler = converter.get_unstructure_hook(val_arg, cache_result=False)
-    else:
-        key_handler = value_handler = None
 
     if key_handler in (identity, to_builtins) and value_handler in (
         identity,
@@ -135,7 +146,7 @@ def mapping_unstructure_factory(type, converter: BaseConverter) -> UnstructureHo
     return converter.gen_unstructure_mapping(type)
 
 
-def attrs_unstructure_factory(type: Any, converter: BaseConverter) -> UnstructureHook:
+def attrs_unstructure_factory(type: Any, converter: Converter) -> UnstructureHook:
     """Choose whether to use msgspec handling or our own."""
     origin = get_origin(type)
     attribs = fields(origin or type)
@@ -163,7 +174,7 @@ def namedtuple_unstructure_factory(
 
     if all(
         converter.get_unstructure_hook(t) in (identity, to_builtins)
-        for t in type.__annotations__.values()
+        for t in get_type_hints(type).values()
     ):
         return identity
 
@@ -171,5 +182,5 @@ def namedtuple_unstructure_factory(
         type,
         converter,
         unstructure_to=tuple,
-        type_args=tuple(type.__annotations__.values()),
+        type_args=tuple(get_type_hints(type).values()),
     )

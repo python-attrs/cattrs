@@ -1,9 +1,13 @@
 """Tests for msgspec functionality."""
+from __future__ import annotations
+
+from enum import Enum
 from typing import (
     Any,
     Callable,
     Dict,
     List,
+    Literal,
     Mapping,
     MutableMapping,
     MutableSequence,
@@ -59,6 +63,10 @@ class NC(NamedTuple):
     a: C
 
 
+class E(Enum):
+    TEST = "test"
+
+
 @fixture
 def converter() -> Conv:
     return make_converter()
@@ -75,10 +83,17 @@ def test_unstructure_passthrough(converter: Conv):
     assert converter.get_unstructure_hook(str) == identity
     assert is_passthrough(converter.get_unstructure_hook(bytes))
     assert converter.get_unstructure_hook(None) == identity
+    assert is_passthrough(converter.get_unstructure_hook(Literal[1]))
+    assert is_passthrough(converter.get_unstructure_hook(E))
 
     # Any is special-cased, and we cannot know if it'll match
     # the msgspec behavior.
     assert not is_passthrough(converter.get_unstructure_hook(List))
+    assert not is_passthrough(converter.get_unstructure_hook(Sequence))
+    assert not is_passthrough(converter.get_unstructure_hook(MutableSequence))
+    assert not is_passthrough(converter.get_unstructure_hook(List[Any]))
+    assert not is_passthrough(converter.get_unstructure_hook(Sequence))
+    assert not is_passthrough(converter.get_unstructure_hook(MutableSequence))
 
     assert is_passthrough(converter.get_unstructure_hook(List[int]))
     assert is_passthrough(converter.get_unstructure_hook(Sequence[int]))
@@ -101,9 +116,13 @@ def test_unstructure_pt_mappings(converter: Conv):
     assert is_passthrough(converter.get_unstructure_hook(Dict[str, str]))
     assert is_passthrough(converter.get_unstructure_hook(Dict[int, int]))
 
-    assert is_passthrough(converter.get_unstructure_hook(Dict[int, A]))
+    assert not is_passthrough(converter.get_unstructure_hook(Dict))
+    assert not is_passthrough(converter.get_unstructure_hook(dict))
     assert not is_passthrough(converter.get_unstructure_hook(Dict[int, B]))
+    assert not is_passthrough(converter.get_unstructure_hook(Mapping))
+    assert not is_passthrough(converter.get_unstructure_hook(MutableMapping))
 
+    assert is_passthrough(converter.get_unstructure_hook(Dict[int, A]))
     assert is_passthrough(converter.get_unstructure_hook(Mapping[int, int]))
     assert is_passthrough(converter.get_unstructure_hook(MutableMapping[int, int]))
 
@@ -112,6 +131,9 @@ def test_dump_hook(converter: Conv):
     """Passthrough for dump hooks works."""
     assert converter.get_dumps_hook(A) == converter.encoder.encode
     assert converter.get_dumps_hook(Dict[str, str]) == converter.encoder.encode
+
+    # msgspec cannot handle these, so cattrs does.
+    assert converter.get_dumps_hook(B) == converter.dumps
 
 
 def test_get_loads_hook(converter: Conv):
