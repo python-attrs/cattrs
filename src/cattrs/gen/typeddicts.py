@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 import sys
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Literal, TypeVar
 
 from attrs import NOTHING, Attribute
 
@@ -50,9 +50,7 @@ from ._generics import generate_mapping
 from ._lc import generate_unique_filename
 from ._shared import find_structure_handler
 
-if TYPE_CHECKING:  # pragma: no cover
-    from typing_extensions import Literal
-
+if TYPE_CHECKING:
     from ..converters import BaseConverter
 
 __all__ = ["make_dict_unstructure_fn", "make_dict_structure_fn"]

@@ -108,6 +108,7 @@ source_pkgs = ["cattrs", "tests"]
 [tool.coverage.report]
 exclude_also = [
     "@overload",
+    "if TYPE_CHECKING:",
 ]
 
 [tool.ruff]
