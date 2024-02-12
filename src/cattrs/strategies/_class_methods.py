@@ -1,9 +1,8 @@
 """Strategy for using class-specific (un)structuring methods."""
-
 from inspect import signature
 from typing import Any, Callable, Optional, Type, TypeVar
 
-from cattrs import BaseConverter
+from .. import BaseConverter
 
 T = TypeVar("T")
 
