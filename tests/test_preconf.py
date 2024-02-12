@@ -35,7 +35,6 @@ from cattrs._compat import (
     AbstractSet,
     Counter,
     FrozenSet,
-    FrozenSetSubscriptable,
     Mapping,
     MutableMapping,
     MutableSequence,
@@ -48,7 +47,6 @@ from cattrs.preconf.bson import make_converter as bson_make_converter
 from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
 from cattrs.preconf.json import make_converter as json_make_converter
 from cattrs.preconf.msgpack import make_converter as msgpack_make_converter
-from cattrs.preconf.pyyaml import make_converter as pyyaml_make_converter
 from cattrs.preconf.tomlkit import make_converter as tomlkit_make_converter
 from cattrs.preconf.ujson import make_converter as ujson_make_converter
 
@@ -579,64 +577,6 @@ def test_bson_unions(union_and_val: tuple, detailed_validation: bool):
     type, val = union_and_val
 
     assert converter.structure(val, type) == val
-
-
-@given(everythings())
-def test_pyyaml(everything: Everything):
-    from yaml import safe_dump, safe_load
-
-    converter = pyyaml_make_converter()
-    unstructured = converter.unstructure(everything)
-    raw = safe_dump(unstructured)
-    assert converter.structure(safe_load(raw), Everything) == everything
-
-
-@given(everythings())
-def test_pyyaml_converter(everything: Everything):
-    converter = pyyaml_make_converter()
-    raw = converter.dumps(everything)
-    assert converter.loads(raw, Everything) == everything
-
-
-@given(everythings())
-def test_pyyaml_converter_unstruct_collection_overrides(everything: Everything):
-    converter = pyyaml_make_converter(
-        unstruct_collection_overrides={FrozenSetSubscriptable: sorted}
-    )
-    raw = converter.unstructure(everything)
-    assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
-
-
-@given(
-    union_and_val=native_unions(
-        include_bools=sys.version_info[:2] != (3, 8)  # Literal issues on 3.8
-    ),
-    detailed_validation=...,
-)
-def test_pyyaml_unions(union_and_val: tuple, detailed_validation: bool):
-    """Native union passthrough works."""
-    converter = pyyaml_make_converter(detailed_validation=detailed_validation)
-    type, val = union_and_val
-
-    assert converter.structure(val, type) == val
-
-
-@given(detailed_validation=...)
-def test_pyyaml_dates(detailed_validation: bool):
-    """Pyyaml dates work."""
-    converter = pyyaml_make_converter(detailed_validation=detailed_validation)
-
-    @define
-    class A:
-        datetime: datetime
-        date: date
-
-    data = """
-    datetime: 1970-01-01T00:00:00Z
-    date: 1970-01-01"""
-    assert converter.loads(data, A) == A(
-        datetime(1970, 1, 1, tzinfo=timezone.utc), date(1970, 1, 1)
-    )
 
 
 @given(

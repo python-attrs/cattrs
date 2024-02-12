@@ -90,3 +90,29 @@ def test_nested_roundtrip(depth):
     converter = BaseConverter()
     use_class_methods(converter, "_structure", "_unstructure")
     assert structured == converter.structure(converter.unstructure(structured), Nested)
+
+
+def test_edge_cases():
+    """Test some edge cases, for coverage."""
+
+    @define
+    class Bad:
+        a: int
+
+        @classmethod
+        def _structure(cls):
+            """This has zero args, so can't work."""
+
+        @classmethod
+        def _unstructure(cls):
+            """This has zero args, so can't work."""
+
+    converter = BaseConverter()
+
+    use_class_methods(converter, "_structure", "_unstructure")
+
+    # The methods take the wrong number of args, so this should fail.
+    with pytest.raises(TypeError):
+        converter.structure({"a": 1}, Bad)
+    with pytest.raises(TypeError):
+        converter.unstructure(Bad(1))
