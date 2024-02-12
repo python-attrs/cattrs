@@ -1,7 +1,16 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Tuple, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Iterable,
+    Literal,
+    Mapping,
+    Tuple,
+    TypeVar,
+)
 
 from attrs import NOTHING, Factory, resolve_types
 
@@ -31,9 +40,7 @@ from ._generics import generate_mapping
 from ._lc import generate_unique_filename
 from ._shared import find_structure_handler
 
-if TYPE_CHECKING:  # pragma: no cover
-    from typing_extensions import Literal
-
+if TYPE_CHECKING:
     from ..converters import BaseConverter
 
 __all__ = [

@@ -8,8 +8,8 @@ from .._compat import is_bare_final
 from ..dispatch import StructureHook
 from ..fns import raise_error
 
-if TYPE_CHECKING:  # pragma: no cover
-    from cattr.converters import BaseConverter
+if TYPE_CHECKING:
+    from ..converters import BaseConverter
 
 
 def find_structure_handler(
