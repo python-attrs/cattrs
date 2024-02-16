@@ -81,7 +81,7 @@ def test_structure_generics_with_cols(t, result, detailed_validation):
 @pytest.mark.parametrize(
     ("t", "result"), ((int, (1, [2], {"3": 3})), (str, ("1", ["2"], {"3": "3"})))
 )
-def test_39_structure_generics_with_cols(t, result):
+def test_39_structure_generics_with_cols(t, result, genconverter: Converter):
     @define
     class GenericCols(Generic[T]):
         a: T
@@ -90,13 +90,13 @@ def test_39_structure_generics_with_cols(t, result):
 
     expected = GenericCols(*result)
 
-    res = Converter().structure(asdict(expected), GenericCols[t])
+    res = genconverter.structure(asdict(expected), GenericCols[t])
 
     assert res == expected
 
 
 @pytest.mark.parametrize(("t", "result"), ((int, (1, [1, 2, 3])), (int, (1, None))))
-def test_structure_nested_generics_with_cols(t, result):
+def test_structure_nested_generics_with_cols(t, result, genconverter: Converter):
     @define
     class GenericCols(Generic[T]):
         a: T
@@ -104,7 +104,7 @@ def test_structure_nested_generics_with_cols(t, result):
 
     expected = GenericCols(*result)
 
-    res = Converter().structure(asdict(expected), GenericCols[t])
+    res = genconverter.structure(asdict(expected), GenericCols[t])
 
     assert res == expected
 
@@ -296,6 +296,7 @@ def test_generate_typeddict_mapping() -> None:
     from typing import Generic, TypedDict, TypeVar
 
     T = TypeVar("T")
+    U = TypeVar("U")
 
     class A(TypedDict):
         pass
@@ -311,6 +312,12 @@ def test_generate_typeddict_mapping() -> None:
         pass
 
     assert generate_mapping(B, {}) == {T.__name__: int}
+
+    class C(Generic[T, U]):
+        a: T
+        c: U
+
+    assert generate_mapping(C[int, U], {}) == {T.__name__: int}
 
 
 def test_nongeneric_protocols(converter):

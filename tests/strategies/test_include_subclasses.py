@@ -328,3 +328,18 @@ def test_overrides(with_union_strategy: bool, struct_unstruct: str):
     assert c.unstructure(structured) == unstructured
     assert c.structure(unstructured, Parent) == structured
     assert c.structure(unstructured, structured.__class__) == structured
+
+
+def test_no_parent_classes(genconverter: Converter):
+    """Test an edge condition when a union strategy is used.
+
+    The class being registered has no subclasses.
+    """
+
+    @define
+    class A:
+        a: int
+
+    include_subclasses(A, genconverter, union_strategy=configure_tagged_union)
+
+    assert genconverter.structure({"a": 1}, A) == A(1)

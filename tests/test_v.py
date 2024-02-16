@@ -1,5 +1,6 @@
 """Tests for the cattrs.v framework."""
 from typing import (
+    Any,
     Dict,
     List,
     MutableMapping,
@@ -9,7 +10,7 @@ from typing import (
     Tuple,
 )
 
-from attrs import Factory, define
+from attrs import Factory, define, field
 from pytest import fixture, raises
 
 from cattrs import Converter, transform_error
@@ -101,6 +102,31 @@ def test_class_errors(c: Converter) -> None:
             "required field missing @ $.a",
             "extra fields found (d) @ $",
         ]
+
+
+def test_untyped_class_errors(c: Converter) -> None:
+    """Errors on untyped attrs classes transform correctly."""
+
+    @define
+    class C:
+        a = field()
+
+    def struct_hook(v, __):
+        if v == 0:
+            raise ValueError()
+        raise TypeError("wrong type")
+
+    c.register_structure_hook_func(lambda t: t is None, struct_hook)
+
+    with raises(Exception) as exc_info:
+        c.structure({"a": 0}, C)
+
+    assert transform_error(exc_info.value) == ["invalid value @ $.a"]
+
+    with raises(Exception) as exc_info:
+        c.structure({"a": 1}, C)
+
+    assert transform_error(exc_info.value) == ["invalid type (wrong type) @ $.a"]
 
 
 def test_sequence_errors(c: Converter) -> None:
@@ -315,3 +341,8 @@ def test_typeddict_attribute_errors(c: Converter) -> None:
     assert transform_error(exc.value) == [
         f"invalid value for type, expected {tn} @ $.a"
     ]
+
+
+def test_other_errors():
+    """Errors without explicit support transform predictably."""
+    assert format_exception(IndexError("Test"), List[int]) == "unknown error (Test)"
