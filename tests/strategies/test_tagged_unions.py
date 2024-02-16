@@ -90,6 +90,8 @@ def test_default_member(converter: BaseConverter) -> None:
 
     # No tag, so should structure as A.
     assert converter.structure({"a": 1}, union) == A(1)
+    # Wrong tag, so should again structure as A.
+    assert converter.structure({"_type": "C", "a": 1}, union) == A(1)
 
     assert converter.structure({"_type": "A", "a": 1}, union) == A(1)
     assert converter.structure({"_type": "B", "a": 1}, union) == B("1")

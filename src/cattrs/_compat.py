@@ -128,10 +128,7 @@ def fields(type):
     try:
         return type.__attrs_attrs__
     except AttributeError:
-        try:
-            return dataclass_fields(type)
-        except AttributeError:
-            raise Exception("Not an attrs or dataclass class.") from None
+        return dataclass_fields(type)
 
 
 def fields_dict(type) -> Dict[str, Union[Attribute, Field]]:

@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Callable, Dict, Optional, Type, Union
+from typing import Any, Callable, Dict, Literal, Type, Union
 
 from attrs import NOTHING
 
@@ -23,7 +23,7 @@ def configure_tagged_union(
     converter: BaseConverter,
     tag_generator: Callable[[Type], str] = default_tag_generator,
     tag_name: str = "_type",
-    default: Optional[Type] = NOTHING,
+    default: Union[Type, Literal[NOTHING]] = NOTHING,
 ) -> None:
     """
     Configure the converter so that `union` (which should be a union) is
