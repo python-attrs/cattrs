@@ -1,6 +1,5 @@
 """Tests for the cattrs.v framework."""
 from typing import (
-    Any,
     Dict,
     List,
     MutableMapping,

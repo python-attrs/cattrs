@@ -659,8 +659,6 @@ def make_dict_structure_fn(
     )
 
     eval(compile(script, fname, "exec"), globs)
-    print(script)
-    print(globs)
 
     res = globs[fn_name]
     res.overrides = kwargs
