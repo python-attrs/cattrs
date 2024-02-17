@@ -24,6 +24,7 @@ jobs:
         with:
           python-version: "${{ matrix.python-version }}"
           allow-python-prereleases: true
+          cache: true
 
       - name: "Run Tox"
         run: |
@@ -70,7 +71,7 @@ jobs:
           echo "total=$TOTAL" >> $GITHUB_ENV
 
           # Report again and fail if under the threshold.
-          python -Im coverage report --fail-under=98
+          python -Im coverage report --fail-under=99
 
       - name: "Upload HTML report."
         uses: "actions/upload-artifact@v3"
