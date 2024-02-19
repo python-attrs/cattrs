@@ -66,8 +66,9 @@ Now, you can easily structure `Point`s from the specified alternative representa
 c = Converter()
 c.register_structure_hook(Point, make_initializer_from(Point.from_polar, c))
 
-p0 = Point(0.0, 0.0)
+p0 = Point(1.0, 0.0)
 p1 = c.structure({"radius": 1.0, "angle": 0.0}, Point)
+assert p0 == p1
 ```
 
 
@@ -120,7 +121,8 @@ Specifying the key that determines the initializer to be used now lets you dynam
 c = Converter()
 c.register_structure_hook(Point, make_initializer_selection_hook("initializer", c))
 
-p0 = Point(0.0, 0.0)
+p0 = Point(1.0, 0.0)
 p1 = c.structure({"initializer": "from_polar", "radius": 1.0, "angle": 0.0}, Point)
 p2 = c.structure({"initializer": "from_tuple", "coordinates": (1.0, 0.0)}, Point)
+assert p0 == p1 == p2
 ```
