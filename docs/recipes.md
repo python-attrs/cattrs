@@ -2,15 +2,14 @@
 
 This page contains a collection of recipes for custom un-/structuring mechanisms.
 
+
 ## Switching Initializers
 
-When structuring _attrs_ classes, _cattrs_ uses the classes' ``__init__`` method to
-instantiate objects by default.
-In certain situations, you might want to deviate from this behavior and use
-alternative initializers instead.
+When structuring _attrs_ classes, _cattrs_ uses the classes' ``__init__`` method to instantiate objects by default.
+In certain situations, you might want to deviate from this behavior and use alternative initializers instead.
 
-For example, consider the following `Point` class describing points in 2D space,
-which offers two `classmethod`s for alternative creation:
+For example, consider the following `Point` class describing points in 2D space, which offers two `classmethod`s for alternative creation:
+
 ```python
 from __future__ import annotations
 
@@ -37,10 +36,11 @@ class Point:
         return Point(radius * math.cos(angle), radius * math.sin(angle))
 ```
 
+
 ### Selecting an Alternative Initializer
 
-A simple way to _statically_ set one of the `classmethod`s as initializer is to
-register a structuring hook that holds a reference to the respective callable:
+A simple way to _statically_ set one of the `classmethod`s as initializer is to register a structuring hook that holds a reference to the respective callable:
+
 ```python
 from inspect import signature
 from typing import Callable, TypedDict
@@ -59,7 +59,9 @@ def make_initializer_from(fn: Callable, conv: Converter) -> StructureHook:
     td_hook = conv.get_structure_hook(td)
     return lambda v, _: fn(**td_hook(v, td))
 ```
+
 Now, you can easily structure `Point`s from the specified alternative representation:
+
 ```python
 c = Converter()
 c.register_structure_hook(Point, make_initializer_from(Point.from_polar, c))
@@ -68,14 +70,14 @@ p0 = Point(0.0, 0.0)
 p1 = c.structure({"radius": 1.0, "angle": 0.0}, Point)
 ```
 
+
 ### Dynamically Switching Between Initializers
-In some cases, even more flexibility is required and the selection of the initializer
-must happen at runtime, requiring a dynamic approach.
-A typical scenario would be when object structuring happens behind an API and
-you want to let the user specify which representation of the object they wish to
-provide in their serialization string.
+
+In some cases, even more flexibility is required and the selection of the initializer must happen at runtime, requiring a dynamic approach.
+A typical scenario would be when object structuring happens behind an API and you want to let the user specify which representation of the object they wish to provide in their serialization string.
 
 In such situations, the following hook factory can help you achieve your goal:
+
 ```python
 from inspect import signature
 from typing import Callable, TypedDict
@@ -112,8 +114,8 @@ def make_initializer_selection_hook(
     return select_initializer_hook
 ```
 
-Specifying the key that determines the initializer to be used now lets you dynamically 
-select the `classmethod` as part of the object specification itself:
+Specifying the key that determines the initializer to be used now lets you dynamically select the `classmethod` as part of the object specification itself:
+
 ```python
 c = Converter()
 c.register_structure_hook(Point, make_initializer_selection_hook("initializer", c))
