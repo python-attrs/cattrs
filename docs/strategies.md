@@ -172,7 +172,7 @@ Without the application of the strategy, in both unstructure and structure opera
 
 ```{note}
 The handling of subclasses is an opt-in feature for two main reasons:
-- Performance. While small and probably negligeable in most cases the subclass handling incurs more function calls and has a performance impact.
+- Performance. While small and probably negligible in most cases the subclass handling incurs more function calls and has a performance impact.
 - Customization. The specific handling of subclasses can be different from one situation to the other. In particular there is not apparent universal good defaults for disambiguating the union type. Consequently the decision is left to the user.
 ```
 
