@@ -10,7 +10,7 @@ In certain situations, you might want to deviate from this behavior and use alte
 
 For example, consider the following `Point` class describing points in 2D space, which offers two `classmethod`s for alternative creation:
 
-```python
+```{doctest}
 from __future__ import annotations
 
 import math
@@ -41,7 +41,7 @@ class Point:
 
 A simple way to _statically_ set one of the `classmethod`s as initializer is to register a structuring hook that holds a reference to the respective callable:
 
-```python
+```{doctest}
 from inspect import signature
 from typing import Callable, TypedDict
 
@@ -62,7 +62,7 @@ def make_initializer_from(fn: Callable, conv: Converter) -> StructureHook:
 
 Now, you can easily structure `Point`s from the specified alternative representation:
 
-```python
+```{doctest}
 c = Converter()
 c.register_structure_hook(Point, make_initializer_from(Point.from_polar, c))
 
@@ -79,7 +79,7 @@ A typical scenario would be when object structuring happens behind an API and yo
 
 In such situations, the following hook factory can help you achieve your goal:
 
-```python
+```{doctest}
 from inspect import signature
 from typing import Callable, TypedDict
 
@@ -117,7 +117,7 @@ def make_initializer_selection_hook(
 
 Specifying the key that determines the initializer to be used now lets you dynamically select the `classmethod` as part of the object specification itself:
 
-```python
+```{doctest}
 c = Converter()
 c.register_structure_hook(Point, make_initializer_selection_hook("initializer", c))
 
