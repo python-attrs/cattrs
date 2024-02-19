@@ -27,7 +27,7 @@ class Point:
 
     @classmethod
     def from_tuple(cls, coordinates: tuple[float, float]) -> Point:
-        """Create a point from a tuple of coordinates."""
+        """Create a point from a tuple of Cartesian coordinates."""
         return Point(*coordinates)
 
     @classmethod
