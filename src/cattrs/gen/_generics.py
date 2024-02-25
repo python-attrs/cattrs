@@ -33,9 +33,27 @@ def generate_mapping(cl: type, old_mapping: dict[str, type] = {}) -> dict[str, t
             if not hasattr(base, "__args__"):
                 continue
             base_args = base.__args__
-            if not hasattr(base.__origin__, "__parameters__"):
+            if hasattr(base.__origin__, "__parameters__"):
+                base_params = base.__origin__.__parameters__
+            elif any(
+                getattr(base_arg, "__default__", None) is not None
+                for base_arg in base_args
+            ):
+                # TypeVar with a default e.g. PEP 696
+                # https://www.python.org/dev/peps/pep-0696/
+                # Extract the defaults for the TypeVars and insert
+                # them into the mapping
+                mapping_params = [
+                    (base_arg, base_arg.__default__)
+                    for base_arg in base_args
+                    # Note: None means no default was provided, since
+                    # TypeVar("T", default=None) sets NoneType as the default
+                    if getattr(base_arg, "__default__", None) is not None
+                ]
+                base_params, base_args = zip(*mapping_params)
+            else:
                 continue
-            base_params = base.__origin__.__parameters__
+
             for param, arg in zip(base_params, base_args):
                 mapping[param.__name__] = arg
 
