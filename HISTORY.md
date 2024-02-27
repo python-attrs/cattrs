@@ -33,6 +33,8 @@ can now be used as decorators and have gained new features.
   ([#426](https://github.com/python-attrs/cattrs/issues/426) [#477](https://github.com/python-attrs/cattrs/pull/477))
 - Add support for [PEP 695](https://peps.python.org/pep-0695/) type aliases.
   ([#452](https://github.com/python-attrs/cattrs/pull/452))
+- Add support for [PEP 696](https://peps.python.org/pep-0696/) `TypeVar`s with defaults.
+  ([#512](https://github.com/python-attrs/cattrs/pull/512))
 - Add support for named tuples with type metadata ([`typing.NamedTuple`](https://docs.python.org/3/library/typing.html#typing.NamedTuple)).
   ([#425](https://github.com/python-attrs/cattrs/issues/425) [#491](https://github.com/python-attrs/cattrs/pull/491))
 - The `include_subclasses` strategy now fetches the member hooks from the converter (making use of converter defaults) if overrides are not provided, instead of generating new hooks with no overrides.
