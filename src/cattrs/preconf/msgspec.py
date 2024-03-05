@@ -106,15 +106,14 @@ def configure_passthroughs(converter: Converter) -> None:
     )
 
 
-def seq_unstructure_factory(type, converter: BaseConverter) -> UnstructureHook:
+def seq_unstructure_factory(type, converter: Converter) -> UnstructureHook:
     """The msgspec unstructure hook factory for sequences."""
     if is_bare(type):
         type_arg = Any
-        handler = converter.get_unstructure_hook(type_arg, cache_result=False)
     else:
         args = get_args(type)
         type_arg = args[0]
-        handler = converter.get_unstructure_hook(type_arg, cache_result=False)
+    handler = converter.get_unstructure_hook(type_arg, cache_result=False)
 
     if handler in (identity, to_builtins):
         return handler
