@@ -1,5 +1,5 @@
 """Tests for generics under PEP 696 (type defaults)."""
-from typing import Generic
+from typing import Generic, List
 
 import pytest
 from attrs import define, fields
@@ -48,3 +48,15 @@ def test_structure_typevar_default(genconverter):
     # But allows other types
     assert genconverter.structure({"a": "1"}, D[str]) == D("1")
     assert genconverter.structure({"a": 1}, D[int]) == D(1)
+
+
+def test_unstructure_iterable(genconverter):
+    """Unstructuring iterables with defaults works."""
+    genconverter.register_unstructure_hook(str, lambda v: v + "_str")
+
+    @define
+    class C(Generic[TD]):
+        a: List[TD]
+
+    assert genconverter.unstructure(C(["a"])) == {"a": ["a_str"]}
+    assert genconverter.unstructure(["a"], List[TD]) == ["a_str"]
