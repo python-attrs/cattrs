@@ -680,6 +680,8 @@ def make_iterable_unstructure_fn(
     # against IndexError.
     if getattr(cl, "__args__", None) not in (None, ()):
         type_arg = cl.__args__[0]
+        if isinstance(type_arg, TypeVar):
+            type_arg = getattr(type_arg, "__default__", Any)
         handler = converter.get_unstructure_hook(type_arg, cache_result=False)
         if handler == identity:
             # Save ourselves the trouble of iterating over it all.
