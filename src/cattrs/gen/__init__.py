@@ -675,29 +675,22 @@ def make_iterable_unstructure_fn(
     """Generate a specialized unstructure function for an iterable."""
     handler = converter.unstructure
 
-    fn_name = "unstructure_iterable"
-
     # Let's try fishing out the type args
     # Unspecified tuples have `__args__` as empty tuples, so guard
     # against IndexError.
     if getattr(cl, "__args__", None) not in (None, ()):
         type_arg = cl.__args__[0]
-        # We don't know how to handle the TypeVar on this level,
-        # so we skip doing the dispatch here.
-        if not isinstance(type_arg, TypeVar):
-            handler = converter.get_unstructure_hook(type_arg, cache_result=False)
+        if isinstance(type_arg, TypeVar):
+            type_arg = getattr(type_arg, "__default__", Any)
+        handler = converter.get_unstructure_hook(type_arg, cache_result=False)
+        if handler == identity:
+            # Save ourselves the trouble of iterating over it all.
+            return unstructure_to or cl
 
-    globs = {"__cattr_seq_cl": unstructure_to or cl, "__cattr_u": handler}
-    lines = []
+    def unstructure_iterable(iterable, _seq_cl=unstructure_to or cl, _hook=handler):
+        return _seq_cl(_hook(i) for i in iterable)
 
-    lines.append(f"def {fn_name}(iterable):")
-    lines.append("    res = __cattr_seq_cl(__cattr_u(i) for i in iterable)")
-
-    total_lines = [*lines, "    return res"]
-
-    eval(compile("\n".join(total_lines), "", "exec"), globs)
-
-    return globs[fn_name]
+    return unstructure_iterable
 
 
 #: A type alias for heterogeneous tuple unstructure hooks.
