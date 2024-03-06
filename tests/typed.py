@@ -1,4 +1,5 @@
 """Strategies for attributes with types and classes using them."""
+
 import sys
 from collections import OrderedDict
 from collections.abc import MutableSequence as AbcMutableSequence
@@ -294,12 +295,18 @@ def _create_dataclass(
             make_dataclass(
                 "HypDataclass",
                 [
-                    (n, a.type)
-                    if a._default is NOTHING
-                    else (
-                        (n, a.type, dc_field(default=a._default))
-                        if not isinstance(a._default, Factory)
-                        else (n, a.type, dc_field(default_factory=a._default.factory))
+                    (
+                        (n, a.type)
+                        if a._default is NOTHING
+                        else (
+                            (n, a.type, dc_field(default=a._default))
+                            if not isinstance(a._default, Factory)
+                            else (
+                                n,
+                                a.type,
+                                dc_field(default_factory=a._default.factory),
+                            )
+                        )
                     )
                     for n, a in zip(gen_attr_names(), attrs)
                 ],
@@ -659,9 +666,11 @@ def mutable_seq_typed_attrs(
 
     return (
         field(
-            type=AbcMutableSequence[float]
-            if not legacy_types_only
-            else MutableSequence[float],
+            type=(
+                AbcMutableSequence[float]
+                if not legacy_types_only
+                else MutableSequence[float]
+            ),
             default=default,
             kw_only=draw(booleans()) if kw_only is None else kw_only,
         ),

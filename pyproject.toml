@@ -3,7 +3,7 @@ skip-magic-trailing-comma = true
 
 [tool.pdm.dev-dependencies]
 lint = [
-    "black>=23.3.0",
+    "black>=24.2.0",
     "ruff>=0.0.277",
 ]
 test = [

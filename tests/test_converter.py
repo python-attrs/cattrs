@@ -1,4 +1,5 @@
 """Test both structuring and unstructuring."""
+
 from collections import deque
 from typing import (
     Any,
@@ -580,9 +581,9 @@ def test_seq_of_simple_classes_unstructure(cls_and_vals, seq_type_and_annotation
     inputs = seq_type(cl(*vals, **kwargs) for cl, vals, kwargs in cls_and_vals)
     outputs = converter.unstructure(
         inputs,
-        unstructure_as=annotation[cl]
-        if annotation not in (Tuple, tuple)
-        else annotation[cl, ...],
+        unstructure_as=(
+            annotation[cl] if annotation not in (Tuple, tuple) else annotation[cl, ...]
+        ),
     )
     assert all(e == test_val for e in outputs)
 
@@ -628,9 +629,11 @@ def test_seq_of_bare_classes_structure(seq_type_and_annotation):
         inputs = [{"a": cl(*vals), "b": cl(*vals)} for _ in range(5)]
         outputs = converter.structure(
             inputs,
-            cl=annotation[C]
-            if annotation not in (Tuple, tuple)
-            else annotation[C, ...],
+            cl=(
+                annotation[C]
+                if annotation not in (Tuple, tuple)
+                else annotation[C, ...]
+            ),
         )
         expected = seq_type(C(a=cl(*vals), b=cl(*vals)) for _ in range(5))
 

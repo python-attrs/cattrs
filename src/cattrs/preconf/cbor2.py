@@ -1,4 +1,5 @@
 """Preconfigured converters for cbor2."""
+
 from datetime import date, datetime, timezone
 from typing import Any, Type, TypeVar, Union
 

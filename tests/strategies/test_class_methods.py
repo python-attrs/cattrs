@@ -52,17 +52,21 @@ def test_not_nested(get_converter, structure_method, unstructure_method, cls) ->
 
     assert converter.structure(
         {
-            "b"
-            if structure_method == "_structure" and hasattr(cls, "_structure")
-            else "a": 42
+            (
+                "b"
+                if structure_method == "_structure" and hasattr(cls, "_structure")
+                else "a"
+            ): 42
         },
         cls,
     ) == cls(42)
 
     assert converter.unstructure(cls(42)) == {
-        "c"
-        if unstructure_method == "_unstructure" and hasattr(cls, "_unstructure")
-        else "a": 42
+        (
+            "c"
+            if unstructure_method == "_unstructure" and hasattr(cls, "_unstructure")
+            else "a"
+        ): 42
     }
 
 

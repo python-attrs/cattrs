@@ -1,4 +1,5 @@
 """Useful internal functions."""
+
 from typing import Any, Callable, NoReturn, Type, TypeVar
 
 from ._compat import TypeAlias

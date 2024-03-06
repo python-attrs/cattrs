@@ -1,4 +1,5 @@
 """Tests for NewTypes."""
+
 from typing import NewType
 
 import pytest

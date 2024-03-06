@@ -1,4 +1,5 @@
 """Test structuring of collections and primitives."""
+
 from typing import Any, Dict, FrozenSet, List, MutableSet, Optional, Set, Tuple, Union
 
 from attrs import define

@@ -1,4 +1,5 @@
 """Pyyaml-specific tests."""
+
 from datetime import date, datetime, timezone
 
 from attrs import define

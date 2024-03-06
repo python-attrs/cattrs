@@ -1,4 +1,5 @@
 """Strategies for attributes without types and accompanying classes."""
+
 import keyword
 import string
 from collections import OrderedDict

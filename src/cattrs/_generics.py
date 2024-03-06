@@ -12,9 +12,11 @@ def deep_copy_with(t, mapping: Mapping[str, Any]):
         args = (args[0],)
     new_args = (
         tuple(
-            mapping[a.__name__]
-            if hasattr(a, "__name__") and a.__name__ in mapping
-            else (deep_copy_with(a, mapping) if is_generic(a) else a)
+            (
+                mapping[a.__name__]
+                if hasattr(a, "__name__") and a.__name__ in mapping
+                else (deep_copy_with(a, mapping) if is_generic(a) else a)
+            )
             for a in args
         )
         + rest

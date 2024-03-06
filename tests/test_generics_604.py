@@ -1,4 +1,5 @@
 """Tests for generics under PEP 604 (unions as pipes)."""
+
 from typing import Generic, TypeVar
 
 from attrs import define

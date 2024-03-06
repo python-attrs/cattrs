@@ -1,4 +1,5 @@
 """Strategies for customizing subclass behaviors."""
+
 from __future__ import annotations
 
 from gc import collect

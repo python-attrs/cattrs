@@ -1,4 +1,5 @@
 """Tests for functionality from the gen module."""
+
 import linecache
 from traceback import format_exc
 

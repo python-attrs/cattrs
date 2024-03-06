@@ -323,17 +323,14 @@ def test_generate_typeddict_mapping() -> None:
 def test_nongeneric_protocols(converter):
     """Non-generic protocols work."""
 
-    class NongenericProtocol(Protocol):
-        ...
+    class NongenericProtocol(Protocol): ...
 
     @define
-    class Entity(NongenericProtocol):
-        ...
+    class Entity(NongenericProtocol): ...
 
     assert generate_mapping(Entity) == {}
 
-    class GenericProtocol(Protocol[T]):
-        ...
+    class GenericProtocol(Protocol[T]): ...
 
     @define
     class GenericEntity(GenericProtocol[int]):

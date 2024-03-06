@@ -3,6 +3,7 @@
 Note that a significant amount of test coverage for this is in the
 preconf tests.
 """
+
 from typing import List, Optional, Union
 
 import pytest

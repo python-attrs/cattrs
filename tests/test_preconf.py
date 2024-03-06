@@ -124,9 +124,9 @@ def everythings(
     )
     strings = text(
         characters(
-            blacklist_categories=("Cs",)
-            if allow_control_characters_in_values
-            else ("Cs", "Cc")
+            blacklist_categories=(
+                ("Cs",) if allow_control_characters_in_values else ("Cs", "Cc")
+            )
         )
     )
     dts = datetimes(

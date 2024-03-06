@@ -1,4 +1,5 @@
 """Tests for the factory hooks documentation."""
+
 from attr import define, fields, has
 
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override

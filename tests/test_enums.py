@@ -1,4 +1,5 @@
 """Tests for enums."""
+
 from hypothesis import given
 from hypothesis.strategies import data, sampled_from
 from pytest import raises

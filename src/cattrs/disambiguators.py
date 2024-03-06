@@ -1,4 +1,5 @@
 """Utilities for union (sum type) disambiguation."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -38,8 +39,9 @@ def create_default_dis_func(
     converter: BaseConverter,
     *classes: type[AttrsInstance],
     use_literals: bool = True,
-    overrides: dict[str, AttributeOverride]
-    | Literal["from_converter"] = "from_converter",
+    overrides: (
+        dict[str, AttributeOverride] | Literal["from_converter"]
+    ) = "from_converter",
 ) -> Callable[[Mapping[Any, Any]], type[Any] | None]:
     """Given attrs classes or dataclasses, generate a disambiguation function.
 

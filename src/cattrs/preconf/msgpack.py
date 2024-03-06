@@ -1,4 +1,5 @@
 """Preconfigured converters for msgpack."""
+
 from datetime import date, datetime, time, timezone
 from typing import Any, Type, TypeVar, Union
 

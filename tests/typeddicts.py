@@ -1,4 +1,5 @@
 """Strategies for typed dicts."""
+
 from datetime import datetime, timezone
 from string import ascii_lowercase
 from typing import Any, Dict, Generic, List, Optional, Set, Tuple, Type, TypeVar
@@ -70,9 +71,11 @@ def annotated_int_attributes(
     if total:
         if not_required and draw(booleans()):
             return (
-                NotRequired[Annotated[int, "test"]]
-                if draw(booleans())
-                else Annotated[NotRequired[int], "test"],
+                (
+                    NotRequired[Annotated[int, "test"]]
+                    if draw(booleans())
+                    else Annotated[NotRequired[int], "test"]
+                ),
                 integers() | just(NOTHING),
                 text(ascii_lowercase),
             )
@@ -80,9 +83,11 @@ def annotated_int_attributes(
 
     if not_required and draw(booleans()):
         return (
-            Required[Annotated[int, "test"]]
-            if draw(booleans())
-            else Annotated[Required[int], "test"],
+            (
+                Required[Annotated[int, "test"]]
+                if draw(booleans())
+                else Annotated[Required[int], "test"]
+            ),
             integers(),
             text(ascii_lowercase),
         )

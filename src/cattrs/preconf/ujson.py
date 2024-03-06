@@ -1,4 +1,5 @@
 """Preconfigured converters for ujson."""
+
 from base64 import b85decode, b85encode
 from datetime import date, datetime
 from typing import Any, AnyStr, Type, TypeVar, Union

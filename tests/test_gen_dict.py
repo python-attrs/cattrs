@@ -1,4 +1,5 @@
 """Tests for generated dict functions."""
+
 from typing import Dict, Type
 
 import pytest
