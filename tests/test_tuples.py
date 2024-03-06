@@ -1,4 +1,5 @@
 """Tests for tuples of all kinds."""
+
 from typing import NamedTuple, Tuple
 
 from cattrs.converters import Converter

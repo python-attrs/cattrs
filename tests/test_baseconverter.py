@@ -1,4 +1,5 @@
 """Test both structuring and unstructuring."""
+
 from typing import Optional, Union
 
 import pytest

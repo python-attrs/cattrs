@@ -1,4 +1,5 @@
 """Preconfigured converters for bson."""
+
 from base64 import b85decode, b85encode
 from datetime import date, datetime
 from typing import Any, Type, TypeVar, Union

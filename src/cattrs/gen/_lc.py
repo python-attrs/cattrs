@@ -1,4 +1,5 @@
 """Line-cache functionality."""
+
 import linecache
 from typing import Any, List
 

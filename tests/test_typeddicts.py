@@ -1,4 +1,5 @@
 """Tests for TypedDict un/structuring."""
+
 from datetime import datetime, timezone
 from typing import Dict, Generic, NewType, Set, Tuple, TypedDict, TypeVar
 

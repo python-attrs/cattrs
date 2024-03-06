@@ -1,4 +1,5 @@
 """Tests for PEP 695 (Type Parameter Syntax)."""
+
 from dataclasses import dataclass
 
 import pytest

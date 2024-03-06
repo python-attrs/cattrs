@@ -1,4 +1,5 @@
 """Cattrs validation."""
+
 from typing import Callable, List, Union
 
 from .errors import (

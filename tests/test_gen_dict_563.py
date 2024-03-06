@@ -1,4 +1,5 @@
 """`gen` tests under PEP 563."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

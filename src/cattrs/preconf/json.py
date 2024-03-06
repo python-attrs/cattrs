@@ -1,4 +1,5 @@
 """Preconfigured converters for the stdlib json."""
+
 from base64 import b85decode, b85encode
 from datetime import date, datetime
 from json import dumps, loads

@@ -151,12 +151,14 @@ def adapted_fields(cl) -> List[Attribute]:
         return [
             Attribute(
                 attr.name,
-                attr.default
-                if attr.default is not MISSING
-                else (
-                    Factory(attr.default_factory)
-                    if attr.default_factory is not MISSING
-                    else NOTHING
+                (
+                    attr.default
+                    if attr.default is not MISSING
+                    else (
+                        Factory(attr.default_factory)
+                        if attr.default_factory is not MISSING
+                        else NOTHING
+                    )
                 ),
                 None,
                 True,

@@ -1,4 +1,5 @@
 """Tests for collections in `cattrs.gen`."""
+
 from typing import Generic, Mapping, NewType, Tuple, TypeVar
 
 from cattrs import Converter

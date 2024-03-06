@@ -286,12 +286,10 @@ class BaseConverter:
         )
 
     @overload
-    def register_unstructure_hook(self) -> Callable[[UnstructureHook], None]:
-        ...
+    def register_unstructure_hook(self) -> Callable[[UnstructureHook], None]: ...
 
     @overload
-    def register_unstructure_hook(self, cls: Any, func: UnstructureHook) -> None:
-        ...
+    def register_unstructure_hook(self, cls: Any, func: UnstructureHook) -> None: ...
 
     def register_unstructure_hook(
         self, cls: Any = None, func: UnstructureHook | None = None
@@ -339,26 +337,22 @@ class BaseConverter:
     @overload
     def register_unstructure_hook_factory(
         self, predicate: Predicate
-    ) -> Callable[[UnstructureHookFactory], UnstructureHookFactory]:
-        ...
+    ) -> Callable[[UnstructureHookFactory], UnstructureHookFactory]: ...
 
     @overload
     def register_unstructure_hook_factory(
         self, predicate: Predicate
-    ) -> Callable[[ExtendedUnstructureHookFactory], ExtendedUnstructureHookFactory]:
-        ...
+    ) -> Callable[[ExtendedUnstructureHookFactory], ExtendedUnstructureHookFactory]: ...
 
     @overload
     def register_unstructure_hook_factory(
         self, predicate: Predicate, factory: UnstructureHookFactory
-    ) -> UnstructureHookFactory:
-        ...
+    ) -> UnstructureHookFactory: ...
 
     @overload
     def register_unstructure_hook_factory(
         self, predicate: Predicate, factory: ExtendedUnstructureHookFactory
-    ) -> ExtendedUnstructureHookFactory:
-        ...
+    ) -> ExtendedUnstructureHookFactory: ...
 
     def register_unstructure_hook_factory(self, predicate, factory=None):
         """
@@ -427,12 +421,10 @@ class BaseConverter:
         )
 
     @overload
-    def register_structure_hook(self) -> Callable[[StructureHook], None]:
-        ...
+    def register_structure_hook(self) -> Callable[[StructureHook], None]: ...
 
     @overload
-    def register_structure_hook(self, cl: Any, func: StructuredValue) -> None:
-        ...
+    def register_structure_hook(self, cl: Any, func: StructuredValue) -> None: ...
 
     def register_structure_hook(
         self, cl: Any, func: StructureHook | None = None
@@ -482,26 +474,22 @@ class BaseConverter:
     @overload
     def register_structure_hook_factory(
         self, predicate: Predicate
-    ) -> Callable[[StructureHookFactory, StructureHookFactory]]:
-        ...
+    ) -> Callable[[StructureHookFactory, StructureHookFactory]]: ...
 
     @overload
     def register_structure_hook_factory(
         self, predicate: Predicate
-    ) -> Callable[[ExtendedStructureHookFactory, ExtendedStructureHookFactory]]:
-        ...
+    ) -> Callable[[ExtendedStructureHookFactory, ExtendedStructureHookFactory]]: ...
 
     @overload
     def register_structure_hook_factory(
         self, predicate: Predicate, factory: StructureHookFactory
-    ) -> StructureHookFactory:
-        ...
+    ) -> StructureHookFactory: ...
 
     @overload
     def register_structure_hook_factory(
         self, predicate: Predicate, factory: ExtendedStructureHookFactory
-    ) -> ExtendedStructureHookFactory:
-        ...
+    ) -> ExtendedStructureHookFactory: ...
 
     def register_structure_hook_factory(self, predicate, factory=None):
         """
@@ -1021,19 +1009,25 @@ class BaseConverter:
         """
         res = self.__class__(
             dict_factory if dict_factory is not None else self._dict_factory,
-            unstruct_strat
-            if unstruct_strat is not None
-            else (
-                UnstructureStrategy.AS_DICT
-                if self._unstructure_attrs == self.unstructure_attrs_asdict
-                else UnstructureStrategy.AS_TUPLE
+            (
+                unstruct_strat
+                if unstruct_strat is not None
+                else (
+                    UnstructureStrategy.AS_DICT
+                    if self._unstructure_attrs == self.unstructure_attrs_asdict
+                    else UnstructureStrategy.AS_TUPLE
+                )
             ),
-            prefer_attrib_converters
-            if prefer_attrib_converters is not None
-            else self._prefer_attrib_converters,
-            detailed_validation
-            if detailed_validation is not None
-            else self.detailed_validation,
+            (
+                prefer_attrib_converters
+                if prefer_attrib_converters is not None
+                else self._prefer_attrib_converters
+            ),
+            (
+                detailed_validation
+                if detailed_validation is not None
+                else self.detailed_validation
+            ),
         )
 
         self._unstructure_func.copy_to(res._unstructure_func, self._unstruct_copy_skip)
@@ -1347,27 +1341,37 @@ class Converter(BaseConverter):
         """
         res = self.__class__(
             dict_factory if dict_factory is not None else self._dict_factory,
-            unstruct_strat
-            if unstruct_strat is not None
-            else (
-                UnstructureStrategy.AS_DICT
-                if self._unstructure_attrs == self.unstructure_attrs_asdict
-                else UnstructureStrategy.AS_TUPLE
+            (
+                unstruct_strat
+                if unstruct_strat is not None
+                else (
+                    UnstructureStrategy.AS_DICT
+                    if self._unstructure_attrs == self.unstructure_attrs_asdict
+                    else UnstructureStrategy.AS_TUPLE
+                )
             ),
             omit_if_default if omit_if_default is not None else self.omit_if_default,
-            forbid_extra_keys
-            if forbid_extra_keys is not None
-            else self.forbid_extra_keys,
+            (
+                forbid_extra_keys
+                if forbid_extra_keys is not None
+                else self.forbid_extra_keys
+            ),
             type_overrides if type_overrides is not None else self.type_overrides,
-            unstruct_collection_overrides
-            if unstruct_collection_overrides is not None
-            else self._unstruct_collection_overrides,
-            prefer_attrib_converters
-            if prefer_attrib_converters is not None
-            else self._prefer_attrib_converters,
-            detailed_validation
-            if detailed_validation is not None
-            else self.detailed_validation,
+            (
+                unstruct_collection_overrides
+                if unstruct_collection_overrides is not None
+                else self._unstruct_collection_overrides
+            ),
+            (
+                prefer_attrib_converters
+                if prefer_attrib_converters is not None
+                else self._prefer_attrib_converters
+            ),
+            (
+                detailed_validation
+                if detailed_validation is not None
+                else self.detailed_validation
+            ),
         )
 
         self._unstructure_func.copy_to(

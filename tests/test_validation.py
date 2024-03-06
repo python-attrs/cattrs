@@ -1,4 +1,5 @@
 """Tests for the extended validation mode."""
+
 import pickle
 from typing import Deque, Dict, FrozenSet, List, Set, Tuple
 

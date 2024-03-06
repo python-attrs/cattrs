@@ -1,4 +1,5 @@
 """Tests for dumping."""
+
 from typing import Type
 
 from attr import asdict, astuple

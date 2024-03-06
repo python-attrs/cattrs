@@ -44,9 +44,9 @@ class FunctionDispatch:
     """
 
     _converter: BaseConverter
-    _handler_pairs: list[
-        tuple[Predicate, Callable[[Any, Any], Any], bool, bool]
-    ] = Factory(list)
+    _handler_pairs: list[tuple[Predicate, Callable[[Any, Any], Any], bool, bool]] = (
+        Factory(list)
+    )
 
     def register(
         self,

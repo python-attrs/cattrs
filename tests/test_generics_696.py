@@ -1,4 +1,5 @@
 """Tests for generics under PEP 696 (type defaults)."""
+
 from typing import Generic, List
 
 import pytest

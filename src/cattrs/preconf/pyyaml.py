@@ -1,4 +1,5 @@
 """Preconfigured converters for pyyaml."""
+
 from datetime import date, datetime
 from functools import partial
 from typing import Any, Type, TypeVar, Union

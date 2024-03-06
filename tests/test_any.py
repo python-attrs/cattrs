@@ -1,4 +1,5 @@
 """Tests for handling `typing.Any`."""
+
 from typing import Any, Dict, Optional
 
 from attrs import define
