@@ -902,10 +902,13 @@ def mapping_structure_factory(
     structure_to: type = dict,
     key_type=NOTHING,
     val_type=NOTHING,
-    detailed_validation: bool = True,
+    detailed_validation: bool | Literal["from_converter"] = "from_converter",
 ) -> MappingStructureFn[T]:
     """Generate a specialized structure function for a mapping."""
     fn_name = "structure_mapping"
+
+    if detailed_validation == "from_converter":
+        detailed_validation = converter.detailed_validation
 
     globs: dict[str, type] = {"__cattr_mapping_cl": structure_to}
 
