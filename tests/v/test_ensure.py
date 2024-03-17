@@ -1,4 +1,5 @@
 """Tests for `cattrs.v.ensure`."""
+
 import sys
 from typing import Dict, List, MutableSequence, Sequence
 
@@ -6,8 +7,8 @@ from pytest import fixture, mark, raises
 
 from cattrs import BaseConverter
 from cattrs._compat import ExceptionGroup
-from cattrs.errors import IterableValidationError
-from cattrs.v import ensure
+from cattrs.errors import IterableValidationError, ValueValidationError
+from cattrs.v import ensure, transform_error
 from cattrs.v._hooks import is_validated, validator_factory
 
 
@@ -39,8 +40,11 @@ def test_ensured_lists(valconv: BaseConverter):
         valconv.structure([], ensure(List[int], lambda lst: len(lst) > 0))
 
     if valconv.detailed_validation:
-        assert isinstance(exc.value, IterableValidationError)
+        assert isinstance(exc.value, ValueValidationError)
         assert isinstance(exc.value.exceptions[0], ValueError)
+        assert transform_error(exc.value) == [
+            "invalid value (Validation failed for []) @ $"
+        ]
     else:
         assert isinstance(exc.value, ValueError)
 
@@ -73,7 +77,7 @@ def test_ensured_list_elements(valconv: BaseConverter, type):
         )
 
     if valconv.detailed_validation:
-        assert isinstance(exc.value, IterableValidationError)
+        assert isinstance(exc.value, ValueValidationError)
         assert isinstance(exc.value.exceptions[0], ValueError)
     else:
         assert isinstance(exc.value, ValueError)
@@ -133,7 +137,7 @@ def test_ensured_typing_dict(valconv: BaseConverter):
         valconv.structure({}, ensure(Dict, lambda d: len(d) > 0, keys=str, values=int))
 
     if valconv.detailed_validation:
-        assert isinstance(exc.value, IterableValidationError)
+        assert isinstance(exc.value, ValueValidationError)
         assert isinstance(exc.value.exceptions[0], ValueError)
     else:
         assert isinstance(exc.value, ValueError)

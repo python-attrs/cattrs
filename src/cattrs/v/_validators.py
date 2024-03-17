@@ -5,17 +5,15 @@ from typing import Callable, Collection, Protocol, Sized, TypeVar
 
 from .._compat import ExceptionGroup
 from ..errors import IterableValidationError, IterableValidationNote
-from ._fluent import ValidatorFactory
+from ._types import Validator, ValidatorFactory
 
 T = TypeVar("T")
 
 
 class Comparable(Protocol[T]):
-    def __lt__(self: T, other: T) -> bool:
-        ...
+    def __lt__(self: T, other: T) -> bool: ...
 
-    def __eq__(self: T, other: T) -> bool:
-        ...
+    def __eq__(self: T, other: T) -> bool: ...
 
 
 C = TypeVar("C", bound=Comparable)
@@ -69,7 +67,7 @@ def ignoring_none(
 
     validators = (validator, *validators)
 
-    def factory(detailed_validation: bool) -> Callable[[T | None], None]:
+    def factory(detailed_validation: bool) -> Validator[T | None]:
         if detailed_validation:
 
             def skip_none(val: T | None, _validators=validators) -> None:
@@ -108,7 +106,7 @@ def for_all(
 
     validators = (validator, *validators)
 
-    def factory(detailed_validation: bool) -> Callable[[T], None]:
+    def factory(detailed_validation: bool) -> Validator[Iterable[T]]:
         if detailed_validation:
 
             def assert_all_elements(val: Iterable[T], _validators=validators) -> None:
@@ -118,7 +116,8 @@ def for_all(
                     try:
                         for v in _validators:
                             try:
-                                v(e)
+                                if v(e) is False:
+                                    raise ValueError()
                             except Exception as exc:
                                 exc.__notes__ = [
                                     *getattr(exc, "__notes__", []),
@@ -137,7 +136,8 @@ def for_all(
             def assert_all_elements(val: Iterable[T], _validators=validators) -> None:
                 for e in val:
                     for v in _validators:
-                        v(e)
+                        if v(e) is False:
+                            raise ValueError()
 
         return assert_all_elements
 

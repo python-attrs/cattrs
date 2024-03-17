@@ -125,3 +125,7 @@ class ForbiddenExtraKeysError(Exception):
             message
             or f"Extra fields in constructor for {cln}: {', '.join(extra_fields)}"
         )
+
+
+class ValueValidationError(BaseValidationError):
+    """Raised when a custom value validator fails under detailed validation."""

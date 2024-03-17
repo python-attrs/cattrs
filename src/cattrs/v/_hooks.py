@@ -1,11 +1,14 @@
 """Hooks and hook factories for validation."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from .._compat import Annotated, ExceptionGroup, is_annotated
+from .._compat import Annotated, is_annotated
 from ..dispatch import StructureHook
+from ..errors import ValueValidationError
 from . import VAnnotation
+from .fns import invalid_value
 
 if TYPE_CHECKING:
     from ..converters import BaseConverter
@@ -43,11 +46,11 @@ def validator_factory(type: Any, converter: BaseConverter) -> StructureHook:
             for validator in val_annotation.validators:
                 try:
                     if validator(res) is False:
-                        raise ValueError(f"Validation failed for {res}")
+                        invalid_value(res)
                 except Exception as exc:
                     errors.append(exc)
             if errors:
-                raise ExceptionGroup("Value validation failed", errors)
+                raise ValueValidationError("Value validation failed", errors, type)
             return res
 
     else:
@@ -56,7 +59,7 @@ def validator_factory(type: Any, converter: BaseConverter) -> StructureHook:
             res = base_hook(val, type)
             for validator in val_annotation.validators:
                 if validator(res) is False:
-                    raise ValueError(f"Validation failed for {res}")
+                    invalid_value(res)
             return res
 
     return validating_hook

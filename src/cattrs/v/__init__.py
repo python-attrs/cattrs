@@ -9,6 +9,7 @@ from ..errors import (
     ClassValidationError,
     ForbiddenExtraKeysError,
     IterableValidationError,
+    ValueValidationError,
 )
 from ._fluent import V, customize
 from ._validators import (
@@ -31,6 +32,7 @@ __all__ = [
     "len_between",
     "transform_error",
     "V",
+    "ValidatorFactory",
 ]
 
 
@@ -62,8 +64,10 @@ def format_exception(exc: BaseException, type: Union[type, None]) -> str:
         if type is not None:
             tn = type.__name__ if hasattr(type, "__name__") else repr(type)
             res = f"invalid value for type, expected {tn} ({exc.args[0]})"
-        else:
+        elif exc.args:
             res = f"invalid value ({exc.args[0]})"
+        else:
+            res = "invalid value"
     elif isinstance(exc, TypeError):
         if type is None:
             if exc.args[0].endswith("object is not iterable"):
@@ -93,7 +97,12 @@ def format_exception(exc: BaseException, type: Union[type, None]) -> str:
 
 
 def transform_error(
-    exc: Union[ClassValidationError, IterableValidationError, BaseException],
+    exc: Union[
+        ClassValidationError,
+        IterableValidationError,
+        ValueValidationError,
+        BaseException,
+    ],
     path: str = "$",
     format_exception: Callable[
         [BaseException, Union[type, None]], str
@@ -137,6 +146,10 @@ def transform_error(
                 errors.append(f"{format_exception(exc, note.type)} @ {p}")
         for exc in without:
             errors.append(f"{format_exception(exc, None)} @ {path}")
+    elif isinstance(exc, ValueValidationError):
+        # This is a value validation error, which we should just flatten.
+        for inner in exc.exceptions:
+            errors.append(f"{format_exception(inner, None)} @ {path}")
     elif isinstance(exc, ExceptionGroup):
         # Likely from a nested validator, needs flattening.
         errors.extend(

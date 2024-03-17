@@ -1,4 +1,6 @@
 """Tests for the fluent validation API."""
+
+from dataclasses import dataclass
 from typing import Dict, List, Union
 
 from attrs import Factory, define, evolve
@@ -32,11 +34,16 @@ class Model:
     h: Dict[str, int] = Factory(dict)
 
 
-def is_lowercase(val: str) -> None:
-    """A validator included with cattrs.
+@dataclass
+class DataclassModel:
+    """A dataclass we want to validate."""
 
-    Probably the simplest possible validator, only takes a string.
-    """
+    a: int
+    b: str
+
+
+def is_lowercase(val: str) -> None:
+    """Probably the simplest possible validator, only takes a string."""
     if val != val.lower():
         raise ValueError(f"{val!r} not lowercase")
 
@@ -133,6 +140,31 @@ def test_simple_string_validation(c: Converter) -> None:
     assert instance == c.structure(c.unstructure(instance), Model)
 
 
+def test_simple_string_validation_dc(c: Converter) -> None:
+    """Simple string validation works for dataclasses."""
+    customize(c, DataclassModel, V("b").ensure(is_lowercase))
+
+    instance = DataclassModel(1, "A")
+
+    unstructured = c.unstructure(instance)
+
+    if c.detailed_validation:
+        with raises(ClassValidationError) as exc_info:
+            c.structure(unstructured, DataclassModel)
+
+        assert transform_error(exc_info.value) == [
+            "invalid value ('A' not lowercase) @ $.b"
+        ]
+    else:
+        with raises(ValueError) as exc_info:
+            c.structure(unstructured, DataclassModel)
+
+        assert repr(exc_info.value) == "ValueError(\"'A' not lowercase\")"
+
+    instance.b = "a"
+    assert instance == c.structure(c.unstructure(instance), DataclassModel)
+
+
 def test_multiple_string_validators(c: Converter) -> None:
     """Simple string validation works."""
     customize(c, Model, V(f(Model).b).ensure(is_lowercase, is_email))
@@ -213,3 +245,14 @@ def test_different_classes_error(c: Converter):
 
     with raises(TypeError):
         customize(c, AnotherModel, V(fs.a).ensure(greater_than(5)))
+
+
+def test_dataclass_typo(c: Converter):
+    """Customizing a non-existent field is a runtime error."""
+
+    @dataclass
+    class AnotherModel:
+        a: int
+
+    with raises(TypeError):
+        customize(c, AnotherModel, V("b").ensure(greater_than(5)))
