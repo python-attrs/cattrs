@@ -54,7 +54,6 @@ lint: ## check style with ruff and black
 test: ## run tests quickly with the default Python
 	pdm run pytest -x --ff -n auto tests
 
-
 test-all: ## run tests on every Python version with tox
 	tox
 
@@ -78,7 +77,7 @@ servedocs: docs ## compile the docs watching for changes
 	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
 
 bench-cmp:
-	pytest bench --benchmark-compare
+	pytest --benchmark-sort=fullname --benchmark-warmup=true --benchmark-warmup-iterations=5 --benchmark-group-by=fullname bench --benchmark-compare
 
 bench:
-	pytest bench --benchmark-save base
+	pytest --benchmark-sort=fullname --benchmark-warmup=true --benchmark-warmup-iterations=5 --benchmark-group-by=fullname bench --benchmark-save base

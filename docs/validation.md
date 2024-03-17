@@ -1,14 +1,75 @@
 # Validation
 
-_cattrs_ has a detailed validation mode since version 22.1.0, and this mode is enabled by default.
-When running under detailed validation, the structuring hooks are slightly slower but produce richer and more precise error messages.
-Unstructuring hooks are not affected.
+_cattrs_ supports _structuring_ since its initial release, and _validation_ since release 24.1.
+
+**Structuring** is the process of ensuring data matches a set of Python types;
+it can be thought of as validating data against structural constraints.
+Structuring ensures the shape of your data.
+Structuring ensures data typed as `list[int]` really contains a list of integers.
+
+**Validation** is the process of ensuring data matches a set of user-provided constraints;
+it can be thought of as validating the value of data.
+Validation happens after the shape of the data has been ensured.
+Validation can ensure a `list[int]` contains at least one integer, and that all integers are positive.
+
+## (Value) Validation
+
+```{versionadded} 24.1.0
+
+```
+```{note} _This API is still provisional; as such it is subject to breaking changes._
+
+```
+
+_cattrs_ can be configured to validate the values of your data (ensuring a list of integers has at least one member, and that all elements are positive).
+
+The basic unit of value validation is a function that takes a value and, if the value is unacceptable, either raises an exception or returns exactly `False`.
+These functions are called _validators_.
+
+The attributes of _attrs_ classes can be validated with the use of a helper function, {func}`cattrs.v.customize`, and a helper class, {class}`cattrs.v.V`.
+_V_ is the validation attribute, mapping to _attrs_ or _dataclass_ attributes.
+
+```python
+from attrs import define
+from cattrs import Converter
+from cattrs.v import customize, V
+
+@define
+class C:
+    a: int
+
+converter = Converter()
+
+customize(converter, C, V("a").ensure(lambda a: a > 0))
+```
+
+Now, every structuring of class `C` will run the provided validator(s).
+
+```python
+converter.structure({"a": -1}, C)
+```
+
+This process also works with dataclasses:
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class D:
+    a: int
+
+customize(converter, D, V("a").ensure(lambda a: a == 5))
+```
 
 ## Detailed Validation
 
 ```{versionadded} 22.1.0
 
 ```
+Detailed validation is enabled by default and can be disabled for a speed boost by creating a converter with `detailed_validation=False`.
+When running under detailed validation, the structuring hooks are slightly slower but produce richer and more precise error messages.
+Unstructuring hooks are not affected.
+
 In detailed validation mode, any structuring errors will be grouped and raised together as a {class}`cattrs.BaseValidationError`, which is a [PEP 654 ExceptionGroup](https://www.python.org/dev/peps/pep-0654/).
 ExceptionGroups are special exceptions which contain lists of other exceptions, which may themselves be other ExceptionGroups.
 In essence, ExceptionGroups are trees of exceptions.

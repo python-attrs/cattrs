@@ -32,9 +32,11 @@ from typing import MutableSet as TypingMutableSet
 from typing import Sequence as TypingSequence
 from typing import Set as TypingSet
 
-from attrs import NOTHING, Attribute, Factory, resolve_types
+from attrs import NOTHING, Attribute, AttrsInstance, Factory, resolve_types
 from attrs import fields as attrs_fields
 from attrs import fields_dict as attrs_fields_dict
+
+from ._types import DataclassLike
 
 __all__ = [
     "ANIES",
@@ -131,7 +133,9 @@ def fields(type):
         return dataclass_fields(type)
 
 
-def fields_dict(type) -> Dict[str, Union[Attribute, Field]]:
+def fields_dict(
+    type: Union[Type[AttrsInstance], Type[DataclassLike]]
+) -> Dict[str, Union[Attribute, Field]]:
     """Return the fields_dict for attrs and dataclasses."""
     if is_dataclass(type):
         return {f.name: f for f in dataclass_fields(type)}
