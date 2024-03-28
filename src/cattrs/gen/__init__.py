@@ -258,7 +258,9 @@ def make_dict_structure_fn(
     converter: BaseConverter,
     _cattrs_forbid_extra_keys: bool | Literal["from_converter"] = "from_converter",
     _cattrs_use_linecache: bool = True,
-    _cattrs_prefer_attrib_converters: bool = False,
+    _cattrs_prefer_attrib_converters: (
+        bool | Literal["from_converter"]
+    ) = "from_converter",
     _cattrs_detailed_validation: bool | Literal["from_converter"] = "from_converter",
     _cattrs_use_alias: bool = False,
     _cattrs_include_init_false: bool = False,
@@ -289,6 +291,9 @@ def make_dict_structure_fn(
     ..  versionchanged:: 23.2.0
         The `_cattrs_forbid_extra_keys` and `_cattrs_detailed_validation` parameters
         take their values from the given converter by default.
+    ..  versionchanged:: 24.1.0
+        The `_cattrs_prefer_attrib_converters` parameter takes its value from the given
+        converter by default.
     """
 
     mapping = {}
@@ -344,6 +349,8 @@ def make_dict_structure_fn(
         _cattrs_forbid_extra_keys = getattr(converter, "forbid_extra_keys", False)
     if _cattrs_detailed_validation == "from_converter":
         _cattrs_detailed_validation = converter.detailed_validation
+    if _cattrs_prefer_attrib_converters == "from_converter":
+        _cattrs_prefer_attrib_converters = converter._prefer_attrib_converters
 
     if _cattrs_forbid_extra_keys:
         globs["__c_a"] = allowed_fields
