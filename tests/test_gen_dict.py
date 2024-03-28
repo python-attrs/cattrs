@@ -633,6 +633,26 @@ def test_detailed_validation_from_converter(converter: BaseConverter):
             converter.structure({"a": "a"}, A)
 
 
+@given(prefer=...)
+def test_prefer_converters_from_converter(prefer: bool):
+    """
+    `prefer_attrs_converters` is taken from the converter by default.
+    """
+
+    @define
+    class A:
+        a: int = field(converter=lambda x: x + 1)
+
+    converter = BaseConverter(prefer_attrib_converters=prefer)
+    converter.register_structure_hook(int, lambda x, _: x + 1)
+    converter.register_structure_hook(A, make_dict_structure_fn(A, converter))
+
+    if prefer:
+        assert converter.structure({"a": 1}, A).a == 2
+    else:
+        assert converter.structure({"a": 1}, A).a == 3
+
+
 def test_fields_exception():
     """fields() raises on a non-attrs, non-dataclass class."""
     with pytest.raises(Exception):  # noqa: B017
