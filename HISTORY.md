@@ -19,6 +19,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#486](https://github.com/python-attrs/cattrs/pull/486))
 - **Minor change**: {py:func}`cattrs.gen.make_dict_structure_fn` will use the value for the `prefer_attrib_converters` parameter from the given converter by default now.
   If you're using this function directly, the old behavior can be restored by passing in the desired values explicitly.
+  ([#527](https://github.com/python-attrs/cattrs/issues/527) [#528](https://github.com/python-attrs/cattrs/pull/528))
 - Introduce {meth}`BaseConverter.get_structure_hook` and {meth}`BaseConverter.get_unstructure_hook` methods.
   ([#432](https://github.com/python-attrs/cattrs/issues/432) [#472](https://github.com/python-attrs/cattrs/pull/472))
 - {meth}`BaseConverter.register_structure_hook`, {meth}`BaseConverter.register_unstructure_hook`,
@@ -53,6 +54,8 @@ can now be used as decorators and have gained new features.
   ([#460](https://github.com/python-attrs/cattrs/issues/460) [#467](https://github.com/python-attrs/cattrs/pull/467))
 - `typing_extensions.Any` is now supported and handled like `typing.Any`.
   ([#488](https://github.com/python-attrs/cattrs/issues/488) [#490](https://github.com/python-attrs/cattrs/pull/490))
+- `Optional` types can now be consistently customized using `register_structure_hook` and `register_unstructure_hook`.
+  ([#529](https://github.com/python-attrs/cattrs/issues/529) [#530](https://github.com/python-attrs/cattrs/pull/530))
 - The BaseConverter now properly generates detailed validation errors for mappings.
   ([#496](https://github.com/python-attrs/cattrs/pull/496))
 - [PEP 695](https://peps.python.org/pep-0695/) generics are now tested.
