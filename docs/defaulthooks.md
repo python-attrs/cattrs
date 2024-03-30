@@ -36,12 +36,10 @@ Any of these hooks can be overriden if pure validation is required instead.
 ```{doctest}
 >>> c = Converter()
 
->>> def validate(value, type):
+>>> @c.register_structure_hook
+... def validate(value, type) -> int:
 ...     if not isinstance(value, type):
 ...         raise ValueError(f'{value!r} not an instance of {type}')
-...
-
->>> c.register_structure_hook(int, validate)
 
 >>> c.structure("1", int)
 Traceback (most recent call last):
@@ -110,11 +108,27 @@ Traceback (most recent call last):
 ...
 TypeError: int() argument must be a string, a bytes-like object or a number, not 'NoneType'
 
->>> cattrs.structure(None, int | None)
->>> # None was returned.
+>>> print(cattrs.structure(None, int | None))
+None
 ```
 
 Bare `Optional` s (non-parameterized, just `Optional`, as opposed to `Optional[str]`) aren't supported; `Optional[Any]` should be used instead.
+
+`Optionals` handling can be customized using {meth}`register_structure_hook` and {meth}`register_unstructure_hook`.
+
+```{doctest}
+>>> converter = Converter()
+
+>>> @converter.register_structure_hook
+... def hook(val: Any, type: Any) -> str | None:
+...     if val in ("", None):
+...         return None
+...     return str(val)
+...
+
+>>> print(converter.structure("", str | None))
+None
+```
 
 
 ### Lists

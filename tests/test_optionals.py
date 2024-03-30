@@ -3,7 +3,7 @@ from typing import Any, NewType, Optional
 import pytest
 from attrs import define
 
-from cattrs import Converter
+from cattrs import BaseConverter, Converter
 
 from ._compat import is_py310_plus
 
@@ -51,3 +51,23 @@ def test_optional_any(converter: Converter):
         pass
 
     assert converter.unstructure(A(), Optional[Any]) == {}
+
+
+def test_override_optional(converter: BaseConverter):
+    """Optionals can be overridden using singledispatch."""
+
+    @converter.register_structure_hook
+    def _(val, _) -> Optional[int]:
+        if val in ("", None):
+            return None
+        return int(val)
+
+    assert converter.structure("", Optional[int]) is None
+
+    @converter.register_unstructure_hook
+    def _(val: Optional[int]) -> Any:
+        if val in (None, 0):
+            return None
+        return val
+
+    assert converter.unstructure(0, Optional[int]) is None

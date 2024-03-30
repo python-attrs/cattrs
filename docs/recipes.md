@@ -10,13 +10,9 @@ In certain situations, you might want to deviate from this behavior and use alte
 
 For example, consider the following `Point` class describing points in 2D space, which offers two `classmethod`s for alternative creation:
 
-```{doctest}
->>> from __future__ import annotations
-
+```{doctest} point_group
 >>> import math
-
 >>> from attrs import define
-
 
 >>> @define
 ... class Point:
@@ -25,12 +21,12 @@ For example, consider the following `Point` class describing points in 2D space,
 ...     y: float
 ...
 ...     @classmethod
-...     def from_tuple(cls, coordinates: tuple[float, float]) -> Point:
+...     def from_tuple(cls, coordinates: tuple[float, float]) -> "Point":
 ...         """Create a point from a tuple of Cartesian coordinates."""
 ...         return Point(*coordinates)
 ...
 ...     @classmethod
-...     def from_polar(cls, radius: float, angle: float) -> Point:
+...     def from_polar(cls, radius: float, angle: float) -> "Point":
 ...         """Create a point from its polar coordinates."""
 ...         return Point(radius * math.cos(angle), radius * math.sin(angle))
 ```
@@ -40,7 +36,7 @@ For example, consider the following `Point` class describing points in 2D space,
 
 A simple way to _statically_ set one of the `classmethod`s as initializer is to register a structuring hook that holds a reference to the respective callable:
 
-```{doctest}
+```{doctest} point_group
 >>> from inspect import signature
 >>> from typing import Callable, TypedDict
 
@@ -48,9 +44,10 @@ A simple way to _statically_ set one of the `classmethod`s as initializer is to 
 >>> from cattrs.dispatch import StructureHook
 
 >>> def signature_to_typed_dict(fn: Callable) -> type[TypedDict]:
-...    """Create a TypedDict reflecting a callable's signature."""
+...     """Create a TypedDict reflecting a callable's signature."""
 ...     params = {p: t.annotation for p, t in signature(fn).parameters.items()}
 ...     return TypedDict(f"{fn.__name__}_args", params)
+...
 
 >>> def make_initializer_from(fn: Callable, conv: Converter) -> StructureHook:
 ...     """Return a structuring hook from a given callable."""
@@ -61,7 +58,7 @@ A simple way to _statically_ set one of the `classmethod`s as initializer is to 
 
 Now, you can easily structure `Point`s from the specified alternative representation:
 
-```{doctest}
+```{doctest} point_group
 >>> c = Converter()
 >>> c.register_structure_hook(Point, make_initializer_from(Point.from_polar, c))
 
@@ -78,7 +75,7 @@ A typical scenario would be when object structuring happens behind an API and yo
 
 In such situations, the following hook factory can help you achieve your goal:
 
-```{doctest}
+```{doctest} point_group
 >>> from inspect import signature
 >>> from typing import Callable, TypedDict
 
@@ -90,6 +87,7 @@ In such situations, the following hook factory can help you achieve your goal:
 ...     params = {p: t.annotation for p, t in signature(fn).parameters.items()}
 ...     return TypedDict(f"{fn.__name__}_args", params)
 
+>>> T = TypeVar("T")
 >>> def make_initializer_selection_hook(
 ...     initializer_key: str,
 ...     converter: Converter,
@@ -116,7 +114,7 @@ In such situations, the following hook factory can help you achieve your goal:
 
 Specifying the key that determines the initializer to be used now lets you dynamically select the `classmethod` as part of the object specification itself:
 
-```{doctest}
+```{doctest} point_group
 >>> c = Converter()
 >>> c.register_structure_hook(Point, make_initializer_selection_hook("initializer", c))
 
