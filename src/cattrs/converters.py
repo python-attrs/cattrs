@@ -23,6 +23,7 @@ from ._compat import (
     OriginMutableSet,
     Sequence,
     Set,
+    TypeAlias,
     fields,
     get_final_base,
     get_newtype_base,
@@ -245,12 +246,12 @@ class BaseConverter:
                 (is_namedtuple, namedtuple_structure_factory, "extended"),
                 (is_mapping, self._structure_dict),
                 (is_supported_union, self._gen_attrs_union_structure, True),
+                (is_optional, self._structure_optional),
                 (
                     lambda t: is_union_type(t) and t in self._union_struct_registry,
                     self._union_struct_registry.__getitem__,
                     True,
                 ),
-                (is_optional, self._structure_optional),
                 (has, self._structure_attrs),
             ]
         )
@@ -1382,4 +1383,4 @@ class Converter(BaseConverter):
         return res
 
 
-GenConverter = Converter
+GenConverter: TypeAlias = Converter
