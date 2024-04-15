@@ -11,7 +11,7 @@ from cattr import Converter
 
 @define
 class A:
-    inner: List[A]  # noqa: UP006
+    inner: list[A]  # noqa: UP006
 
 
 def test_simple_recursive():
