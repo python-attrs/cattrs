@@ -84,27 +84,50 @@ def configure_tagged_union(
         return res
 
     if default is NOTHING:
+        if getattr(converter, "forbid_extra_keys", False):
 
-        def structure_tagged_union(
-            val: dict, _, _tag_to_cl=tag_to_hook, _tag_name=tag_name
-        ) -> union:
-            val = val.copy()
-            return _tag_to_cl[val.pop(_tag_name)](val)
+            def structure_tagged_union(
+                val: dict, _, _tag_to_cl=tag_to_hook, _tag_name=tag_name
+            ) -> union:
+                val = val.copy()
+                return _tag_to_cl[val.pop(_tag_name)](val)
+
+        else:
+
+            def structure_tagged_union(
+                val: dict, _, _tag_to_cl=tag_to_hook, _tag_name=tag_name
+            ) -> union:
+                return _tag_to_cl[val[_tag_name]](val)
 
     else:
+        if getattr(converter, "forbid_extra_keys", False):
 
-        def structure_tagged_union(
-            val: dict,
-            _,
-            _tag_to_hook=tag_to_hook,
-            _tag_name=tag_name,
-            _dh=default_handler,
-            _default=default,
-        ) -> union:
-            if _tag_name in val:
-                val = val.copy()
-                return _tag_to_hook[val.pop(_tag_name)](val)
-            return _dh(val, _default)
+            def structure_tagged_union(
+                val: dict,
+                _,
+                _tag_to_hook=tag_to_hook,
+                _tag_name=tag_name,
+                _dh=default_handler,
+                _default=default,
+            ) -> union:
+                if _tag_name in val:
+                    val = val.copy()
+                    return _tag_to_hook[val.pop(_tag_name)](val)
+                return _dh(val, _default)
+
+        else:
+
+            def structure_tagged_union(
+                val: dict,
+                _,
+                _tag_to_hook=tag_to_hook,
+                _tag_name=tag_name,
+                _dh=default_handler,
+                _default=default,
+            ) -> union:
+                if _tag_name in val:
+                    return _tag_to_hook[val[_tag_name]](val)
+                return _dh(val, _default)
 
     converter.register_unstructure_hook(union, unstructure_tagged_union)
     converter.register_structure_hook(union, structure_tagged_union)

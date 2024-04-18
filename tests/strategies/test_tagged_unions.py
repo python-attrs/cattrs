@@ -97,6 +97,28 @@ def test_default_member(converter: BaseConverter) -> None:
     assert converter.structure({"_type": "B", "a": 1}, union) == B("1")
 
 
+def test_default_member_with_tag(converter: BaseConverter) -> None:
+    """Members can access the tags, if not `forbid_extra_keys`."""
+
+    @define
+    class C:
+        _type: str = ""
+
+    union = Union[A, B, C]
+    configure_tagged_union(union, converter, default=C)
+    assert converter.unstructure(A(1), union) == {"_type": "A", "a": 1}
+    assert converter.unstructure(B("1"), union) == {"_type": "B", "a": "1"}
+
+    # No tag, so should structure as C.
+    assert converter.structure({"a": 1}, union) == C()
+    # Wrong tag, so should again structure as C.
+    assert converter.structure({"_type": "D", "a": 1}, union) == C("D")
+
+    assert converter.structure({"_type": "A", "a": 1}, union) == A(1)
+    assert converter.structure({"_type": "B", "a": 1}, union) == B("1")
+    assert converter.structure({"_type": "C", "a": 1}, union) == C("C")
+
+
 def test_default_member_validation(converter: BaseConverter) -> None:
     """Default members are structured properly.."""
     union = Union[A, B]

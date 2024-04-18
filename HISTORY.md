@@ -48,6 +48,8 @@ can now be used as decorators and have gained new features.
   ([#463](https://github.com/python-attrs/cattrs/pull/463))
 - `cattrs.gen` generators now attach metadata to the generated functions, making them introspectable.
   ([#472](https://github.com/python-attrs/cattrs/pull/472))
+- The [tagged union strategy](https://catt.rs/en/stable/strategies.html#tagged-unions-strategy) now leaves the tags in the payload unless `forbid_extra_keys` is set.
+  ([#533](https://github.com/python-attrs/cattrs/issues/533) [#534](https://github.com/python-attrs/cattrs/pull/534))
 - More robust support for `Annotated` and `NotRequired` in TypedDicts.
   ([#450](https://github.com/python-attrs/cattrs/pull/450))
 - `typing_extensions.Literal` is now automatically structured, just like `typing.Literal`.
