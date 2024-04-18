@@ -74,7 +74,7 @@ The payload can be interpreted as about a dozen different messages, based on the
 
 To keep the example simple we define two classes, one for the `REFUND` event and one for everything else.
 
-```python
+```{testcode} apple
 
 @define
 class Refund:
@@ -92,7 +92,9 @@ Next, we use the _tagged unions_ strategy to prepare our converter.
 The tag value for the `Refund` event is `REFUND`, and we can let the `OtherAppleNotification` class handle all the other cases.
 The `tag_generator` parameter is a callable, so we can give it the `get` method of a dictionary.
 
-```python
+```{doctest} apple
+
+>>> from cattrs.strategies import configure_tagged_union
 
 >>> c = Converter()
 >>> configure_tagged_union(
@@ -107,7 +109,7 @@ The `tag_generator` parameter is a callable, so we can give it the `get` method 
 
 The converter is now ready to start structuring Apple notifications.
 
-```python
+```{doctest} apple
 
 >>> payload = {"notificationType": "REFUND", "originalTransactionId": "1"}
 >>> notification = c.structure(payload, AppleNotification)
@@ -117,7 +119,7 @@ The converter is now ready to start structuring Apple notifications.
 ...         print(f"Refund for {txn_id}!")
 ...     case OtherAppleNotification(not_type):
 ...         print("Can't handle this yet")
-
+Refund for 1!
 ```
 
 ```{versionadded} 23.1.0
