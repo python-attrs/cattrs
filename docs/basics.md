@@ -72,7 +72,7 @@ This new hook can be used directly or registered to a converter (the original in
 ```
 
 
-Now if we use this hook to structure a `Model`, through ✨the magic of function composition✨ that hook will use our old `int_hook`.
+Now if we use this hook to structure a `Model`, through ✨the magic of function composition✨ that hook will use the pre-existing (default) `Model` hook, which takes advanatge of our `int_hook`.
 
 ```python
 >>> converter.structure({"a": "1"}, Model)

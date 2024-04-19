@@ -216,3 +216,28 @@ _cattrs_ will now structure both key names into `new_field` on your class.
 converter.structure({"new_field": "foo"}, MyInternalAttr)
 converter.structure({"old_field": "foo"}, MyInternalAttr)
 ```
+
+## Chaining hooks
+
+When customizing conversion, one might want to pre- or post-process a type before applying structuring or unstructuring. One might be tempted to write something like:
+
+```python
+def structure_thing(thing, type_):
+    # do something to thing
+    structured_thing = converter.structure(thing, type_)
+    # do something to structured_thing
+    return structured_thing
+```
+
+Unfortunately, this will result in an infinite loop (and stack overflow) as the `converter.structure` call will call `structure_thing` again. It will therefore be necessary to use the `converter`'s `get_structure_hook` method to obtain the default hook for the type, and then call it directly.
+
+```python
+_base_hook = converter.get_structure_hook(type_)
+def structure_thing(thing, type_):
+    # do something to thing
+    structured_thing = _base_hook(thing, type_)
+    # do something to structured_thing
+    return structured_thing
+```
+
+Note that this captures the default hook at the time of definition, so if the default hook changes later, this hook will not be affected. The order of such chaining hooks must be carefully considered, particularly given subclass matching and the complexities available with `register_structure_hook_func`.

@@ -23,15 +23,16 @@ The new copy may be changed through the `copy` arguments, but will retain all ma
 This feature is supported for Python 3.9 and later.
 ```
 
+By default, collections are unstructured by unstructuring all their contents and then returning a new collection of the same type containing the unstructured contents.
+
 Overriding collection unstructuring in a generic way can be a very useful feature.
 A common example is using a JSON library that doesn't support sets, but expects lists and tuples instead.
 
-Using ordinary unstructuring hooks for this is unwieldy due to the semantics of
-[singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch);
-in other words, you'd need to register hooks for all specific types of set you're using (`set[int]`, `set[float]`,
-`set[str]`...), which is not useful.
+If users simply call `converter.unstructure(my_collection)`, the unstructuring will know only `my_collection.__class__` (for example `set`) and not any more specific type (for example `set[int]`). Thus one can `register_unstructure_hook` for `set` to achieve custom conversions of these objects. Unfortunately this usage handles all `set` objects regardless of their contents, and the hook has no way of telling that it is actually working with a `set[int]` (short of inspecting the contents). For this specific example, a generic `set` unstructuring hook cannot assume that the contents can be sorted, but an unstructuring hook specific to `set[int]` could.
 
-Function-based hooks can be used instead, but come with their own set of challenges - they're complicated to write efficiently.
+If users are specifying `unstructure_as`, then using ordinary unstructuring hooks for handling collections is unwieldy: it is not possible to `register_unstructure_hook(set[int], ...)`, and if `unstructure_as` is set to `set[int]`, the hook for `set` will not be called.
+
+Function-based hooks can be used instead - when deciding whether they apply to a given argument they have access to the declared type of their argument - but come with their own set of challenges; in particular they're complicated to write efficiently as they have to be given the opportunity to decide whether they will handle every object that is being unstructured.
 
 The {class}`Converter` supports easy customizations of collection unstructuring using its `unstruct_collection_overrides` parameter.
 For example, to unstructure all sets into lists, use the following:
@@ -41,9 +42,11 @@ For example, to unstructure all sets into lists, use the following:
 >>> from collections.abc import Set
 >>> converter = cattrs.Converter(unstruct_collection_overrides={Set: list})
 
->>> converter.unstructure({1, 2, 3})
+>>> converter.unstructure({1, 2, 3}, unstructure_as=Set[int])
 [1, 2, 3]
 ```
+
+Specifically, if the converter is in the process of unstructuring and it encounters a collection that matches a key in `unstruct_collection_overrides`, it will unstructure all the contents of the collection and then pass a generator that yields them to the override function. For mapping types the generator will yield key-value pairs, and for sequence types it will yield the elements. Unfortunately, the override function will not have access to the declared type of the collection (here `set[int]`), so it will have to make do with the runtime type. In contrast with a simple `register_unstructure_hook` for `set`, the override function will be called regardless of what parameterized generic type is supplied to `unstructure_as`.
 
 Going even further, the `Converter` contains heuristics to support the following Python types, in order of decreasing generality:
 

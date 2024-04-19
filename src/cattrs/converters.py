@@ -273,6 +273,14 @@ class BaseConverter:
         self._struct_copy_skip = self._structure_func.get_num_fns()
 
     def unstructure(self, obj: Any, unstructure_as: Any = None) -> Any:
+        """Unstructure an object.
+
+        :param obj: The object to unstructure.
+        :param unstructure_as: The type to unstructure as. If not provided, the
+            type of the object (``obj.__class__``) will be used. Using ``unstructure_as``
+            can allow specification of generics, for example to ensure that ``list[A]``
+            is unstructured as ``list[A]`` rather than as ``list``.
+        """
         return self._unstructure_func.dispatch(
             obj.__class__ if unstructure_as is None else unstructure_as
         )(obj)
