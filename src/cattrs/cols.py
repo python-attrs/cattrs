@@ -1,4 +1,5 @@
 """Utility functions for collections."""
+
 from __future__ import annotations
 
 from sys import version_info
