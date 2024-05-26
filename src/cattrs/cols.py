@@ -5,7 +5,7 @@ from __future__ import annotations
 from sys import version_info
 from typing import TYPE_CHECKING, Any, Iterable, NamedTuple, Tuple, TypeVar
 
-from ._compat import ANIES, is_bare, is_subclass
+from ._compat import ANIES, is_bare, is_sequence, is_subclass
 from .dispatch import StructureHook, UnstructureHook
 from .errors import IterableValidationError, IterableValidationNote
 from .fns import identity
@@ -16,8 +16,10 @@ if TYPE_CHECKING:
 
 __all__ = [
     "is_namedtuple",
-    "namedtuple_unstructure_factory",
+    "is_sequence",
+    "list_structure_factory",
     "namedtuple_structure_factory",
+    "namedtuple_unstructure_factory",
 ]
 
 if version_info[:2] >= (3, 9):

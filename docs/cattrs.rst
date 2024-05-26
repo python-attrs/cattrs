@@ -19,6 +19,14 @@ Subpackages
 Submodules
 ----------
 
+cattrs.cols module
+------------------
+
+.. automodule:: cattrs.cols
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 cattrs.disambiguators module
 ----------------------------
 

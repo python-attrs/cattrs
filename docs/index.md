@@ -37,6 +37,7 @@ caption: Dev Guide
 history
 benchmarking
 contributing
+modindex
 ```
 
 ```{include} ../README.md

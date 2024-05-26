@@ -332,6 +332,11 @@ if sys.version_info >= (3, 9):
         return NOTHING
 
     def is_sequence(type: Any) -> bool:
+        """A predicate function for sequences.
+
+        Matches lists, sequences, mutable sequences, deques and homogenous
+        tuples.
+        """
         origin = getattr(type, "__origin__", None)
         return (
             type

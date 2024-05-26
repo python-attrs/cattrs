@@ -23,6 +23,10 @@ The new copy may be changed through the `copy` arguments, but will retain all ma
 This feature is supported for Python 3.9 and later.
 ```
 
+```{tip}
+See [](customizing.md#customizing-collections) for a more modern and more powerful way of customizing collection handling.
+```
+
 Overriding collection unstructuring in a generic way can be a very useful feature.
 A common example is using a JSON library that doesn't support sets, but expects lists and tuples instead.
 
