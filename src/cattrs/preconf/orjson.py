@@ -9,10 +9,10 @@ from typing import Any, Type, TypeVar, Union
 from orjson import dumps, loads
 
 from .._compat import AbstractSet, is_mapping
+from ..cols import is_namedtuple, namedtuple_unstructure_factory
 from ..converters import BaseConverter, Converter
 from ..fns import identity
 from ..strategies import configure_union_passthrough
-from ..tuples import is_namedtuple, namedtuple_unstructure_factory
 from . import wrap
 
 T = TypeVar("T")

@@ -7,9 +7,9 @@ from typing import Any, Type, TypeVar, Union
 from yaml import safe_dump, safe_load
 
 from .._compat import FrozenSetSubscriptable
+from ..cols import is_namedtuple, namedtuple_unstructure_factory
 from ..converters import BaseConverter, Converter
 from ..strategies import configure_union_passthrough
-from ..tuples import is_namedtuple, namedtuple_unstructure_factory
 from . import validate_datetime, wrap
 
 T = TypeVar("T")

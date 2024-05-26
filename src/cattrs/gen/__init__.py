@@ -356,219 +356,37 @@ def make_dict_structure_fn(
         globs["__c_a"] = allowed_fields
         globs["__c_feke"] = ForbiddenExtraKeysError
 
-    if _cattrs_detailed_validation:
-        lines.append("  res = {}")
-        lines.append("  errors = []")
-        invocation_lines.append("**res,")
-        internal_arg_parts["__c_cve"] = ClassValidationError
-        internal_arg_parts["__c_avn"] = AttributeValidationNote
-        for a in attrs:
-            an = a.name
-            override = kwargs.get(an, neutral)
-            if override.omit:
-                continue
-            if override.omit is None and not a.init and not _cattrs_include_init_false:
-                continue
-            t = a.type
-            if isinstance(t, TypeVar):
-                t = mapping.get(t.__name__, t)
-            elif is_generic(t) and not is_bare(t) and not is_annotated(t):
-                t = deep_copy_with(t, mapping)
-
-            # For each attribute, we try resolving the type here and now.
-            # If a type is manually overwritten, this function should be
-            # regenerated.
-            if override.struct_hook is not None:
-                # If the user has requested an override, just use that.
-                handler = override.struct_hook
-            else:
-                handler = find_structure_handler(
-                    a, t, converter, _cattrs_prefer_attrib_converters
-                )
-
-            struct_handler_name = f"__c_structure_{an}"
-            if handler is not None:
-                internal_arg_parts[struct_handler_name] = handler
-
-            ian = a.alias
-            if override.rename is None:
-                kn = an if not _cattrs_use_alias else a.alias
-            else:
-                kn = override.rename
-
-            allowed_fields.add(kn)
-            i = "  "
-
-            if not a.init:
-                if a.default is not NOTHING:
-                    pi_lines.append(f"{i}if '{kn}' in o:")
-                    i = f"{i}  "
-                pi_lines.append(f"{i}try:")
-                i = f"{i}  "
-                type_name = f"__c_type_{an}"
-                internal_arg_parts[type_name] = t
-                if handler is not None:
-                    if handler == converter._structure_call:
-                        internal_arg_parts[struct_handler_name] = t
-                        pi_lines.append(
-                            f"{i}instance.{an} = {struct_handler_name}(o['{kn}'])"
-                        )
-                    else:
-                        tn = f"__c_type_{an}"
-                        internal_arg_parts[tn] = t
-                        pi_lines.append(
-                            f"{i}instance.{an} = {struct_handler_name}(o['{kn}'], {tn})"
-                        )
-                else:
-                    pi_lines.append(f"{i}instance.{an} = o['{kn}']")
-                i = i[:-2]
-                pi_lines.append(f"{i}except Exception as e:")
-                i = f"{i}  "
-                pi_lines.append(
-                    f'{i}e.__notes__ = getattr(e, \'__notes__\', []) + [__c_avn("Structuring class {cl.__qualname__} @ attribute {an}", "{an}", __c_type_{an})]'
-                )
-                pi_lines.append(f"{i}errors.append(e)")
-
-            else:
-                if a.default is not NOTHING:
-                    lines.append(f"{i}if '{kn}' in o:")
-                    i = f"{i}  "
-                lines.append(f"{i}try:")
-                i = f"{i}  "
-                type_name = f"__c_type_{an}"
-                internal_arg_parts[type_name] = t
-                if handler:
-                    if handler == converter._structure_call:
-                        internal_arg_parts[struct_handler_name] = t
-                        lines.append(
-                            f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'])"
-                        )
-                    else:
-                        tn = f"__c_type_{an}"
-                        internal_arg_parts[tn] = t
-                        lines.append(
-                            f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'], {tn})"
-                        )
-                else:
-                    lines.append(f"{i}res['{ian}'] = o['{kn}']")
-                i = i[:-2]
-                lines.append(f"{i}except Exception as e:")
-                i = f"{i}  "
-                lines.append(
-                    f'{i}e.__notes__ = getattr(e, \'__notes__\', []) + [__c_avn("Structuring class {cl.__qualname__} @ attribute {an}", "{an}", __c_type_{an})]'
-                )
-                lines.append(f"{i}errors.append(e)")
-
-        if _cattrs_forbid_extra_keys:
-            post_lines += [
-                "  unknown_fields = set(o.keys()) - __c_a",
-                "  if unknown_fields:",
-                "    errors.append(__c_feke('', __cl, unknown_fields))",
-            ]
-
-        post_lines.append(
-            f"  if errors: raise __c_cve('While structuring ' + {cl_name!r}, errors, __cl)"
-        )
-        if not pi_lines:
-            instantiation_lines = (
-                ["  try:"]
-                + ["    return __cl("]
-                + [f"      {line}" for line in invocation_lines]
-                + ["    )"]
-                + [
-                    f"  except Exception as exc: raise __c_cve('While structuring ' + {cl_name!r}, [exc], __cl)"
-                ]
-            )
-        else:
-            instantiation_lines = (
-                ["  try:"]
-                + ["    instance = __cl("]
-                + [f"      {line}" for line in invocation_lines]
-                + ["    )"]
-                + [
-                    f"  except Exception as exc: raise __c_cve('While structuring ' + {cl_name!r}, [exc], __cl)"
-                ]
-            )
-            pi_lines.append("  return instance")
+    # We keep track of what we're generating to help with recursive
+    # class graphs.
+    try:
+        working_set = already_generating.working_set
+    except AttributeError:
+        working_set = set()
+        already_generating.working_set = working_set
     else:
-        non_required = []
-        # The first loop deals with required args.
-        for a in attrs:
-            an = a.name
-            override = kwargs.get(an, neutral)
-            if override.omit:
-                continue
-            if override.omit is None and not a.init and not _cattrs_include_init_false:
-                continue
-            if a.default is not NOTHING:
-                non_required.append(a)
-                continue
-            t = a.type
-            if isinstance(t, TypeVar):
-                t = mapping.get(t.__name__, t)
-            elif is_generic(t) and not is_bare(t) and not is_annotated(t):
-                t = deep_copy_with(t, mapping)
+        if cl in working_set:
+            raise RecursionError()
 
-            # For each attribute, we try resolving the type here and now.
-            # If a type is manually overwritten, this function should be
-            # regenerated.
-            if override.struct_hook is not None:
-                # If the user has requested an override, just use that.
-                handler = override.struct_hook
-            else:
-                handler = find_structure_handler(
-                    a, t, converter, _cattrs_prefer_attrib_converters
-                )
+    working_set.add(cl)
 
-            if override.rename is None:
-                kn = an if not _cattrs_use_alias else a.alias
-            else:
-                kn = override.rename
-            allowed_fields.add(kn)
-
-            if not a.init:
-                if handler is not None:
-                    struct_handler_name = f"__c_structure_{an}"
-                    internal_arg_parts[struct_handler_name] = handler
-                    if handler == converter._structure_call:
-                        internal_arg_parts[struct_handler_name] = t
-                        pi_line = f"  instance.{an} = {struct_handler_name}(o['{kn}'])"
-                    else:
-                        tn = f"__c_type_{an}"
-                        internal_arg_parts[tn] = t
-                        pi_line = (
-                            f"  instance.{an} = {struct_handler_name}(o['{kn}'], {tn})"
-                        )
-                else:
-                    pi_line = f"  instance.{an} = o['{kn}']"
-
-                pi_lines.append(pi_line)
-            else:
-                if handler:
-                    struct_handler_name = f"__c_structure_{an}"
-                    internal_arg_parts[struct_handler_name] = handler
-                    if handler == converter._structure_call:
-                        internal_arg_parts[struct_handler_name] = t
-                        invocation_line = f"{struct_handler_name}(o['{kn}']),"
-                    else:
-                        tn = f"__c_type_{an}"
-                        internal_arg_parts[tn] = t
-                        invocation_line = f"{struct_handler_name}(o['{kn}'], {tn}),"
-                else:
-                    invocation_line = f"o['{kn}'],"
-
-                if a.kw_only:
-                    invocation_line = f"{a.alias}={invocation_line}"
-                invocation_lines.append(invocation_line)
-
-        # The second loop is for optional args.
-        if non_required:
-            invocation_lines.append("**res,")
+    try:
+        if _cattrs_detailed_validation:
             lines.append("  res = {}")
-
-            for a in non_required:
+            lines.append("  errors = []")
+            invocation_lines.append("**res,")
+            internal_arg_parts["__c_cve"] = ClassValidationError
+            internal_arg_parts["__c_avn"] = AttributeValidationNote
+            for a in attrs:
                 an = a.name
                 override = kwargs.get(an, neutral)
+                if override.omit:
+                    continue
+                if (
+                    override.omit is None
+                    and not a.init
+                    and not _cattrs_include_init_false
+                ):
+                    continue
                 t = a.type
                 if isinstance(t, TypeVar):
                     t = mapping.get(t.__name__, t)
@@ -587,65 +405,273 @@ def make_dict_structure_fn(
                     )
 
                 struct_handler_name = f"__c_structure_{an}"
-                internal_arg_parts[struct_handler_name] = handler
+                if handler is not None:
+                    internal_arg_parts[struct_handler_name] = handler
+
+                ian = a.alias
+                if override.rename is None:
+                    kn = an if not _cattrs_use_alias else a.alias
+                else:
+                    kn = override.rename
+
+                allowed_fields.add(kn)
+                i = "  "
+
+                if not a.init:
+                    if a.default is not NOTHING:
+                        pi_lines.append(f"{i}if '{kn}' in o:")
+                        i = f"{i}  "
+                    pi_lines.append(f"{i}try:")
+                    i = f"{i}  "
+                    type_name = f"__c_type_{an}"
+                    internal_arg_parts[type_name] = t
+                    if handler is not None:
+                        if handler == converter._structure_call:
+                            internal_arg_parts[struct_handler_name] = t
+                            pi_lines.append(
+                                f"{i}instance.{an} = {struct_handler_name}(o['{kn}'])"
+                            )
+                        else:
+                            tn = f"__c_type_{an}"
+                            internal_arg_parts[tn] = t
+                            pi_lines.append(
+                                f"{i}instance.{an} = {struct_handler_name}(o['{kn}'], {tn})"
+                            )
+                    else:
+                        pi_lines.append(f"{i}instance.{an} = o['{kn}']")
+                    i = i[:-2]
+                    pi_lines.append(f"{i}except Exception as e:")
+                    i = f"{i}  "
+                    pi_lines.append(
+                        f'{i}e.__notes__ = getattr(e, \'__notes__\', []) + [__c_avn("Structuring class {cl.__qualname__} @ attribute {an}", "{an}", __c_type_{an})]'
+                    )
+                    pi_lines.append(f"{i}errors.append(e)")
+
+                else:
+                    if a.default is not NOTHING:
+                        lines.append(f"{i}if '{kn}' in o:")
+                        i = f"{i}  "
+                    lines.append(f"{i}try:")
+                    i = f"{i}  "
+                    type_name = f"__c_type_{an}"
+                    internal_arg_parts[type_name] = t
+                    if handler:
+                        if handler == converter._structure_call:
+                            internal_arg_parts[struct_handler_name] = t
+                            lines.append(
+                                f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'])"
+                            )
+                        else:
+                            tn = f"__c_type_{an}"
+                            internal_arg_parts[tn] = t
+                            lines.append(
+                                f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'], {tn})"
+                            )
+                    else:
+                        lines.append(f"{i}res['{ian}'] = o['{kn}']")
+                    i = i[:-2]
+                    lines.append(f"{i}except Exception as e:")
+                    i = f"{i}  "
+                    lines.append(
+                        f'{i}e.__notes__ = getattr(e, \'__notes__\', []) + [__c_avn("Structuring class {cl.__qualname__} @ attribute {an}", "{an}", __c_type_{an})]'
+                    )
+                    lines.append(f"{i}errors.append(e)")
+
+            if _cattrs_forbid_extra_keys:
+                post_lines += [
+                    "  unknown_fields = set(o.keys()) - __c_a",
+                    "  if unknown_fields:",
+                    "    errors.append(__c_feke('', __cl, unknown_fields))",
+                ]
+
+            post_lines.append(
+                f"  if errors: raise __c_cve('While structuring ' + {cl_name!r}, errors, __cl)"
+            )
+            if not pi_lines:
+                instantiation_lines = (
+                    ["  try:"]
+                    + ["    return __cl("]
+                    + [f"      {line}" for line in invocation_lines]
+                    + ["    )"]
+                    + [
+                        f"  except Exception as exc: raise __c_cve('While structuring ' + {cl_name!r}, [exc], __cl)"
+                    ]
+                )
+            else:
+                instantiation_lines = (
+                    ["  try:"]
+                    + ["    instance = __cl("]
+                    + [f"      {line}" for line in invocation_lines]
+                    + ["    )"]
+                    + [
+                        f"  except Exception as exc: raise __c_cve('While structuring ' + {cl_name!r}, [exc], __cl)"
+                    ]
+                )
+                pi_lines.append("  return instance")
+        else:
+            non_required = []
+            # The first loop deals with required args.
+            for a in attrs:
+                an = a.name
+                override = kwargs.get(an, neutral)
+                if override.omit:
+                    continue
+                if (
+                    override.omit is None
+                    and not a.init
+                    and not _cattrs_include_init_false
+                ):
+                    continue
+                if a.default is not NOTHING:
+                    non_required.append(a)
+                    continue
+                t = a.type
+                if isinstance(t, TypeVar):
+                    t = mapping.get(t.__name__, t)
+                elif is_generic(t) and not is_bare(t) and not is_annotated(t):
+                    t = deep_copy_with(t, mapping)
+
+                # For each attribute, we try resolving the type here and now.
+                # If a type is manually overwritten, this function should be
+                # regenerated.
+                if override.struct_hook is not None:
+                    # If the user has requested an override, just use that.
+                    handler = override.struct_hook
+                else:
+                    handler = find_structure_handler(
+                        a, t, converter, _cattrs_prefer_attrib_converters
+                    )
 
                 if override.rename is None:
                     kn = an if not _cattrs_use_alias else a.alias
                 else:
                     kn = override.rename
                 allowed_fields.add(kn)
-                if not a.init:
-                    pi_lines.append(f"  if '{kn}' in o:")
-                    if handler:
-                        if handler == converter._structure_call:
-                            internal_arg_parts[struct_handler_name] = t
-                            pi_lines.append(
-                                f"    instance.{an} = {struct_handler_name}(o['{kn}'])"
-                            )
-                        else:
-                            tn = f"__c_type_{an}"
-                            internal_arg_parts[tn] = t
-                            pi_lines.append(
-                                f"    instance.{an} = {struct_handler_name}(o['{kn}'], {tn})"
-                            )
-                    else:
-                        pi_lines.append(f"    instance.{an} = o['{kn}']")
-                else:
-                    post_lines.append(f"  if '{kn}' in o:")
-                    if handler:
-                        if handler == converter._structure_call:
-                            internal_arg_parts[struct_handler_name] = t
-                            post_lines.append(
-                                f"    res['{a.alias}'] = {struct_handler_name}(o['{kn}'])"
-                            )
-                        else:
-                            tn = f"__c_type_{an}"
-                            internal_arg_parts[tn] = t
-                            post_lines.append(
-                                f"    res['{a.alias}'] = {struct_handler_name}(o['{kn}'], {tn})"
-                            )
-                    else:
-                        post_lines.append(f"    res['{a.alias}'] = o['{kn}']")
-        if not pi_lines:
-            instantiation_lines = (
-                ["  return __cl("]
-                + [f"    {line}" for line in invocation_lines]
-                + ["  )"]
-            )
-        else:
-            instantiation_lines = (
-                ["  instance = __cl("]
-                + [f"    {line}" for line in invocation_lines]
-                + ["  )"]
-            )
-            pi_lines.append("  return instance")
 
-        if _cattrs_forbid_extra_keys:
-            post_lines += [
-                "  unknown_fields = set(o.keys()) - __c_a",
-                "  if unknown_fields:",
-                "    raise __c_feke('', __cl, unknown_fields)",
-            ]
+                if not a.init:
+                    if handler is not None:
+                        struct_handler_name = f"__c_structure_{an}"
+                        internal_arg_parts[struct_handler_name] = handler
+                        if handler == converter._structure_call:
+                            internal_arg_parts[struct_handler_name] = t
+                            pi_line = (
+                                f"  instance.{an} = {struct_handler_name}(o['{kn}'])"
+                            )
+                        else:
+                            tn = f"__c_type_{an}"
+                            internal_arg_parts[tn] = t
+                            pi_line = f"  instance.{an} = {struct_handler_name}(o['{kn}'], {tn})"
+                    else:
+                        pi_line = f"  instance.{an} = o['{kn}']"
+
+                    pi_lines.append(pi_line)
+                else:
+                    if handler:
+                        struct_handler_name = f"__c_structure_{an}"
+                        internal_arg_parts[struct_handler_name] = handler
+                        if handler == converter._structure_call:
+                            internal_arg_parts[struct_handler_name] = t
+                            invocation_line = f"{struct_handler_name}(o['{kn}']),"
+                        else:
+                            tn = f"__c_type_{an}"
+                            internal_arg_parts[tn] = t
+                            invocation_line = f"{struct_handler_name}(o['{kn}'], {tn}),"
+                    else:
+                        invocation_line = f"o['{kn}'],"
+
+                    if a.kw_only:
+                        invocation_line = f"{a.alias}={invocation_line}"
+                    invocation_lines.append(invocation_line)
+
+            # The second loop is for optional args.
+            if non_required:
+                invocation_lines.append("**res,")
+                lines.append("  res = {}")
+
+                for a in non_required:
+                    an = a.name
+                    override = kwargs.get(an, neutral)
+                    t = a.type
+                    if isinstance(t, TypeVar):
+                        t = mapping.get(t.__name__, t)
+                    elif is_generic(t) and not is_bare(t) and not is_annotated(t):
+                        t = deep_copy_with(t, mapping)
+
+                    # For each attribute, we try resolving the type here and now.
+                    # If a type is manually overwritten, this function should be
+                    # regenerated.
+                    if override.struct_hook is not None:
+                        # If the user has requested an override, just use that.
+                        handler = override.struct_hook
+                    else:
+                        handler = find_structure_handler(
+                            a, t, converter, _cattrs_prefer_attrib_converters
+                        )
+
+                    struct_handler_name = f"__c_structure_{an}"
+                    internal_arg_parts[struct_handler_name] = handler
+
+                    if override.rename is None:
+                        kn = an if not _cattrs_use_alias else a.alias
+                    else:
+                        kn = override.rename
+                    allowed_fields.add(kn)
+                    if not a.init:
+                        pi_lines.append(f"  if '{kn}' in o:")
+                        if handler:
+                            if handler == converter._structure_call:
+                                internal_arg_parts[struct_handler_name] = t
+                                pi_lines.append(
+                                    f"    instance.{an} = {struct_handler_name}(o['{kn}'])"
+                                )
+                            else:
+                                tn = f"__c_type_{an}"
+                                internal_arg_parts[tn] = t
+                                pi_lines.append(
+                                    f"    instance.{an} = {struct_handler_name}(o['{kn}'], {tn})"
+                                )
+                        else:
+                            pi_lines.append(f"    instance.{an} = o['{kn}']")
+                    else:
+                        post_lines.append(f"  if '{kn}' in o:")
+                        if handler:
+                            if handler == converter._structure_call:
+                                internal_arg_parts[struct_handler_name] = t
+                                post_lines.append(
+                                    f"    res['{a.alias}'] = {struct_handler_name}(o['{kn}'])"
+                                )
+                            else:
+                                tn = f"__c_type_{an}"
+                                internal_arg_parts[tn] = t
+                                post_lines.append(
+                                    f"    res['{a.alias}'] = {struct_handler_name}(o['{kn}'], {tn})"
+                                )
+                        else:
+                            post_lines.append(f"    res['{a.alias}'] = o['{kn}']")
+            if not pi_lines:
+                instantiation_lines = (
+                    ["  return __cl("]
+                    + [f"    {line}" for line in invocation_lines]
+                    + ["  )"]
+                )
+            else:
+                instantiation_lines = (
+                    ["  instance = __cl("]
+                    + [f"    {line}" for line in invocation_lines]
+                    + ["  )"]
+                )
+                pi_lines.append("  return instance")
+
+            if _cattrs_forbid_extra_keys:
+                post_lines += [
+                    "  unknown_fields = set(o.keys()) - __c_a",
+                    "  if unknown_fields:",
+                    "    raise __c_feke('', __cl, unknown_fields)",
+                ]
+    finally:
+        working_set.remove(cl)
+        if not working_set:
+            del already_generating.working_set
 
     # At the end, we create the function header.
     internal_arg_line = ", ".join([f"{i}={i}" for i in internal_arg_parts])

@@ -2,8 +2,8 @@
 
 from typing import NamedTuple, Tuple
 
+from cattrs.cols import is_namedtuple
 from cattrs.converters import Converter
-from cattrs.tuples import is_namedtuple
 
 
 def test_simple_hetero_tuples(genconverter: Converter):

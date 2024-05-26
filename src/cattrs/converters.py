@@ -51,6 +51,12 @@ from ._compat import (
     is_union_type,
     signature,
 )
+from .cols import (
+    is_namedtuple,
+    list_structure_factory,
+    namedtuple_structure_factory,
+    namedtuple_unstructure_factory,
+)
 from .disambiguators import create_default_dis_func, is_supported_union
 from .dispatch import (
     HookFactory,
@@ -83,11 +89,6 @@ from .gen import (
 )
 from .gen.typeddicts import make_dict_structure_fn as make_typeddict_dict_struct_fn
 from .gen.typeddicts import make_dict_unstructure_fn as make_typeddict_dict_unstruct_fn
-from .tuples import (
-    is_namedtuple,
-    namedtuple_structure_factory,
-    namedtuple_unstructure_factory,
-)
 
 __all__ = ["UnstructureStrategy", "BaseConverter", "Converter", "GenConverter"]
 
@@ -238,7 +239,7 @@ class BaseConverter:
                 ),
                 (is_literal, self._structure_simple_literal),
                 (is_literal_containing_enums, self._structure_enum_literal),
-                (is_sequence, self._structure_list),
+                (is_sequence, list_structure_factory, "extended"),
                 (is_deque, self._structure_deque),
                 (is_mutable_set, self._structure_set),
                 (is_frozenset, self._structure_frozenset),
@@ -287,10 +288,12 @@ class BaseConverter:
         )
 
     @overload
-    def register_unstructure_hook(self) -> Callable[[UnstructureHook], None]: ...
+    def register_unstructure_hook(self) -> Callable[[UnstructureHook], None]:
+        ...
 
     @overload
-    def register_unstructure_hook(self, cls: Any, func: UnstructureHook) -> None: ...
+    def register_unstructure_hook(self, cls: Any, func: UnstructureHook) -> None:
+        ...
 
     def register_unstructure_hook(
         self, cls: Any = None, func: UnstructureHook | None = None
@@ -338,22 +341,26 @@ class BaseConverter:
     @overload
     def register_unstructure_hook_factory(
         self, predicate: Predicate
-    ) -> Callable[[UnstructureHookFactory], UnstructureHookFactory]: ...
+    ) -> Callable[[UnstructureHookFactory], UnstructureHookFactory]:
+        ...
 
     @overload
     def register_unstructure_hook_factory(
         self, predicate: Predicate
-    ) -> Callable[[ExtendedUnstructureHookFactory], ExtendedUnstructureHookFactory]: ...
+    ) -> Callable[[ExtendedUnstructureHookFactory], ExtendedUnstructureHookFactory]:
+        ...
 
     @overload
     def register_unstructure_hook_factory(
         self, predicate: Predicate, factory: UnstructureHookFactory
-    ) -> UnstructureHookFactory: ...
+    ) -> UnstructureHookFactory:
+        ...
 
     @overload
     def register_unstructure_hook_factory(
         self, predicate: Predicate, factory: ExtendedUnstructureHookFactory
-    ) -> ExtendedUnstructureHookFactory: ...
+    ) -> ExtendedUnstructureHookFactory:
+        ...
 
     def register_unstructure_hook_factory(self, predicate, factory=None):
         """
@@ -422,10 +429,12 @@ class BaseConverter:
         )
 
     @overload
-    def register_structure_hook(self) -> Callable[[StructureHook], None]: ...
+    def register_structure_hook(self) -> Callable[[StructureHook], None]:
+        ...
 
     @overload
-    def register_structure_hook(self, cl: Any, func: StructuredValue) -> None: ...
+    def register_structure_hook(self, cl: Any, func: StructuredValue) -> None:
+        ...
 
     def register_structure_hook(
         self, cl: Any, func: StructureHook | None = None
@@ -475,22 +484,26 @@ class BaseConverter:
     @overload
     def register_structure_hook_factory(
         self, predicate: Predicate
-    ) -> Callable[[StructureHookFactory, StructureHookFactory]]: ...
+    ) -> Callable[[StructureHookFactory, StructureHookFactory]]:
+        ...
 
     @overload
     def register_structure_hook_factory(
         self, predicate: Predicate
-    ) -> Callable[[ExtendedStructureHookFactory, ExtendedStructureHookFactory]]: ...
+    ) -> Callable[[ExtendedStructureHookFactory, ExtendedStructureHookFactory]]:
+        ...
 
     @overload
     def register_structure_hook_factory(
         self, predicate: Predicate, factory: StructureHookFactory
-    ) -> StructureHookFactory: ...
+    ) -> StructureHookFactory:
+        ...
 
     @overload
     def register_structure_hook_factory(
         self, predicate: Predicate, factory: ExtendedStructureHookFactory
-    ) -> ExtendedStructureHookFactory: ...
+    ) -> ExtendedStructureHookFactory:
+        ...
 
     def register_structure_hook_factory(self, predicate, factory=None):
         """
@@ -737,36 +750,6 @@ class BaseConverter:
             conv_obj[getattr(a, "alias", a.name)] = self._structure_attribute(a, val)
 
         return cl(**conv_obj)
-
-    def _structure_list(self, obj: Iterable[T], cl: Any) -> list[T]:
-        """Convert an iterable to a potentially generic list."""
-        if is_bare(cl) or cl.__args__[0] in ANIES:
-            res = list(obj)
-        else:
-            elem_type = cl.__args__[0]
-            handler = self._structure_func.dispatch(elem_type)
-            if self.detailed_validation:
-                errors = []
-                res = []
-                ix = 0  # Avoid `enumerate` for performance.
-                for e in obj:
-                    try:
-                        res.append(handler(e, elem_type))
-                    except Exception as e:
-                        msg = IterableValidationNote(
-                            f"Structuring {cl} @ index {ix}", ix, elem_type
-                        )
-                        e.__notes__ = [*getattr(e, "__notes__", []), msg]
-                        errors.append(e)
-                    finally:
-                        ix += 1
-                if errors:
-                    raise IterableValidationError(
-                        f"While structuring {cl!r}", errors, cl
-                    )
-            else:
-                res = [handler(e, elem_type) for e in obj]
-        return res
 
     def _structure_deque(self, obj: Iterable[T], cl: Any) -> deque[T]:
         """Convert an iterable to a potentially generic deque."""
