@@ -27,6 +27,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 can now be used as decorators and have gained new features.
   See [here](https://catt.rs/en/latest/customizing.html#use-as-decorators) and [here](https://catt.rs/en/latest/customizing.html#id1) for more details.
   ([#487](https://github.com/python-attrs/cattrs/pull/487))
+- Introduce and [document](https://catt.rs/en/latest/customizing.html#customizing-collections) the {mod}`cattrs.cols` module for better collection customizations.
+  ([#504](https://github.com/python-attrs/cattrs/issues/504) [#540][https://github.com/python-attrs/cattrs/pull/540])
 - Introduce the [_msgspec_](https://jcristharif.com/msgspec/) {mod}`preconf converter <cattrs.preconf.msgspec>`.
   Only JSON is supported for now, with other formats supported by _msgspec_ to come later.
   ([#481](https://github.com/python-attrs/cattrs/pull/481))
