@@ -168,6 +168,17 @@ Available predicates are:
 * {meth}`is_sequence <cattrs.cols.is_sequence>`
 * {meth}`is_namedtuple <cattrs.cols.is_namedtuple>`
 
+````{tip}
+These predicates aren't _cattrs_-specific and may be useful in other contexts.
+```{doctest} predicates
+>>> from cattrs.cols import is_sequence
+
+>>> is_sequence(list[str])
+True
+```
+````
+
+
 Available hook factories are:
 
 * {meth}`iterable_unstructure_factory <cattrs.cols.iterable_unstructure_factory>`
