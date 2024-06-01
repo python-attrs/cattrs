@@ -56,11 +56,11 @@ def test_unstructure_attrs_nested(benchmark, converter_cls, unstructure_strat):
         e: InnerE
 
     inst = Outer(
-        InnerA(1, 1.0, "one", "one".encode()),
-        InnerB(2, 2.0, "two", "two".encode()),
-        InnerC(3, 3.0, "three", "three".encode()),
-        InnerD(4, 4.0, "four", "four".encode()),
-        InnerE(5, 5.0, "five", "five".encode()),
+        InnerA(1, 1.0, "one", b"one"),
+        InnerB(2, 2.0, "two", b"two"),
+        InnerC(3, 3.0, "three", b"three"),
+        InnerD(4, 4.0, "four", b"four"),
+        InnerE(5, 5.0, "five", b"five"),
     )
 
     benchmark(c.unstructure, inst)
@@ -115,7 +115,7 @@ def test_unstruct_attrs_deep_nest(benchmark, converter_cls, unstructure_strat):
         c: InnerE
         d: InnerE
 
-    make_inner_a = lambda: InnerA(1, 1.0, "one", "one".encode())
+    make_inner_a = lambda: InnerA(1, 1.0, "one", b"one")
     make_inner_b = lambda: InnerB(*[make_inner_a() for _ in range(4)])
     make_inner_c = lambda: InnerC(*[make_inner_b() for _ in range(4)])
     make_inner_d = lambda: InnerD(*[make_inner_c() for _ in range(4)])
