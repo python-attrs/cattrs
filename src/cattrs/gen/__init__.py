@@ -136,7 +136,7 @@ def make_dict_unstructure_fn(
     try:
         for a in attrs:
             attr_name = a.name
-            override = kwargs.pop(attr_name, neutral)
+            override = kwargs.get(attr_name, neutral)
             if override.omit:
                 continue
             if override.omit is None and not a.init and not _cattrs_include_init_false:

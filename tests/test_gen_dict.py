@@ -201,6 +201,7 @@ def test_renaming(cl_and_vals, data):
         cl, converter, **{to_replace.name: override(rename="class")}
     )
     assert s_fn.overrides == {to_replace.name: override(rename="class")}
+    assert u_fn.overrides == {to_replace.name: override(rename="class")}
 
     converter.register_structure_hook(cl, s_fn)
     converter.register_unstructure_hook(cl, u_fn)
