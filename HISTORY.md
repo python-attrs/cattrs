@@ -48,7 +48,7 @@ can now be used as decorators and have gained new features.
   ([#481](https://github.com/python-attrs/cattrs/pull/481))
 - The {class}`orjson preconf converter <cattrs.preconf.orjson.OrjsonConverter>` now passes through dates and datetimes to orjson while unstructuring, greatly improving speed.
   ([#463](https://github.com/python-attrs/cattrs/pull/463))
-- `cattrs.gen` generators now attach metadata to the generated functions, making them introspectable.
+- {mod}`cattrs.gen` generators now attach metadata to the generated functions, making them introspectable.
   ([#472](https://github.com/python-attrs/cattrs/pull/472))
 - Structure hook factories in {mod}`cattrs.gen` now handle recursive classes better.
   ([#540](https://github.com/python-attrs/cattrs/pull/540))
