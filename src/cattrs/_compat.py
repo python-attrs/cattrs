@@ -504,9 +504,10 @@ else:
             or type.__origin__ is deque
         )
 
-    def is_mutable_set(type):
-        return type is set or (
-            type.__class__ is _GenericAlias and is_subclass(type.__origin__, MutableSet)
+    def is_mutable_set(type) -> bool:
+        return type in (set, TypingAbstractSet) or (
+            type.__class__ is _GenericAlias
+            and is_subclass(type.__origin__, (MutableSet, TypingAbstractSet))
         )
 
     def is_frozenset(type):
