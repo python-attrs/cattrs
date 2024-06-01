@@ -343,3 +343,26 @@ def test_no_parent_classes(genconverter: Converter):
     include_subclasses(A, genconverter, union_strategy=configure_tagged_union)
 
     assert genconverter.structure({"a": 1}, A) == A(1)
+
+
+def test_cyclic_classes(genconverter: Converter):
+    """A cyclic reference case from issue #542."""
+
+    @define
+    class Base:
+        pass
+
+    @define
+    class Subclass1(Base):
+        b: str
+        a: Base
+
+    @define
+    class Subclass2(Base):
+        b: str
+
+    include_subclasses(Base, genconverter, union_strategy=configure_tagged_union)
+
+    assert genconverter.structure(
+        {"b": "a", "_type": "Subclass1", "a": {"b": "c", "_type": "Subclass2"}}, Base
+    ) == Subclass1("a", Subclass2("c"))
