@@ -27,6 +27,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 can now be used as decorators and have gained new features.
   See [here](https://catt.rs/en/latest/customizing.html#use-as-decorators) and [here](https://catt.rs/en/latest/customizing.html#id1) for more details.
   ([#487](https://github.com/python-attrs/cattrs/pull/487))
+- Introduce and [document](https://catt.rs/en/latest/customizing.html#customizing-collections) the {mod}`cattrs.cols` module for better collection customizations.
+  ([#504](https://github.com/python-attrs/cattrs/issues/504) [#540](https://github.com/python-attrs/cattrs/pull/540))
 - Introduce the [_msgspec_](https://jcristharif.com/msgspec/) {mod}`preconf converter <cattrs.preconf.msgspec>`.
   Only JSON is supported for now, with other formats supported by _msgspec_ to come later.
   ([#481](https://github.com/python-attrs/cattrs/pull/481))
@@ -46,8 +48,10 @@ can now be used as decorators and have gained new features.
   ([#481](https://github.com/python-attrs/cattrs/pull/481))
 - The {class}`orjson preconf converter <cattrs.preconf.orjson.OrjsonConverter>` now passes through dates and datetimes to orjson while unstructuring, greatly improving speed.
   ([#463](https://github.com/python-attrs/cattrs/pull/463))
-- `cattrs.gen` generators now attach metadata to the generated functions, making them introspectable.
+- {mod}`cattrs.gen` generators now attach metadata to the generated functions, making them introspectable.
   ([#472](https://github.com/python-attrs/cattrs/pull/472))
+- Structure hook factories in {mod}`cattrs.gen` now handle recursive classes better.
+  ([#540](https://github.com/python-attrs/cattrs/pull/540))
 - The [tagged union strategy](https://catt.rs/en/stable/strategies.html#tagged-unions-strategy) now leaves the tags in the payload unless `forbid_extra_keys` is set.
   ([#533](https://github.com/python-attrs/cattrs/issues/533) [#534](https://github.com/python-attrs/cattrs/pull/534))
 - More robust support for `Annotated` and `NotRequired` in TypedDicts.

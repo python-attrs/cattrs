@@ -13,7 +13,7 @@ from attrs import resolve_types
 from msgspec import Struct, convert, to_builtins
 from msgspec.json import Encoder, decode
 
-from cattrs._compat import (
+from .._compat import (
     fields,
     get_args,
     get_origin,
@@ -22,13 +22,12 @@ from cattrs._compat import (
     is_mapping,
     is_sequence,
 )
-from cattrs.dispatch import UnstructureHook
-from cattrs.fns import identity
-
+from ..cols import is_namedtuple
 from ..converters import BaseConverter, Converter
+from ..dispatch import UnstructureHook
+from ..fns import identity
 from ..gen import make_hetero_tuple_unstructure_fn
 from ..strategies import configure_union_passthrough
-from ..tuples import is_namedtuple
 from . import wrap
 
 T = TypeVar("T")

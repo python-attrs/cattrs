@@ -332,6 +332,11 @@ if sys.version_info >= (3, 9):
         return NOTHING
 
     def is_sequence(type: Any) -> bool:
+        """A predicate function for sequences.
+
+        Matches lists, sequences, mutable sequences, deques and homogenous
+        tuples.
+        """
         origin = getattr(type, "__origin__", None)
         return (
             type
@@ -366,7 +371,11 @@ if sys.version_info >= (3, 9):
             or (getattr(type, "__origin__", None) is deque)
         )
 
-    def is_mutable_set(type):
+    def is_mutable_set(type: Any) -> bool:
+        """A predicate function for (mutable) sets.
+
+        Matches built-in sets and sets from the typing module.
+        """
         return (
             type in (TypingSet, TypingMutableSet, set)
             or (
@@ -376,7 +385,11 @@ if sys.version_info >= (3, 9):
             or (getattr(type, "__origin__", None) in (set, AbcMutableSet, AbcSet))
         )
 
-    def is_frozenset(type):
+    def is_frozenset(type: Any) -> bool:
+        """A predicate function for frozensets.
+
+        Matches built-in frozensets and frozensets from the typing module.
+        """
         return (
             type in (FrozenSet, frozenset)
             or (
@@ -491,9 +504,10 @@ else:
             or type.__origin__ is deque
         )
 
-    def is_mutable_set(type):
-        return type is set or (
-            type.__class__ is _GenericAlias and is_subclass(type.__origin__, MutableSet)
+    def is_mutable_set(type) -> bool:
+        return type in (set, TypingAbstractSet) or (
+            type.__class__ is _GenericAlias
+            and is_subclass(type.__origin__, (MutableSet, TypingAbstractSet))
         )
 
     def is_frozenset(type):

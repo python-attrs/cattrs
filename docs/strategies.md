@@ -376,6 +376,7 @@ This strategy has been preapplied to the following preconfigured converters:
 - {py:class}`Cbor2Converter <cattrs.preconf.cbor2.Cbor2Converter>`
 - {py:class}`JsonConverter <cattrs.preconf.json.JsonConverter>`
 - {py:class}`MsgpackConverter <cattrs.preconf.msgpack.MsgpackConverter>`
+- {py:class}`MsgspecJsonConverter <cattrs.preconf.msgspec.MsgspecJsonConverter>`
 - {py:class}`OrjsonConverter <cattrs.preconf.orjson.OrjsonConverter>`
 - {py:class}`PyyamlConverter <cattrs.preconf.pyyaml.PyyamlConverter>`
 - {py:class}`TomlkitConverter <cattrs.preconf.tomlkit.TomlkitConverter>`

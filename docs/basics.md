@@ -14,7 +14,7 @@ To create a private converter, instantiate a {class}`cattrs.Converter`. Converte
 
 The two main methods, {meth}`structure <cattrs.BaseConverter.structure>` and {meth}`unstructure <cattrs.BaseConverter.unstructure>`, are used to convert between _structured_ and _unstructured_ data.
 
-```python
+```{doctest} basics
 >>> from cattrs import structure, unstructure
 >>> from attrs import define
 
@@ -23,7 +23,7 @@ The two main methods, {meth}`structure <cattrs.BaseConverter.structure>` and {me
 ...    a: int
 
 >>> unstructure(Model(1))
-{"a": 1}
+{'a': 1}
 >>> structure({"a": 1}, Model)
 Model(a=1)
 ```
@@ -31,32 +31,31 @@ Model(a=1)
 _cattrs_ comes with a rich library of un/structuring hooks by default but it excels at composing custom hooks with built-in ones.
 
 The simplest approach to customization is writing a new hook from scratch.
-For example, we can write our own hook for the `int` class.
+For example, we can write our own hook for the `int` class and register it to a converter.
 
-```python
->>> def int_hook(value, type):
+```{doctest} basics
+>>> from cattrs import Converter
+
+>>> converter = Converter()
+
+>>> @converter.register_structure_hook
+... def int_hook(value, type) -> int:
 ...     if not isinstance(value, int):
 ...         raise ValueError('not an int!')
 ...     return value
 ```
 
-We can then register this hook to a converter and any other hook converting an `int` will use it.
+Now, any other hook converting an `int` will use it.
 
-```python
->>> from cattrs import Converter
-
->>> converter = Converter()
->>> converter.register_structure_hook(int, int_hook)
-```
-
-Another approach to customization is wrapping an existing hook with your own function.
+Another approach to customization is wrapping (composing) an existing hook with your own function.
 A base hook can be obtained from a converter and then be subjected to the very rich machinery of function composition that Python offers.
 
 
-```python
+```{doctest} basics
 >>> base_hook = converter.get_structure_hook(Model)
 
->>> def my_model_hook(value, type):
+>>> @converter.register_structure_hook
+... def my_model_hook(value, type) -> Model:
 ...     # Apply any preprocessing to the value.
 ...     result = base_hook(value, type)
 ...     # Apply any postprocessing to the model.
@@ -64,13 +63,6 @@ A base hook can be obtained from a converter and then be subjected to the very r
 ```
 
 (`cattrs.structure({}, Model)` is equivalent to `cattrs.get_structure_hook(Model)({}, Model)`.)
-
-This new hook can be used directly or registered to a converter (the original instance, or a different one):
-
-```python
->>> converter.register_structure_hook(Model, my_model_hook)
-```
-
 
 Now if we use this hook to structure a `Model`, through ✨the magic of function composition✨ that hook will use our old `int_hook`.
 
