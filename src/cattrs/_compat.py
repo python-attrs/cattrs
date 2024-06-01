@@ -371,7 +371,11 @@ if sys.version_info >= (3, 9):
             or (getattr(type, "__origin__", None) is deque)
         )
 
-    def is_mutable_set(type):
+    def is_mutable_set(type: Any) -> bool:
+        """A predicate function for (mutable) sets.
+
+        Matches built-in sets and sets from the typing module.
+        """
         return (
             type in (TypingSet, TypingMutableSet, set)
             or (
@@ -381,7 +385,11 @@ if sys.version_info >= (3, 9):
             or (getattr(type, "__origin__", None) in (set, AbcMutableSet, AbcSet))
         )
 
-    def is_frozenset(type):
+    def is_frozenset(type: Any) -> bool:
+        """A predicate function for frozensets.
+
+        Matches built-in frozensets and frozensets from the typing module.
+        """
         return (
             type in (FrozenSet, frozenset)
             or (

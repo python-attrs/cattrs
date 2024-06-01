@@ -5,7 +5,8 @@ from __future__ import annotations
 from sys import version_info
 from typing import TYPE_CHECKING, Any, Iterable, NamedTuple, Tuple, TypeVar
 
-from ._compat import ANIES, is_bare, is_sequence, is_subclass
+from ._compat import ANIES, is_bare, is_frozenset, is_sequence, is_subclass
+from ._compat import is_mutable_set as is_set
 from .dispatch import StructureHook, UnstructureHook
 from .errors import IterableValidationError, IterableValidationNote
 from .fns import identity
@@ -15,12 +16,22 @@ if TYPE_CHECKING:
     from .converters import BaseConverter
 
 __all__ = [
+    "is_any_set",
+    "is_frozenset",
     "is_namedtuple",
+    "is_set",
     "is_sequence",
+    "iterable_unstructure_factory",
     "list_structure_factory",
     "namedtuple_structure_factory",
     "namedtuple_unstructure_factory",
 ]
+
+
+def is_any_set(type) -> bool:
+    """A predicate function for both mutable and frozensets."""
+    return is_set(type) or is_frozenset(type)
+
 
 if version_info[:2] >= (3, 9):
 
@@ -120,6 +131,33 @@ def list_structure_factory(type: type, converter: BaseConverter) -> StructureHoo
             return [_handler(e, _elem_type) for e in obj]
 
     return structure_list
+
+
+def iterable_unstructure_factory(
+    cl: Any, converter: BaseConverter, unstructure_to: Any = None
+) -> UnstructureHook:
+    """A hook factory for unstructuring iterables.
+
+    :param unstructure_to: Force unstructuring to this type, if provided.
+    """
+    handler = converter.unstructure
+
+    # Let's try fishing out the type args
+    # Unspecified tuples have `__args__` as empty tuples, so guard
+    # against IndexError.
+    if getattr(cl, "__args__", None) not in (None, ()):
+        type_arg = cl.__args__[0]
+        if isinstance(type_arg, TypeVar):
+            type_arg = getattr(type_arg, "__default__", Any)
+        handler = converter.get_unstructure_hook(type_arg, cache_result=False)
+        if handler == identity:
+            # Save ourselves the trouble of iterating over it all.
+            return unstructure_to or cl
+
+    def unstructure_iterable(iterable, _seq_cl=unstructure_to or cl, _hook=handler):
+        return _seq_cl(_hook(i) for i in iterable)
+
+    return unstructure_iterable
 
 
 def namedtuple_unstructure_factory(

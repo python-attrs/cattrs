@@ -162,11 +162,15 @@ These hook factories can be wrapped to apply complex customizations.
 
 Available predicates are:
 
+* {meth}`is_any_set <cattrs.cols.is_any_set>`
+* {meth}`is_frozenset <cattrs.cols.is_frozenset>`
+* {meth}`is_set <cattrs.cols.is_set>`
 * {meth}`is_sequence <cattrs.cols.is_sequence>`
 * {meth}`is_namedtuple <cattrs.cols.is_namedtuple>`
 
 Available hook factories are:
 
+* {meth}`iterable_unstructure_factory <cattrs.cols.iterable_unstructure_factory>`
 * {meth}`list_structure_factory <cattrs.cols.list_structure_factory>`
 * {meth}`namedtuple_structure_factory <cattrs.cols.namedtuple_structure_factory>`
 * {meth}`namedtuple_unstructure_factory <cattrs.cols.namedtuple_unstructure_factory>`

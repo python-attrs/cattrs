@@ -66,7 +66,7 @@ A base hook can be obtained from a converter and then be subjected to the very r
 
 Now if we use this hook to structure a `Model`, through ✨the magic of function composition✨ that hook will use our old `int_hook`.
 
-```{python}
+```python
 >>> converter.structure({"a": "1"}, Model)
   + Exception Group Traceback (most recent call last):
     |   File "...", line 22, in <module>
