@@ -1,0 +1,88 @@
+- case: empty_customize
+  main: |
+    from attrs import define, fields as f
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: int
+
+    c = Converter()
+
+    v.customize(c, A)
+
+- case: empty_customize_dc
+  main: |
+    from dataclasses import dataclass
+    from cattrs import v, Converter
+
+    @dataclass
+    class A:
+      a: int
+
+    c = Converter()
+
+    v.customize(c, A)
+
+- case: empty_customize_unsupported
+  main: |
+    from cattrs import v, Converter
+
+    class A:
+      a: int
+
+    c = Converter()
+
+    v.customize(c, A)  # E: Argument 2 to "customize" has incompatible type "type[A]"; expected "type[AttrsInstance] | type[DataclassLike]"  [arg-type]
+
+- case: customize_int
+  main: |
+    from attrs import define, fields as f
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: int
+
+    c = Converter()
+
+    v.customize(c, A, v.V(f(A).a).ensure(v.between(5, 10)))
+
+- case: customize_int_dc
+  main: |
+    from dataclasses import dataclass
+    from cattrs import v, Converter
+
+    @dataclass
+    class A:
+      a: int
+
+    c = Converter()
+
+    v.customize(c, A, v.V("a").ensure(v.between(5, 10)))
+
+- case: customize_int_no_empty_ensure
+  main: |
+    from attrs import define, fields as f
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: int
+
+    c = Converter()
+
+    v.customize(c, A, v.V(f(A).a).ensure())  # E: Missing positional argument "validator" in call to "ensure" of "V"  [call-arg]
+
+- case: customize_int_no_wrong_validator
+  main: |
+    from attrs import define, fields as f
+    from cattrs import v, Converter
+
+    @define
+    class A:
+      a: int
+
+    c = Converter()
+
+    v.customize(c, A, v.V(f(A).a).ensure(v.len_between(0, 10)))  # E: Argument 1 to "ensure" of "V" has incompatible type "Callable[[Sized], None]"; expected "Callable[[int], Any] | Callable[[bool], Callable[[int], Any]]"  [arg-type]
