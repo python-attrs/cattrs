@@ -227,7 +227,7 @@ def namedtuple_dict_structure_factory(
     /,
     **kwargs: AttributeOverride,
 ) -> StructureHook:
-    """A hook factory for structuring namedtuples from dictionaries.
+    """A hook factory for hooks structuring namedtuples from dictionaries.
 
     :param forbid_extra_keys: Whether the hook should raise a `ForbiddenExtraKeysError`
         if unknown keys are encountered.
@@ -269,7 +269,7 @@ def namedtuple_dict_unstructure_factory(
     /,
     **kwargs: AttributeOverride,
 ) -> UnstructureHook:
-    """A hook factory for unstructuring namedtuples to dictionaries.
+    """A hook factory for hooks unstructuring namedtuples to dictionaries.
 
     :param omit_if_default: When true, attributes equal to their default values
         will be omitted in the result dictionary.
