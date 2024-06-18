@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from sys import version_info
-from typing import TYPE_CHECKING, Any, Iterable, NamedTuple, Tuple, TypeVar
+from typing import TYPE_CHECKING, Any, Iterable, Literal, NamedTuple, Tuple, TypeVar
 
 from attrs import NOTHING, Attribute
 
@@ -219,9 +219,19 @@ def _namedtuple_to_attrs(cl: type[tuple]) -> list[Attribute]:
 
 
 def namedtuple_dict_structure_factory(
-    cl: type[tuple], converter: BaseConverter, **kwargs: AttributeOverride
+    cl: type[tuple],
+    converter: BaseConverter,
+    detailed_validation: bool | Literal["from_converter"] = "from_converter",
+    forbid_extra_keys: bool = False,
+    use_linecache: bool = True,
+    /,
+    **kwargs: AttributeOverride,
 ) -> StructureHook:
     """A hook factory for structuring namedtuples from dictionaries.
+
+    :param forbid_extra_keys: Whether the hook should raise a `ForbiddenExtraKeysError`
+        if unknown keys are encountered.
+    :param use_linecache: Whether to store the source code in the Python linecache.
 
     .. versionadded:: 24.1.0
     """
@@ -237,7 +247,13 @@ def namedtuple_dict_structure_factory(
 
     try:
         return make_dict_structure_fn_from_attrs(
-            _namedtuple_to_attrs(cl), cl, converter, **kwargs
+            _namedtuple_to_attrs(cl),
+            cl,
+            converter,
+            _cattrs_forbid_extra_keys=forbid_extra_keys,
+            _cattrs_use_detailed_validation=detailed_validation,
+            _cattrs_use_linecache=use_linecache,
+            **kwargs,
         )
     finally:
         working_set.remove(cl)
@@ -246,9 +262,18 @@ def namedtuple_dict_structure_factory(
 
 
 def namedtuple_dict_unstructure_factory(
-    cl: type[tuple], converter: BaseConverter, **kwargs: AttributeOverride
+    cl: type[tuple],
+    converter: BaseConverter,
+    omit_if_default: bool = False,
+    use_linecache: bool = True,
+    /,
+    **kwargs: AttributeOverride,
 ) -> UnstructureHook:
     """A hook factory for unstructuring namedtuples to dictionaries.
+
+    :param omit_if_default: When true, attributes equal to their default values
+        will be omitted in the result dictionary.
+    :param use_linecache: Whether to store the source code in the Python linecache.
 
     .. versionadded:: 24.1.0
     """
@@ -264,7 +289,12 @@ def namedtuple_dict_unstructure_factory(
 
     try:
         return make_dict_unstructure_fn_from_attrs(
-            _namedtuple_to_attrs(cl), cl, converter, **kwargs
+            _namedtuple_to_attrs(cl),
+            cl,
+            converter,
+            _cattrs_omit_if_default=omit_if_default,
+            _cattrs_use_linecache=use_linecache,
+            **kwargs,
         )
     finally:
         working_set.remove(cl)

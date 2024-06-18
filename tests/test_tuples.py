@@ -2,12 +2,15 @@
 
 from typing import NamedTuple, Tuple
 
+from pytest import raises
+
 from cattrs.cols import (
     is_namedtuple,
     namedtuple_dict_structure_factory,
     namedtuple_dict_unstructure_factory,
 )
 from cattrs.converters import Converter
+from cattrs.errors import ForbiddenExtraKeysError
 
 
 def test_simple_hetero_tuples(genconverter: Converter):
@@ -81,3 +84,26 @@ def test_simple_dict_nametuples(genconverter: Converter):
 
     # Defaults work.
     assert genconverter.structure({"a": 1}, Test) == Test(1, "test")
+
+
+def test_dict_nametuples_forbid_extra_keys(genconverter: Converter):
+    """Forbidding extra keys works for structuring namedtuples from dicts."""
+
+    class Test(NamedTuple):
+        a: int
+
+    genconverter.register_structure_hook_factory(
+        lambda t: t is Test,
+        lambda t, c: namedtuple_dict_structure_factory(t, c, "from_converter", True),
+    )
+
+    with raises(Exception) as exc_info:
+        genconverter.structure({"a": 1, "b": "2"}, Test)
+
+    if genconverter.detailed_validation:
+        exc = exc_info.value.exceptions[0]
+    else:
+        exc = exc_info.value
+
+    assert isinstance(exc, ForbiddenExtraKeysError)
+    assert exc.extra_fields == {"b"}
