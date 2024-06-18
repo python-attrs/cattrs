@@ -1,7 +1,7 @@
 import typing
 from copy import deepcopy
 from functools import partial
-from typing import Tuple
+from typing import List, Tuple
 
 import pytest
 from attrs import define
@@ -366,3 +366,28 @@ def test_cyclic_classes(genconverter: Converter):
     assert genconverter.structure(
         {"b": "a", "_type": "Subclass1", "a": {"b": "c", "_type": "Subclass2"}}, Base
     ) == Subclass1("a", Subclass2("c"))
+
+
+def test_cycles_classes_2(genconverter: Converter):
+    """A cyclic reference case from #430."""
+
+    @define
+    class A:
+        x: int
+
+    @define
+    class Derived(A):
+        d: A
+
+    include_subclasses(A, genconverter, union_strategy=configure_tagged_union)
+
+    assert genconverter.structure(
+        [
+            {
+                "x": 9,
+                "d": {"x": 99, "d": {"x": 999, "_type": "A"}, "_type": "Derived"},
+                "_type": "Derived",
+            }
+        ],
+        List[A],
+    ) == [Derived(9, Derived(99, A(999)))]
