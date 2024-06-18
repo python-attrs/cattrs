@@ -236,7 +236,6 @@ def namedtuple_dict_structure_factory(
     working_set.add(cl)
 
     try:
-        print(_namedtuple_to_attrs(cl))
         return make_dict_structure_fn_from_attrs(
             _namedtuple_to_attrs(cl), cl, converter, **kwargs
         )
