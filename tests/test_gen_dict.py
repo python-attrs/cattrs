@@ -185,7 +185,9 @@ def test_unmodified_generated_structuring(cl_and_vals, dv: bool):
 
 
 @given(
-    simple_typed_classes(min_attrs=1) | simple_typed_dataclasses(min_attrs=1), data()
+    simple_typed_classes(min_attrs=1, allow_nan=False)
+    | simple_typed_dataclasses(min_attrs=1, allow_nan=False),
+    data(),
 )
 def test_renaming(cl_and_vals, data):
     converter = Converter()

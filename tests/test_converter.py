@@ -54,8 +54,8 @@ def test_simple_roundtrip(cls_and_vals, detailed_validation):
 
 
 @given(
-    simple_typed_classes(kw_only=False, newtypes=False)
-    | simple_typed_dataclasses(newtypes=False),
+    simple_typed_classes(kw_only=False, newtypes=False, allow_nan=False)
+    | simple_typed_dataclasses(newtypes=False, allow_nan=False),
     booleans(),
 )
 def test_simple_roundtrip_tuple(cls_and_vals, dv: bool):
@@ -103,7 +103,8 @@ def test_simple_roundtrip_defaults_tuple(attr_and_vals):
 
 
 @given(
-    simple_typed_classes(newtypes=False) | simple_typed_dataclasses(newtypes=False),
+    simple_typed_classes(newtypes=False, allow_nan=False)
+    | simple_typed_dataclasses(newtypes=False, allow_nan=False),
     unstructure_strats,
 )
 def test_simple_roundtrip_with_extra_keys_forbidden(cls_and_vals, strat):

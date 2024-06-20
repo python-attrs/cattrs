@@ -82,7 +82,9 @@ def simple_typed_classes(
     ).flatmap(partial(_create_hyp_class, frozen=frozen))
 
 
-def simple_typed_dataclasses(defaults=None, min_attrs=0, frozen=False, newtypes=True):
+def simple_typed_dataclasses(
+    defaults=None, min_attrs=0, frozen=False, newtypes=True, allow_nan=None
+):
     """Yield tuples of (class, values)."""
     return lists_of_typed_attrs(
         defaults,
@@ -90,6 +92,7 @@ def simple_typed_dataclasses(defaults=None, min_attrs=0, frozen=False, newtypes=
         for_frozen=frozen,
         allow_mutable_defaults=False,
         newtypes=newtypes,
+        allow_nan=allow_nan,
     ).flatmap(partial(_create_dataclass, frozen=frozen))
 
 
