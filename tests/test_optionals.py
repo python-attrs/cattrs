@@ -63,6 +63,7 @@ def test_override_optional(converter: BaseConverter):
         return int(val)
 
     assert converter.structure("", Optional[int]) is None
+    assert converter.structure("1", Optional[int]) == 1
 
     @converter.register_unstructure_hook
     def _(val: Optional[int]) -> Any:
@@ -71,3 +72,4 @@ def test_override_optional(converter: BaseConverter):
         return val
 
     assert converter.unstructure(0, Optional[int]) is None
+    assert converter.unstructure(5, Optional[int]) == 5
