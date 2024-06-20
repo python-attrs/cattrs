@@ -3,7 +3,16 @@
 from __future__ import annotations
 
 from sys import version_info
-from typing import TYPE_CHECKING, Any, Iterable, Literal, NamedTuple, Tuple, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Iterable,
+    Literal,
+    NamedTuple,
+    Tuple,
+    TypeVar,
+    get_type_hints,
+)
 
 from attrs import NOTHING, Attribute
 
@@ -188,7 +197,7 @@ def _namedtuple_to_attrs(cl: type[tuple]) -> list[Attribute]:
             type=a,
             alias=name,
         )
-        for name, a in cl.__annotations__.items()
+        for name, a in get_type_hints(cl).items()
     ]
 
 
@@ -262,7 +271,6 @@ def namedtuple_dict_unstructure_factory(
     working_set.add(cl)
 
     try:
-        print(_namedtuple_to_attrs(cl))
         return make_dict_unstructure_fn_from_attrs(
             _namedtuple_to_attrs(cl),
             cl,

@@ -1,4 +1,4 @@
-"""`gen` tests under PEP 563."""
+"""`gen` tests under PEP 563 (stringified annotations)."""
 
 from __future__ import annotations
 
