@@ -185,6 +185,8 @@ Available hook factories are:
 * {meth}`list_structure_factory <cattrs.cols.list_structure_factory>`
 * {meth}`namedtuple_structure_factory <cattrs.cols.namedtuple_structure_factory>`
 * {meth}`namedtuple_unstructure_factory <cattrs.cols.namedtuple_unstructure_factory>`
+* {meth}`namedtuple_dict_structure_factory <cattrs.cols.namedtuple_dict_structure_factory>`
+* {meth}`namedtuple_dict_unstructure_factory <cattrs.cols.namedtuple_dict_unstructure_factory>`
 
 Additional predicates and hook factories will be added as requested.
 
@@ -223,6 +225,40 @@ ValueError: Not a list!
 
 ```{versionadded} 24.1.0
 
+```
+
+### Customizing Named Tuples
+
+Named tuples can be un/structured using dictionaries using the {meth}`namedtuple_dict_structure_factory <cattrs.cols.namedtuple_dict_structure_factory>`
+and {meth}`namedtuple_dict_unstructure_factory <cattrs.cols.namedtuple_dict_unstructure_factory>`
+hook factories.
+
+To unstructure _all_ named tuples into dictionaries:
+
+```{doctest} namedtuples
+>>> from typing import NamedTuple
+
+>>> from cattrs.cols import is_namedtuple, namedtuple_dict_unstructure_factory
+>>> c = Converter()
+
+>>> c.register_unstructure_hook_factory(is_namedtuple, namedtuple_dict_unstructure_factory)
+<function namedtuple_dict_unstructure_factory at ...>
+
+>>> class MyNamedTuple(NamedTuple):
+...     a: int
+
+>>> c.unstructure(MyNamedTuple(1))
+{'a': 1}
+```
+
+To only un/structure _some_ named tuples into dictionaries,
+change the predicate function when registering the hook factory:
+
+```{doctest} namedtuples
+>>> c.register_unstructure_hook_factory(
+...     lambda t: t is MyNamedTuple,
+...     namedtuple_dict_unstructure_factory,
+... )
 ```
 
 ## Using `cattrs.gen` Generators

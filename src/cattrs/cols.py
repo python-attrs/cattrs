@@ -3,14 +3,32 @@
 from __future__ import annotations
 
 from sys import version_info
-from typing import TYPE_CHECKING, Any, Iterable, NamedTuple, Tuple, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Iterable,
+    Literal,
+    NamedTuple,
+    Tuple,
+    TypeVar,
+    get_type_hints,
+)
+
+from attrs import NOTHING, Attribute
 
 from ._compat import ANIES, is_bare, is_frozenset, is_sequence, is_subclass
 from ._compat import is_mutable_set as is_set
 from .dispatch import StructureHook, UnstructureHook
 from .errors import IterableValidationError, IterableValidationNote
 from .fns import identity
-from .gen import make_hetero_tuple_unstructure_fn
+from .gen import (
+    AttributeOverride,
+    already_generating,
+    make_dict_structure_fn_from_attrs,
+    make_dict_unstructure_fn_from_attrs,
+    make_hetero_tuple_unstructure_fn,
+)
+from .gen import make_iterable_unstructure_fn as iterable_unstructure_factory
 
 if TYPE_CHECKING:
     from .converters import BaseConverter
@@ -25,6 +43,8 @@ __all__ = [
     "list_structure_factory",
     "namedtuple_structure_factory",
     "namedtuple_unstructure_factory",
+    "namedtuple_dict_structure_factory",
+    "namedtuple_dict_unstructure_factory",
 ]
 
 
@@ -133,57 +153,134 @@ def list_structure_factory(type: type, converter: BaseConverter) -> StructureHoo
     return structure_list
 
 
-def iterable_unstructure_factory(
-    cl: Any, converter: BaseConverter, unstructure_to: Any = None
-) -> UnstructureHook:
-    """A hook factory for unstructuring iterables.
-
-    :param unstructure_to: Force unstructuring to this type, if provided.
-    """
-    handler = converter.unstructure
-
-    # Let's try fishing out the type args
-    # Unspecified tuples have `__args__` as empty tuples, so guard
-    # against IndexError.
-    if getattr(cl, "__args__", None) not in (None, ()):
-        type_arg = cl.__args__[0]
-        if isinstance(type_arg, TypeVar):
-            type_arg = getattr(type_arg, "__default__", Any)
-        handler = converter.get_unstructure_hook(type_arg, cache_result=False)
-        if handler == identity:
-            # Save ourselves the trouble of iterating over it all.
-            return unstructure_to or cl
-
-    def unstructure_iterable(iterable, _seq_cl=unstructure_to or cl, _hook=handler):
-        return _seq_cl(_hook(i) for i in iterable)
-
-    return unstructure_iterable
-
-
 def namedtuple_unstructure_factory(
-    type: type[tuple], converter: BaseConverter, unstructure_to: Any = None
+    cl: type[tuple], converter: BaseConverter, unstructure_to: Any = None
 ) -> UnstructureHook:
     """A hook factory for unstructuring namedtuples.
 
     :param unstructure_to: Force unstructuring to this type, if provided.
     """
 
-    if unstructure_to is None and _is_passthrough(type, converter):
+    if unstructure_to is None and _is_passthrough(cl, converter):
         return identity
 
     return make_hetero_tuple_unstructure_fn(
-        type,
+        cl,
         converter,
         unstructure_to=tuple if unstructure_to is None else unstructure_to,
-        type_args=tuple(type.__annotations__.values()),
+        type_args=tuple(cl.__annotations__.values()),
     )
 
 
 def namedtuple_structure_factory(
-    type: type[tuple], converter: BaseConverter
+    cl: type[tuple], converter: BaseConverter
 ) -> StructureHook:
-    """A hook factory for structuring namedtuples."""
+    """A hook factory for structuring namedtuples from iterables."""
     # We delegate to the existing infrastructure for heterogenous tuples.
-    hetero_tuple_type = Tuple[tuple(type.__annotations__.values())]
+    hetero_tuple_type = Tuple[tuple(cl.__annotations__.values())]
     base_hook = converter.get_structure_hook(hetero_tuple_type)
-    return lambda v, _: type(*base_hook(v, hetero_tuple_type))
+    return lambda v, _: cl(*base_hook(v, hetero_tuple_type))
+
+
+def _namedtuple_to_attrs(cl: type[tuple]) -> list[Attribute]:
+    """Generate pseudo attributes for a namedtuple."""
+    return [
+        Attribute(
+            name,
+            cl._field_defaults.get(name, NOTHING),
+            None,
+            False,
+            False,
+            False,
+            True,
+            False,
+            type=a,
+            alias=name,
+        )
+        for name, a in get_type_hints(cl).items()
+    ]
+
+
+def namedtuple_dict_structure_factory(
+    cl: type[tuple],
+    converter: BaseConverter,
+    detailed_validation: bool | Literal["from_converter"] = "from_converter",
+    forbid_extra_keys: bool = False,
+    use_linecache: bool = True,
+    /,
+    **kwargs: AttributeOverride,
+) -> StructureHook:
+    """A hook factory for hooks structuring namedtuples from dictionaries.
+
+    :param forbid_extra_keys: Whether the hook should raise a `ForbiddenExtraKeysError`
+        if unknown keys are encountered.
+    :param use_linecache: Whether to store the source code in the Python linecache.
+
+    .. versionadded:: 24.1.0
+    """
+    try:
+        working_set = already_generating.working_set
+    except AttributeError:
+        working_set = set()
+        already_generating.working_set = working_set
+    else:
+        if cl in working_set:
+            raise RecursionError()
+
+    working_set.add(cl)
+
+    try:
+        return make_dict_structure_fn_from_attrs(
+            _namedtuple_to_attrs(cl),
+            cl,
+            converter,
+            _cattrs_forbid_extra_keys=forbid_extra_keys,
+            _cattrs_use_detailed_validation=detailed_validation,
+            _cattrs_use_linecache=use_linecache,
+            **kwargs,
+        )
+    finally:
+        working_set.remove(cl)
+        if not working_set:
+            del already_generating.working_set
+
+
+def namedtuple_dict_unstructure_factory(
+    cl: type[tuple],
+    converter: BaseConverter,
+    omit_if_default: bool = False,
+    use_linecache: bool = True,
+    /,
+    **kwargs: AttributeOverride,
+) -> UnstructureHook:
+    """A hook factory for hooks unstructuring namedtuples to dictionaries.
+
+    :param omit_if_default: When true, attributes equal to their default values
+        will be omitted in the result dictionary.
+    :param use_linecache: Whether to store the source code in the Python linecache.
+
+    .. versionadded:: 24.1.0
+    """
+    try:
+        working_set = already_generating.working_set
+    except AttributeError:
+        working_set = set()
+        already_generating.working_set = working_set
+    if cl in working_set:
+        raise RecursionError()
+
+    working_set.add(cl)
+
+    try:
+        return make_dict_unstructure_fn_from_attrs(
+            _namedtuple_to_attrs(cl),
+            cl,
+            converter,
+            _cattrs_omit_if_default=omit_if_default,
+            _cattrs_use_linecache=use_linecache,
+            **kwargs,
+        )
+    finally:
+        working_set.remove(cl)
+        if not working_set:
+            del already_generating.working_set

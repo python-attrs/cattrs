@@ -1,9 +1,17 @@
 """Tests for tuples of all kinds."""
 
-from typing import NamedTuple, Tuple
+from typing import List, NamedTuple, Tuple
 
-from cattrs.cols import is_namedtuple
+from attrs import Factory, define
+from pytest import raises
+
+from cattrs.cols import (
+    is_namedtuple,
+    namedtuple_dict_structure_factory,
+    namedtuple_dict_unstructure_factory,
+)
 from cattrs.converters import Converter
+from cattrs.errors import ForbiddenExtraKeysError
 
 
 def test_simple_hetero_tuples(genconverter: Converter):
@@ -56,3 +64,74 @@ def test_simple_typed_namedtuples(genconverter: Converter):
 
     assert genconverter.unstructure(Test(1)) == (2,)
     assert genconverter.structure([2], Test) == Test(1)
+
+
+def test_simple_dict_nametuples(genconverter: Converter):
+    """Namedtuples can be un/structured to/from dicts."""
+
+    class Test(NamedTuple):
+        a: int
+        b: str = "test"
+
+    genconverter.register_unstructure_hook_factory(
+        lambda t: t is Test, namedtuple_dict_unstructure_factory
+    )
+    genconverter.register_structure_hook_factory(
+        lambda t: t is Test, namedtuple_dict_structure_factory
+    )
+
+    assert genconverter.unstructure(Test(1)) == {"a": 1, "b": "test"}
+    assert genconverter.structure({"a": 1, "b": "2"}, Test) == Test(1, "2")
+
+    # Defaults work.
+    assert genconverter.structure({"a": 1}, Test) == Test(1, "test")
+
+
+@define
+class RecursiveAttrs:
+    b: "List[RecursiveNamedtuple]" = Factory(list)
+
+
+class RecursiveNamedtuple(NamedTuple):
+    a: RecursiveAttrs
+
+
+def test_recursive_dict_nametuples(genconverter: Converter):
+    """Recursive namedtuples can be un/structured to/from dicts."""
+
+    genconverter.register_unstructure_hook_factory(
+        lambda t: t is RecursiveNamedtuple, namedtuple_dict_unstructure_factory
+    )
+    genconverter.register_structure_hook_factory(
+        lambda t: t is RecursiveNamedtuple, namedtuple_dict_structure_factory
+    )
+
+    assert genconverter.unstructure(RecursiveNamedtuple(RecursiveAttrs())) == {
+        "a": {"b": []}
+    }
+    assert genconverter.structure(
+        {"a": {}}, RecursiveNamedtuple
+    ) == RecursiveNamedtuple(RecursiveAttrs())
+
+
+def test_dict_nametuples_forbid_extra_keys(genconverter: Converter):
+    """Forbidding extra keys works for structuring namedtuples from dicts."""
+
+    class Test(NamedTuple):
+        a: int
+
+    genconverter.register_structure_hook_factory(
+        lambda t: t is Test,
+        lambda t, c: namedtuple_dict_structure_factory(t, c, "from_converter", True),
+    )
+
+    with raises(Exception) as exc_info:
+        genconverter.structure({"a": 1, "b": "2"}, Test)
+
+    if genconverter.detailed_validation:
+        exc = exc_info.value.exceptions[0]
+    else:
+        exc = exc_info.value
+
+    assert isinstance(exc, ForbiddenExtraKeysError)
+    assert exc.extra_fields == {"b"}

@@ -148,6 +148,10 @@ ignore = [
     "DTZ006", # datetimes in tests
 ]
 
+[tool.ruff.lint.pyupgrade]
+# Preserve types, even if a file imports `from __future__ import annotations`.
+keep-runtime-typing = true
+
 [tool.hatch.version]
 source = "vcs"
 raw-options = { local_scheme = "no-local-version" }

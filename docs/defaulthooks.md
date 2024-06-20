@@ -210,6 +210,10 @@ Any type parameters set to `typing.Any` will be passed through unconverted.
 
 When unstructuring, heterogeneous tuples unstructure into tuples since it's faster and virtually all serialization libraries support tuples natively.
 
+```{seealso}
+[Support for typing.NamedTuple.](#typingnamedtuple)
+```
+
 ```{note}
 Structuring heterogenous tuples are not supported by the BaseConverter.
 ```
@@ -511,6 +515,10 @@ When unstructuring, literals are passed through.
 ### `typing.NamedTuple`
 
 Named tuples with type hints (created from [`typing.NamedTuple`](https://docs.python.org/3/library/typing.html#typing.NamedTuple)) are supported.
+Named tuples are un/structured using tuples or lists by default.
+
+The {mod}`cattrs.cols` module contains hook factories for un/structuring named tuples using dictionaries instead,
+[see here for details](customizing.md#customizing-named-tuples).
 
 ```{versionadded} 24.1.0
 
