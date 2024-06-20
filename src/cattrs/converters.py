@@ -53,6 +53,7 @@ from ._compat import (
 )
 from .cols import (
     is_namedtuple,
+    iterable_unstructure_factory,
     list_structure_factory,
     namedtuple_structure_factory,
     namedtuple_unstructure_factory,
@@ -83,7 +84,6 @@ from .gen import (
     make_dict_structure_fn,
     make_dict_unstructure_fn,
     make_hetero_tuple_unstructure_fn,
-    make_iterable_unstructure_fn,
     make_mapping_structure_fn,
     make_mapping_unstructure_fn,
 )
@@ -1248,7 +1248,7 @@ class Converter(BaseConverter):
         unstructure_to = self._unstruct_collection_overrides.get(
             get_origin(cl) or cl, unstructure_to or list
         )
-        h = make_iterable_unstructure_fn(cl, self, unstructure_to=unstructure_to)
+        h = iterable_unstructure_factory(cl, self, unstructure_to=unstructure_to)
         self._unstructure_func.register_cls_list([(cl, h)], direct=True)
         return h
 

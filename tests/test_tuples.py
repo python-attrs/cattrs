@@ -1,7 +1,8 @@
 """Tests for tuples of all kinds."""
 
-from typing import NamedTuple, Tuple
+from typing import NamedTuple, Optional, Tuple
 
+from attrs import define
 from pytest import raises
 
 from cattrs.cols import (
@@ -84,6 +85,33 @@ def test_simple_dict_nametuples(genconverter: Converter):
 
     # Defaults work.
     assert genconverter.structure({"a": 1}, Test) == Test(1, "test")
+
+
+@define
+class RecursiveAttrs:
+    b: "Optional[RecursiveNamedtuple]" = None
+
+
+class RecursiveNamedtuple(NamedTuple):
+    a: RecursiveAttrs
+
+
+def test_recursive_dict_nametuples(genconverter: Converter):
+    """Recursive namedtuples can be un/structured to/from dicts."""
+
+    genconverter.register_unstructure_hook_factory(
+        lambda t: t is RecursiveNamedtuple, namedtuple_dict_unstructure_factory
+    )
+    genconverter.register_structure_hook_factory(
+        lambda t: t is RecursiveNamedtuple, namedtuple_dict_structure_factory
+    )
+
+    assert genconverter.unstructure(RecursiveNamedtuple(RecursiveAttrs())) == {
+        "a": {"b": None}
+    }
+    assert genconverter.structure(
+        {"a": {}}, RecursiveNamedtuple
+    ) == RecursiveNamedtuple(RecursiveAttrs())
 
 
 def test_dict_nametuples_forbid_extra_keys(genconverter: Converter):

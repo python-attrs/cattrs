@@ -19,6 +19,7 @@ from .gen import (
     make_dict_unstructure_fn_from_attrs,
     make_hetero_tuple_unstructure_fn,
 )
+from .gen import make_iterable_unstructure_fn as iterable_unstructure_factory
 
 if TYPE_CHECKING:
     from .converters import BaseConverter
@@ -143,33 +144,6 @@ def list_structure_factory(type: type, converter: BaseConverter) -> StructureHoo
     return structure_list
 
 
-def iterable_unstructure_factory(
-    cl: Any, converter: BaseConverter, unstructure_to: Any = None
-) -> UnstructureHook:
-    """A hook factory for unstructuring iterables.
-
-    :param unstructure_to: Force unstructuring to this type, if provided.
-    """
-    handler = converter.unstructure
-
-    # Let's try fishing out the type args
-    # Unspecified tuples have `__args__` as empty tuples, so guard
-    # against IndexError.
-    if getattr(cl, "__args__", None) not in (None, ()):
-        type_arg = cl.__args__[0]
-        if isinstance(type_arg, TypeVar):
-            type_arg = getattr(type_arg, "__default__", Any)
-        handler = converter.get_unstructure_hook(type_arg, cache_result=False)
-        if handler == identity:
-            # Save ourselves the trouble of iterating over it all.
-            return unstructure_to or cl
-
-    def unstructure_iterable(iterable, _seq_cl=unstructure_to or cl, _hook=handler):
-        return _seq_cl(_hook(i) for i in iterable)
-
-    return unstructure_iterable
-
-
 def namedtuple_unstructure_factory(
     cl: type[tuple], converter: BaseConverter, unstructure_to: Any = None
 ) -> UnstructureHook:
@@ -288,6 +262,7 @@ def namedtuple_dict_unstructure_factory(
     working_set.add(cl)
 
     try:
+        print(_namedtuple_to_attrs(cl))
         return make_dict_unstructure_fn_from_attrs(
             _namedtuple_to_attrs(cl),
             cl,

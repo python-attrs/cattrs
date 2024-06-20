@@ -5,6 +5,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    Final,
     Iterable,
     Literal,
     Mapping,
@@ -26,6 +27,7 @@ from .._compat import (
     is_generic,
 )
 from .._generics import deep_copy_with
+from ..dispatch import UnstructureHook
 from ..errors import (
     AttributeValidationNote,
     ClassValidationError,
@@ -789,30 +791,6 @@ def make_dict_structure_fn(
 IterableUnstructureFn = Callable[[Iterable[Any]], Any]
 
 
-def make_iterable_unstructure_fn(
-    cl: Any, converter: BaseConverter, unstructure_to: Any = None
-) -> IterableUnstructureFn:
-    """Generate a specialized unstructure function for an iterable."""
-    handler = converter.unstructure
-
-    # Let's try fishing out the type args
-    # Unspecified tuples have `__args__` as empty tuples, so guard
-    # against IndexError.
-    if getattr(cl, "__args__", None) not in (None, ()):
-        type_arg = cl.__args__[0]
-        if isinstance(type_arg, TypeVar):
-            type_arg = getattr(type_arg, "__default__", Any)
-        handler = converter.get_unstructure_hook(type_arg, cache_result=False)
-        if handler == identity:
-            # Save ourselves the trouble of iterating over it all.
-            return unstructure_to or cl
-
-    def unstructure_iterable(iterable, _seq_cl=unstructure_to or cl, _hook=handler):
-        return _seq_cl(_hook(i) for i in iterable)
-
-    return unstructure_iterable
-
-
 #: A type alias for heterogeneous tuple unstructure hooks.
 HeteroTupleUnstructureFn: TypeAlias = Callable[[Tuple[Any, ...]], Any]
 
@@ -1038,3 +1016,33 @@ def make_mapping_structure_fn(
     eval(compile(script, "", "exec"), globs)
 
     return globs[fn_name]
+
+
+def iterable_unstructure_factory(
+    cl: Any, converter: BaseConverter, unstructure_to: Any = None
+) -> UnstructureHook:
+    """A hook factory for unstructuring iterables.
+
+    :param unstructure_to: Force unstructuring to this type, if provided.
+    """
+    handler = converter.unstructure
+
+    # Let's try fishing out the type args
+    # Unspecified tuples have `__args__` as empty tuples, so guard
+    # against IndexError.
+    if getattr(cl, "__args__", None) not in (None, ()):
+        type_arg = cl.__args__[0]
+        if isinstance(type_arg, TypeVar):
+            type_arg = getattr(type_arg, "__default__", Any)
+        handler = converter.get_unstructure_hook(type_arg, cache_result=False)
+        if handler == identity:
+            # Save ourselves the trouble of iterating over it all.
+            return unstructure_to or cl
+
+    def unstructure_iterable(iterable, _seq_cl=unstructure_to or cl, _hook=handler):
+        return _seq_cl(_hook(i) for i in iterable)
+
+    return unstructure_iterable
+
+
+make_iterable_unstructure_fn: Final = iterable_unstructure_factory
