@@ -1018,6 +1018,7 @@ def make_mapping_structure_fn(
     return globs[fn_name]
 
 
+# This factory is here for backwards compatibility and circular imports.
 def iterable_unstructure_factory(
     cl: Any, converter: BaseConverter, unstructure_to: Any = None
 ) -> UnstructureHook:

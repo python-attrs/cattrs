@@ -223,8 +223,9 @@ def namedtuple_dict_structure_factory(
     except AttributeError:
         working_set = set()
         already_generating.working_set = working_set
-    if cl in working_set:
-        raise RecursionError()
+    else:
+        if cl in working_set:
+            raise RecursionError()
 
     working_set.add(cl)
 

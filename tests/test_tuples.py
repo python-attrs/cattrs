@@ -1,8 +1,8 @@
 """Tests for tuples of all kinds."""
 
-from typing import NamedTuple, Optional, Tuple
+from typing import List, NamedTuple, Tuple
 
-from attrs import define
+from attrs import Factory, define
 from pytest import raises
 
 from cattrs.cols import (
@@ -89,7 +89,7 @@ def test_simple_dict_nametuples(genconverter: Converter):
 
 @define
 class RecursiveAttrs:
-    b: "Optional[RecursiveNamedtuple]" = None
+    b: "List[RecursiveNamedtuple]" = Factory(list)
 
 
 class RecursiveNamedtuple(NamedTuple):
@@ -107,7 +107,7 @@ def test_recursive_dict_nametuples(genconverter: Converter):
     )
 
     assert genconverter.unstructure(RecursiveNamedtuple(RecursiveAttrs())) == {
-        "a": {"b": None}
+        "a": {"b": []}
     }
     assert genconverter.structure(
         {"a": {}}, RecursiveNamedtuple
