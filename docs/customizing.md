@@ -255,10 +255,13 @@ To only un/structure _some_ named tuples into dictionaries,
 change the predicate function when registering the hook factory:
 
 ```{doctest} namedtuples
+    :options: +ELLIPSIS
+
 >>> c.register_unstructure_hook_factory(
 ...     lambda t: t is MyNamedTuple,
 ...     namedtuple_dict_unstructure_factory,
 ... )
+<function namedtuple_dict_unstructure_factory at ...>
 ```
 
 ## Using `cattrs.gen` Generators

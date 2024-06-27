@@ -4,17 +4,18 @@
   <em>Great software needs great data structures.</em>
 </p>
 
-<a href="https://pypi.python.org/pypi/cattrs"><img src="https://img.shields.io/pypi/v/cattrs.svg"/></a>
-<a href="https://github.com/python-attrs/cattrs/actions?workflow=CI"><img src="https://github.com/python-attrs/cattrs/workflows/CI/badge.svg"/></a>
-<a href="https://catt.rs/en/latest/?badge=latest"><img src="https://readthedocs.org/projects/cattrs/badge/?version=latest" alt="Documentation Status"/></a>
-<a href="https://github.com/python-attrs/cattrs"><img src="https://img.shields.io/pypi/pyversions/cattrs.svg" alt="Supported Python versions"/></a>
-<a href="https://github.com/python-attrs/cattrs/actions/workflows/main.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Tinche/22405310d6a663164d894a2beab4d44d/raw/covbadge.json"/></a>
-<a href="https://github.com/psf/black"><img src="https://img.shields.io/badge/code%20style-black-000000.svg"/></a>
+[![PyPI](https://img.shields.io/pypi/v/cattrs.svg)](https://pypi.python.org/pypi/cattrs)
+[![Build](https://github.com/python-attrs/cattrs/workflows/CI/badge.svg)](https://github.com/python-attrs/cattrs/actions?workflow=CI)
+[![Documentation Status](https://readthedocs.org/projects/cattrs/badge/?version=latest)](https://catt.rs/)
+[![Supported Python Versions](https://img.shields.io/pypi/pyversions/cattrs.svg)](https://github.com/python-attrs/cattrs)
+[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Tinche/22405310d6a663164d894a2beab4d44d/raw/covbadge.json)](https://github.com/python-attrs/cattrs/actions/workflows/main.yml)
+[![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 ---
 
-**cattrs** is an open source Python library for structuring and unstructuring
-data. _cattrs_ works best with _attrs_ classes, dataclasses and the usual
+**cattrs** is an open source Python library for structuring and unstructuring data.
+_cattrs_ works best with _attrs_ classes, dataclasses and the usual
 Python collections, but other kinds of classes are supported by manually
 registering converters.
 
