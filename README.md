@@ -154,7 +154,7 @@ The following types are supported:
 
 ### Batteries Included
 
-_cattrs_ comes with pre-configured converters for a number of serialization libraries, including JSON (standard library, [_orjson_](https://pypi.org/project/orjson/), [UltraJSON](https://pypi.org/project/ujson/)), [_msgpack_](https://pypi.org/project/msgpack/), [_cbor2_](https://pypi.org/project/cbor2/), [_bson_](https://pypi.org/project/bson/), [PyYAML](https://pypi.org/project/PyYAML/), [_tomlkit_](https://pypi.org/project/tomlkit/) and [_msgspec_](https://pypi.org/project/msgspec/) (supports JSON, MessagePack, YAML, and TOML).
+_cattrs_ comes with pre-configured converters for a number of serialization libraries, including JSON (standard library, [_orjson_](https://pypi.org/project/orjson/), [UltraJSON](https://pypi.org/project/ujson/)), [_msgpack_](https://pypi.org/project/msgpack/), [_cbor2_](https://pypi.org/project/cbor2/), [_bson_](https://pypi.org/project/bson/), [PyYAML](https://pypi.org/project/PyYAML/), [_tomlkit_](https://pypi.org/project/tomlkit/) and [_msgspec_](https://pypi.org/project/msgspec/) (supports only JSON at this time).
 
 For details, see the [cattrs.preconf package](https://catt.rs/en/stable/preconf.html).
 
