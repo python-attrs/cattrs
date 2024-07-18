@@ -13,7 +13,7 @@
 
 ---
 
-**cattrs** is a swiss-army knife for (un)structuring and validating data in Python.
+**cattrs** is a Swiss Army knife for (un)structuring and validating data in Python.
 In practice, that means it converts **unstructured dictionaries** into **proper classes** and back, while **validating** their contents.
 
 ---
