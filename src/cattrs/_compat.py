@@ -404,7 +404,8 @@ if sys.version_info >= (3, 9):
             not hasattr(type, "__origin__") and not hasattr(type, "__args__")
         )
 
-    def is_mapping(type):
+    def is_mapping(type: Any) -> bool:
+        """A predicate function for mappings."""
         return (
             type in (dict, Dict, TypingMapping, TypingMutableMapping, AbcMutableMapping)
             or (
@@ -515,7 +516,8 @@ else:
             type.__class__ is _GenericAlias and is_subclass(type.__origin__, FrozenSet)
         )
 
-    def is_mapping(type):
+    def is_mapping(type: Any) -> bool:
+        """A predicate function for mappings."""
         return type in (TypingMapping, dict) or (
             type.__class__ is _GenericAlias
             and is_subclass(type.__origin__, TypingMapping)

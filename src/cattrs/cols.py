@@ -16,7 +16,7 @@ from typing import (
 
 from attrs import NOTHING, Attribute
 
-from ._compat import ANIES, is_bare, is_frozenset, is_sequence, is_subclass
+from ._compat import ANIES, is_bare, is_frozenset, is_mapping, is_sequence, is_subclass
 from ._compat import is_mutable_set as is_set
 from .dispatch import StructureHook, UnstructureHook
 from .errors import IterableValidationError, IterableValidationNote
@@ -27,6 +27,7 @@ from .gen import (
     make_dict_structure_fn_from_attrs,
     make_dict_unstructure_fn_from_attrs,
     make_hetero_tuple_unstructure_fn,
+    mapping_structure_factory,
 )
 from .gen import make_iterable_unstructure_fn as iterable_unstructure_factory
 
@@ -37,6 +38,7 @@ __all__ = [
     "is_any_set",
     "is_frozenset",
     "is_namedtuple",
+    "is_mapping",
     "is_set",
     "is_sequence",
     "iterable_unstructure_factory",
@@ -45,6 +47,7 @@ __all__ = [
     "namedtuple_unstructure_factory",
     "namedtuple_dict_structure_factory",
     "namedtuple_dict_unstructure_factory",
+    "mapping_structure_factory",
 ]
 
 
