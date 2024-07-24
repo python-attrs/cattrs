@@ -156,13 +156,13 @@ A useful use case for unstructuring collections is to create a deep copy of a co
 ### Dictionaries
 
 Dictionaries can be produced from other mapping objects.
-More precisely, the unstructured object must expose an [`items()`](https://docs.python.org/3/library/stdtypes.html#dict.items) method producing an iterable of key-value tuples, and be able to be passed to the `dict` constructor as an argument.
+More precisely, the unstructured object must expose an [`items()`](https://docs.python.org/3/library/stdtypes.html#dict.items) method producing an iterable of key-value tuples,
+and be able to be passed to the `dict` constructor as an argument.
 Types converting to dictionaries are:
 
-- `typing.Dict[K, V]`
-- `typing.MutableMapping[K, V]`
-- `typing.Mapping[K, V]`
-- `dict[K, V]`
+- `dict[K, V]` and `typing.Dict[K, V]`
+- `collections.abc.MutableMapping[K, V]` and `typing.MutableMapping[K, V]`
+- `collections.abc.Mapping[K, V]` and `typing.Mapping[K, V]`
 
 In all cases, a new dict will be returned, so this operation can be used to copy a mapping into a dict.
 Any type parameters set to `typing.Any` will be passed through unconverted.
@@ -183,6 +183,10 @@ Both keys and values are converted.
 {'1': None, '2': 2}
 ```
 
+### Virtual Subclasses of [`abc.Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping) and [`abc.MutableMapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping)
+
+If a class declares itself a virtual subclass of `collections.abc.Mapping` or `collections.abc.MutableMapping` and its initializer accepts a dictionary,
+_cattrs_ will be able to structure it by default.
 
 ### Homogeneous and Heterogeneous Tuples
 

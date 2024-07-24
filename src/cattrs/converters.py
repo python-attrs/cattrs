@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from collections import Counter, deque
+from collections.abc import Mapping as AbcMapping
+from collections.abc import MutableMapping as AbcMutableMapping
 from collections.abc import MutableSet as AbcMutableSet
 from dataclasses import Field
 from enum import Enum
@@ -1289,8 +1291,16 @@ class Converter(BaseConverter):
         return h
 
     def gen_structure_mapping(self, cl: Any) -> MappingStructureFn[T]:
+        structure_to = get_origin(cl) or cl
+        if structure_to in (
+            MutableMapping,
+            AbcMutableMapping,
+            Mapping,
+            AbcMapping,
+        ):  # These default to dicts
+            structure_to = dict
         h = make_mapping_structure_fn(
-            cl, self, detailed_validation=self.detailed_validation
+            cl, self, structure_to, detailed_validation=self.detailed_validation
         )
         self._structure_func.register_cls_list([(cl, h)], direct=True)
         return h

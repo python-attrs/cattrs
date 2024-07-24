@@ -166,6 +166,7 @@ Available predicates are:
 * {meth}`is_frozenset <cattrs.cols.is_frozenset>`
 * {meth}`is_set <cattrs.cols.is_set>`
 * {meth}`is_sequence <cattrs.cols.is_sequence>`
+* {meth}`is_mapping <cattrs.cols.is_mapping>`
 * {meth}`is_namedtuple <cattrs.cols.is_namedtuple>`
 
 ````{tip}
@@ -187,6 +188,7 @@ Available hook factories are:
 * {meth}`namedtuple_unstructure_factory <cattrs.cols.namedtuple_unstructure_factory>`
 * {meth}`namedtuple_dict_structure_factory <cattrs.cols.namedtuple_dict_structure_factory>`
 * {meth}`namedtuple_dict_unstructure_factory <cattrs.cols.namedtuple_dict_unstructure_factory>`
+* {meth}`mapping_structure_factory <cattrs.cols.mapping_structure_factory>`
 
 Additional predicates and hook factories will be added as requested.
 

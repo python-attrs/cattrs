@@ -898,7 +898,8 @@ def make_mapping_unstructure_fn(
 MappingStructureFn = Callable[[Mapping[Any, Any], Any], T]
 
 
-def make_mapping_structure_fn(
+# This factory is here for backwards compatibility and circular imports.
+def mapping_structure_factory(
     cl: type[T],
     converter: BaseConverter,
     structure_to: type = dict,
@@ -1016,6 +1017,9 @@ def make_mapping_structure_fn(
     eval(compile(script, "", "exec"), globs)
 
     return globs[fn_name]
+
+
+make_mapping_structure_fn: Final = mapping_structure_factory
 
 
 # This factory is here for backwards compatibility and circular imports.

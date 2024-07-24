@@ -1,6 +1,8 @@
 """Tests for the `cattrs.cols` module."""
 
-from cattrs import BaseConverter
+from immutables import Map
+
+from cattrs import BaseConverter, Converter
 from cattrs._compat import AbstractSet, FrozenSet
 from cattrs.cols import is_any_set, iterable_unstructure_factory
 
@@ -19,3 +21,8 @@ def test_set_overriding(converter: BaseConverter):
         "b",
         "c",
     ]
+
+
+def test_structuring_immutables_map(genconverter: Converter):
+    """This should work due to our new is_mapping predicate."""
+    assert genconverter.structure({"a": 1}, Map[str, int]) == Map(a=1)

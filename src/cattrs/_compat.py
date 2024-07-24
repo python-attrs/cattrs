@@ -1,5 +1,7 @@
 import sys
 from collections import deque
+from collections.abc import Mapping as AbcMapping
+from collections.abc import MutableMapping as AbcMutableMapping
 from collections.abc import MutableSet as AbcMutableSet
 from collections.abc import Set as AbcSet
 from dataclasses import MISSING, Field, is_dataclass
@@ -219,8 +221,6 @@ if sys.version_info >= (3, 10):
 
 if sys.version_info >= (3, 9):
     from collections import Counter
-    from collections.abc import Mapping as AbcMapping
-    from collections.abc import MutableMapping as AbcMutableMapping
     from collections.abc import MutableSequence as AbcMutableSequence
     from collections.abc import MutableSet as AbcMutableSet
     from collections.abc import Sequence as AbcSequence
@@ -404,18 +404,17 @@ if sys.version_info >= (3, 9):
             not hasattr(type, "__origin__") and not hasattr(type, "__args__")
         )
 
-    def is_mapping(type):
+    def is_mapping(type: Any) -> bool:
+        """A predicate function for mappings."""
         return (
             type in (dict, Dict, TypingMapping, TypingMutableMapping, AbcMutableMapping)
             or (
                 type.__class__ is _GenericAlias
                 and is_subclass(type.__origin__, TypingMapping)
             )
-            or (
-                getattr(type, "__origin__", None)
-                in (dict, AbcMutableMapping, AbcMapping)
+            or is_subclass(
+                getattr(type, "__origin__", type), (dict, AbcMutableMapping, AbcMapping)
             )
-            or is_subclass(type, dict)
         )
 
     def is_counter(type):
@@ -515,10 +514,17 @@ else:
             type.__class__ is _GenericAlias and is_subclass(type.__origin__, FrozenSet)
         )
 
-    def is_mapping(type):
-        return type in (TypingMapping, dict) or (
-            type.__class__ is _GenericAlias
-            and is_subclass(type.__origin__, TypingMapping)
+    def is_mapping(type: Any) -> bool:
+        """A predicate function for mappings."""
+        return (
+            type in (TypingMapping, dict)
+            or (
+                type.__class__ is _GenericAlias
+                and is_subclass(type.__origin__, TypingMapping)
+            )
+            or is_subclass(
+                getattr(type, "__origin__", type), (dict, AbcMutableMapping, AbcMapping)
+            )
         )
 
     bare_generic_args = {
