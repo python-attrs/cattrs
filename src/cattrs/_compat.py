@@ -1,5 +1,7 @@
 import sys
 from collections import deque
+from collections.abc import Mapping as AbcMapping
+from collections.abc import MutableMapping as AbcMutableMapping
 from collections.abc import MutableSet as AbcMutableSet
 from collections.abc import Set as AbcSet
 from dataclasses import MISSING, Field, is_dataclass
@@ -219,8 +221,6 @@ if sys.version_info >= (3, 10):
 
 if sys.version_info >= (3, 9):
     from collections import Counter
-    from collections.abc import Mapping as AbcMapping
-    from collections.abc import MutableMapping as AbcMutableMapping
     from collections.abc import MutableSequence as AbcMutableSequence
     from collections.abc import MutableSet as AbcMutableSet
     from collections.abc import Sequence as AbcSequence
