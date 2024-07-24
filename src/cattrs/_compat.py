@@ -412,11 +412,9 @@ if sys.version_info >= (3, 9):
                 type.__class__ is _GenericAlias
                 and is_subclass(type.__origin__, TypingMapping)
             )
-            or (
-                getattr(type, "__origin__", None)
-                in (dict, AbcMutableMapping, AbcMapping)
+            or is_subclass(
+                getattr(type, "__origin__", type), (dict, AbcMutableMapping, AbcMapping)
             )
-            or is_subclass(type, dict)
         )
 
     def is_counter(type):
@@ -518,9 +516,15 @@ else:
 
     def is_mapping(type: Any) -> bool:
         """A predicate function for mappings."""
-        return type in (TypingMapping, dict) or (
-            type.__class__ is _GenericAlias
-            and is_subclass(type.__origin__, TypingMapping)
+        return (
+            type in (TypingMapping, dict)
+            or (
+                type.__class__ is _GenericAlias
+                and is_subclass(type.__origin__, TypingMapping)
+            )
+            or is_subclass(
+                getattr(type, "__origin__", type), (dict, AbcMutableMapping, AbcMapping)
+            )
         )
 
     bare_generic_args = {

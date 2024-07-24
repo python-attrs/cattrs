@@ -1290,7 +1290,7 @@ class Converter(BaseConverter):
 
     def gen_structure_mapping(self, cl: Any) -> MappingStructureFn[T]:
         h = make_mapping_structure_fn(
-            cl, self, detailed_validation=self.detailed_validation
+            cl, self, get_origin(cl) or cl, detailed_validation=self.detailed_validation
         )
         self._structure_func.register_cls_list([(cl, h)], direct=True)
         return h
