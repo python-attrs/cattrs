@@ -288,10 +288,12 @@ class BaseConverter:
         )
 
     @overload
-    def register_unstructure_hook(self) -> Callable[[UnstructureHook], None]: ...
+    def register_unstructure_hook(self) -> Callable[[UnstructureHook], None]:
+        ...
 
     @overload
-    def register_unstructure_hook(self, cls: Any, func: UnstructureHook) -> None: ...
+    def register_unstructure_hook(self, cls: Any, func: UnstructureHook) -> None:
+        ...
 
     def register_unstructure_hook(
         self, cls: Any = None, func: UnstructureHook | None = None
@@ -339,22 +341,26 @@ class BaseConverter:
     @overload
     def register_unstructure_hook_factory(
         self, predicate: Predicate
-    ) -> Callable[[UnstructureHookFactory], UnstructureHookFactory]: ...
+    ) -> Callable[[UnstructureHookFactory], UnstructureHookFactory]:
+        ...
 
     @overload
     def register_unstructure_hook_factory(
         self, predicate: Predicate
-    ) -> Callable[[ExtendedUnstructureHookFactory], ExtendedUnstructureHookFactory]: ...
+    ) -> Callable[[ExtendedUnstructureHookFactory], ExtendedUnstructureHookFactory]:
+        ...
 
     @overload
     def register_unstructure_hook_factory(
         self, predicate: Predicate, factory: UnstructureHookFactory
-    ) -> UnstructureHookFactory: ...
+    ) -> UnstructureHookFactory:
+        ...
 
     @overload
     def register_unstructure_hook_factory(
         self, predicate: Predicate, factory: ExtendedUnstructureHookFactory
-    ) -> ExtendedUnstructureHookFactory: ...
+    ) -> ExtendedUnstructureHookFactory:
+        ...
 
     def register_unstructure_hook_factory(self, predicate, factory=None):
         """
@@ -423,10 +429,12 @@ class BaseConverter:
         )
 
     @overload
-    def register_structure_hook(self) -> Callable[[StructureHook], None]: ...
+    def register_structure_hook(self) -> Callable[[StructureHook], None]:
+        ...
 
     @overload
-    def register_structure_hook(self, cl: Any, func: StructuredValue) -> None: ...
+    def register_structure_hook(self, cl: Any, func: StructuredValue) -> None:
+        ...
 
     def register_structure_hook(
         self, cl: Any, func: StructureHook | None = None
@@ -476,22 +484,26 @@ class BaseConverter:
     @overload
     def register_structure_hook_factory(
         self, predicate: Predicate
-    ) -> Callable[[StructureHookFactory, StructureHookFactory]]: ...
+    ) -> Callable[[StructureHookFactory, StructureHookFactory]]:
+        ...
 
     @overload
     def register_structure_hook_factory(
         self, predicate: Predicate
-    ) -> Callable[[ExtendedStructureHookFactory, ExtendedStructureHookFactory]]: ...
+    ) -> Callable[[ExtendedStructureHookFactory, ExtendedStructureHookFactory]]:
+        ...
 
     @overload
     def register_structure_hook_factory(
         self, predicate: Predicate, factory: StructureHookFactory
-    ) -> StructureHookFactory: ...
+    ) -> StructureHookFactory:
+        ...
 
     @overload
     def register_structure_hook_factory(
         self, predicate: Predicate, factory: ExtendedStructureHookFactory
-    ) -> ExtendedStructureHookFactory: ...
+    ) -> ExtendedStructureHookFactory:
+        ...
 
     def register_structure_hook_factory(self, predicate, factory=None):
         """
@@ -1289,8 +1301,11 @@ class Converter(BaseConverter):
         return h
 
     def gen_structure_mapping(self, cl: Any) -> MappingStructureFn[T]:
+        structure_to = get_origin(cl) or cl
+        if structure_to in (MutableMapping, Mapping):  # These default to dicts
+            structure_to = dict
         h = make_mapping_structure_fn(
-            cl, self, get_origin(cl) or cl, detailed_validation=self.detailed_validation
+            cl, self, structure_to, detailed_validation=self.detailed_validation
         )
         self._structure_func.register_cls_list([(cl, h)], direct=True)
         return h
