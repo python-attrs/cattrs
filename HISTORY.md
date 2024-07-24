@@ -23,12 +23,15 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - Introduce {meth}`BaseConverter.get_structure_hook` and {meth}`BaseConverter.get_unstructure_hook` methods.
   ([#432](https://github.com/python-attrs/cattrs/issues/432) [#472](https://github.com/python-attrs/cattrs/pull/472))
 - {meth}`BaseConverter.register_structure_hook`, {meth}`BaseConverter.register_unstructure_hook`,
-{meth}`BaseConverter.register_unstructure_hook_factory` and {meth}`BaseConverter.register_structure_hook_factory`
-can now be used as decorators and have gained new features.
+  {meth}`BaseConverter.register_unstructure_hook_factory` and {meth}`BaseConverter.register_structure_hook_factory`
+  can now be used as decorators and have gained new features.
   See [here](https://catt.rs/en/latest/customizing.html#use-as-decorators) and [here](https://catt.rs/en/latest/customizing.html#id1) for more details.
   ([#487](https://github.com/python-attrs/cattrs/pull/487))
 - Introduce and [document](https://catt.rs/en/latest/customizing.html#customizing-collections) the {mod}`cattrs.cols` module for better collection customizations.
   ([#504](https://github.com/python-attrs/cattrs/issues/504) [#540](https://github.com/python-attrs/cattrs/pull/540))
+- Enhance the {func}`cattrs.cols.is_mapping` predicate function to also cover virtual subclasses of `abc.Mapping`.
+  This enables map classes from libraries such as _immutables_ or _sortedcontainers_ to structure out-of-the-box.
+  ([#555](https://github.com/python-attrs/cattrs/issues/555) [#556](https://github.com/python-attrs/cattrs/pull/556))
 - Introduce the [_msgspec_](https://jcristharif.com/msgspec/) {mod}`preconf converter <cattrs.preconf.msgspec>`.
   Only JSON is supported for now, with other formats supported by _msgspec_ to come later.
   ([#481](https://github.com/python-attrs/cattrs/pull/481))
