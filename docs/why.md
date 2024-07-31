@@ -82,7 +82,7 @@ Finally, here's a much more complex example, involving _attrs_ classes where _ca
 >>> structure(p, list[Union[Dog, Cat]])
 [Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)), Cat(breed=<CatBreed.MAINE_COON: 'maine_coon'>, names=['Fluffly', 'Fluffer'])]
 
-``````
+```
 
 :::{tip}
 Consider unstructured data a low-level representation that needs to be converted to structured data to be handled, and use `structure()`.
@@ -94,7 +94,6 @@ When you're done, `unstructure()` the data to its unstructured form and pass it 
 :start-after: "begin-why -->"
 :end-before: "<!-- end-why"
 ```
-
 
 
 ## Additional Documentation and Talks
