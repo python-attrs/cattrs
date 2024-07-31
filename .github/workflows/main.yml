@@ -61,7 +61,7 @@ jobs:
       - name: "Combine coverage"
         run: |
           python -Im coverage combine
-          python -Im coverage html --skip-covered --skip-empty
+          python -Im coverage html
           python -Im coverage json
 
           # Report and write to summary.
