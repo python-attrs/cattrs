@@ -1,8 +1,8 @@
-# Customizing Un/structuring
+# Customizing (Un-)structuring
 
 This section describes customizing the unstructuring and structuring processes in _cattrs_.
 
-## Custom Un/structuring Hooks
+## Custom (Un-)structuring Hooks
 
 You can write your own structuring and unstructuring functions and register them for types using {meth}`Converter.register_structure_hook() <cattrs.BaseConverter.register_structure_hook>` and {meth}`Converter.register_unstructure_hook() <cattrs.BaseConverter.register_unstructure_hook>`.
 This approach is the most flexible but also requires the most amount of boilerplate.
