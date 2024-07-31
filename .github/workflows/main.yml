@@ -65,7 +65,7 @@ jobs:
           python -Im coverage json
 
           # Report and write to summary.
-          python -Im coverage report --skip-covered --skip-empty | sed 's/^/    /' >> $GITHUB_STEP_SUMMARY
+          python -Im coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
 
           export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
           echo "total=$TOTAL" >> $GITHUB_ENV
