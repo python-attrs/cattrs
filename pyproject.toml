@@ -106,6 +106,9 @@ parallel = true
 source_pkgs = ["cattrs", "tests"]
 
 [tool.coverage.report]
+show_missing = true
+skip_covered = true
+skip_empty = true
 exclude_also = [
     "@overload",
     "if TYPE_CHECKING:",
