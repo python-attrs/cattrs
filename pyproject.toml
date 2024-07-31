@@ -103,7 +103,6 @@ addopts = "-l --benchmark-sort=fullname --benchmark-warmup=true --benchmark-warm
 
 [tool.coverage.run]
 parallel = true
-branch = true
 source_pkgs = ["cattrs", "tests"]
 
 [tool.coverage.report]
