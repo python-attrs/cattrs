@@ -49,7 +49,7 @@ Finally, here's a much more complex example, involving _attrs_ classes where _ca
 
 ```python
 >>> from enum import unique, Enum
->>> from typing import Optional, Sequence, Union
+>>> from typing import Sequence
 >>> from cattrs import structure, unstructure
 >>> from attrs import define, field
 
@@ -79,7 +79,7 @@ Finally, here's a much more complex example, involving _attrs_ classes where _ca
 
 >>> p
 [{'cuteness': 1, 'chip': {'chip_id': 1, 'time_chipped': 10.0}}, {'breed': 'maine_coon', 'names': ['Fluffly', 'Fluffer']}]
->>> structure(p, list[Union[Dog, Cat]])
+>>> structure(p, list[Dog | Cat])
 [Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)), Cat(breed=<CatBreed.MAINE_COON: 'maine_coon'>, names=['Fluffly', 'Fluffer'])]
 
 ```
