@@ -1214,7 +1214,7 @@ class Converter(BaseConverter):
 
         return unstructure_optional
 
-    def gen_structure_typeddict(self, cl: Any) -> Callable[[dict], dict]:
+    def gen_structure_typeddict(self, cl: Any) -> Callable[[dict, Any], dict]:
         """Generate a TypedDict structure function.
 
         Also apply converter-scored modifications.
