@@ -9,7 +9,7 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
-## 24.1.0 (UNRELEASED)
+## 24.1.0 (2024-08-28)
 
 - **Potentially breaking**: Unstructuring hooks for `typing.Any` are consistent now: values are unstructured using their runtime type.
   Previously this behavior was underspecified and inconsistent, but followed this rule in the majority of cases.
