@@ -74,7 +74,7 @@ Documentation = "https://catt.rs/en/stable/"
 
 [project.optional-dependencies]
 ujson = [
-    "ujson>=5.7.0",
+    "ujson>=5.10.0",
 ]
 orjson = [
     "orjson>=3.9.2; implementation_name == \"cpython\"",
