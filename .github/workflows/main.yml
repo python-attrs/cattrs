@@ -25,6 +25,7 @@ jobs:
           python-version: "${{ matrix.python-version }}"
           allow-python-prereleases: true
           cache: true
+          version: "2.17.3"
 
       - name: "Run Tox"
         run: |
