@@ -4,8 +4,11 @@
 [metadata]
 groups = ["default", "bench", "bson", "cbor2", "docs", "lint", "msgpack", "msgspec", "orjson", "pyyaml", "test", "tomlkit", "ujson"]
 strategy = ["cross_platform"]
-lock_version = "4.4.1"
-content_hash = "sha256:80497e8d5b756fc000f8a8b58b2ae6e6501168628e264daf7de6049fa45b096e"
+lock_version = "4.5.0"
+content_hash = "sha256:0021461d1869a3c40dd28cb81f9e8a51bac5b3fff29ac6d540058188999172f7"
+
+[[metadata.targets]]
+requires_python = ">=3.8"
 
 [[package]]
 name = "alabaster"
@@ -22,6 +25,9 @@ name = "attrs"
 version = "23.1.0"
 requires_python = ">=3.7"
 summary = "Classes Without Boilerplate"
+dependencies = [
+    "importlib-metadata; python_version < \"3.8\"",
+]
 files = [
     {file = "attrs-23.1.0-py3-none-any.whl", hash = "sha256:1f28b4522cdc2fb4256ac1a020c78acf9cba2c6b461ccd2c126f3aa8e8335d04"},
     {file = "attrs-23.1.0.tar.gz", hash = "sha256:6279836d581513a26f1bf235f9acd333bc9115683f14f7e8fae46c98fc50e015"},
@@ -45,6 +51,9 @@ name = "backports-zoneinfo"
 version = "0.2.1"
 requires_python = ">=3.6"
 summary = "Backport of the standard library zoneinfo module"
+dependencies = [
+    "importlib-resources; python_version < \"3.7\"",
+]
 files = [
     {file = "backports.zoneinfo-0.2.1-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:8961c0f32cd0336fb8e8ead11a1f8cd99ec07145ec2931122faaac1c8f7fd987"},
     {file = "backports.zoneinfo-0.2.1-cp38-cp38-manylinux1_i686.whl", hash = "sha256:e81b76cace8eda1fca50e345242ba977f9be6ae3945af8d46326d776b4cf78d1"},
@@ -231,6 +240,7 @@ requires_python = ">=3.7"
 summary = "Composable command line interface toolkit"
 dependencies = [
     "colorama; platform_system == \"Windows\"",
+    "importlib-metadata; python_version < \"3.8\"",
 ]
 files = [
     {file = "click-8.1.7-py3-none-any.whl", hash = "sha256:ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28"},
@@ -403,6 +413,9 @@ name = "immutables"
 version = "0.20"
 requires_python = ">=3.8.0"
 summary = "Immutable Collections"
+dependencies = [
+    "typing-extensions>=3.7.4.3; python_version < \"3.8\"",
+]
 files = [
     {file = "immutables-0.20-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:dea0ae4d7f31b145c18c16badeebc2f039d09411be4a8febb86e1244cf7f1ce0"},
     {file = "immutables-0.20-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:2dd0dcef2f8d4523d34dbe1d2b7804b3d2a51fddbd104aad13f506a838a2ea15"},
@@ -453,6 +466,7 @@ version = "6.8.0"
 requires_python = ">=3.8"
 summary = "Read metadata from Python packages"
 dependencies = [
+    "typing-extensions>=3.6.4; python_version < \"3.8\"",
     "zipp>=0.5",
 ]
 files = [
@@ -503,6 +517,7 @@ summary = "Python LiveReload is an awesome tool for web developers"
 dependencies = [
     "six",
     "tornado; python_version > \"2.7\"",
+    "tornado<6; python_version == \"2.7\"",
 ]
 files = [
     {file = "livereload-2.6.3-py2.py3-none-any.whl", hash = "sha256:ad4ac6f53b2d62bb6ce1a5e6e96f1f00976a32348afedcb4b6d68df2a1d346e4"},
@@ -890,6 +905,9 @@ name = "platformdirs"
 version = "3.10.0"
 requires_python = ">=3.7"
 summary = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
+dependencies = [
+    "typing-extensions>=4.7.1; python_version < \"3.8\"",
+]
 files = [
     {file = "platformdirs-3.10.0-py3-none-any.whl", hash = "sha256:d7c24979f292f916dc9cbf8648319032f551ea8c49a4c9bf2fb556a02070ec1d"},
     {file = "platformdirs-3.10.0.tar.gz", hash = "sha256:b45696dab2d7cc691a3226759c0d3b00c47c8b6e293d96f6436f733303f77f6d"},
@@ -1052,8 +1070,10 @@ version = "4.0.0"
 requires_python = ">=3.7"
 summary = "A ``pytest`` fixture for benchmarking code. It will group the tests into rounds that are calibrated to the chosen timer."
 dependencies = [
+    "pathlib2; python_version < \"3.4\"",
     "py-cpuinfo",
     "pytest>=3.8",
+    "statistics; python_version < \"3.4\"",
 ]
 files = [
     {file = "pytest-benchmark-4.0.0.tar.gz", hash = "sha256:fb0785b83efe599a6a956361c0691ae1dbb5318018561af10f3e915caa0048d1"},
