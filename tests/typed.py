@@ -67,7 +67,7 @@ def simple_typed_classes(
     newtypes=True,
     text_codec: str = "utf8",
     allow_infinity=None,
-    allow_nan=None,
+    allow_nan=True,
 ) -> SearchStrategy[Tuple[Type, PosArgs, KwArgs]]:
     """Yield tuples of (class, values)."""
     return lists_of_typed_attrs(
@@ -82,7 +82,9 @@ def simple_typed_classes(
     ).flatmap(partial(_create_hyp_class, frozen=frozen))
 
 
-def simple_typed_dataclasses(defaults=None, min_attrs=0, frozen=False, newtypes=True):
+def simple_typed_dataclasses(
+    defaults=None, min_attrs=0, frozen=False, newtypes=True, allow_nan=True
+):
     """Yield tuples of (class, values)."""
     return lists_of_typed_attrs(
         defaults,
@@ -90,15 +92,20 @@ def simple_typed_dataclasses(defaults=None, min_attrs=0, frozen=False, newtypes=
         for_frozen=frozen,
         allow_mutable_defaults=False,
         newtypes=newtypes,
+        allow_nan=allow_nan,
     ).flatmap(partial(_create_dataclass, frozen=frozen))
 
 
 def simple_typed_classes_and_strats(
-    defaults=None, min_attrs=0, kw_only=None, newtypes=True
+    defaults=None, min_attrs=0, kw_only=None, newtypes=True, allow_nan=True
 ) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs], SearchStrategy[KwArgs]]]:
     """Yield tuples of (class, (strategies))."""
     return lists_of_typed_attrs(
-        defaults, min_size=min_attrs, kw_only=kw_only, newtypes=newtypes
+        defaults,
+        min_size=min_attrs,
+        kw_only=kw_only,
+        newtypes=newtypes,
+        allow_nan=allow_nan,
     ).flatmap(_create_hyp_class_and_strat)
 
 
@@ -111,7 +118,7 @@ def lists_of_typed_attrs(
     newtypes=True,
     text_codec="utf8",
     allow_infinity=None,
-    allow_nan=None,
+    allow_nan=True,
 ) -> SearchStrategy[List[Tuple[_CountingAttr, SearchStrategy[PosArg]]]]:
     # Python functions support up to 255 arguments.
     return lists(
@@ -142,7 +149,7 @@ def simple_typed_attrs(
     newtypes=True,
     text_codec="utf8",
     allow_infinity=None,
-    allow_nan=None,
+    allow_nan=True,
 ) -> SearchStrategy[Tuple[_CountingAttr, SearchStrategy[PosArgs]]]:
     if not is_39_or_later:
         res = (
@@ -400,7 +407,7 @@ def str_typed_attrs(draw, defaults=None, kw_only=None, codec: str = "utf8"):
 
 @composite
 def float_typed_attrs(
-    draw, defaults=None, kw_only=None, allow_infinity=None, allow_nan=None
+    draw, defaults=None, kw_only=None, allow_infinity=None, allow_nan=True
 ):
     """
     Generate a tuple of an attribute and a strategy that yields floats for that
@@ -832,7 +839,7 @@ def dict_of_class(
 
 
 def _create_hyp_nested_strategy(
-    simple_class_strategy: SearchStrategy, kw_only=None, newtypes=True
+    simple_class_strategy: SearchStrategy, kw_only=None, newtypes=True, allow_nan=True
 ) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs], SearchStrategy[KwArgs]]]:
     """
     Create a recursive attrs class.
@@ -847,7 +854,8 @@ def _create_hyp_nested_strategy(
     attrs_and_classes: SearchStrategy[
         Tuple[List[Tuple[_CountingAttr, PosArgs]], Tuple[Type, SearchStrategy[PosArgs]]]
     ] = tuples(
-        lists_of_typed_attrs(kw_only=kw_only, newtypes=newtypes), simple_class_strategy
+        lists_of_typed_attrs(kw_only=kw_only, newtypes=newtypes, allow_nan=allow_nan),
+        simple_class_strategy,
     )
 
     return nested_classes(attrs_and_classes)
@@ -891,22 +899,37 @@ def nested_classes(
 
 
 def nested_typed_classes_and_strat(
-    defaults=None, min_attrs=0, kw_only=None, newtypes=True
+    defaults=None, min_attrs=0, kw_only=None, newtypes=True, allow_nan=True
 ) -> SearchStrategy[Tuple[Type, SearchStrategy[PosArgs]]]:
     return recursive(
         simple_typed_classes_and_strats(
-            defaults=defaults, min_attrs=min_attrs, kw_only=kw_only, newtypes=newtypes
+            defaults=defaults,
+            min_attrs=min_attrs,
+            kw_only=kw_only,
+            newtypes=newtypes,
+            allow_nan=allow_nan,
         ),
-        partial(_create_hyp_nested_strategy, kw_only=kw_only, newtypes=newtypes),
+        partial(
+            _create_hyp_nested_strategy,
+            kw_only=kw_only,
+            newtypes=newtypes,
+            allow_nan=allow_nan,
+        ),
         max_leaves=20,
     )
 
 
 @composite
-def nested_typed_classes(draw, defaults=None, min_attrs=0, kw_only=None, newtypes=True):
+def nested_typed_classes(
+    draw, defaults=None, min_attrs=0, kw_only=None, newtypes=True, allow_nan=True
+):
     cl, strat, kwarg_strat = draw(
         nested_typed_classes_and_strat(
-            defaults=defaults, min_attrs=min_attrs, kw_only=kw_only, newtypes=newtypes
+            defaults=defaults,
+            min_attrs=min_attrs,
+            kw_only=kw_only,
+            newtypes=newtypes,
+            allow_nan=allow_nan,
         )
     )
     return cl, draw(strat), draw(kwarg_strat)
