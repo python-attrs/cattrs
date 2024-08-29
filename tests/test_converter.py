@@ -40,7 +40,10 @@ from .typed import (
 unstructure_strats = one_of(just(s) for s in UnstructureStrategy)
 
 
-@given(simple_typed_classes() | simple_typed_dataclasses(), booleans())
+@given(
+    simple_typed_classes(allow_nan=False) | simple_typed_dataclasses(allow_nan=False),
+    booleans(),
+)
 def test_simple_roundtrip(cls_and_vals, detailed_validation):
     """
     Simple classes with metadata can be unstructured and restructured.
@@ -54,8 +57,8 @@ def test_simple_roundtrip(cls_and_vals, detailed_validation):
 
 
 @given(
-    simple_typed_classes(kw_only=False, newtypes=False)
-    | simple_typed_dataclasses(newtypes=False),
+    simple_typed_classes(kw_only=False, newtypes=False, allow_nan=False)
+    | simple_typed_dataclasses(newtypes=False, allow_nan=False),
     booleans(),
 )
 def test_simple_roundtrip_tuple(cls_and_vals, dv: bool):
@@ -72,7 +75,7 @@ def test_simple_roundtrip_tuple(cls_and_vals, dv: bool):
     assert inst == converter.structure(unstructured, cl)
 
 
-@given(simple_typed_attrs(defaults=True))
+@given(simple_typed_attrs(defaults=True, allow_nan=False))
 def test_simple_roundtrip_defaults(attr_and_vals):
     """
     Simple classes with metadata can be unstructured and restructured.
@@ -87,7 +90,9 @@ def test_simple_roundtrip_defaults(attr_and_vals):
     assert inst == converter.structure(converter.unstructure(inst), cl)
 
 
-@given(simple_typed_attrs(defaults=True, kw_only=False, newtypes=False))
+@given(
+    simple_typed_attrs(defaults=True, kw_only=False, newtypes=False, allow_nan=False)
+)
 def test_simple_roundtrip_defaults_tuple(attr_and_vals):
     """
     Simple classes with metadata can be unstructured and restructured.
@@ -103,7 +108,8 @@ def test_simple_roundtrip_defaults_tuple(attr_and_vals):
 
 
 @given(
-    simple_typed_classes(newtypes=False) | simple_typed_dataclasses(newtypes=False),
+    simple_typed_classes(newtypes=False, allow_nan=False)
+    | simple_typed_dataclasses(newtypes=False, allow_nan=False),
     unstructure_strats,
 )
 def test_simple_roundtrip_with_extra_keys_forbidden(cls_and_vals, strat):
@@ -200,7 +206,7 @@ def test_forbid_extra_keys_nested_override():
     assert cve.value.exceptions[0].extra_fields == {"b"}
 
 
-@given(nested_typed_classes(defaults=True, min_attrs=1), booleans())
+@given(nested_typed_classes(defaults=True, min_attrs=1, allow_nan=False), booleans())
 def test_nested_roundtrip(cls_and_vals, omit_if_default):
     """
     Nested classes with metadata can be unstructured and restructured.
@@ -214,7 +220,9 @@ def test_nested_roundtrip(cls_and_vals, omit_if_default):
 
 
 @given(
-    nested_typed_classes(defaults=True, min_attrs=1, kw_only=False, newtypes=False),
+    nested_typed_classes(
+        defaults=True, min_attrs=1, kw_only=False, newtypes=False, allow_nan=False
+    ),
     booleans(),
 )
 def test_nested_roundtrip_tuple(cls_and_vals, omit_if_default: bool):
@@ -233,8 +241,8 @@ def test_nested_roundtrip_tuple(cls_and_vals, omit_if_default: bool):
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
 @given(
-    simple_typed_classes(defaults=False, newtypes=False),
-    simple_typed_classes(defaults=False, newtypes=False),
+    simple_typed_classes(defaults=False, newtypes=False, allow_nan=False),
+    simple_typed_classes(defaults=False, newtypes=False, allow_nan=False),
     unstructure_strats,
 )
 def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
@@ -278,8 +286,8 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
 @pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
 @settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
 @given(
-    simple_typed_classes(defaults=False, newtypes=False),
-    simple_typed_classes(defaults=False, newtypes=False),
+    simple_typed_classes(defaults=False, newtypes=False, allow_nan=False),
+    simple_typed_classes(defaults=False, newtypes=False, allow_nan=False),
     unstructure_strats,
 )
 def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
@@ -320,7 +328,7 @@ def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
         assert inst == converter.structure(unstructured, C)
 
 
-@given(simple_typed_classes(defaults=False))
+@given(simple_typed_classes(defaults=False, allow_nan=False))
 def test_optional_field_roundtrip(cl_and_vals):
     """
     Classes with optional fields can be unstructured and structured.
@@ -342,7 +350,7 @@ def test_optional_field_roundtrip(cl_and_vals):
 
 
 @pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
-@given(simple_typed_classes(defaults=False))
+@given(simple_typed_classes(defaults=False, allow_nan=False))
 def test_310_optional_field_roundtrip(cl_and_vals):
     """
     Classes with optional fields can be unstructured and structured.
@@ -363,7 +371,7 @@ def test_310_optional_field_roundtrip(cl_and_vals):
     assert inst == converter.structure(unstructured, C)
 
 
-@given(simple_typed_classes(defaults=True))
+@given(simple_typed_classes(defaults=True, allow_nan=False))
 def test_omit_default_roundtrip(cl_and_vals):
     """
     Omit default on the converter works.

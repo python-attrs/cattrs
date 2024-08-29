@@ -356,7 +356,7 @@ def float_attrs(draw, defaults=None, kw_only=None):
     """
     default = NOTHING
     if defaults is True or (defaults is None and draw(st.booleans())):
-        default = draw(st.floats())
+        default = draw(st.floats(allow_nan=False))
     return (
         attr.ib(
             default=default, kw_only=draw(st.booleans()) if kw_only is None else kw_only
