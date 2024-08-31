@@ -6,6 +6,7 @@ from attrs import NOTHING, Attribute, Factory
 
 from .._compat import is_bare_final
 from ..dispatch import StructureHook
+from ..errors import StructureHandlerNotFoundError
 from ..fns import raise_error
 
 if TYPE_CHECKING:
@@ -27,9 +28,14 @@ def find_structure_handler(
         elif (
             a.converter is not None and not prefer_attrs_converters and type is not None
         ):
-            handler = c.get_structure_hook(type, cache_result=False)
-            if handler == raise_error:
+            try:
+                handler = c.get_structure_hook(type, cache_result=False)
+            except StructureHandlerNotFoundError:
                 handler = None
+            else:
+                # The legacy way, should still work.
+                if handler == raise_error:
+                    handler = None
         elif type is not None:
             if (
                 is_bare_final(type)

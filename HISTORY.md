@@ -9,6 +9,16 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
+
+## 24.2.0 (UNRELEASED)
+
+- **Potentially breaking**: The converters raise {class}`StructureHandlerNotFoundError` more eagerly (on hook creation, instead of on hook use).
+  This helps surfacing problems with missing hooks sooner.
+  See [Migrations](https://catt.rs/latest/migrations.html#the-default-structure-hook-fallback-factory) for steps to restore legacy behavior.
+  ([#577](https://github.com/python-attrs/cattrs/pull/577))
+- Add a [Migrations](https://catt.rs/latest/migrations.html) page, with instructions on migrating changed behavior for each version.
+  ([#577](https://github.com/python-attrs/cattrs/pull/577))
+
 ## 24.1.2 (2024-09-22)
 
 - Fix {meth}`BaseConverter.register_structure_hook` and {meth}`BaseConverter.register_unstructure_hook` type hints.
