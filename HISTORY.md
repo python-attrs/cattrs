@@ -13,8 +13,10 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 - **Potentially breaking**: The converters raise `StructureHandlerNotFoundError` more eagerly (on hook creation, instead of on hook use).
   This helps surfacing problems with missing hooks sooner.
-  See [migrations](https://catt.rs/latest/migrations.html) for steps to restore legacy behavior.
-- Add a migrations page, with instructions on migrating changed behavior for each version.
+  See [Migrations](https://catt.rs/latest/migrations.html) for steps to restore legacy behavior.
+  ([#577](https://github.com/python-attrs/cattrs/pull/577))
+- Add a [Migrations] page, with instructions on migrating changed behavior for each version.
+  ([#577](https://github.com/python-attrs/cattrs/pull/577))
 
 ## 24.1.0 (2024-08-28)
 
