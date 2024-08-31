@@ -721,6 +721,18 @@ def test_annotated_with_typing_extensions_attrs():
     assert structured == Outer(Inner(2), [Inner(2)], Inner(2))
 
 
+def test_default_structure_fallback(converter_cls: Type[BaseConverter]):
+    """The default structure fallback hook factory eagerly errors."""
+
+    class Test:
+        """Unsupported by default."""
+
+    c = converter_cls()
+
+    with pytest.raises(StructureHandlerNotFoundError):
+        c.get_structure_hook(Test)
+
+
 def test_unstructure_fallbacks(converter_cls: Type[BaseConverter]):
     """Unstructure fallback factories work."""
 

@@ -161,7 +161,9 @@ class BaseConverter:
         prefer_attrib_converters: bool = False,
         detailed_validation: bool = True,
         unstructure_fallback_factory: HookFactory[UnstructureHook] = lambda _: identity,
-        structure_fallback_factory: HookFactory[StructureHook] = lambda _: raise_error,
+        structure_fallback_factory: HookFactory[StructureHook] = lambda t: raise_error(
+            None, t
+        ),
     ) -> None:
         """
         :param detailed_validation: Whether to use a slightly slower mode for detailed
@@ -173,6 +175,9 @@ class BaseConverter:
 
         ..  versionadded:: 23.2.0 *unstructure_fallback_factory*
         ..  versionadded:: 23.2.0 *structure_fallback_factory*
+        ..  versionchanged:: 24.2.0
+            The default `structure_fallback_factory` now raises errors for missing handlers
+            more eagerly, surfacing problems earlier.
         """
         unstruct_strat = UnstructureStrategy(unstruct_strat)
         self._prefer_attrib_converters = prefer_attrib_converters
@@ -1031,7 +1036,9 @@ class Converter(BaseConverter):
         prefer_attrib_converters: bool = False,
         detailed_validation: bool = True,
         unstructure_fallback_factory: HookFactory[UnstructureHook] = lambda _: identity,
-        structure_fallback_factory: HookFactory[StructureHook] = lambda _: raise_error,
+        structure_fallback_factory: HookFactory[StructureHook] = lambda t: raise_error(
+            None, t
+        ),
     ):
         """
         :param detailed_validation: Whether to use a slightly slower mode for detailed
@@ -1043,6 +1050,9 @@ class Converter(BaseConverter):
 
         ..  versionadded:: 23.2.0 *unstructure_fallback_factory*
         ..  versionadded:: 23.2.0 *structure_fallback_factory*
+        ..  versionchanged:: 24.2.0
+            The default `structure_fallback_factory` now raises errors for missing handlers
+            more eagerly, surfacing problems earlier.
         """
         super().__init__(
             dict_factory=dict_factory,

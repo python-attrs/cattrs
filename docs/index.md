@@ -47,6 +47,7 @@ validation
 preconf
 unions
 usage
+migrations
 indepth
 ```
 
