@@ -107,17 +107,13 @@ ExtendedUnstructureHookFactory: TypeAlias = Callable[[TargetType, T], Unstructur
 # This typevar for the BaseConverter.
 AnyUnstructureHookFactoryBase = TypeVar(
     "AnyUnstructureHookFactoryBase",
-    bound=Union[
-        HookFactory[UnstructureHook], ExtendedUnstructureHookFactory[BaseConverter]
-    ],
+    bound="HookFactory[UnstructureHook] | ExtendedUnstructureHookFactory[BaseConverter]",
 )
 
 # This typevar for the Converter.
 AnyUnstructureHookFactory = TypeVar(
     "AnyUnstructureHookFactory",
-    bound=Union[
-        HookFactory[UnstructureHook], ExtendedUnstructureHookFactory[Converter]
-    ],
+    bound="HookFactory[UnstructureHook] | ExtendedUnstructureHookFactory[Converter]",
 )
 
 StructureHookFactory = TypeVar("StructureHookFactory", bound=HookFactory[StructureHook])
@@ -128,15 +124,13 @@ ExtendedStructureHookFactory: TypeAlias = Callable[[TargetType, T], StructureHoo
 # This typevar for the BaseConverter.
 AnyStructureHookFactoryBase = TypeVar(
     "AnyStructureHookFactoryBase",
-    bound=Union[
-        HookFactory[StructureHook], ExtendedStructureHookFactory[BaseConverter]
-    ],
+    bound="HookFactory[StructureHook] | ExtendedStructureHookFactory[BaseConverter]",
 )
 
 # This typevar for the Converter.
 AnyStructureHookFactory = TypeVar(
     "AnyStructureHookFactory",
-    bound=Union[HookFactory[StructureHook], ExtendedStructureHookFactory[Converter]],
+    bound="HookFactory[StructureHook] | ExtendedStructureHookFactory[Converter]",
 )
 
 
