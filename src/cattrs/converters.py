@@ -1184,6 +1184,10 @@ class Converter(BaseConverter):
         self, predicate: Predicate, factory: ExtendedUnstructureHookFactory[Converter]
     ) -> ExtendedUnstructureHookFactory[Converter]: ...
 
+    def register_unstructure_hook_factory(self, predicate, factory=None):
+        # This dummy wrapper is required due to how `@overload` works.
+        return super().register_unstructure_hook_factory(predicate, factory)
+
     @overload
     def register_structure_hook_factory(
         self, predicate: Predicate
@@ -1198,6 +1202,10 @@ class Converter(BaseConverter):
     def register_structure_hook_factory(
         self, predicate: Predicate, factory: ExtendedStructureHookFactory[Converter]
     ) -> ExtendedStructureHookFactory[Converter]: ...
+
+    def register_structure_hook_factory(self, predicate, factory=None):
+        # This dummy wrapper is required due to how `@overload` works.
+        return super().register_structure_hook_factory(predicate, factory)
 
     def get_structure_newtype(self, type: type[T]) -> Callable[[Any, Any], T]:
         base = get_newtype_base(type)
