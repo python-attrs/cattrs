@@ -9,7 +9,7 @@ from enum import Enum
 from inspect import Signature
 from inspect import signature as inspect_signature
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, Union, overload
+from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, overload
 
 from attrs import Attribute, resolve_types
 from attrs import has as attrs_has
