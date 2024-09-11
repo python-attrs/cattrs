@@ -9,7 +9,7 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
-## 24.1.1 (UNRELEASED)
+## 24.1.1 (2024-09-11)
 
 - Fix {meth}`BaseConverter.register_structure_hook_factory` and {meth}`BaseConverter.register_unstructure_hook_factory` type hints.
   ([#578](https://github.com/python-attrs/cattrs/issues/578) [#579](https://github.com/python-attrs/cattrs/pull/579))
