@@ -37,7 +37,6 @@ _cattrs_ works best with [_attrs_](https://www.attrs.org/) classes, and [datacla
 C(a=1, b=['x', 'y'])
 >>> unstructure(instance)
 {'a': 1, 'b': ['x', 'y']}
-
 ```
 
 <!-- end-teaser -->

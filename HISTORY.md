@@ -9,6 +9,11 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
+## 24.1.1 (UNRELEASED)
+
+- Fix {meth}`BaseConverter.register_structure_hook_factory` and {meth}`BaseConverter.register_unstructure_hook_factory` type hints.
+  ([#578](https://github.com/python-attrs/cattrs/issues/578) [#579](https://github.com/python-attrs/cattrs/pull/579))
+
 ## 24.1.0 (2024-08-28)
 
 - **Potentially breaking**: Unstructuring hooks for `typing.Any` are consistent now: values are unstructured using their runtime type.

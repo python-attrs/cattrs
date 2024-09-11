@@ -102,17 +102,35 @@ UnstructureHookFactory = TypeVar(
 )
 
 # The Extended factory also takes a converter.
-ExtendedUnstructureHookFactory = TypeVar(
-    "ExtendedUnstructureHookFactory",
-    bound=Callable[[TargetType, "BaseConverter"], UnstructureHook],
+ExtendedUnstructureHookFactory: TypeAlias = Callable[[TargetType, T], UnstructureHook]
+
+# This typevar for the BaseConverter.
+AnyUnstructureHookFactoryBase = TypeVar(
+    "AnyUnstructureHookFactoryBase",
+    bound="HookFactory[UnstructureHook] | ExtendedUnstructureHookFactory[BaseConverter]",
+)
+
+# This typevar for the Converter.
+AnyUnstructureHookFactory = TypeVar(
+    "AnyUnstructureHookFactory",
+    bound="HookFactory[UnstructureHook] | ExtendedUnstructureHookFactory[Converter]",
 )
 
 StructureHookFactory = TypeVar("StructureHookFactory", bound=HookFactory[StructureHook])
 
 # The Extended factory also takes a converter.
-ExtendedStructureHookFactory = TypeVar(
-    "ExtendedStructureHookFactory",
-    bound=Callable[[TargetType, "BaseConverter"], StructureHook],
+ExtendedStructureHookFactory: TypeAlias = Callable[[TargetType, T], StructureHook]
+
+# This typevar for the BaseConverter.
+AnyStructureHookFactoryBase = TypeVar(
+    "AnyStructureHookFactoryBase",
+    bound="HookFactory[StructureHook] | ExtendedStructureHookFactory[BaseConverter]",
+)
+
+# This typevar for the Converter.
+AnyStructureHookFactory = TypeVar(
+    "AnyStructureHookFactory",
+    bound="HookFactory[StructureHook] | ExtendedStructureHookFactory[Converter]",
 )
 
 
@@ -341,12 +359,7 @@ class BaseConverter:
     @overload
     def register_unstructure_hook_factory(
         self, predicate: Predicate
-    ) -> Callable[[UnstructureHookFactory], UnstructureHookFactory]: ...
-
-    @overload
-    def register_unstructure_hook_factory(
-        self, predicate: Predicate
-    ) -> Callable[[ExtendedUnstructureHookFactory], ExtendedUnstructureHookFactory]: ...
+    ) -> Callable[[AnyUnstructureHookFactoryBase], AnyUnstructureHookFactoryBase]: ...
 
     @overload
     def register_unstructure_hook_factory(
@@ -355,8 +368,10 @@ class BaseConverter:
 
     @overload
     def register_unstructure_hook_factory(
-        self, predicate: Predicate, factory: ExtendedUnstructureHookFactory
-    ) -> ExtendedUnstructureHookFactory: ...
+        self,
+        predicate: Predicate,
+        factory: ExtendedUnstructureHookFactory[BaseConverter],
+    ) -> ExtendedUnstructureHookFactory[BaseConverter]: ...
 
     def register_unstructure_hook_factory(self, predicate, factory=None):
         """
@@ -478,12 +493,7 @@ class BaseConverter:
     @overload
     def register_structure_hook_factory(
         self, predicate: Predicate
-    ) -> Callable[[StructureHookFactory, StructureHookFactory]]: ...
-
-    @overload
-    def register_structure_hook_factory(
-        self, predicate: Predicate
-    ) -> Callable[[ExtendedStructureHookFactory, ExtendedStructureHookFactory]]: ...
+    ) -> Callable[[AnyStructureHookFactoryBase], AnyStructureHookFactoryBase]: ...
 
     @overload
     def register_structure_hook_factory(
@@ -492,8 +502,8 @@ class BaseConverter:
 
     @overload
     def register_structure_hook_factory(
-        self, predicate: Predicate, factory: ExtendedStructureHookFactory
-    ) -> ExtendedStructureHookFactory: ...
+        self, predicate: Predicate, factory: ExtendedStructureHookFactory[BaseConverter]
+    ) -> ExtendedStructureHookFactory[BaseConverter]: ...
 
     def register_structure_hook_factory(self, predicate, factory=None):
         """
@@ -1158,6 +1168,44 @@ class Converter(BaseConverter):
         # We keep these so we can more correctly copy the hooks.
         self._struct_copy_skip = self._structure_func.get_num_fns()
         self._unstruct_copy_skip = self._unstructure_func.get_num_fns()
+
+    @overload
+    def register_unstructure_hook_factory(
+        self, predicate: Predicate
+    ) -> Callable[[AnyUnstructureHookFactory], AnyUnstructureHookFactory]: ...
+
+    @overload
+    def register_unstructure_hook_factory(
+        self, predicate: Predicate, factory: UnstructureHookFactory
+    ) -> UnstructureHookFactory: ...
+
+    @overload
+    def register_unstructure_hook_factory(
+        self, predicate: Predicate, factory: ExtendedUnstructureHookFactory[Converter]
+    ) -> ExtendedUnstructureHookFactory[Converter]: ...
+
+    def register_unstructure_hook_factory(self, predicate, factory=None):
+        # This dummy wrapper is required due to how `@overload` works.
+        return super().register_unstructure_hook_factory(predicate, factory)
+
+    @overload
+    def register_structure_hook_factory(
+        self, predicate: Predicate
+    ) -> Callable[[AnyStructureHookFactory], AnyStructureHookFactory]: ...
+
+    @overload
+    def register_structure_hook_factory(
+        self, predicate: Predicate, factory: StructureHookFactory
+    ) -> StructureHookFactory: ...
+
+    @overload
+    def register_structure_hook_factory(
+        self, predicate: Predicate, factory: ExtendedStructureHookFactory[Converter]
+    ) -> ExtendedStructureHookFactory[Converter]: ...
+
+    def register_structure_hook_factory(self, predicate, factory=None):
+        # This dummy wrapper is required due to how `@overload` works.
+        return super().register_structure_hook_factory(predicate, factory)
 
     def get_structure_newtype(self, type: type[T]) -> Callable[[Any, Any], T]:
         base = get_newtype_base(type)
