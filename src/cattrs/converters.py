@@ -133,6 +133,9 @@ AnyStructureHookFactory = TypeVar(
     bound="HookFactory[StructureHook] | ExtendedStructureHookFactory[Converter]",
 )
 
+UnstructureHookT = TypeVar("UnstructureHookT", bound=UnstructureHook)
+StructureHookT = TypeVar("StructureHookT", bound=StructureHook)
+
 
 class UnstructureStrategy(Enum):
     """`attrs` classes unstructuring strategies."""
@@ -308,7 +311,7 @@ class BaseConverter:
         )
 
     @overload
-    def register_unstructure_hook(self) -> Callable[[UnstructureHook], None]: ...
+    def register_unstructure_hook(self, cls: UnstructureHookT) -> UnstructureHookT: ...
 
     @overload
     def register_unstructure_hook(self, cls: Any, func: UnstructureHook) -> None: ...
@@ -335,7 +338,7 @@ class BaseConverter:
             cls = next(iter(sig.parameters.values())).annotation
             self.register_unstructure_hook(cls, func)
 
-            return None
+            return func
 
         if attrs_has(cls):
             resolve_types(cls)
@@ -440,10 +443,10 @@ class BaseConverter:
         )
 
     @overload
-    def register_structure_hook(self) -> Callable[[StructureHook], None]: ...
+    def register_structure_hook(self, cl: StructureHookT) -> StructureHookT: ...
 
     @overload
-    def register_structure_hook(self, cl: Any, func: StructuredValue) -> None: ...
+    def register_structure_hook(self, cl: Any, func: StructureHook) -> None: ...
 
     def register_structure_hook(
         self, cl: Any, func: StructureHook | None = None
@@ -469,7 +472,7 @@ class BaseConverter:
             func = cl
             sig = signature(func)
             self.register_structure_hook(sig.return_annotation, func)
-            return
+            return func
 
         if attrs_has(cl):
             resolve_types(cl)
@@ -481,6 +484,7 @@ class BaseConverter:
             self._structure_func.register_func_list([(lambda t: t is cl, func)])
         else:
             self._structure_func.register_cls_list([(cl, func)])
+        return None
 
     def register_structure_hook_func(
         self, check_func: Predicate, func: StructureHook
