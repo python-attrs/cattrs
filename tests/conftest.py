@@ -37,3 +37,5 @@ if sys.version_info < (3, 12):
     collect_ignore_glob.append("*_695.py")
 if platform.python_implementation() == "PyPy":
     collect_ignore_glob.append("*_cpython.py")
+if sys.version_info >= (3, 13):  # Remove when msgspec supports 3.13.
+    collect_ignore_glob.append("*test_msgspec_cpython.py")
