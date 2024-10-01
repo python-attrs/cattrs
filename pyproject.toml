@@ -43,7 +43,7 @@ authors = [
 ]
 dependencies = [
     "attrs>=23.1.0",
-    "typing-extensions>=4.1.0, !=4.6.3; python_version < '3.11'",
+    "typing-extensions>=4.12.2",
     "exceptiongroup>=1.1.1; python_version < '3.11'",
 ]
 requires-python = ">=3.8"

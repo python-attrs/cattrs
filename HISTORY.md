@@ -18,6 +18,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#577](https://github.com/python-attrs/cattrs/pull/577))
 - Add a [Migrations](https://catt.rs/latest/migrations.html) page, with instructions on migrating changed behavior for each version.
   ([#577](https://github.com/python-attrs/cattrs/pull/577))
+- Python 3.13 is now supported.
+  ([#543](https://github.com/python-attrs/cattrs/pull/543) [#547](https://github.com/python-attrs/cattrs/issues/547))
 
 ## 24.1.2 (2024-09-22)
 
