@@ -892,9 +892,7 @@ def mapping_unstructure_factory(
     lines.append(f"def {fn_name}(mapping):")
 
     if unstructure_to is dict:
-        lines.append(
-            f"    res = {{{k_u}: {v_u} for k, v in mapping.items()}}"
-        )
+        lines.append(f"    res = {{{k_u}: {v_u} for k, v in mapping.items()}}")
     else:
         lines.append(
             f"    res = __cattr_mapping_cl(({k_u}, {v_u}) for k, v in mapping.items())"
