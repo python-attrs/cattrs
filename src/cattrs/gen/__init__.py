@@ -851,7 +851,11 @@ def mapping_unstructure_factory(
     unstructure_to: Any = None,
     key_handler: Callable[[Any, Any | None], Any] | None = None,
 ) -> MappingUnstructureFn:
-    """Generate a specialized unstructure function for a mapping."""
+    """Generate a specialized unstructure function for a mapping.
+
+    :param unstructure_to: The class to unstructure to; defaults to the
+        same class as the mapping being unstructured.
+    """
     kh = key_handler or converter.unstructure
     val_handler = converter.unstructure
 
@@ -886,9 +890,15 @@ def mapping_unstructure_factory(
     lines = []
 
     lines.append(f"def {fn_name}(mapping):")
-    lines.append(
-        f"    res = __cattr_mapping_cl(({k_u}, {v_u}) for k, v in mapping.items())"
-    )
+
+    if unstructure_to is dict:
+        lines.append(
+            f"    res = {{{k_u}: {v_u}}} for k, v in mapping.items())"
+        )
+    else:
+        lines.append(
+            f"    res = __cattr_mapping_cl(({k_u}, {v_u}) for k, v in mapping.items())"
+        )
 
     total_lines = [*lines, "    return res"]
 
