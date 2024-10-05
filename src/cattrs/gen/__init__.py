@@ -893,7 +893,7 @@ def mapping_unstructure_factory(
 
     if unstructure_to is dict:
         lines.append(
-            f"    res = {{{k_u}: {v_u}}} for k, v in mapping.items())"
+            f"    res = {{{k_u}: {v_u} for k, v in mapping.items()}}"
         )
     else:
         lines.append(
