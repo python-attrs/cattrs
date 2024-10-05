@@ -14,6 +14,7 @@ from typing import (
 )
 
 from attrs import NOTHING, Attribute, Factory, resolve_types
+from typing_extensions import NoDefault
 
 from .._compat import (
     ANIES,
@@ -1029,6 +1030,9 @@ def iterable_unstructure_factory(
     """A hook factory for unstructuring iterables.
 
     :param unstructure_to: Force unstructuring to this type, if provided.
+
+    ..  versionchanged:: 24.2.0
+        `typing.NoDefault` is now correctly handled as `Any`.
     """
     handler = converter.unstructure
 
@@ -1039,6 +1043,8 @@ def iterable_unstructure_factory(
         type_arg = cl.__args__[0]
         if isinstance(type_arg, TypeVar):
             type_arg = getattr(type_arg, "__default__", Any)
+            if type_arg is NoDefault:
+                type_arg = Any
         handler = converter.get_unstructure_hook(type_arg, cache_result=False)
         if handler == identity:
             # Save ourselves the trouble of iterating over it all.
