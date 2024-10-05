@@ -91,9 +91,9 @@ class MultiStrategyDispatch(Generic[Hook]):
     MultiStrategyDispatch uses a combination of exact-match dispatch,
     singledispatch, and FunctionDispatch.
 
-    :param converter: A converter to be used for factories that require converters.
     :param fallback_factory: A hook factory to be called when a hook cannot be
         produced.
+    :param converter: A converter to be used for factories that require converters.
 
     .. versionchanged:: 23.2.0
         Fallbacks are now factories.
@@ -103,7 +103,6 @@ class MultiStrategyDispatch(Generic[Hook]):
     """
 
     _fallback_factory: HookFactory[Hook]
-    _converter: BaseConverter
     _direct_dispatch: dict[TargetType, Hook]
     _function_dispatch: FunctionDispatch
     _single_dispatch: Any

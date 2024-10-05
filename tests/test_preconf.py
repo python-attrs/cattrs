@@ -4,7 +4,7 @@ from enum import Enum, IntEnum, unique
 from json import dumps as json_dumps
 from json import loads as json_loads
 from platform import python_implementation
-from typing import Any, Dict, List, NamedTuple, NewType, Tuple, Union
+from typing import Any, Dict, Final, List, NamedTuple, NewType, Tuple, Union
 
 import pytest
 from attrs import define
@@ -699,7 +699,10 @@ def test_cbor2_unions(union_and_val: tuple, detailed_validation: bool):
     assert converter.structure(val, type) == val
 
 
-@pytest.mark.skipif(python_implementation() == "PyPy", reason="no msgspec on PyPy")
+NO_MSGSPEC: Final = python_implementation() == "PyPy" or sys.version_info[:2] >= (3, 13)
+
+
+@pytest.mark.skipif(NO_MSGSPEC, reason="msgspec not available")
 @given(everythings(allow_inf=False))
 def test_msgspec_json_converter(everything: Everything):
     from cattrs.preconf.msgspec import make_converter as msgspec_make_converter
@@ -709,7 +712,7 @@ def test_msgspec_json_converter(everything: Everything):
     assert converter.loads(raw, Everything) == everything
 
 
-@pytest.mark.skipif(python_implementation() == "PyPy", reason="no msgspec on PyPy")
+@pytest.mark.skipif(NO_MSGSPEC, reason="msgspec not available")
 @given(everythings(allow_inf=False))
 def test_msgspec_json_unstruct_collection_overrides(everything: Everything):
     """Ensure collection overrides work."""
@@ -724,7 +727,7 @@ def test_msgspec_json_unstruct_collection_overrides(everything: Everything):
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
 
 
-@pytest.mark.skipif(python_implementation() == "PyPy", reason="no msgspec on PyPy")
+@pytest.mark.skipif(NO_MSGSPEC, reason="msgspec not available")
 @given(
     union_and_val=native_unions(
         include_datetimes=False,
