@@ -28,6 +28,7 @@ from .gen import (
     make_dict_unstructure_fn_from_attrs,
     make_hetero_tuple_unstructure_fn,
     mapping_structure_factory,
+    mapping_unstructure_factory,
 )
 from .gen import make_iterable_unstructure_fn as iterable_unstructure_factory
 
@@ -48,6 +49,7 @@ __all__ = [
     "namedtuple_dict_structure_factory",
     "namedtuple_dict_unstructure_factory",
     "mapping_structure_factory",
+    "mapping_unstructure_factory",
 ]
 
 

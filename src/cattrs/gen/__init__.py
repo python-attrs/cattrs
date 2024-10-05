@@ -844,7 +844,8 @@ def make_hetero_tuple_unstructure_fn(
 MappingUnstructureFn = Callable[[Mapping[Any, Any]], Any]
 
 
-def make_mapping_unstructure_fn(
+# This factory is here for backwards compatibility and circular imports.
+def mapping_unstructure_factory(
     cl: Any,
     converter: BaseConverter,
     unstructure_to: Any = None,
@@ -895,6 +896,8 @@ def make_mapping_unstructure_fn(
 
     return globs[fn_name]
 
+
+make_mapping_unstructure_fn: Final = mapping_unstructure_factory
 
 MappingStructureFn = Callable[[Mapping[Any, Any], Any], T]
 

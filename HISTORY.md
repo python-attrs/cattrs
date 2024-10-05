@@ -18,6 +18,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#577](https://github.com/python-attrs/cattrs/pull/577))
 - Add a [Migrations](https://catt.rs/latest/migrations.html) page, with instructions on migrating changed behavior for each version.
   ([#577](https://github.com/python-attrs/cattrs/pull/577))
+- Expose {func}`cattrs.cols.mapping_unstructure_factory` through {mod}`cattrs.cols`.
 - Python 3.13 is now supported.
   ([#543](https://github.com/python-attrs/cattrs/pull/543) [#547](https://github.com/python-attrs/cattrs/issues/547))
 
@@ -39,7 +40,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#473](https://github.com/python-attrs/cattrs/pull/473))
 - **Minor change**: Heterogeneous tuples are now unstructured into tuples instead of lists by default; this is significantly faster and widely supported by serialization libraries.
   ([#486](https://github.com/python-attrs/cattrs/pull/486))
-- **Minor change**: {py:func}`cattrs.gen.make_dict_structure_fn` will use the value for the `prefer_attrib_converters` parameter from the given converter by default now.
+- **Minor change**: {func}`cattrs.gen.make_dict_structure_fn` will use the value for the `prefer_attrib_converters` parameter from the given converter by default now.
   If you're using this function directly, the old behavior can be restored by passing in the desired values explicitly.
   ([#527](https://github.com/python-attrs/cattrs/issues/527) [#528](https://github.com/python-attrs/cattrs/pull/528))
 - Introduce {meth}`BaseConverter.get_structure_hook` and {meth}`BaseConverter.get_unstructure_hook` methods.
