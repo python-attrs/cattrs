@@ -860,6 +860,7 @@ def mapping_unstructure_factory(
     val_handler = converter.unstructure
 
     fn_name = "unstructure_mapping"
+    origin = cl
 
     # Let's try fishing out the type args.
     if getattr(cl, "__args__", None) is not None:
@@ -878,11 +879,9 @@ def mapping_unstructure_factory(
         if val_handler == identity:
             val_handler = None
 
-    globs = {
-        "__cattr_mapping_cl": unstructure_to or cl,
-        "__cattr_k_u": kh,
-        "__cattr_v_u": val_handler,
-    }
+        origin = get_origin(cl)
+
+    globs = {"__cattr_k_u": kh, "__cattr_v_u": val_handler}
 
     k_u = "__cattr_k_u(k)" if kh is not None else "k"
     v_u = "__cattr_v_u(v)" if val_handler is not None else "v"
@@ -891,9 +890,14 @@ def mapping_unstructure_factory(
 
     lines.append(f"def {fn_name}(mapping):")
 
-    if unstructure_to is dict:
+    if unstructure_to is dict or origin is dict:
+        if kh is None and val_handler is None:
+            # Simplest path.
+            return dict
+
         lines.append(f"    res = {{{k_u}: {v_u} for k, v in mapping.items()}}")
     else:
+        globs["__cattr_mapping_cl"] = unstructure_to or cl
         lines.append(
             f"    res = __cattr_mapping_cl(({k_u}, {v_u}) for k, v in mapping.items())"
         )
