@@ -886,25 +886,23 @@ def mapping_unstructure_factory(
     k_u = "__cattr_k_u(k)" if kh is not None else "k"
     v_u = "__cattr_v_u(v)" if val_handler is not None else "v"
 
-    lines = []
-
-    lines.append(f"def {fn_name}(mapping):")
+    lines = [f"def {fn_name}(mapping):"]
 
     if unstructure_to is dict or origin is dict:
         if kh is None and val_handler is None:
             # Simplest path.
             return dict
 
-        lines.append(f"    res = {{{k_u}: {v_u} for k, v in mapping.items()}}")
+        lines.append(f"    return {{{k_u}: {v_u} for k, v in mapping.items()}}")
     else:
         globs["__cattr_mapping_cl"] = unstructure_to or cl
         lines.append(
             f"    res = __cattr_mapping_cl(({k_u}, {v_u}) for k, v in mapping.items())"
         )
 
-    total_lines = [*lines, "    return res"]
+        lines = [*lines, "    return res"]
 
-    eval(compile("\n".join(total_lines), "", "exec"), globs)
+    eval(compile("\n".join(lines), "", "exec"), globs)
 
     return globs[fn_name]
 
