@@ -888,7 +888,7 @@ def mapping_unstructure_factory(
 
     lines = [f"def {fn_name}(mapping):"]
 
-    if unstructure_to is dict or origin is dict:
+    if unstructure_to is dict or unstructure_to is None and origin is dict:
         if kh is None and val_handler is None:
             # Simplest path.
             return dict

@@ -46,3 +46,9 @@ def test_mapping_unstructure_direct(genconverter: Converter):
 
     if is_py310_plus:
         assert genconverter.get_unstructure_hook(dict[str, int]) is dict
+
+
+def test_mapping_unstructure_to(genconverter: Converter):
+    """`unstructure_to` works."""
+    hook = mapping_unstructure_factory(Dict[str, str], genconverter, unstructure_to=Map)
+    assert hook({"a": "a"}).__class__ is Map
