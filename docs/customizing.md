@@ -189,6 +189,7 @@ Available hook factories are:
 * {meth}`namedtuple_dict_structure_factory <cattrs.cols.namedtuple_dict_structure_factory>`
 * {meth}`namedtuple_dict_unstructure_factory <cattrs.cols.namedtuple_dict_unstructure_factory>`
 * {meth}`mapping_structure_factory <cattrs.cols.mapping_structure_factory>`
+* {meth}`mapping_unstructure_factory <cattrs.cols.mapping_unstructure_factory>`
 
 Additional predicates and hook factories will be added as requested.
 

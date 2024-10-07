@@ -57,6 +57,8 @@ from .cols import (
     is_namedtuple,
     iterable_unstructure_factory,
     list_structure_factory,
+    mapping_structure_factory,
+    mapping_unstructure_factory,
     namedtuple_structure_factory,
     namedtuple_unstructure_factory,
 )
@@ -86,8 +88,6 @@ from .gen import (
     make_dict_structure_fn,
     make_dict_unstructure_fn,
     make_hetero_tuple_unstructure_fn,
-    make_mapping_structure_fn,
-    make_mapping_unstructure_fn,
 )
 from .gen.typeddicts import make_dict_structure_fn as make_typeddict_dict_struct_fn
 from .gen.typeddicts import make_dict_unstructure_fn as make_typeddict_dict_unstruct_fn
@@ -1335,14 +1335,14 @@ class Converter(BaseConverter):
         unstructure_to = self._unstruct_collection_overrides.get(
             get_origin(cl) or cl, unstructure_to or dict
         )
-        h = make_mapping_unstructure_fn(
+        h = mapping_unstructure_factory(
             cl, self, unstructure_to=unstructure_to, key_handler=key_handler
         )
         self._unstructure_func.register_cls_list([(cl, h)], direct=True)
         return h
 
     def gen_structure_counter(self, cl: Any) -> MappingStructureFn[T]:
-        h = make_mapping_structure_fn(
+        h = mapping_structure_factory(
             cl,
             self,
             structure_to=Counter,
@@ -1361,7 +1361,7 @@ class Converter(BaseConverter):
             AbcMapping,
         ):  # These default to dicts
             structure_to = dict
-        h = make_mapping_structure_fn(
+        h = mapping_structure_factory(
             cl, self, structure_to, detailed_validation=self.detailed_validation
         )
         self._structure_func.register_cls_list([(cl, h)], direct=True)

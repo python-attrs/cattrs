@@ -844,17 +844,23 @@ def make_hetero_tuple_unstructure_fn(
 MappingUnstructureFn = Callable[[Mapping[Any, Any]], Any]
 
 
-def make_mapping_unstructure_fn(
+# This factory is here for backwards compatibility and circular imports.
+def mapping_unstructure_factory(
     cl: Any,
     converter: BaseConverter,
     unstructure_to: Any = None,
     key_handler: Callable[[Any, Any | None], Any] | None = None,
 ) -> MappingUnstructureFn:
-    """Generate a specialized unstructure function for a mapping."""
+    """Generate a specialized unstructure function for a mapping.
+
+    :param unstructure_to: The class to unstructure to; defaults to the
+        same class as the mapping being unstructured.
+    """
     kh = key_handler or converter.unstructure
     val_handler = converter.unstructure
 
     fn_name = "unstructure_mapping"
+    origin = cl
 
     # Let's try fishing out the type args.
     if getattr(cl, "__args__", None) is not None:
@@ -873,28 +879,35 @@ def make_mapping_unstructure_fn(
         if val_handler == identity:
             val_handler = None
 
-    globs = {
-        "__cattr_mapping_cl": unstructure_to or cl,
-        "__cattr_k_u": kh,
-        "__cattr_v_u": val_handler,
-    }
+        origin = get_origin(cl)
+
+    globs = {"__cattr_k_u": kh, "__cattr_v_u": val_handler}
 
     k_u = "__cattr_k_u(k)" if kh is not None else "k"
     v_u = "__cattr_v_u(v)" if val_handler is not None else "v"
 
-    lines = []
+    lines = [f"def {fn_name}(mapping):"]
 
-    lines.append(f"def {fn_name}(mapping):")
-    lines.append(
-        f"    res = __cattr_mapping_cl(({k_u}, {v_u}) for k, v in mapping.items())"
-    )
+    if unstructure_to is dict or unstructure_to is None and origin is dict:
+        if kh is None and val_handler is None:
+            # Simplest path.
+            return dict
 
-    total_lines = [*lines, "    return res"]
+        lines.append(f"    return {{{k_u}: {v_u} for k, v in mapping.items()}}")
+    else:
+        globs["__cattr_mapping_cl"] = unstructure_to or cl
+        lines.append(
+            f"    res = __cattr_mapping_cl(({k_u}, {v_u}) for k, v in mapping.items())"
+        )
 
-    eval(compile("\n".join(total_lines), "", "exec"), globs)
+        lines = [*lines, "    return res"]
+
+    eval(compile("\n".join(lines), "", "exec"), globs)
 
     return globs[fn_name]
 
+
+make_mapping_unstructure_fn: Final = mapping_unstructure_factory
 
 MappingStructureFn = Callable[[Mapping[Any, Any], Any], T]
 
