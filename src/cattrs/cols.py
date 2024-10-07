@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
+from functools import partial
 from sys import version_info
 from typing import (
     TYPE_CHECKING,
     Any,
+    DefaultDict,
     Iterable,
     Literal,
     NamedTuple,
@@ -16,7 +19,16 @@ from typing import (
 
 from attrs import NOTHING, Attribute
 
-from ._compat import ANIES, is_bare, is_frozenset, is_mapping, is_sequence, is_subclass
+from ._compat import (
+    ANIES,
+    get_args,
+    get_origin,
+    is_bare,
+    is_frozenset,
+    is_mapping,
+    is_sequence,
+    is_subclass,
+)
 from ._compat import is_mutable_set as is_set
 from .dispatch import StructureHook, UnstructureHook
 from .errors import IterableValidationError, IterableValidationNote
@@ -289,3 +301,23 @@ def namedtuple_dict_unstructure_factory(
         working_set.remove(cl)
         if not working_set:
             del already_generating.working_set
+
+
+def is_defaultdict(type: Any) -> bool:
+    """Is this type a defaultdict?
+
+    Bare defaultdicts (defaultdicts with no type arguments) are not supported
+    since there's no way to discover their _default_factory_.
+    """
+    return is_subclass(get_origin(type), (defaultdict, DefaultDict))
+
+
+def defaultdict_struct_factory(
+    type: type[defaultdict], converter: BaseConverter
+) -> StructureHook:
+    """A structure hook factory for defaultdicts.
+
+    The value type parameter will be used as the _default factory_.
+    """
+    value_type = get_args(type)[1]
+    return mapping_structure_factory(type, converter, partial(defaultdict, value_type))
