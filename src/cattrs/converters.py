@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections import Counter, deque
 from collections.abc import Mapping as AbcMapping
 from collections.abc import MutableMapping as AbcMutableMapping
-from collections.abc import MutableSet as AbcMutableSet
 from dataclasses import Field
 from enum import Enum
 from inspect import Signature
@@ -1093,16 +1092,12 @@ class Converter(BaseConverter):
         if OriginAbstractSet in co:
             if OriginMutableSet not in co:
                 co[OriginMutableSet] = co[OriginAbstractSet]
-                co[AbcMutableSet] = co[OriginAbstractSet]  # For 3.8 compatibility.
             if FrozenSetSubscriptable not in co:
                 co[FrozenSetSubscriptable] = co[OriginAbstractSet]
 
         # abc.MutableSet overrrides, if defined, apply to sets
         if OriginMutableSet in co and set not in co:
             co[set] = co[OriginMutableSet]
-
-        if FrozenSetSubscriptable in co:
-            co[frozenset] = co[FrozenSetSubscriptable]  # For 3.8 compatibility.
 
         # abc.Sequence overrides, if defined, can apply to MutableSequences, lists and
         # tuples

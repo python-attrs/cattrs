@@ -287,12 +287,10 @@ Sets and frozensets are unstructured into the same class.
 {'a': 1}
 ```
 
-Both [_total_ and _non-total_](https://peps.python.org/pep-0589/#totality) TypedDicts are supported, and inheritance between any combination works (except on 3.8 when `typing.TypedDict` is used, see below).
+Both [_total_ and _non-total_](https://peps.python.org/pep-0589/#totality) TypedDicts are supported, and inheritance between any combination works.
 Generic TypedDicts work on Python 3.11 and later, since that is the first Python version that supports them in general.
 
 [`typing.Required` and `typing.NotRequired`](https://peps.python.org/pep-0655/) are supported.
-
-On Python 3.8, using `typing_extensions.TypedDict` is recommended since `typing.TypedDict` doesn't support all necessary features so certain combinations of subclassing, totality and `typing.Required` won't work.
 
 [Similar to _attrs_ classes](customizing.md#using-cattrsgen-generators), un/structuring can be customized using {meth}`cattrs.gen.typeddicts.make_dict_structure_fn` and {meth}`cattrs.gen.typeddicts.make_dict_unstructure_fn`.
 

@@ -25,7 +25,7 @@ from cattrs.gen.typeddicts import (
     make_dict_unstructure_fn,
 )
 
-from ._compat import is_py38, is_py39, is_py310, is_py311_plus
+from ._compat import is_py311_plus
 from .typeddicts import (
     generic_typeddicts,
     simple_typeddicts,
@@ -77,7 +77,7 @@ def get_annot(t) -> dict:
     return get_annots(t)
 
 
-@given(simple_typeddicts(typeddict_cls=None if not is_py38 else ExtensionsTypedDict))
+@given(simple_typeddicts())
 def test_simple_roundtrip(cls_and_instance) -> None:
     """Round-trips for simple classes work."""
     c = mk_converter()
@@ -97,12 +97,7 @@ def test_simple_roundtrip(cls_and_instance) -> None:
     assert restructured == instance
 
 
-@given(
-    simple_typeddicts(
-        total=False, typeddict_cls=None if not is_py38 else ExtensionsTypedDict
-    ),
-    booleans(),
-)
+@given(simple_typeddicts(total=False), booleans())
 def test_simple_nontotal(cls_and_instance, detailed_validation: bool) -> None:
     """Non-total dicts work."""
     c = mk_converter(detailed_validation=detailed_validation)
@@ -122,7 +117,7 @@ def test_simple_nontotal(cls_and_instance, detailed_validation: bool) -> None:
     assert restructured == instance
 
 
-@given(simple_typeddicts(typeddict_cls=None if not is_py38 else ExtensionsTypedDict))
+@given(simple_typeddicts())
 def test_int_override(cls_and_instance) -> None:
     """Overriding a base unstructure handler should work."""
     cls, instance = cls_and_instance
@@ -138,12 +133,7 @@ def test_int_override(cls_and_instance) -> None:
     assert unstructured == instance
 
 
-@given(
-    simple_typeddicts_with_extra_keys(
-        typeddict_cls=None if not is_py38 else ExtensionsTypedDict
-    ),
-    booleans(),
-)
+@given(simple_typeddicts_with_extra_keys(), booleans())
 def test_extra_keys(
     cls_instance_extra: Tuple[type, Dict, Set[str]], detailed_validation: bool
 ) -> None:
@@ -243,14 +233,7 @@ def test_not_required(
     assert restructured == instance
 
 
-@given(
-    simple_typeddicts(
-        total=False,
-        not_required=True,
-        typeddict_cls=None if not is_py38 else ExtensionsTypedDict,
-    ),
-    booleans(),
-)
+@given(simple_typeddicts(total=False, not_required=True), booleans())
 def test_required(
     cls_and_instance: Tuple[type, Dict], detailed_validation: bool
 ) -> None:
@@ -264,9 +247,9 @@ def test_required(
     assert restructured == instance
 
 
-@pytest.mark.skipif(is_py39 or is_py310, reason="Sigh")
+@pytest.mark.skipif(not is_py311_plus, reason="Sigh")
 def test_required_keys() -> None:
-    """We don't support the full gamut of functionality on 3.8.
+    """We don't support the full gamut of functionality on 3.9 and 3.10.
 
     When using `typing.TypedDict` we have only partial functionality;
     this test tests only a subset of this.
