@@ -5,6 +5,7 @@ import sys
 from typing import TYPE_CHECKING, Any, Callable, Literal, TypeVar
 
 from attrs import NOTHING, Attribute
+from typing_extensions import _TypedDictMeta
 
 try:
     from inspect import get_annotations
@@ -15,17 +16,8 @@ try:
 except ImportError:
     # https://docs.python.org/3/howto/annotations.html#accessing-the-annotations-dict-of-an-object-in-python-3-9-and-older
     def get_annots(cl) -> dict[str, Any]:
-        if isinstance(cl, type):
-            ann = cl.__dict__.get("__annotations__", {})
-        else:
-            ann = getattr(cl, "__annotations__", {})
-        return ann
+        return cl.__dict__.get("__annotations__", {})
 
-
-try:
-    from typing_extensions import _TypedDictMeta
-except ImportError:
-    _TypedDictMeta = None
 
 from .._compat import (
     TypedDict,
@@ -535,8 +527,6 @@ def _adapted_fields(cls: Any) -> list[Attribute]:
 
 
 def _is_extensions_typeddict(cls) -> bool:
-    if _TypedDictMeta is None:
-        return False
     return cls.__class__ is _TypedDictMeta or (
         is_generic(cls) and (cls.__origin__.__class__ is _TypedDictMeta)
     )
