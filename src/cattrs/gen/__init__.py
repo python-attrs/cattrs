@@ -4,7 +4,7 @@ import re
 from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING, Any, Callable, Final, Literal, TypeVar
 
-from attrs import NOTHING, Attribute, Factory, resolve_types
+from attrs import NOTHING, Attribute, Factory
 from typing_extensions import NoDefault
 
 from .._compat import (
@@ -239,10 +239,6 @@ def make_dict_unstructure_fn(
     """
     origin = get_origin(cl)
     attrs = adapted_fields(origin or cl)  # type: ignore
-
-    if any(isinstance(a.type, str) for a in attrs):
-        # PEP 563 annotations - need to be resolved.
-        resolve_types(cl)
 
     mapping = {}
     if is_generic(cl):
@@ -742,10 +738,6 @@ def make_dict_structure_fn(
             break
 
     attrs = adapted_fields(cl)
-
-    if any(isinstance(a.type, str) for a in attrs):
-        # PEP 563 annotations - need to be resolved.
-        resolve_types(cl)
 
     # We keep track of what we're generating to help with recursive
     # class graphs.
