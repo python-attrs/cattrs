@@ -27,7 +27,10 @@ def test_simple_roundtrip(cls_and_vals, strat):
     assert inst == converter.structure(converter.unstructure(inst), cl)
 
 
-@given(simple_typed_attrs(defaults=True, newtypes=False), unstructure_strats)
+@given(
+    simple_typed_attrs(defaults=True, newtypes=False, allow_nan=False),
+    unstructure_strats,
+)
 def test_simple_roundtrip_defaults(attr_and_strat, strat):
     """
     Simple classes with metadata can be unstructured and restructured.
