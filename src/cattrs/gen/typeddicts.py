@@ -548,7 +548,7 @@ if sys.version_info >= (3, 11):
         return cls.__required_keys__
 
 else:
-    from typing_extensions import Annotated, NotRequired, Required, get_args
+    from typing_extensions import Annotated, NotRequired, get_args
 
     # Note that there is no `typing.Required` on 3.9 and 3.10, only in
     # `typing_extensions`. Therefore, `typing.TypedDict` will not honor this

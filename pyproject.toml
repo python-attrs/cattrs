@@ -149,6 +149,8 @@ ignore = [
     "B006",   # mutable argument defaults
     "DTZ001", # datetimes in tests
     "DTZ006", # datetimes in tests
+    "UP006",  # We support old typing constructs at runtime
+    "UP035",  # We support old typing constructs at runtime
 ]
 
 [tool.ruff.lint.pyupgrade]
