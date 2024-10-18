@@ -9,8 +9,7 @@ from collections.abc import (
 )
 from functools import partial
 
-import attr
-import pytest
+from attrs import define, field
 from immutables import Map
 
 from cattrs import Converter
@@ -69,9 +68,9 @@ def test_collection_unstructure_override_seq():
 
     assert c.unstructure([1, 2, 3], unstructure_as=Sequence[int]) == (1, 2, 3)
 
-    @attr.define
+    @define
     class MyList:
-        args = attr.ib(converter=list)
+        args = field(converter=list)
 
     # Second approach, using abc.MutableSequence
     c = Converter(unstruct_collection_overrides={MutableSequence: MyList})
@@ -112,7 +111,6 @@ def test_collection_unstructure_override_seq():
     assert c.unstructure((1, 2, 3)) == MyList([1, 2, 3])
 
 
-@pytest.mark.skipif(not is_py39_plus, reason="Requires Python 3.9+")
 def test_collection_unstructure_override_mapping():
     """Test overriding unstructuring mappings."""
 
