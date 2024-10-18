@@ -10,7 +10,6 @@ from cattrs._compat import FrozenSetSubscriptable
 from cattrs.errors import ClassValidationError
 from cattrs.preconf.pyyaml import make_converter
 
-from .._compat import is_py38
 from ..test_preconf import Everything, everythings, native_unions
 
 
@@ -40,10 +39,7 @@ def test_pyyaml_converter_unstruct_collection_overrides(everything: Everything):
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
 
 
-@given(
-    union_and_val=native_unions(include_bools=not is_py38),  # Literal issues on 3.8
-    detailed_validation=...,
-)
+@given(union_and_val=native_unions(), detailed_validation=...)
 def test_pyyaml_unions(union_and_val: tuple, detailed_validation: bool):
     """Native union passthrough works."""
     converter = make_converter(detailed_validation=detailed_validation)

@@ -1,4 +1,5 @@
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from ._compat import copy_with, get_args, is_annotated, is_generic
 

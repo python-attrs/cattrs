@@ -1,6 +1,6 @@
 """Useful internal functions."""
 
-from typing import Any, Callable, NoReturn, Type, TypeVar
+from typing import Any, Callable, NoReturn, TypeVar
 
 from ._compat import TypeAlias
 from .errors import StructureHandlerNotFoundError
@@ -16,7 +16,7 @@ def identity(obj: T) -> T:
     return obj
 
 
-def raise_error(_, cl: Type) -> NoReturn:
+def raise_error(_, cl: Any) -> NoReturn:
     """At the bottom of the condition stack, we explode if we can't handle it."""
     msg = f"Unsupported type: {cl!r}. Register a structure hook for it."
     raise StructureHandlerNotFoundError(msg, type_=cl)

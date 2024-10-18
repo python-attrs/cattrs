@@ -4,7 +4,7 @@ from base64 import b85decode, b85encode
 from datetime import date, datetime
 from enum import Enum
 from functools import partial
-from typing import Any, Type, TypeVar, Union
+from typing import Any, TypeVar, Union
 
 from orjson import dumps, loads
 
@@ -22,7 +22,7 @@ class OrjsonConverter(Converter):
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> bytes:
         return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
-    def loads(self, data: Union[bytes, bytearray, memoryview, str], cl: Type[T]) -> T:
+    def loads(self, data: Union[bytes, bytearray, memoryview, str], cl: type[T]) -> T:
         return self.structure(loads(data), cl)
 
 

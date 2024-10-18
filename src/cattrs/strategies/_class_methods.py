@@ -1,7 +1,7 @@
 """Strategy for using class-specific (un)structuring methods."""
 
 from inspect import signature
-from typing import Any, Callable, Optional, Type, TypeVar
+from typing import Any, Callable, Optional, TypeVar
 
 from .. import BaseConverter
 
@@ -35,7 +35,7 @@ def use_class_methods(
 
     if structure_method_name:
 
-        def make_class_method_structure(cl: Type[T]) -> Callable[[Any, Type[T]], T]:
+        def make_class_method_structure(cl: type[T]) -> Callable[[Any, type[T]], T]:
             fn = getattr(cl, structure_method_name)
             n_parameters = len(signature(fn).parameters)
             if n_parameters == 1:
@@ -50,7 +50,7 @@ def use_class_methods(
 
     if unstructure_method_name:
 
-        def make_class_method_unstructure(cl: Type[T]) -> Callable[[T], T]:
+        def make_class_method_unstructure(cl: type[T]) -> Callable[[T], T]:
             fn = getattr(cl, unstructure_method_name)
             n_parameters = len(signature(fn).parameters)
             if n_parameters == 1:

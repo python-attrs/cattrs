@@ -3,7 +3,7 @@
 from base64 import b85decode, b85encode
 from datetime import date, datetime
 from json import dumps, loads
-from typing import Any, Type, TypeVar, Union
+from typing import Any, TypeVar, Union
 
 from .._compat import AbstractSet, Counter
 from ..converters import BaseConverter, Converter
@@ -17,7 +17,7 @@ class JsonConverter(Converter):
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> str:
         return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
-    def loads(self, data: Union[bytes, str], cl: Type[T], **kwargs: Any) -> T:
+    def loads(self, data: Union[bytes, str], cl: type[T], **kwargs: Any) -> T:
         return self.structure(loads(data, **kwargs), cl)
 
 

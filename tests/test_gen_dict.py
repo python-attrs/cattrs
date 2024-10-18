@@ -12,7 +12,6 @@ from cattrs._compat import adapted_fields, fields
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
-from ._compat import is_py39_plus
 from .typed import nested_typed_classes, simple_typed_classes, simple_typed_dataclasses
 from .untyped import nested_classes, simple_classes
 
@@ -313,7 +312,6 @@ def test_omitting_structure(detailed_validation: bool):
     assert not hasattr(structured, "b")
 
 
-@pytest.mark.skipif(not is_py39_plus, reason="literals and annotated are 3.9+")
 def test_type_names_with_quotes():
     """Types with quote characters in their reprs should work."""
     from typing import Annotated, Literal, Union

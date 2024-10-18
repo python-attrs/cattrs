@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import MISSING
 from functools import reduce
 from operator import or_
-from typing import TYPE_CHECKING, Any, Callable, Literal, Mapping, Union
+from typing import TYPE_CHECKING, Any, Callable, Literal, Union
 
 from attrs import NOTHING, Attribute, AttrsInstance
 

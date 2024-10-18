@@ -1,17 +1,8 @@
 from __future__ import annotations
 
 import re
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Final,
-    Iterable,
-    Literal,
-    Mapping,
-    Tuple,
-    TypeVar,
-)
+from collections.abc import Iterable, Mapping
+from typing import TYPE_CHECKING, Any, Callable, Final, Literal, TypeVar
 
 from attrs import NOTHING, Attribute, Factory, resolve_types
 from typing_extensions import NoDefault
@@ -793,7 +784,7 @@ IterableUnstructureFn = Callable[[Iterable[Any]], Any]
 
 
 #: A type alias for heterogeneous tuple unstructure hooks.
-HeteroTupleUnstructureFn: TypeAlias = Callable[[Tuple[Any, ...]], Any]
+HeteroTupleUnstructureFn: TypeAlias = Callable[[tuple[Any, ...]], Any]
 
 
 def make_hetero_tuple_unstructure_fn(

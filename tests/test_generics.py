@@ -10,13 +10,7 @@ from cattrs._generics import deep_copy_with
 from cattrs.errors import StructureHandlerNotFoundError
 from cattrs.gen._generics import generate_mapping
 
-from ._compat import (
-    Dict_origin,
-    List_origin,
-    is_py39_plus,
-    is_py310_plus,
-    is_py311_plus,
-)
+from ._compat import Dict_origin, List_origin, is_py310_plus, is_py311_plus
 
 T = TypeVar("T")
 T2 = TypeVar("T2")
@@ -77,7 +71,6 @@ def test_structure_generics_with_cols(t, result, detailed_validation):
     assert res == result
 
 
-@pytest.mark.skipif(not is_py39_plus, reason="3.9+ generics syntax")
 @pytest.mark.parametrize(
     ("t", "result"), ((int, (1, [2], {"3": 3})), (str, ("1", ["2"], {"3": "3"})))
 )

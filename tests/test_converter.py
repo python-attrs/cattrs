@@ -29,7 +29,7 @@ from cattrs.errors import (
 )
 from cattrs.gen import make_dict_structure_fn, override
 
-from ._compat import is_py39_plus, is_py310_plus
+from ._compat import is_py310_plus
 from .typed import (
     nested_typed_classes,
     simple_typed_attrs,
@@ -562,17 +562,6 @@ def test_overriding_generated_structure_hook_func():
             (deque, MutableSequence),
             (tuple, Sequence),
         ]
-        if is_py39_plus
-        else [
-            (tuple, Tuple),
-            (list, List),
-            (deque, Deque),
-            (set, Set),
-            (frozenset, FrozenSet),
-            (list, MutableSequence),
-            (deque, MutableSequence),
-            (tuple, Sequence),
-        ]
     ),
 )
 def test_seq_of_simple_classes_unstructure(cls_and_vals, seq_type_and_annotation):
@@ -610,14 +599,6 @@ def test_seq_of_simple_classes_unstructure(cls_and_vals, seq_type_and_annotation
             (frozenset, frozenset),
             (frozenset, FrozenSet),
         ]
-        if is_py39_plus
-        else [
-            (tuple, Tuple),
-            (list, List),
-            (deque, Deque),
-            (set, Set),
-            (frozenset, FrozenSet),
-        ]
     )
 )
 def test_seq_of_bare_classes_structure(seq_type_and_annotation):
@@ -649,7 +630,6 @@ def test_seq_of_bare_classes_structure(seq_type_and_annotation):
         assert outputs == expected
 
 
-@pytest.mark.skipif(not is_py39_plus, reason="3.9+ only")
 def test_annotated_attrs():
     """Annotation support works for attrs classes."""
     from typing import Annotated

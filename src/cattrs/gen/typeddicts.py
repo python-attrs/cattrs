@@ -547,8 +547,8 @@ if sys.version_info >= (3, 11):
     def _required_keys(cls: type) -> set[str]:
         return cls.__required_keys__
 
-elif sys.version_info >= (3, 9):
-    from typing_extensions import Annotated, NotRequired, Required, get_args
+else:
+    from typing_extensions import Annotated, NotRequired, get_args
 
     # Note that there is no `typing.Required` on 3.9 and 3.10, only in
     # `typing_extensions`. Therefore, `typing.TypedDict` will not honor this
@@ -563,7 +563,7 @@ elif sys.version_info >= (3, 9):
         # gathering required keys. *sigh*
         own_annotations = cls.__dict__.get("__annotations__", {})
         required_keys = set()
-        # On 3.8 - 3.10, typing.TypedDict doesn't put typeddict superclasses
+        # On 3.9 - 3.10, typing.TypedDict doesn't put typeddict superclasses
         # in the MRO, therefore we cannot handle non-required keys properly
         # in some situations. Oh well.
         for key in getattr(cls, "__required_keys__", []):
@@ -576,35 +576,6 @@ elif sys.version_info >= (3, 9):
                     annotation_origin = get_origin(annotation_type)
 
             if annotation_origin is NotRequired:
-                pass
-            elif cls.__total__:
-                required_keys.add(key)
-        return required_keys
-
-else:
-    from typing_extensions import Annotated, NotRequired, Required, get_args
-
-    # On 3.8, typing.TypedDicts do not have __required_keys__.
-
-    def _required_keys(cls: type) -> set[str]:
-        """Our own processor for required keys."""
-        if _is_extensions_typeddict(cls):
-            return cls.__required_keys__
-
-        own_annotations = cls.__dict__.get("__annotations__", {})
-        required_keys = set()
-        for key in own_annotations:
-            annotation_type = own_annotations[key]
-
-            if is_annotated(annotation_type):
-                # If this is `Annotated`, we need to get the origin twice.
-                annotation_type = get_origin(annotation_type)
-
-            annotation_origin = get_origin(annotation_type)
-
-            if annotation_origin is Required:
-                required_keys.add(key)
-            elif annotation_origin is NotRequired:
                 pass
             elif cls.__total__:
                 required_keys.add(key)

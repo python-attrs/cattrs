@@ -1,7 +1,7 @@
 """Preconfigured converters for msgpack."""
 
 from datetime import date, datetime, time, timezone
-from typing import Any, Type, TypeVar, Union
+from typing import Any, TypeVar, Union
 
 from msgpack import dumps, loads
 
@@ -18,7 +18,7 @@ class MsgpackConverter(Converter):
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> bytes:
         return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
-    def loads(self, data: bytes, cl: Type[T], **kwargs: Any) -> T:
+    def loads(self, data: bytes, cl: type[T], **kwargs: Any) -> T:
         return self.structure(loads(data, **kwargs), cl)
 
 

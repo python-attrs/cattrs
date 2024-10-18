@@ -46,7 +46,7 @@ dependencies = [
     "typing-extensions>=4.12.2",
     "exceptiongroup>=1.1.1; python_version < '3.11'",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 readme = "README.md"
 license = {text = "MIT"}
 keywords = ["attrs", "serialization", "dataclasses"]
@@ -54,7 +54,6 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -150,6 +149,8 @@ ignore = [
     "B006",   # mutable argument defaults
     "DTZ001", # datetimes in tests
     "DTZ006", # datetimes in tests
+    "UP006",  # We support old typing constructs at runtime
+    "UP035",  # We support old typing constructs at runtime
 ]
 
 [tool.ruff.lint.pyupgrade]

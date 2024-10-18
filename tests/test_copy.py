@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from copy import deepcopy
-from typing import Callable, Type
+from typing import Callable
 
 from attr import define
 from hypothesis import given
@@ -20,7 +20,7 @@ class Simple:
 
 @given(strat=unstructure_strats, detailed_validation=..., prefer_attrib=...)
 def test_deepcopy(
-    converter_cls: Type[BaseConverter],
+    converter_cls: type[BaseConverter],
     strat: UnstructureStrategy,
     prefer_attrib: bool,
     detailed_validation: bool,
@@ -47,7 +47,7 @@ def test_deepcopy(
     dict_factory=one_of(just(dict), just(OrderedDict)),
 )
 def test_copy(
-    converter_cls: Type[BaseConverter],
+    converter_cls: type[BaseConverter],
     strat: UnstructureStrategy,
     prefer_attrib: bool,
     detailed_validation: bool,
@@ -114,7 +114,7 @@ def test_copy_converter(
     dict_factory=one_of(just(dict), just(OrderedDict)),
 )
 def test_copy_hooks(
-    converter_cls: Type[BaseConverter],
+    converter_cls: type[BaseConverter],
     strat: UnstructureStrategy,
     prefer_attrib: bool,
     detailed_validation: bool,
@@ -152,7 +152,7 @@ def test_copy_hooks(
     dict_factory=one_of(just(dict), just(OrderedDict)),
 )
 def test_copy_func_hooks(
-    converter_cls: Type[BaseConverter],
+    converter_cls: type[BaseConverter],
     strat: UnstructureStrategy,
     prefer_attrib: bool,
     detailed_validation: bool,
