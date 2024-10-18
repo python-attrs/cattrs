@@ -17,7 +17,6 @@ from typing import (
     Sequence,
     Set,
     Tuple,
-    Type,
 )
 
 import attr
@@ -27,8 +26,8 @@ from hypothesis import strategies as st
 from hypothesis.strategies import SearchStrategy
 
 PosArg = Any
-PosArgs = Tuple[PosArg]
-KwArgs = Dict[str, Any]
+PosArgs = tuple[PosArg]
+KwArgs = dict[str, Any]
 
 primitive_strategies = st.sampled_from(
     [
@@ -166,7 +165,7 @@ def gen_attr_names() -> Iterable[str]:
 
 
 def _create_hyp_class(
-    attrs_and_strategy: List[Tuple[_CountingAttr, st.SearchStrategy[PosArgs]]],
+    attrs_and_strategy: list[tuple[_CountingAttr, st.SearchStrategy[PosArgs]]],
     frozen=None,
 ):
     """
@@ -221,8 +220,8 @@ def just_class_with_type(tup):
 
 
 def just_class_with_type_takes_self(
-    tup: Tuple[List[Tuple[_CountingAttr, SearchStrategy]], Tuple[Type[AttrsInstance]]]
-) -> SearchStrategy[Tuple[Type[AttrsInstance]]]:
+    tup: tuple[list[tuple[_CountingAttr, SearchStrategy]], tuple[type[AttrsInstance]]]
+) -> SearchStrategy[tuple[type[AttrsInstance]]]:
     nested_cl = tup[1][0]
     default = Factory(lambda _: nested_cl(), takes_self=True)
     combined_attrs = list(tup[0])

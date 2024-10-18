@@ -1,7 +1,7 @@
 from typing import Type, Union
 
-import attr
 import pytest
+from attrs import define
 
 from cattrs.converters import BaseConverter, Converter
 
@@ -18,11 +18,11 @@ def test_custom_union_toplevel_roundtrip(cls: Type[BaseConverter]):
     """
     c = cls()
 
-    @attr.define
+    @define
     class A:
         a: int
 
-    @attr.define
+    @define
     class B:
         a: int
 
@@ -51,11 +51,11 @@ def test_310_custom_union_toplevel_roundtrip(cls: Type[BaseConverter]):
     """
     c = cls()
 
-    @attr.define
+    @define
     class A:
         a: int
 
-    @attr.define
+    @define
     class B:
         a: int
 
@@ -83,15 +83,15 @@ def test_custom_union_clsfield_roundtrip(cls: Type[BaseConverter]):
     """
     c = cls()
 
-    @attr.define
+    @define
     class A:
         a: int
 
-    @attr.define
+    @define
     class B:
         a: int
 
-    @attr.define
+    @define
     class C:
         f: Union[A, B]
 
