@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Callable, Dict, Literal, Type, Union
+from typing import Any, Callable, Literal, Union
 
 from attrs import NOTHING
 
@@ -13,7 +13,7 @@ __all__ = [
 ]
 
 
-def default_tag_generator(typ: Type) -> str:
+def default_tag_generator(typ: type) -> str:
     """Return the class name."""
     return typ.__name__
 
@@ -21,9 +21,9 @@ def default_tag_generator(typ: Type) -> str:
 def configure_tagged_union(
     union: Any,
     converter: BaseConverter,
-    tag_generator: Callable[[Type], str] = default_tag_generator,
+    tag_generator: Callable[[type], str] = default_tag_generator,
     tag_name: str = "_type",
-    default: Union[Type, Literal[NOTHING]] = NOTHING,
+    default: Union[type, Literal[NOTHING]] = NOTHING,
 ) -> None:
     """
     Configure the converter so that `union` (which should be a union) is
@@ -78,7 +78,7 @@ def configure_tagged_union(
         _exact_cl_unstruct_hooks=exact_cl_unstruct_hooks,
         _cl_to_tag=cl_to_tag,
         _tag_name=tag_name,
-    ) -> Dict:
+    ) -> dict:
         res = _exact_cl_unstruct_hooks[val.__class__](val)
         res[_tag_name] = _cl_to_tag[val.__class__]
         return res

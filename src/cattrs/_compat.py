@@ -1,32 +1,41 @@
 import sys
-from collections import deque
+from collections import Counter, deque
 from collections.abc import Mapping as AbcMapping
 from collections.abc import MutableMapping as AbcMutableMapping
+from collections.abc import MutableSequence as AbcMutableSequence
 from collections.abc import MutableSet as AbcMutableSet
+from collections.abc import Sequence as AbcSequence
 from collections.abc import Set as AbcSet
 from dataclasses import MISSING, Field, is_dataclass
 from dataclasses import fields as dataclass_fields
 from functools import partial
 from inspect import signature as _signature
-from typing import AbstractSet as TypingAbstractSet
+from types import GenericAlias
 from typing import (
+    Annotated,
     Any,
     Deque,
     Dict,
     Final,
     FrozenSet,
+    Generic,
     List,
     Literal,
     NewType,
     Optional,
     Protocol,
     Tuple,
-    Type,
+    TypedDict,
     Union,
+    _AnnotatedAlias,
+    _GenericAlias,
+    _SpecialGenericAlias,
+    _UnionGenericAlias,
     get_args,
     get_origin,
     get_type_hints,
 )
+from typing import Counter as TypingCounter
 from typing import Mapping as TypingMapping
 from typing import MutableMapping as TypingMutableMapping
 from typing import MutableSequence as TypingMutableSequence
@@ -94,11 +103,11 @@ except ImportError:  # pragma: no cover
 NoneType = type(None)
 
 
-def is_optional(typ: Type) -> bool:
+def is_optional(typ: Any) -> bool:
     return is_union_type(typ) and NoneType in typ.__args__ and len(typ.__args__) == 2
 
 
-def is_typeddict(cls):
+def is_typeddict(cls: Any):
     """Thin wrapper around typing(_extensions).is_typeddict"""
     return _is_typeddict(getattr(cls, "__origin__", cls))
 
@@ -133,14 +142,14 @@ def fields(type):
         return dataclass_fields(type)
 
 
-def fields_dict(type) -> Dict[str, Union[Attribute, Field]]:
+def fields_dict(type) -> dict[str, Union[Attribute, Field]]:
     """Return the fields_dict for attrs and dataclasses."""
     if is_dataclass(type):
         return {f.name: f for f in dataclass_fields(type)}
     return attrs_fields_dict(type)
 
 
-def adapted_fields(cl) -> List[Attribute]:
+def adapted_fields(cl) -> list[Attribute]:
     """Return the attrs format of `fields()` for attrs and dataclasses."""
     if is_dataclass(cl):
         attrs = dataclass_fields(cl)
@@ -219,23 +228,6 @@ signature = _signature
 if sys.version_info >= (3, 10):
     signature = partial(_signature, eval_str=True)
 
-from collections import Counter
-from collections.abc import MutableSequence as AbcMutableSequence
-from collections.abc import MutableSet as AbcMutableSet
-from collections.abc import Sequence as AbcSequence
-from collections.abc import Set as AbcSet
-from types import GenericAlias
-from typing import (
-    Annotated,
-    Generic,
-    TypedDict,
-    Union,
-    _AnnotatedAlias,
-    _GenericAlias,
-    _SpecialGenericAlias,
-    _UnionGenericAlias,
-)
-from typing import Counter as TypingCounter
 
 try:
     # Not present on 3.9.0, so we try carefully.
@@ -308,6 +300,7 @@ if sys.version_info >= (3, 10):
         from typing_extensions import NotRequired, Required
 
 else:
+    # 3.9
     from typing_extensions import NotRequired, Required
 
     def is_union_type(obj):

@@ -2,7 +2,7 @@
 
 from base64 import b85decode, b85encode
 from datetime import date, datetime
-from typing import Any, Type, TypeVar, Union
+from typing import Any, TypeVar, Union
 
 from bson import DEFAULT_CODEC_OPTIONS, CodecOptions, Int64, ObjectId, decode, encode
 
@@ -38,7 +38,7 @@ class BsonConverter(Converter):
     def loads(
         self,
         data: bytes,
-        cl: Type[T],
+        cl: type[T],
         codec_options: CodecOptions = DEFAULT_CODEC_OPTIONS,
     ) -> T:
         return self.structure(decode(data, codec_options=codec_options), cl)

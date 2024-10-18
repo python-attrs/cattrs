@@ -2,7 +2,7 @@
 
 from base64 import b85decode, b85encode
 from datetime import date, datetime
-from typing import Any, AnyStr, Type, TypeVar, Union
+from typing import Any, AnyStr, TypeVar, Union
 
 from ujson import dumps, loads
 
@@ -19,7 +19,7 @@ class UjsonConverter(Converter):
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> str:
         return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
-    def loads(self, data: AnyStr, cl: Type[T], **kwargs: Any) -> T:
+    def loads(self, data: AnyStr, cl: type[T], **kwargs: Any) -> T:
         return self.structure(loads(data, **kwargs), cl)
 
 

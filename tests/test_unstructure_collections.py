@@ -16,10 +16,7 @@ from immutables import Map
 from cattrs import Converter
 from cattrs.converters import is_mutable_set, is_sequence
 
-from ._compat import is_py39_plus
 
-
-@pytest.mark.skipif(not is_py39_plus, reason="Requires Python 3.9+")
 def test_collection_unstructure_override_set():
     """Test overriding unstructuring sets."""
 

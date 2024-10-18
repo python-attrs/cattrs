@@ -2,7 +2,7 @@
 
 from datetime import date, datetime
 from functools import partial
-from typing import Any, Type, TypeVar, Union
+from typing import Any, TypeVar, Union
 
 from yaml import safe_dump, safe_load
 
@@ -15,7 +15,7 @@ from . import validate_datetime, wrap
 T = TypeVar("T")
 
 
-def validate_date(v, _):
+def validate_date(v: Any, _):
     if not isinstance(v, date):
         raise ValueError(f"Expected date, got {v}")
     return v
@@ -25,7 +25,7 @@ class PyyamlConverter(Converter):
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> str:
         return safe_dump(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
-    def loads(self, data: str, cl: Type[T]) -> T:
+    def loads(self, data: str, cl: type[T]) -> T:
         return self.structure(safe_load(data), cl)
 
 

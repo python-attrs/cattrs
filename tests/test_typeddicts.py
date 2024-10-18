@@ -1,7 +1,7 @@
 """Tests for TypedDict un/structuring."""
 
 from datetime import datetime, timezone
-from typing import Dict, Generic, NewType, Set, Tuple, TypedDict, TypeVar
+from typing import Generic, NewType, TypedDict, TypeVar
 
 import pytest
 from attrs import NOTHING
@@ -135,7 +135,7 @@ def test_int_override(cls_and_instance) -> None:
 
 @given(simple_typeddicts_with_extra_keys(), booleans())
 def test_extra_keys(
-    cls_instance_extra: Tuple[type, Dict, Set[str]], detailed_validation: bool
+    cls_instance_extra: tuple[type, dict, set[str]], detailed_validation: bool
 ) -> None:
     """Extra keys are preserved."""
     cls, instance, extra = cls_instance_extra
@@ -157,7 +157,7 @@ def test_extra_keys(
 @pytest.mark.skipif(not is_py311_plus, reason="3.11+ only")
 @given(generic_typeddicts(total=True), booleans())
 def test_generics(
-    cls_and_instance: Tuple[type, Dict], detailed_validation: bool
+    cls_and_instance: tuple[type, dict], detailed_validation: bool
 ) -> None:
     """Generic TypedDicts work."""
     c = mk_converter(detailed_validation=detailed_validation)
@@ -221,7 +221,7 @@ def test_deep_generics(detailed_validation: bool):
 
 @given(simple_typeddicts(total=True, not_required=True), booleans())
 def test_not_required(
-    cls_and_instance: Tuple[type, Dict], detailed_validation: bool
+    cls_and_instance: tuple[type, dict], detailed_validation: bool
 ) -> None:
     """NotRequired[] keys are handled."""
     c = mk_converter(detailed_validation=detailed_validation)
@@ -235,7 +235,7 @@ def test_not_required(
 
 @given(simple_typeddicts(total=False, not_required=True), booleans())
 def test_required(
-    cls_and_instance: Tuple[type, Dict], detailed_validation: bool
+    cls_and_instance: tuple[type, dict], detailed_validation: bool
 ) -> None:
     """Required[] keys are handled."""
     c = mk_converter(detailed_validation=detailed_validation)
@@ -270,7 +270,7 @@ def test_required_keys() -> None:
 
 
 @given(simple_typeddicts(min_attrs=1, total=True), booleans())
-def test_omit(cls_and_instance: Tuple[type, Dict], detailed_validation: bool) -> None:
+def test_omit(cls_and_instance: tuple[type, dict], detailed_validation: bool) -> None:
     """`override(omit=True)` works."""
     c = mk_converter(detailed_validation=detailed_validation)
 
@@ -312,7 +312,7 @@ def test_omit(cls_and_instance: Tuple[type, Dict], detailed_validation: bool) ->
 
 
 @given(simple_typeddicts(min_attrs=1, total=True, not_required=True), booleans())
-def test_rename(cls_and_instance: Tuple[type, Dict], detailed_validation: bool) -> None:
+def test_rename(cls_and_instance: tuple[type, dict], detailed_validation: bool) -> None:
     """`override(rename=...)` works."""
     c = mk_converter(detailed_validation=detailed_validation)
 
@@ -338,7 +338,7 @@ def test_rename(cls_and_instance: Tuple[type, Dict], detailed_validation: bool) 
 
 @given(simple_typeddicts(total=True), booleans())
 def test_forbid_extra_keys(
-    cls_and_instance: Tuple[type, Dict], detailed_validation: bool
+    cls_and_instance: tuple[type, dict], detailed_validation: bool
 ) -> None:
     """Extra keys can be forbidden."""
     c = mk_converter(detailed_validation)

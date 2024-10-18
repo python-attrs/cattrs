@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter, deque
+from collections.abc import Iterable
 from collections.abc import Mapping as AbcMapping
 from collections.abc import MutableMapping as AbcMutableMapping
 from dataclasses import Field
@@ -8,7 +9,7 @@ from enum import Enum
 from inspect import Signature
 from inspect import signature as inspect_signature
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, overload
+from typing import Any, Callable, Optional, Tuple, TypeVar, overload
 
 from attrs import Attribute, resolve_types
 from attrs import has as attrs_has

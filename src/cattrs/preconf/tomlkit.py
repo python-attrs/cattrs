@@ -4,7 +4,7 @@ from base64 import b85decode, b85encode
 from datetime import date, datetime
 from enum import Enum
 from operator import attrgetter
-from typing import Any, Type, TypeVar, Union
+from typing import Any, TypeVar, Union
 
 from tomlkit import dumps, loads
 from tomlkit.items import Float, Integer, String
@@ -23,7 +23,7 @@ class TomlkitConverter(Converter):
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> str:
         return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
-    def loads(self, data: str, cl: Type[T]) -> T:
+    def loads(self, data: str, cl: type[T]) -> T:
         return self.structure(loads(data), cl)
 
 
