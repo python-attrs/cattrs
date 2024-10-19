@@ -336,6 +336,7 @@ def test_overriding_struct_hook(converter: BaseConverter) -> None:
     class A:
         a: int
         b: str
+        c: int = 0
 
     converter.register_structure_hook(
         A,
@@ -343,11 +344,12 @@ def test_overriding_struct_hook(converter: BaseConverter) -> None:
             A,
             converter,
             a=override(struct_hook=lambda v, _: ceil(v)),
+            c=override(struct_hook=lambda v, _: ceil(v)),
             _cattrs_detailed_validation=converter.detailed_validation,
         ),
     )
 
-    assert converter.structure({"a": 0.5, "b": 1}, A) == A(1, "1")
+    assert converter.structure({"a": 0.5, "b": 1, "c": 0.5}, A) == A(1, "1", 1)
 
 
 def test_overriding_unstruct_hook(converter: BaseConverter) -> None:
