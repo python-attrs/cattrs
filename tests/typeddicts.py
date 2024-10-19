@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from string import ascii_lowercase
-from typing import Any, Dict, Generic, List, Optional, Set, Tuple, Type, TypeVar
+from typing import Any, Generic, List, Optional, TypeVar
 
 from attrs import NOTHING
 from hypothesis import note
@@ -51,7 +51,7 @@ def gen_typeddict_attr_names():
 @composite
 def int_attributes(
     draw: DrawFn, total: bool = True, not_required: bool = False
-) -> Tuple[Type[int], SearchStrategy, SearchStrategy]:
+) -> tuple[type[int], SearchStrategy, SearchStrategy]:
     if total:
         if not_required and draw(booleans()):
             return (NotRequired[int], integers() | just(NOTHING), text(ascii_lowercase))
@@ -66,7 +66,7 @@ def int_attributes(
 @composite
 def annotated_int_attributes(
     draw: DrawFn, total: bool = True, not_required: bool = False
-) -> Tuple[int, SearchStrategy, SearchStrategy]:
+) -> tuple[int, SearchStrategy, SearchStrategy]:
     """Generate combinations of Annotated types."""
     if total:
         if not_required and draw(booleans()):
@@ -98,7 +98,7 @@ def annotated_int_attributes(
 @composite
 def datetime_attributes(
     draw: DrawFn, total: bool = True, not_required: bool = False
-) -> Tuple[datetime, SearchStrategy, SearchStrategy]:
+) -> tuple[datetime, SearchStrategy, SearchStrategy]:
     success_strat = datetimes(
         min_value=datetime(1970, 1, 1),
         max_value=datetime(2038, 1, 1),
@@ -119,7 +119,7 @@ def datetime_attributes(
 @composite
 def list_of_int_attributes(
     draw: DrawFn, total: bool = True, not_required: bool = False
-) -> Tuple[List[int], SearchStrategy, SearchStrategy]:
+) -> tuple[list[int], SearchStrategy, SearchStrategy]:
     if total:
         if not_required and draw(booleans()):
             return (
@@ -151,7 +151,7 @@ def simple_typeddicts(
     not_required: bool = False,
     min_attrs: int = 0,
     typeddict_cls: Optional[Any] = None,
-) -> Tuple[TypedDictType, dict]:
+) -> tuple[TypedDictType, dict]:
     """Generate simple typed dicts.
 
     :param total: Generate the given totality dicts (default = random)
@@ -205,7 +205,7 @@ def simple_typeddicts(
 @composite
 def simple_typeddicts_with_extra_keys(
     draw: DrawFn, total: Optional[bool] = None, typeddict_cls: Optional[Any] = None
-) -> Tuple[TypedDictType, dict, Set[str]]:
+) -> tuple[TypedDictType, dict, set[str]]:
     """Generate TypedDicts, with the instances having extra keys."""
     cls, success = draw(simple_typeddicts(total, typeddict_cls=typeddict_cls))
 
@@ -217,7 +217,7 @@ def simple_typeddicts_with_extra_keys(
 
 
 @composite
-def generic_typeddicts(draw: DrawFn, total: bool = True) -> Tuple[TypedDictType, dict]:
+def generic_typeddicts(draw: DrawFn, total: bool = True) -> tuple[TypedDictType, dict]:
     """Generate generic typed dicts.
 
     :param total: Generate the given totality dicts
@@ -272,7 +272,7 @@ def generic_typeddicts(draw: DrawFn, total: bool = True) -> Tuple[TypedDictType,
 
 
 def make_typeddict(
-    cls_name: str, attrs: Dict[str, type], total: bool = True, bases: List = []
+    cls_name: str, attrs: dict[str, type], total: bool = True, bases: list = []
 ) -> TypedDictType:
     globs = {"TypedDict": TypedDict}
     lines = []

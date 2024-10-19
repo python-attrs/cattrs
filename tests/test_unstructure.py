@@ -1,12 +1,10 @@
 """Tests for dumping."""
 
-from typing import Type
-
 from attr import asdict, astuple
 from hypothesis import given
 from hypothesis.strategies import data, just, lists, one_of, sampled_from
 
-from cattr.converters import BaseConverter, UnstructureStrategy
+from cattrs.converters import BaseConverter, UnstructureStrategy
 
 from .untyped import (
     dicts_of_primitives,
@@ -126,7 +124,7 @@ def test_unstructure_hook_func(converter):
 
 
 @given(lists(simple_classes()), one_of(just(tuple), just(list)))
-def test_seq_of_simple_classes_unstructure(cls_and_vals, seq_type: Type):
+def test_seq_of_simple_classes_unstructure(cls_and_vals, seq_type: type):
     """Dumping a sequence of primitives is a simple copy operation."""
     converter = BaseConverter()
 

@@ -149,8 +149,11 @@ def fields_dict(type) -> dict[str, Union[Attribute, Field]]:
     return attrs_fields_dict(type)
 
 
-def adapted_fields(cl) -> list[Attribute]:
-    """Return the attrs format of `fields()` for attrs and dataclasses."""
+def adapted_fields(cl: type) -> list[Attribute]:
+    """Return the attrs format of `fields()` for attrs and dataclasses.
+
+    Resolves `attrs` stringified annotations, if present.
+    """
     if is_dataclass(cl):
         attrs = dataclass_fields(cl)
         if any(isinstance(a.type, str) for a in attrs):

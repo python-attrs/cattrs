@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from attr import define
+from attrs import define
 
 from cattrs import Converter
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn

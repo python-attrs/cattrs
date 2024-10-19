@@ -5,10 +5,10 @@
 groups = ["default", "bench", "bson", "cbor2", "docs", "lint", "msgpack", "msgspec", "orjson", "pyyaml", "test", "tomlkit", "ujson"]
 strategy = ["cross_platform"]
 lock_version = "4.5.0"
-content_hash = "sha256:3d2f4b852119c21e2ce96a9dbca3591ce2456f02ca8d27d2cc91db2eb58a39c0"
+content_hash = "sha256:65ad998823b6230ece9dfc7adcd4d737071cbc03e56cc2fc357fd5ad7ae53ca1"
 
 [[metadata.targets]]
-requires_python = ">=3.8"
+requires_python = ">=3.9"
 
 [[package]]
 name = "alabaster"
@@ -44,23 +44,6 @@ dependencies = [
 files = [
     {file = "Babel-2.12.1-py3-none-any.whl", hash = "sha256:b4246fb7677d3b98f501a39d43396d3cafdc8eadb045f4a31be01863f655c610"},
     {file = "Babel-2.12.1.tar.gz", hash = "sha256:cc2d99999cd01d44420ae725a21c9e3711b3aadc7976d6147f622d8581963455"},
-]
-
-[[package]]
-name = "backports-zoneinfo"
-version = "0.2.1"
-requires_python = ">=3.6"
-summary = "Backport of the standard library zoneinfo module"
-dependencies = [
-    "importlib-resources; python_version < \"3.7\"",
-]
-files = [
-    {file = "backports.zoneinfo-0.2.1-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:8961c0f32cd0336fb8e8ead11a1f8cd99ec07145ec2931122faaac1c8f7fd987"},
-    {file = "backports.zoneinfo-0.2.1-cp38-cp38-manylinux1_i686.whl", hash = "sha256:e81b76cace8eda1fca50e345242ba977f9be6ae3945af8d46326d776b4cf78d1"},
-    {file = "backports.zoneinfo-0.2.1-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:7b0a64cda4145548fed9efc10322770f929b944ce5cee6c0dfe0c87bf4c0c8c9"},
-    {file = "backports.zoneinfo-0.2.1-cp38-cp38-win32.whl", hash = "sha256:1b13e654a55cd45672cb54ed12148cd33628f672548f373963b0bff67b217328"},
-    {file = "backports.zoneinfo-0.2.1-cp38-cp38-win_amd64.whl", hash = "sha256:4a0f800587060bf8880f954dbef70de6c11bbe59c673c3d818921f042f9954a6"},
-    {file = "backports.zoneinfo-0.2.1.tar.gz", hash = "sha256:fadbfe37f74051d024037f223b8e001611eac868b5c5b06144ef4d8b799862f2"},
 ]
 
 [[package]]
@@ -492,19 +475,6 @@ dependencies = [
 files = [
     {file = "importlib_metadata-6.8.0-py3-none-any.whl", hash = "sha256:3ebb78df84a805d7698245025b975d9d67053cd94c79245ba4b3eb694abe68bb"},
     {file = "importlib_metadata-6.8.0.tar.gz", hash = "sha256:dbace7892d8c0c4ac1ad096662232f831d4e64f4c4545bd53016a3e9d4654743"},
-]
-
-[[package]]
-name = "importlib-resources"
-version = "6.1.1"
-requires_python = ">=3.8"
-summary = "Read resources from Python packages"
-dependencies = [
-    "zipp>=3.1.0; python_version < \"3.10\"",
-]
-files = [
-    {file = "importlib_resources-6.1.1-py3-none-any.whl", hash = "sha256:e8bf90d8213b486f428c9c39714b920041cb02c184686a3dee24905aaa8105d6"},
-    {file = "importlib_resources-6.1.1.tar.gz", hash = "sha256:3893a00122eafde6894c59914446a512f728a0c1a45f9bb9b63721b6bacf0b4a"},
 ]
 
 [[package]]
@@ -1132,15 +1102,6 @@ dependencies = [
 files = [
     {file = "python-dateutil-2.8.2.tar.gz", hash = "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"},
     {file = "python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},
-]
-
-[[package]]
-name = "pytz"
-version = "2023.3"
-summary = "World timezone definitions, modern and historical"
-files = [
-    {file = "pytz-2023.3-py2.py3-none-any.whl", hash = "sha256:a151b3abb88eda1d4e34a9814df37de2a80e301e68ba0fd856fb9b46bfbbbffb"},
-    {file = "pytz-2023.3.tar.gz", hash = "sha256:1d8ce29db189191fb55338ee6d0387d82ab59f3d00eac103412d64e0ebd0c588"},
 ]
 
 [[package]]
