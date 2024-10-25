@@ -1046,7 +1046,7 @@ class Converter(BaseConverter):
         omit_if_default: bool = False,
         forbid_extra_keys: bool = False,
         type_overrides: Mapping[type, AttributeOverride] = {},
-        unstruct_collection_overrides: Mapping[type, Callable] = {},
+        unstruct_collection_overrides: Mapping[type, UnstructureHook] = {},
         prefer_attrib_converters: bool = False,
         detailed_validation: bool = True,
         unstructure_fallback_factory: HookFactory[UnstructureHook] = lambda _: identity,

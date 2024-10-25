@@ -22,6 +22,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - Python 3.13 is now supported.
   ([#543](https://github.com/python-attrs/cattrs/pull/543) [#547](https://github.com/python-attrs/cattrs/issues/547))
 - Python 3.8 is no longer supported, as it is end-of-life. Use previous versions on this Python version.
+- Change type of Converter.__init__.unstruct_collection_overrides from Callable to Mapping[type, UnstructureHook] ([#594](https://github.com/python-attrs/cattrs/pull/594).
 
 ## 24.1.2 (2024-09-22)
 
