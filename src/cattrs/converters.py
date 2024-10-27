@@ -54,7 +54,7 @@ from ._compat import (
     signature,
 )
 from .cols import (
-    defaultdict_struct_factory,
+    defaultdict_structure_factory,
     is_defaultdict,
     is_namedtuple,
     iterable_unstructure_factory,
@@ -1172,7 +1172,7 @@ class Converter(BaseConverter):
         self.register_structure_hook_factory(is_annotated, self.gen_structure_annotated)
         self.register_structure_hook_factory(is_mapping, self.gen_structure_mapping)
         self.register_structure_hook_factory(is_counter, self.gen_structure_counter)
-        self.register_structure_hook_factory(is_defaultdict, defaultdict_struct_factory)
+        self.register_structure_hook_factory(is_defaultdict, defaultdict_structure_factory)
         self.register_structure_hook_factory(is_typeddict, self.gen_structure_typeddict)
         self.register_structure_hook_factory(
             lambda t: get_newtype_base(t) is not None, self.get_structure_newtype

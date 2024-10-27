@@ -19,6 +19,9 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - Add a [Migrations](https://catt.rs/latest/migrations.html) page, with instructions on migrating changed behavior for each version.
   ([#577](https://github.com/python-attrs/cattrs/pull/577))
 - Expose {func}`cattrs.cols.mapping_unstructure_factory` through {mod}`cattrs.cols`.
+- Some `defaultdicts` are now [supported by default](https://catt.rs/latest/), and
+  {func}`cattrs.cols.is_defaultdict`{func} and `cattrs.cols.defaultdict_structure_factory` are exposed through {mod}`cattrs.cols`.
+  ([#519](https://github.com/python-attrs/cattrs/issues/519) [#588](https://github.com/python-attrs/cattrs/pull/588))
 - Python 3.13 is now supported.
   ([#543](https://github.com/python-attrs/cattrs/pull/543) [#547](https://github.com/python-attrs/cattrs/issues/547))
 - Python 3.8 is no longer supported, as it is end-of-life. Use previous versions on this Python version.

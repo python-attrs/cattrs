@@ -14,6 +14,10 @@ def test_typing_defaultdicts(genconverter: Converter):
     assert res["a"] == 1
     assert res["b"] == 0
 
+    genconverter.register_unstructure_hook(int, str)
+
+    assert genconverter.unstructure(res) == {"a": "1", "b": "0"}
+
 
 def test_collection_defaultdicts(genconverter: Converter):
     """`collections.defaultdict` works."""
@@ -22,3 +26,7 @@ def test_collection_defaultdicts(genconverter: Converter):
     assert isinstance(res, defaultdict)
     assert res["a"] == 1
     assert res["b"] == 0
+
+    genconverter.register_unstructure_hook(int, str)
+
+    assert genconverter.unstructure(res) == {"a": "1", "b": "0"}

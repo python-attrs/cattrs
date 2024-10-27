@@ -155,118 +155,6 @@ Here's an example of using an unstructure hook factory to handle unstructuring [
 [1, 2]
 ```
 
-## Customizing Collections
-
-The {mod}`cattrs.cols` module contains predicates and hook factories useful for customizing collection handling.
-These hook factories can be wrapped to apply complex customizations.
-
-Available predicates are:
-
-* {meth}`is_any_set <cattrs.cols.is_any_set>`
-* {meth}`is_frozenset <cattrs.cols.is_frozenset>`
-* {meth}`is_set <cattrs.cols.is_set>`
-* {meth}`is_sequence <cattrs.cols.is_sequence>`
-* {meth}`is_mapping <cattrs.cols.is_mapping>`
-* {meth}`is_namedtuple <cattrs.cols.is_namedtuple>`
-
-````{tip}
-These predicates aren't _cattrs_-specific and may be useful in other contexts.
-```{doctest} predicates
->>> from cattrs.cols import is_sequence
-
->>> is_sequence(list[str])
-True
-```
-````
-
-
-Available hook factories are:
-
-* {meth}`iterable_unstructure_factory <cattrs.cols.iterable_unstructure_factory>`
-* {meth}`list_structure_factory <cattrs.cols.list_structure_factory>`
-* {meth}`namedtuple_structure_factory <cattrs.cols.namedtuple_structure_factory>`
-* {meth}`namedtuple_unstructure_factory <cattrs.cols.namedtuple_unstructure_factory>`
-* {meth}`namedtuple_dict_structure_factory <cattrs.cols.namedtuple_dict_structure_factory>`
-* {meth}`namedtuple_dict_unstructure_factory <cattrs.cols.namedtuple_dict_unstructure_factory>`
-* {meth}`mapping_structure_factory <cattrs.cols.mapping_structure_factory>`
-* {meth}`mapping_unstructure_factory <cattrs.cols.mapping_unstructure_factory>`
-
-Additional predicates and hook factories will be added as requested.
-
-For example, by default sequences are structured from any iterable into lists.
-This may be too lax, and additional validation may be applied by wrapping the default list structuring hook factory.
-
-```{testcode} list-customization
-from cattrs.cols import is_sequence, list_structure_factory
-
-c = Converter()
-
-@c.register_structure_hook_factory(is_sequence)
-def strict_list_hook_factory(type, converter):
-
-    # First, we generate the default hook...
-    list_hook = list_structure_factory(type, converter)
-
-    # Then, we wrap it with a function of our own...
-    def strict_list_hook(value, type):
-        if not isinstance(value, list):
-            raise ValueError("Not a list!")
-        return list_hook(value, type)
-
-    # And finally, we return our own composite hook.
-    return strict_list_hook
-```
-
-Now, all sequence structuring will be stricter:
-
-```{doctest} list-customization
->>> c.structure({"a", "b", "c"}, list[str])
-Traceback (most recent call last):
-    ...
-ValueError: Not a list!
-```
-
-```{versionadded} 24.1.0
-
-```
-
-### Customizing Named Tuples
-
-Named tuples can be un/structured using dictionaries using the {meth}`namedtuple_dict_structure_factory <cattrs.cols.namedtuple_dict_structure_factory>`
-and {meth}`namedtuple_dict_unstructure_factory <cattrs.cols.namedtuple_dict_unstructure_factory>`
-hook factories.
-
-To unstructure _all_ named tuples into dictionaries:
-
-```{doctest} namedtuples
->>> from typing import NamedTuple
-
->>> from cattrs.cols import is_namedtuple, namedtuple_dict_unstructure_factory
->>> c = Converter()
-
->>> c.register_unstructure_hook_factory(is_namedtuple, namedtuple_dict_unstructure_factory)
-<function namedtuple_dict_unstructure_factory at ...>
-
->>> class MyNamedTuple(NamedTuple):
-...     a: int
-
->>> c.unstructure(MyNamedTuple(1))
-{'a': 1}
-```
-
-To only un/structure _some_ named tuples into dictionaries,
-change the predicate function when registering the hook factory:
-
-```{doctest} namedtuples
-    :options: +ELLIPSIS
-
->>> c.register_unstructure_hook_factory(
-...     lambda t: t is MyNamedTuple,
-...     namedtuple_dict_unstructure_factory,
-... )
-<function namedtuple_dict_unstructure_factory at ...>
-```
-
 ## Using `cattrs.gen` Generators
 
 The {mod}`cattrs.gen` module allows for generating and compiling specialized hooks for unstructuring _attrs_ classes, dataclasses and typed dicts.
@@ -489,5 +377,123 @@ ClassWithInitFalse(number=2)
 ```
 
 ```{versionadded} 23.2.0
+
+```
+
+## Customizing Collections
+
+The {mod}`cattrs.cols` module contains predicates and hook factories useful for customizing collection handling.
+These hook factories can be wrapped to apply complex customizations.
+
+Available predicates are:
+
+* {meth}`is_any_set <cattrs.cols.is_any_set>`
+* {meth}`is_frozenset <cattrs.cols.is_frozenset>`
+* {meth}`is_set <cattrs.cols.is_set>`
+* {meth}`is_sequence <cattrs.cols.is_sequence>`
+* {meth}`is_mapping <cattrs.cols.is_mapping>`
+* {meth}`is_namedtuple <cattrs.cols.is_namedtuple>`
+* {meth}`is_defaultdict <cattrs.cols.is_defaultdict>`
+
+````{tip}
+These predicates aren't _cattrs_-specific and may be useful in other contexts.
+```{doctest} predicates
+>>> from cattrs.cols import is_sequence
+
+>>> is_sequence(list[str])
+True
+```
+````
+
+
+Available hook factories are:
+
+* {meth}`iterable_unstructure_factory <cattrs.cols.iterable_unstructure_factory>`
+* {meth}`list_structure_factory <cattrs.cols.list_structure_factory>`
+* {meth}`namedtuple_structure_factory <cattrs.cols.namedtuple_structure_factory>`
+* {meth}`namedtuple_unstructure_factory <cattrs.cols.namedtuple_unstructure_factory>`
+* {meth}`namedtuple_dict_structure_factory <cattrs.cols.namedtuple_dict_structure_factory>`
+* {meth}`namedtuple_dict_unstructure_factory <cattrs.cols.namedtuple_dict_unstructure_factory>`
+* {meth}`mapping_structure_factory <cattrs.cols.mapping_structure_factory>`
+* {meth}`mapping_unstructure_factory <cattrs.cols.mapping_unstructure_factory>`
+* {meth}`defaultdict_structure_factory <cattrs.cols.defaultdict_structure_factory>`
+
+Additional predicates and hook factories will be added as requested.
+
+For example, by default sequences are structured from any iterable into lists.
+This may be too lax, and additional validation may be applied by wrapping the default list structuring hook factory.
+
+```{testcode} list-customization
+from cattrs.cols import is_sequence, list_structure_factory
+
+c = Converter()
+
+@c.register_structure_hook_factory(is_sequence)
+def strict_list_hook_factory(type, converter):
+
+    # First, we generate the default hook...
+    list_hook = list_structure_factory(type, converter)
+
+    # Then, we wrap it with a function of our own...
+    def strict_list_hook(value, type):
+        if not isinstance(value, list):
+            raise ValueError("Not a list!")
+        return list_hook(value, type)
+
+    # And finally, we return our own composite hook.
+    return strict_list_hook
+```
+
+Now, all sequence structuring will be stricter:
+
+```{doctest} list-customization
+>>> c.structure({"a", "b", "c"}, list[str])
+Traceback (most recent call last):
+    ...
+ValueError: Not a list!
+```
+
+```{versionadded} 24.1.0
+
+```
+
+### Customizing Named Tuples
+
+Named tuples can be un/structured using dictionaries using the {meth}`namedtuple_dict_structure_factory <cattrs.cols.namedtuple_dict_structure_factory>`
+and {meth}`namedtuple_dict_unstructure_factory <cattrs.cols.namedtuple_dict_unstructure_factory>`
+hook factories.
+
+To unstructure _all_ named tuples into dictionaries:
+
+```{doctest} namedtuples
+>>> from typing import NamedTuple
+
+>>> from cattrs.cols import is_namedtuple, namedtuple_dict_unstructure_factory
+>>> c = Converter()
+
+>>> c.register_unstructure_hook_factory(is_namedtuple, namedtuple_dict_unstructure_factory)
+<function namedtuple_dict_unstructure_factory at ...>
+
+>>> class MyNamedTuple(NamedTuple):
+...     a: int
+
+>>> c.unstructure(MyNamedTuple(1))
+{'a': 1}
+```
+
+To only un/structure _some_ named tuples into dictionaries,
+change the predicate function when registering the hook factory:
+
+```{doctest} namedtuples
+    :options: +ELLIPSIS
+
+>>> c.register_unstructure_hook_factory(
+...     lambda t: t is MyNamedTuple,
+...     namedtuple_dict_unstructure_factory,
+... )
+<function namedtuple_dict_unstructure_factory at ...>
+```
+
+```{versionadded} 24.1.0
 
 ```

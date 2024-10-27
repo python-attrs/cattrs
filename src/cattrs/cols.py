@@ -47,11 +47,13 @@ if TYPE_CHECKING:
 
 __all__ = [
     "is_any_set",
+    "is_defaultdict",
     "is_frozenset",
     "is_namedtuple",
     "is_mapping",
     "is_set",
     "is_sequence",
+    "defaultdict_structure_factory",
     "iterable_unstructure_factory",
     "list_structure_factory",
     "namedtuple_structure_factory",
@@ -291,12 +293,15 @@ def is_defaultdict(type: Any) -> bool:
     return is_subclass(get_origin(type), (defaultdict, DefaultDict))
 
 
-def defaultdict_struct_factory(
-    type: type[defaultdict], converter: BaseConverter
+def defaultdict_structure_factory(
+    type: type[defaultdict], converter: BaseConverter, default_factory: Any = NOTHING
 ) -> StructureHook:
     """A structure hook factory for defaultdicts.
 
     The value type parameter will be used as the _default factory_.
     """
-    value_type = get_args(type)[1]
-    return mapping_structure_factory(type, converter, partial(defaultdict, value_type))
+    if default_factory is NOTHING:
+        default_factory = get_args(type)[1]
+    return mapping_structure_factory(
+        type, converter, partial(defaultdict, default_factory)
+    )
