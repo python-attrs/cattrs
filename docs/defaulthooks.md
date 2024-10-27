@@ -185,7 +185,8 @@ Both keys and values are converted.
 
 ### defaultdicts
 
-`defaultdicts` can be structured by default if they can be initialized using their value type hint.
+[`defaultdicts`](https://docs.python.org/3/library/collections.html#collections.defaultdict)
+can be structured by default if they can be initialized using their value type hint.
 Supported types are:
 
 - `collections.defaultdict[K, V]`

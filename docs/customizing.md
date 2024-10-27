@@ -155,19 +155,20 @@ Here's an example of using an unstructure hook factory to handle unstructuring [
 [1, 2]
 ```
 
-## Using `cattrs.gen` Generators
+## Using `cattrs.gen` Hook Factories
 
-The {mod}`cattrs.gen` module allows for generating and compiling specialized hooks for unstructuring _attrs_ classes, dataclasses and typed dicts.
+The {mod}`cattrs.gen` module contains [hook factories](#hook-factories) for un/structuring _attrs_ classes, dataclasses and typed dicts.
 The default {class}`Converter <cattrs.Converter>`, upon first encountering one of these types,
-will use the generation functions mentioned here to generate specialized hooks for it,
+will use the hook factories mentioned here to generate specialized hooks for it,
 register the hooks and use them.
 
 One reason for generating these hooks in advance is that they can bypass a lot of _cattrs_ machinery and be significantly faster than normal _cattrs_.
-The hooks are also good building blocks for more complex customizations.
+The hook factories are also good building blocks for more complex customizations.
 
 Another reason is overriding behavior on a per-attribute basis.
 
-Currently, the overrides only support generating dictionary un/structuring hooks (as opposed to tuples), and support `omit_if_default`, `forbid_extra_keys`, `rename` and `omit`.
+Currently, the overrides only support generating dictionary un/structuring hooks (as opposed to tuples),
+and support `omit_if_default`, `forbid_extra_keys`, `rename` and `omit`.
 
 ### `omit_if_default`
 
