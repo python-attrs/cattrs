@@ -214,6 +214,10 @@ defaultdict(<function <lambda> at ...>, {'key': 1})
 
 `defaultdicts` are unstructured into plain dictionaries.
 
+```{note}
+`defaultdicts` are not supported by the BaseConverter.
+```
+
 ```{versionadded} 24.2.0
 
 ```
