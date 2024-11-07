@@ -183,6 +183,46 @@ Both keys and values are converted.
 {'1': None, '2': 2}
 ```
 
+### defaultdicts
+
+[`defaultdicts`](https://docs.python.org/3/library/collections.html#collections.defaultdict)
+can be structured by default if they can be initialized using their value type hint.
+Supported types are:
+
+- `collections.defaultdict[K, V]`
+- `typing.DefaultDict[K, V]`
+
+For example, `defaultdict[str, int]` works since _cattrs_ will initialize it with `defaultdict(int)`.
+
+This also means `defaultdicts` without key and value annotations (bare `defaultdicts`) cannot be structured by default.
+
+`defaultdicts` with arbitrary default factories can be structured by using {meth}`defaultdict_structure_factory <cattrs.cols.defaultdict_structure_factory>`:
+
+```{doctest}
+>>> from collections import defaultdict
+>>> from cattrs.cols import defaultdict_structure_factory
+
+>>> converter = Converter()
+>>> hook = defaultdict_structure_factory(
+...     defaultdict[str, int],
+...     converter,
+...     default_factory=lambda: 1
+... )
+
+>>> hook({"key": 1})
+defaultdict(<function <lambda> at ...>, {'key': 1})
+```
+
+`defaultdicts` are unstructured into plain dictionaries.
+
+```{note}
+`defaultdicts` are not supported by the BaseConverter.
+```
+
+```{versionadded} 24.2.0
+
+```
+
 ### Virtual Subclasses of [`abc.Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping) and [`abc.MutableMapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping)
 
 If a class declares itself a virtual subclass of `collections.abc.Mapping` or `collections.abc.MutableMapping` and its initializer accepts a dictionary,

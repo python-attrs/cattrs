@@ -2,12 +2,31 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeVar, get_type_hints
+from functools import partial
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    DefaultDict,
+    Literal,
+    NamedTuple,
+    TypeVar,
+    get_type_hints,
+)
 
 from attrs import NOTHING, Attribute
 
-from ._compat import ANIES, is_bare, is_frozenset, is_mapping, is_sequence, is_subclass
+from ._compat import (
+    ANIES,
+    get_args,
+    get_origin,
+    is_bare,
+    is_frozenset,
+    is_mapping,
+    is_sequence,
+    is_subclass,
+)
 from ._compat import is_mutable_set as is_set
 from .dispatch import StructureHook, UnstructureHook
 from .errors import IterableValidationError, IterableValidationNote
@@ -28,11 +47,13 @@ if TYPE_CHECKING:
 
 __all__ = [
     "is_any_set",
+    "is_defaultdict",
     "is_frozenset",
     "is_namedtuple",
     "is_mapping",
     "is_set",
     "is_sequence",
+    "defaultdict_structure_factory",
     "iterable_unstructure_factory",
     "list_structure_factory",
     "namedtuple_structure_factory",
@@ -261,3 +282,26 @@ def namedtuple_dict_unstructure_factory(
         working_set.remove(cl)
         if not working_set:
             del already_generating.working_set
+
+
+def is_defaultdict(type: Any) -> bool:
+    """Is this type a defaultdict?
+
+    Bare defaultdicts (defaultdicts with no type arguments) are not supported
+    since there's no way to discover their _default_factory_.
+    """
+    return is_subclass(get_origin(type), (defaultdict, DefaultDict))
+
+
+def defaultdict_structure_factory(
+    type: type[defaultdict], converter: BaseConverter, default_factory: Any = NOTHING
+) -> StructureHook:
+    """A structure hook factory for defaultdicts.
+
+    The value type parameter will be used as the _default factory_.
+    """
+    if default_factory is NOTHING:
+        default_factory = get_args(type)[1]
+    return mapping_structure_factory(
+        type, converter, partial(defaultdict, default_factory)
+    )
