@@ -62,12 +62,12 @@ Converts unstructured data into structured data, recursively, according to your 
 The following types are supported:
 
 - `typing.Optional[T]` and its 3.10+ form, `T | None`.
-- `list[T]`, `typing.List[T]`, `typing.MutableSequence[T]`, `typing.Sequence[T]` convert to a lists.
+- `list[T]`, `typing.List[T]`, `typing.MutableSequence[T]`, `typing.Sequence[T]` convert to lists.
 - `tuple` and `typing.Tuple` (both variants, `tuple[T, ...]` and `tuple[X, Y, Z]`).
-- `set[T]`, `typing.MutableSet[T]`, and `typing.Set[T]` convert to a sets.
-- `frozenset[T]`, and `typing.FrozenSet[T]` convert to a frozensets.
-- `dict[K, V]`, `typing.Dict[K, V]`, `typing.MutableMapping[K, V]`, and `typing.Mapping[K, V]` convert to a dictionaries.
-- [`typing.TypedDict`](https://docs.python.org/3/library/typing.html#typing.TypedDict), ordinary and generic.
+- `set[T]`, `typing.MutableSet[T]`, and `typing.Set[T]` convert to sets.
+- `frozenset[T]`, and `typing.FrozenSet[T]` convert to frozensets.
+- `dict[K, V]`, `typing.Dict[K, V]`, `typing.MutableMapping[K, V]`, and `typing.Mapping[K, V]` convert to dictionaries.
+- [`typing.TypedDict`](https://docs.python.org/3/library/typing.html#typing.TypedDict), both ordinary and generic.
 - [`typing.NewType`](https://docs.python.org/3/library/typing.html#newtype)
 - [PEP 695 type aliases](https://docs.python.org/3/library/typing.html#type-aliases) on 3.12+
 - _attrs_ classes with simple attributes and the usual `__init__`[^simple].
