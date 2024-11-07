@@ -22,12 +22,13 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - Some `defaultdicts` are now [supported by default](https://catt.rs/en/latest/defaulthooks.html#defaultdicts), and
   {func}`cattrs.cols.is_defaultdict`{func} and `cattrs.cols.defaultdict_structure_factory` are exposed through {mod}`cattrs.cols`.
   ([#519](https://github.com/python-attrs/cattrs/issues/519) [#588](https://github.com/python-attrs/cattrs/pull/588))
+- Replace `cattrs.gen.MappingStructureFn` with `cattrs.SimpleStructureHook[In, T]`.
 - Python 3.13 is now supported.
   ([#543](https://github.com/python-attrs/cattrs/pull/543) [#547](https://github.com/python-attrs/cattrs/issues/547))
 - Python 3.8 is no longer supported, as it is end-of-life. Use previous versions on this Python version.
   ([#591](https://github.com/python-attrs/cattrs/pull/591))
-- Change type of Converter.__init__.unstruct_collection_overrides from Callable to Mapping[type, UnstructureHook]
-  ([#594](https://github.com/python-attrs/cattrs/pull/594).
+- Change type of `Converter.__init__.unstruct_collection_overrides` from `Callable` to `Mapping[type, UnstructureHook]`
+  ([#594](https://github.com/python-attrs/cattrs/pull/594)).
 
 ## 24.1.2 (2024-09-22)
 

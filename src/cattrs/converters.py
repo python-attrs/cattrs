@@ -85,7 +85,6 @@ from .gen import (
     DictStructureFn,
     HeteroTupleUnstructureFn,
     IterableUnstructureFn,
-    MappingStructureFn,
     MappingUnstructureFn,
     make_dict_structure_fn,
     make_dict_unstructure_fn,
@@ -93,6 +92,7 @@ from .gen import (
 )
 from .gen.typeddicts import make_dict_structure_fn as make_typeddict_dict_struct_fn
 from .gen.typeddicts import make_dict_unstructure_fn as make_typeddict_dict_unstruct_fn
+from .types import SimpleStructureHook
 
 __all__ = ["UnstructureStrategy", "BaseConverter", "Converter", "GenConverter"]
 
@@ -137,6 +137,7 @@ AnyStructureHookFactory = TypeVar(
 
 UnstructureHookT = TypeVar("UnstructureHookT", bound=UnstructureHook)
 StructureHookT = TypeVar("StructureHookT", bound=StructureHook)
+CounterT = TypeVar("CounterT", bound=Counter)
 
 
 class UnstructureStrategy(Enum):
@@ -1342,7 +1343,9 @@ class Converter(BaseConverter):
         self._unstructure_func.register_cls_list([(cl, h)], direct=True)
         return h
 
-    def gen_structure_counter(self, cl: Any) -> MappingStructureFn[T]:
+    def gen_structure_counter(
+        self, cl: type[CounterT]
+    ) -> SimpleStructureHook[Mapping[Any, Any], CounterT]:
         h = mapping_structure_factory(
             cl,
             self,
@@ -1353,7 +1356,9 @@ class Converter(BaseConverter):
         self._structure_func.register_cls_list([(cl, h)], direct=True)
         return h
 
-    def gen_structure_mapping(self, cl: Any) -> MappingStructureFn[T]:
+    def gen_structure_mapping(
+        self, cl: Any
+    ) -> SimpleStructureHook[Mapping[Any, Any], Any]:
         structure_to = get_origin(cl) or cl
         if structure_to in (
             MutableMapping,

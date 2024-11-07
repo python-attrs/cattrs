@@ -29,6 +29,7 @@ from ..errors import (
     StructureHandlerNotFoundError,
 )
 from ..fns import identity
+from ..types import SimpleStructureHook
 from ._consts import AttributeOverride, already_generating, neutral
 from ._generics import generate_mapping
 from ._lc import generate_unique_filename
@@ -892,8 +893,6 @@ def mapping_unstructure_factory(
 
 make_mapping_unstructure_fn: Final = mapping_unstructure_factory
 
-MappingStructureFn = Callable[[Mapping[Any, Any], Any], T]
-
 
 # This factory is here for backwards compatibility and circular imports.
 def mapping_structure_factory(
@@ -903,7 +902,7 @@ def mapping_structure_factory(
     key_type=NOTHING,
     val_type=NOTHING,
     detailed_validation: bool | Literal["from_converter"] = "from_converter",
-) -> MappingStructureFn[T]:
+) -> SimpleStructureHook[Mapping[Any, Any], T]:
     """Generate a specialized structure function for a mapping."""
     fn_name = "structure_mapping"
 
@@ -1010,7 +1009,8 @@ def mapping_structure_factory(
     for k, v in internal_arg_parts.items():
         globs[k] = v
 
-    def_line = f"def {fn_name}(mapping, _{internal_arg_line}):"
+    globs["cl"] = cl
+    def_line = f"def {fn_name}(mapping, cl=cl{internal_arg_line}):"
     total_lines = [def_line, *lines, "  return res"]
     script = "\n".join(total_lines)
 

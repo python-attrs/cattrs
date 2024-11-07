@@ -209,7 +209,7 @@ This also means `defaultdicts` without key and value annotations (bare `defaultd
 ...     default_factory=lambda: 1
 ... )
 
->>> hook({"key": 1}, defaultdict[str, int])
+>>> hook({"key": 1})
 defaultdict(<function <lambda> at ...>, {'key': 1})
 ```
 
