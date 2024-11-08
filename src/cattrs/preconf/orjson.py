@@ -13,7 +13,7 @@ from ..cols import is_namedtuple, namedtuple_unstructure_factory
 from ..converters import BaseConverter, Converter
 from ..fns import identity
 from ..strategies import configure_union_passthrough
-from . import wrap
+from . import is_primitive_enum, wrap
 
 T = TypeVar("T")
 
@@ -36,9 +36,12 @@ def configure_converter(converter: BaseConverter):
     * sets are serialized as lists
     * string enum mapping keys have special handling
     * mapping keys are coerced into strings when unstructuring
+    * bare, string and int enums are passed through when unstructuring
 
     .. versionchanged: 24.1.0
         Add support for typed namedtuples.
+    .. versionchanged: 24.2.0
+        Enums are left to the library to unstructure, speeding them up.
     """
     converter.register_unstructure_hook(
         bytes, lambda v: (b85encode(v) if v else b"").decode("utf8")
@@ -79,6 +82,9 @@ def configure_converter(converter: BaseConverter):
                 "extended",
             ),
         ]
+    )
+    converter.register_unstructure_hook_func(
+        partial(is_primitive_enum, include_bare_enums=True), identity
     )
     configure_union_passthrough(Union[str, bool, int, float, None], converter)
 

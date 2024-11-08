@@ -2,16 +2,25 @@
 
 The {mod}`cattrs.preconf` package contains factories for preconfigured converters, specifically adjusted for particular serialization libraries.
 
-For example, to get a converter configured for BSON:
+For example, to get a converter configured for _orjson_:
 
 ```{doctest}
 
->>> from cattrs.preconf.bson import make_converter
+>>> from cattrs.preconf.orjson import make_converter
 
 >>> converter = make_converter() # Takes the same parameters as the `cattrs.Converter`
 ```
 
 Converters obtained this way can be customized further, just like any other converter.
+
+For compatibility and performance reasons, these converters are usually configured to unstructure differently than ordinary `Converters`.
+A couple of examples:
+* the {class}`_orjson_ converter <cattrs.preconf.orjson.OrjsonConverter>` is configured to pass `datetime` instances unstructured since _orjson_ can handle them faster.
+* the {class}`_msgspec_ JSON converter <cattrs.preconf.msgspec.MsgspecJsonConverter>` is configured to pass through some dataclasses and _attrs_classes,
+if the output is identical to what normal unstructuring would have produced, since _msgspec_ can handle them faster.
+
+The intended usage is to pass the unstructured output directly to the underlying library,
+or use `converter.dumps` which will do it for you.
 
 These converters support all [default hooks](defaulthooks.md)
 and the following additional classes and type annotations,

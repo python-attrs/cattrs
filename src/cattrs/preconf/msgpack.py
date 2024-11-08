@@ -8,8 +8,9 @@ from msgpack import dumps, loads
 from cattrs._compat import AbstractSet
 
 from ..converters import BaseConverter, Converter
+from ..fns import identity
 from ..strategies import configure_union_passthrough
-from . import wrap
+from . import is_primitive_enum, wrap
 
 T = TypeVar("T")
 
@@ -28,6 +29,10 @@ def configure_converter(converter: BaseConverter):
 
     * datetimes are serialized as timestamp floats
     * sets are serialized as lists
+    * string and int enums are passed through when unstructuring
+
+    .. versionchanged: 24.2.0
+        Enums are left to the library to unstructure, speeding them up.
     """
     converter.register_unstructure_hook(datetime, lambda v: v.timestamp())
     converter.register_structure_hook(
@@ -39,6 +44,7 @@ def configure_converter(converter: BaseConverter):
     converter.register_structure_hook(
         date, lambda v, _: datetime.fromtimestamp(v, timezone.utc).date()
     )
+    converter.register_unstructure_hook_func(is_primitive_enum, identity)
     configure_union_passthrough(Union[str, bool, int, float, None, bytes], converter)
 
 
