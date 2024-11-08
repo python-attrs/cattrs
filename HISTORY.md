@@ -22,6 +22,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - Some `defaultdicts` are now [supported by default](https://catt.rs/en/latest/defaulthooks.html#defaultdicts), and
   {func}`cattrs.cols.is_defaultdict`{func} and `cattrs.cols.defaultdict_structure_factory` are exposed through {mod}`cattrs.cols`.
   ([#519](https://github.com/python-attrs/cattrs/issues/519) [#588](https://github.com/python-attrs/cattrs/pull/588))
+- Literals containing enums are now unstructured properly.
 - Replace `cattrs.gen.MappingStructureFn` with `cattrs.SimpleStructureHook[In, T]`.
 - Python 3.13 is now supported.
   ([#543](https://github.com/python-attrs/cattrs/pull/543) [#547](https://github.com/python-attrs/cattrs/issues/547))
