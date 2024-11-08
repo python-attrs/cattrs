@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter, deque
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from collections.abc import Mapping as AbcMapping
 from collections.abc import MutableMapping as AbcMutableMapping
 from dataclasses import Field
@@ -9,7 +9,7 @@ from enum import Enum
 from inspect import Signature
 from inspect import signature as inspect_signature
 from pathlib import Path
-from typing import Any, Callable, Optional, Tuple, TypeVar, overload
+from typing import Any, Optional, Tuple, TypeVar, overload
 
 from attrs import Attribute, resolve_types
 from attrs import has as attrs_has
@@ -82,7 +82,6 @@ from .errors import (
 from .fns import Predicate, identity, raise_error
 from .gen import (
     AttributeOverride,
-    DictStructureFn,
     HeteroTupleUnstructureFn,
     IterableUnstructureFn,
     MappingUnstructureFn,
@@ -641,7 +640,9 @@ class BaseConverter:
 
     # Python primitives to classes.
 
-    def _gen_structure_generic(self, cl: type[T]) -> DictStructureFn[T]:
+    def _gen_structure_generic(
+        self, cl: type[T]
+    ) -> SimpleStructureHook[Mapping[str, Any], T]:
         """Create and return a hook for structuring generics."""
         return make_dict_structure_fn(
             cl, self, _cattrs_prefer_attrib_converters=self._prefer_attrib_converters
