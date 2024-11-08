@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Mapping
-from typing import TYPE_CHECKING, Any, Callable, Final, Literal, TypeVar
+from collections.abc import Callable, Iterable, Mapping
+from typing import TYPE_CHECKING, Any, Final, Literal, TypeVar
 
 from attrs import NOTHING, Attribute, Factory
 from typing_extensions import NoDefault
@@ -69,7 +69,7 @@ T = TypeVar("T")
 
 def make_dict_unstructure_fn_from_attrs(
     attrs: list[Attribute],
-    cl: type,
+    cl: type[T],
     converter: BaseConverter,
     typevar_map: dict[str, Any] = {},
     _cattrs_omit_if_default: bool = False,
@@ -282,12 +282,9 @@ def make_dict_unstructure_fn(
             del already_generating.working_set
 
 
-DictStructureFn = Callable[[Mapping[str, Any], Any], T]
-
-
 def make_dict_structure_fn_from_attrs(
     attrs: list[Attribute],
-    cl: type,
+    cl: type[T],
     converter: BaseConverter,
     typevar_map: dict[str, Any] = {},
     _cattrs_forbid_extra_keys: bool | Literal["from_converter"] = "from_converter",
@@ -299,7 +296,7 @@ def make_dict_structure_fn_from_attrs(
     _cattrs_use_alias: bool = False,
     _cattrs_include_init_false: bool = False,
     **kwargs: AttributeOverride,
-) -> DictStructureFn[T]:
+) -> SimpleStructureHook[Mapping[str, Any], T]:
     """
     Generate a specialized dict structuring function for a list of attributes.
 
@@ -663,7 +660,7 @@ def make_dict_structure_fn_from_attrs(
         globs[k] = v
 
     total_lines = [
-        f"def {fn_name}(o, _, {internal_arg_line}):",
+        f"def {fn_name}(o, _=__cl, {internal_arg_line}):",
         *lines,
         *post_lines,
         *instantiation_lines,
@@ -695,7 +692,7 @@ def make_dict_structure_fn(
     _cattrs_use_alias: bool = False,
     _cattrs_include_init_false: bool = False,
     **kwargs: AttributeOverride,
-) -> DictStructureFn[T]:
+) -> SimpleStructureHook[Mapping[str, Any], T]:
     """
     Generate a specialized dict structuring function for an attrs class or
     dataclass.
