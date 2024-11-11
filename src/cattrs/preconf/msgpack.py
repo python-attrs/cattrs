@@ -9,8 +9,9 @@ from cattrs._compat import AbstractSet
 
 from ..converters import BaseConverter, Converter
 from ..fns import identity
+from ..literals import is_literal_containing_enums
 from ..strategies import configure_union_passthrough
-from . import is_primitive_enum, wrap
+from . import is_primitive_enum, literals_with_enums_unstructure_factory, wrap
 
 T = TypeVar("T")
 
@@ -45,6 +46,9 @@ def configure_converter(converter: BaseConverter):
         date, lambda v, _: datetime.fromtimestamp(v, timezone.utc).date()
     )
     converter.register_unstructure_hook_func(is_primitive_enum, identity)
+    converter.register_unstructure_hook_factory(
+        is_literal_containing_enums, literals_with_enums_unstructure_factory
+    )
     configure_union_passthrough(Union[str, bool, int, float, None, bytes], converter)
 
 

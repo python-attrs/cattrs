@@ -25,7 +25,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - Many preconf converters (_bson_, stdlib JSON, _cbor2_, _msgpack_, _msgspec_, _orjson_, _ujson_) skip unstructuring `int` and `str` enums,
   leaving them to the underlying libraries to handle with greater efficiency.
   ([#598](https://github.com/python-attrs/cattrs/pull/598))
-- Literals containing enums are now unstructured properly.
+- Literals containing enums are now unstructured properly, and their unstructuring is greatly optimized in the _bson_, stdlib JSON, _cbor2_, _msgpack_, _msgspec_, _orjson_ and _ujson_ preconf converters.
   ([#598](https://github.com/python-attrs/cattrs/pull/598))
 - Replace `cattrs.gen.MappingStructureFn` with `cattrs.SimpleStructureHook[In, T]`.
 - Python 3.13 is now supported.

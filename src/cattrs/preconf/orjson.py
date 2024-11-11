@@ -12,8 +12,9 @@ from .._compat import AbstractSet, is_mapping
 from ..cols import is_namedtuple, namedtuple_unstructure_factory
 from ..converters import BaseConverter, Converter
 from ..fns import identity
+from ..literals import is_literal_containing_enums
 from ..strategies import configure_union_passthrough
-from . import is_primitive_enum, wrap
+from . import is_primitive_enum, literals_with_enums_unstructure_factory, wrap
 
 T = TypeVar("T")
 
@@ -85,6 +86,9 @@ def configure_converter(converter: BaseConverter):
     )
     converter.register_unstructure_hook_func(
         partial(is_primitive_enum, include_bare_enums=True), identity
+    )
+    converter.register_unstructure_hook_factory(
+        is_literal_containing_enums, literals_with_enums_unstructure_factory
     )
     configure_union_passthrough(Union[str, bool, int, float, None], converter)
 

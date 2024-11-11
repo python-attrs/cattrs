@@ -5,7 +5,7 @@ from cattrs import BaseConverter
 from cattrs.fns import identity
 
 
-class TestEnum(Enum):
+class AnEnum(Enum):
     TEST = "test"
 
 
@@ -16,4 +16,4 @@ def test_unstructure_literal(converter: BaseConverter):
 
 def test_unstructure_literal_with_enum(converter: BaseConverter):
     """Literals with enums are properly unstructured."""
-    assert converter.unstructure(TestEnum.TEST, Literal[TestEnum.TEST]) == "test"
+    assert converter.unstructure(AnEnum.TEST, Literal[AnEnum.TEST]) == "test"

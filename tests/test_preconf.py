@@ -4,10 +4,10 @@ from enum import Enum, IntEnum, unique
 from json import dumps as json_dumps
 from json import loads as json_loads
 from platform import python_implementation
-from typing import Any, Dict, Final, List, NamedTuple, NewType, Union
+from typing import Any, Dict, Final, List, Literal, NamedTuple, NewType, Union
 
 import pytest
-from attrs import define
+from attrs import define, fields
 from bson import CodecOptions, ObjectId
 from hypothesis import given, settings
 from hypothesis.strategies import (
@@ -109,6 +109,8 @@ class Everything:
     native_union_with_spillover: Union[int, str, Set[str]]
     native_union_with_union_spillover: Union[int, str, A, B]
     a_namedtuple: C
+    a_literal: Literal[1, AStringEnum.A]
+    a_literal_with_bare: Literal[1, ABareEnum.B]
 
 
 @composite
@@ -179,6 +181,8 @@ def everythings(
         draw(one_of(ints, strings, sets(strings))),
         draw(one_of(ints, strings, ints.map(A), strings.map(B))),
         draw(fs.map(C)),
+        draw(one_of(just(1), just(Everything.AStringEnum.A))),
+        draw(one_of(just(1), just(Everything.ABareEnum.B))),
     )
 
 
@@ -357,6 +361,7 @@ def test_stdlib_json_efficient_enum():
 
     assert converter.get_unstructure_hook(Everything.AnIntEnum) == identity
     assert converter.get_unstructure_hook(Everything.AStringEnum) == identity
+    assert converter.get_unstructure_hook(fields(Everything).a_literal) == identity
 
 
 @given(
@@ -434,6 +439,7 @@ def test_ujson_efficient_enum():
 
     assert converter.get_unstructure_hook(Everything.AnIntEnum) == identity
     assert converter.get_unstructure_hook(Everything.AStringEnum) == identity
+    assert converter.get_unstructure_hook(fields(Everything).a_literal.type) == identity
 
 
 @pytest.mark.skipif(NO_ORJSON, reason="orjson not available")
@@ -533,6 +539,11 @@ def test_orjson_efficient_enum():
     assert converter.get_unstructure_hook(Everything.AnIntEnum) == identity
     assert converter.get_unstructure_hook(Everything.AStringEnum) == identity
     assert converter.get_unstructure_hook(Everything.ABareEnum) == identity
+    assert converter.get_unstructure_hook(fields(Everything).a_literal.type) == identity
+    assert (
+        converter.get_unstructure_hook(fields(Everything).a_literal_with_bare.type)
+        == identity
+    )
 
 
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
@@ -597,6 +608,7 @@ def test_msgpack_efficient_enum():
 
     assert converter.get_unstructure_hook(Everything.AnIntEnum) == identity
     assert converter.get_unstructure_hook(Everything.AStringEnum) == identity
+    assert converter.get_unstructure_hook(fields(Everything).a_literal.type) == identity
 
 
 @given(
@@ -697,6 +709,7 @@ def test_bson_efficient_enum():
 
     assert converter.get_unstructure_hook(Everything.AnIntEnum) == identity
     assert converter.get_unstructure_hook(Everything.AStringEnum) == identity
+    assert converter.get_unstructure_hook(fields(Everything).a_literal.type) == identity
 
 
 @given(
@@ -824,6 +837,7 @@ def test_cbor2_efficient_enum():
 
     assert converter.get_unstructure_hook(Everything.AnIntEnum) == identity
     assert converter.get_unstructure_hook(Everything.AStringEnum) == identity
+    assert converter.get_unstructure_hook(fields(Everything).a_literal.type) == identity
 
 
 @pytest.mark.skipif(NO_MSGSPEC, reason="msgspec not available")
@@ -894,3 +908,8 @@ def test_msgspec_efficient_enum():
     assert converter.get_unstructure_hook(Everything.AnIntEnum) == identity
     assert converter.get_unstructure_hook(Everything.AStringEnum) == identity
     assert converter.get_unstructure_hook(Everything.ABareEnum) == identity
+    assert converter.get_unstructure_hook(fields(Everything).a_literal.type) == identity
+    assert (
+        converter.get_unstructure_hook(fields(Everything).a_literal_with_bare.type)
+        == identity
+    )
