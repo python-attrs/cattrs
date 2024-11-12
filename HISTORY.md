@@ -36,6 +36,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#591](https://github.com/python-attrs/cattrs/pull/591))
 - Change type of `Converter.__init__.unstruct_collection_overrides` from `Callable` to `Mapping[type, UnstructureHook]`
   ([#594](https://github.com/python-attrs/cattrs/pull/594)).
+- Adopt the Contributor Covenant Code of Conduct (just like _attrs_).
 
 ## 24.1.2 (2024-09-22)
 
