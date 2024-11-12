@@ -1,14 +1,14 @@
 """Preconfigured converters for bson."""
 
 from base64 import b85decode, b85encode
+from collections.abc import Set
 from datetime import date, datetime
 from typing import Any, TypeVar, Union
 
 from bson import DEFAULT_CODEC_OPTIONS, CodecOptions, Int64, ObjectId, decode, encode
 
-from cattrs._compat import AbstractSet, is_mapping
-from cattrs.gen import make_mapping_structure_fn
-
+from .._compat import is_mapping, is_subclass
+from ..cols import mapping_structure_factory
 from ..converters import BaseConverter, Converter
 from ..dispatch import StructureHook
 from ..fns import identity
@@ -69,9 +69,9 @@ def configure_converter(converter: BaseConverter):
         key_handler = str
         args = getattr(cl, "__args__", None)
         if args:
-            if issubclass(args[0], str):
+            if is_subclass(args[0], str):
                 key_handler = None
-            elif issubclass(args[0], bytes):
+            elif is_subclass(args[0], bytes):
 
                 def key_handler(k):
                     return b85encode(k).decode("utf8")
@@ -82,10 +82,10 @@ def configure_converter(converter: BaseConverter):
 
     def gen_structure_mapping(cl: Any) -> StructureHook:
         args = getattr(cl, "__args__", None)
-        if args and issubclass(args[0], bytes):
-            h = make_mapping_structure_fn(cl, converter, key_type=Base85Bytes)
+        if args and is_subclass(args[0], bytes):
+            h = mapping_structure_factory(cl, converter, key_type=Base85Bytes)
         else:
-            h = make_mapping_structure_fn(cl, converter)
+            h = mapping_structure_factory(cl, converter)
         return h
 
     converter.register_structure_hook(Base85Bytes, lambda v, _: b85decode(v))
@@ -112,7 +112,7 @@ def configure_converter(converter: BaseConverter):
 @wrap(BsonConverter)
 def make_converter(*args: Any, **kwargs: Any) -> BsonConverter:
     kwargs["unstruct_collection_overrides"] = {
-        AbstractSet: list,
+        Set: list,
         **kwargs.get("unstruct_collection_overrides", {}),
     }
     res = BsonConverter(*args, **kwargs)

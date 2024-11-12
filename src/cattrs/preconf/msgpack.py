@@ -1,11 +1,10 @@
 """Preconfigured converters for msgpack."""
 
+from collections.abc import Set
 from datetime import date, datetime, time, timezone
 from typing import Any, TypeVar, Union
 
 from msgpack import dumps, loads
-
-from cattrs._compat import AbstractSet
 
 from ..converters import BaseConverter, Converter
 from ..fns import identity
@@ -55,7 +54,7 @@ def configure_converter(converter: BaseConverter):
 @wrap(MsgpackConverter)
 def make_converter(*args: Any, **kwargs: Any) -> MsgpackConverter:
     kwargs["unstruct_collection_overrides"] = {
-        AbstractSet: list,
+        Set: list,
         **kwargs.get("unstruct_collection_overrides", {}),
     }
     res = MsgpackConverter(*args, **kwargs)

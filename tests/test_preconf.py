@@ -1,4 +1,5 @@
 import sys
+from collections.abc import Callable, Set
 from datetime import date, datetime, timezone
 from enum import Enum, IntEnum, unique
 from json import dumps as json_dumps
@@ -31,8 +32,8 @@ from hypothesis.strategies import (
     text,
 )
 
+from cattrs import Converter
 from cattrs._compat import (
-    AbstractSet,
     Counter,
     FrozenSet,
     Mapping,
@@ -40,7 +41,6 @@ from cattrs._compat import (
     MutableSequence,
     MutableSet,
     Sequence,
-    Set,
     TupleSubscriptable,
 )
 from cattrs.fns import identity
@@ -48,6 +48,7 @@ from cattrs.preconf.bson import make_converter as bson_make_converter
 from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
 from cattrs.preconf.json import make_converter as json_make_converter
 from cattrs.preconf.msgpack import make_converter as msgpack_make_converter
+from cattrs.preconf.pyyaml import make_converter as pyyaml_make_converter
 from cattrs.preconf.tomlkit import make_converter as tomlkit_make_converter
 from cattrs.preconf.ujson import make_converter as ujson_make_converter
 
@@ -301,7 +302,7 @@ def test_stdlib_json_converter(everything: Everything):
 
 @given(everythings())
 def test_stdlib_json_converter_unstruct_collection_overrides(everything: Everything):
-    converter = json_make_converter(unstruct_collection_overrides={AbstractSet: sorted})
+    converter = json_make_converter(unstruct_collection_overrides={Set: sorted})
     raw = converter.unstructure(everything)
     assert raw["a_set"] == sorted(raw["a_set"])
     assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
@@ -395,9 +396,7 @@ def test_ujson_converter(everything: Everything):
     )
 )
 def test_ujson_converter_unstruct_collection_overrides(everything: Everything):
-    converter = ujson_make_converter(
-        unstruct_collection_overrides={AbstractSet: sorted}
-    )
+    converter = ujson_make_converter(unstruct_collection_overrides={Set: sorted})
     raw = converter.unstructure(everything)
     assert raw["a_set"] == sorted(raw["a_set"])
     assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
@@ -484,9 +483,7 @@ def test_orjson_converter(everything: Everything, detailed_validation: bool):
 def test_orjson_converter_unstruct_collection_overrides(everything: Everything):
     from cattrs.preconf.orjson import make_converter as orjson_make_converter
 
-    converter = orjson_make_converter(
-        unstruct_collection_overrides={AbstractSet: sorted}
-    )
+    converter = orjson_make_converter(unstruct_collection_overrides={Set: sorted})
     raw = converter.unstructure(everything)
     assert raw["a_set"] == sorted(raw["a_set"])
     assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
@@ -568,9 +565,7 @@ def test_msgpack_converter(everything: Everything):
 
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
 def test_msgpack_converter_unstruct_collection_overrides(everything: Everything):
-    converter = msgpack_make_converter(
-        unstruct_collection_overrides={AbstractSet: sorted}
-    )
+    converter = msgpack_make_converter(unstruct_collection_overrides={Set: sorted})
     raw = converter.unstructure(everything)
     assert raw["a_set"] == sorted(raw["a_set"])
     assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
@@ -663,7 +658,7 @@ def test_bson_converter(everything: Everything, detailed_validation: bool):
     )
 )
 def test_bson_converter_unstruct_collection_overrides(everything: Everything):
-    converter = bson_make_converter(unstruct_collection_overrides={AbstractSet: sorted})
+    converter = bson_make_converter(unstruct_collection_overrides={Set: sorted})
     raw = converter.unstructure(everything)
     assert raw["a_set"] == sorted(raw["a_set"])
     assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
@@ -755,9 +750,7 @@ def test_tomlkit_converter(everything: Everything, detailed_validation: bool):
     )
 )
 def test_tomlkit_converter_unstruct_collection_overrides(everything: Everything):
-    converter = tomlkit_make_converter(
-        unstruct_collection_overrides={AbstractSet: sorted}
-    )
+    converter = tomlkit_make_converter(unstruct_collection_overrides={Set: sorted})
     raw = converter.unstructure(everything)
     assert raw["a_set"] == sorted(raw["a_set"])
     assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
@@ -797,9 +790,7 @@ def test_cbor2_converter(everything: Everything):
 
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
 def test_cbor2_converter_unstruct_collection_overrides(everything: Everything):
-    converter = cbor2_make_converter(
-        unstruct_collection_overrides={AbstractSet: sorted}
-    )
+    converter = cbor2_make_converter(unstruct_collection_overrides={Set: sorted})
     raw = converter.unstructure(everything)
     assert raw["a_set"] == sorted(raw["a_set"])
     assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
@@ -856,9 +847,7 @@ def test_msgspec_json_unstruct_collection_overrides(everything: Everything):
     """Ensure collection overrides work."""
     from cattrs.preconf.msgspec import make_converter as msgspec_make_converter
 
-    converter = msgspec_make_converter(
-        unstruct_collection_overrides={AbstractSet: sorted}
-    )
+    converter = msgspec_make_converter(unstruct_collection_overrides={Set: sorted})
     raw = converter.unstructure(everything)
     assert raw["a_set"] == sorted(raw["a_set"])
     assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
@@ -913,3 +902,39 @@ def test_msgspec_efficient_enum():
         converter.get_unstructure_hook(fields(Everything).a_literal_with_bare.type)
         == identity
     )
+
+
+@pytest.mark.parametrize(
+    "converter_factory",
+    [
+        bson_make_converter,
+        cbor2_make_converter,
+        json_make_converter,
+        msgpack_make_converter,
+        tomlkit_make_converter,
+        ujson_make_converter,
+        pyyaml_make_converter,
+    ],
+)
+def test_literal_dicts(converter_factory: Callable[[], Converter]):
+    """Dicts with keys that aren't subclasses of `type` work."""
+    converter = converter_factory()
+
+    assert converter.structure({"a": 1}, Dict[Literal["a"], int]) == {"a": 1}
+    assert converter.unstructure({"a": 1}, Dict[Literal["a"], int]) == {"a": 1}
+
+
+@pytest.mark.skipif(NO_ORJSON, reason="orjson not available")
+def test_literal_dicts_orjson():
+    """Dicts with keys that aren't subclasses of `type` work."""
+    from cattrs.preconf.orjson import make_converter as orjson_make_converter
+
+    test_literal_dicts(orjson_make_converter)
+
+
+@pytest.mark.skipif(NO_MSGSPEC, reason="msgspec not available")
+def test_literal_dicts_msgspec():
+    """Dicts with keys that aren't subclasses of `type` work."""
+    from cattrs.preconf.msgspec import make_converter as msgspec_make_converter
+
+    test_literal_dicts(msgspec_make_converter)

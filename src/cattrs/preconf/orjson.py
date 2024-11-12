@@ -1,6 +1,7 @@
 """Preconfigured converters for orjson."""
 
 from base64 import b85decode, b85encode
+from collections.abc import Set
 from datetime import date, datetime
 from enum import Enum
 from functools import partial
@@ -8,8 +9,8 @@ from typing import Any, TypeVar, Union
 
 from orjson import dumps, loads
 
-from .._compat import AbstractSet, is_mapping
-from ..cols import is_namedtuple, namedtuple_unstructure_factory
+from .._compat import is_subclass
+from ..cols import is_mapping, is_namedtuple, namedtuple_unstructure_factory
 from ..converters import BaseConverter, Converter
 from ..fns import identity
 from ..literals import is_literal_containing_enums
@@ -56,7 +57,7 @@ def configure_converter(converter: BaseConverter):
         key_handler = str
         args = getattr(cl, "__args__", None)
         if args:
-            if issubclass(args[0], str) and issubclass(args[0], Enum):
+            if is_subclass(args[0], str) and is_subclass(args[0], Enum):
 
                 def key_handler(v):
                     return v.value
@@ -96,7 +97,7 @@ def configure_converter(converter: BaseConverter):
 @wrap(OrjsonConverter)
 def make_converter(*args: Any, **kwargs: Any) -> OrjsonConverter:
     kwargs["unstruct_collection_overrides"] = {
-        AbstractSet: list,
+        Set: list,
         **kwargs.get("unstruct_collection_overrides", {}),
     }
     res = OrjsonConverter(*args, **kwargs)

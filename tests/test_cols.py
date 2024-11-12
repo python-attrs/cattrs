@@ -1,11 +1,12 @@
 """Tests for the `cattrs.cols` module."""
 
+from collections.abc import Set
 from typing import Dict
 
 from immutables import Map
 
 from cattrs import BaseConverter, Converter
-from cattrs._compat import AbstractSet, FrozenSet
+from cattrs._compat import FrozenSet
 from cattrs.cols import (
     is_any_set,
     iterable_unstructure_factory,
@@ -23,7 +24,7 @@ def test_set_overriding(converter: BaseConverter):
         lambda t, c: iterable_unstructure_factory(t, c, unstructure_to=sorted),
     )
 
-    assert converter.unstructure({"c", "b", "a"}, AbstractSet[str]) == ["a", "b", "c"]
+    assert converter.unstructure({"c", "b", "a"}, Set[str]) == ["a", "b", "c"]
     assert converter.unstructure(frozenset(["c", "b", "a"]), FrozenSet[str]) == [
         "a",
         "b",

@@ -1,11 +1,12 @@
 """Preconfigured converters for the stdlib json."""
 
 from base64 import b85decode, b85encode
+from collections.abc import Set
 from datetime import date, datetime
 from json import dumps, loads
 from typing import Any, TypeVar, Union
 
-from .._compat import AbstractSet, Counter
+from .._compat import Counter
 from ..converters import BaseConverter, Converter
 from ..fns import identity
 from ..literals import is_literal_containing_enums
@@ -56,7 +57,7 @@ def configure_converter(converter: BaseConverter):
 @wrap(JsonConverter)
 def make_converter(*args: Any, **kwargs: Any) -> JsonConverter:
     kwargs["unstruct_collection_overrides"] = {
-        AbstractSet: list,
+        Set: list,
         Counter: dict,
         **kwargs.get("unstruct_collection_overrides", {}),
     }
