@@ -1,12 +1,12 @@
 """Preconfigured converters for ujson."""
 
 from base64 import b85decode, b85encode
+from collections.abc import Set
 from datetime import date, datetime
 from typing import Any, AnyStr, TypeVar, Union
 
 from ujson import dumps, loads
 
-from .._compat import AbstractSet
 from ..converters import BaseConverter, Converter
 from ..fns import identity
 from ..literals import is_literal_containing_enums
@@ -55,7 +55,7 @@ def configure_converter(converter: BaseConverter):
 @wrap(UjsonConverter)
 def make_converter(*args: Any, **kwargs: Any) -> UjsonConverter:
     kwargs["unstruct_collection_overrides"] = {
-        AbstractSet: list,
+        Set: list,
         **kwargs.get("unstruct_collection_overrides", {}),
     }
     res = UjsonConverter(*args, **kwargs)

@@ -252,7 +252,6 @@ except ImportError:  # pragma: no cover
 
 
 Set = AbcSet
-AbstractSet = AbcSet
 MutableSet = AbcMutableSet
 Sequence = AbcSequence
 MutableSequence = AbcMutableSequence

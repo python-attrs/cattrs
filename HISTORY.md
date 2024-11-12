@@ -27,6 +27,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#598](https://github.com/python-attrs/cattrs/pull/598))
 - Literals containing enums are now unstructured properly, and their unstructuring is greatly optimized in the _bson_, stdlib JSON, _cbor2_, _msgpack_, _msgspec_, _orjson_ and _ujson_ preconf converters.
   ([#598](https://github.com/python-attrs/cattrs/pull/598))
+- Preconf converters now handle dictionaries with literal keys properly.
+  ([#599](https://github.com/python-attrs/cattrs/pull/599))
 - Replace `cattrs.gen.MappingStructureFn` with `cattrs.SimpleStructureHook[In, T]`.
 - Python 3.13 is now supported.
   ([#543](https://github.com/python-attrs/cattrs/pull/543) [#547](https://github.com/python-attrs/cattrs/issues/547))

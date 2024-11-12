@@ -1,6 +1,7 @@
 """Preconfigured converters for tomlkit."""
 
 from base64 import b85decode, b85encode
+from collections.abc import Set
 from datetime import date, datetime
 from enum import Enum
 from operator import attrgetter
@@ -9,8 +10,7 @@ from typing import Any, TypeVar, Union
 from tomlkit import dumps, loads
 from tomlkit.items import Float, Integer, String
 
-from cattrs._compat import AbstractSet, is_mapping
-
+from .._compat import is_mapping, is_subclass
 from ..converters import BaseConverter, Converter
 from ..strategies import configure_union_passthrough
 from . import validate_datetime, wrap
@@ -48,9 +48,9 @@ def configure_converter(converter: BaseConverter):
             # Currently, tomlkit has inconsistent behavior on 3.11
             # so we paper over it here.
             # https://github.com/sdispater/tomlkit/issues/237
-            if issubclass(args[0], str):
-                key_handler = _enum_value_getter if issubclass(args[0], Enum) else None
-            elif issubclass(args[0], bytes):
+            if is_subclass(args[0], str):
+                key_handler = _enum_value_getter if is_subclass(args[0], Enum) else None
+            elif is_subclass(args[0], bytes):
 
                 def key_handler(k: bytes):
                     return b85encode(k).decode("utf8")
@@ -77,7 +77,7 @@ def configure_converter(converter: BaseConverter):
 @wrap(TomlkitConverter)
 def make_converter(*args: Any, **kwargs: Any) -> TomlkitConverter:
     kwargs["unstruct_collection_overrides"] = {
-        AbstractSet: list,
+        Set: list,
         tuple: list,
         **kwargs.get("unstruct_collection_overrides", {}),
     }

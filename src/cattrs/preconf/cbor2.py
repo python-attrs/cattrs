@@ -1,11 +1,10 @@
 """Preconfigured converters for cbor2."""
 
+from collections.abc import Set
 from datetime import date, datetime, timezone
 from typing import Any, TypeVar, Union
 
 from cbor2 import dumps, loads
-
-from cattrs._compat import AbstractSet
 
 from ..converters import BaseConverter, Converter
 from ..fns import identity
@@ -48,7 +47,7 @@ def configure_converter(converter: BaseConverter):
 @wrap(Cbor2Converter)
 def make_converter(*args: Any, **kwargs: Any) -> Cbor2Converter:
     kwargs["unstruct_collection_overrides"] = {
-        AbstractSet: list,
+        Set: list,
         **kwargs.get("unstruct_collection_overrides", {}),
     }
     res = Cbor2Converter(*args, **kwargs)
