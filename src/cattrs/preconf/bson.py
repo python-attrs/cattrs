@@ -11,8 +11,15 @@ from cattrs.gen import make_mapping_structure_fn
 
 from ..converters import BaseConverter, Converter
 from ..dispatch import StructureHook
+from ..fns import identity
+from ..literals import is_literal_containing_enums
 from ..strategies import configure_union_passthrough
-from . import validate_datetime, wrap
+from . import (
+    is_primitive_enum,
+    literals_with_enums_unstructure_factory,
+    validate_datetime,
+    wrap,
+)
 
 T = TypeVar("T")
 
@@ -52,6 +59,10 @@ def configure_converter(converter: BaseConverter):
     * byte mapping keys are base85-encoded into strings when unstructuring, and reverse
     * non-string, non-byte mapping keys are coerced into strings when unstructuring
     * a deserialization hook is registered for bson.ObjectId by default
+    * string and int enums are passed through when unstructuring
+
+    .. versionchanged: 24.2.0
+        Enums are left to the library to unstructure, speeding them up.
     """
 
     def gen_unstructure_mapping(cl: Any, unstructure_to=None):
@@ -92,6 +103,10 @@ def configure_converter(converter: BaseConverter):
     converter.register_structure_hook(datetime, validate_datetime)
     converter.register_unstructure_hook(date, lambda v: v.isoformat())
     converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
+    converter.register_unstructure_hook_func(is_primitive_enum, identity)
+    converter.register_unstructure_hook_factory(
+        is_literal_containing_enums, literals_with_enums_unstructure_factory
+    )
 
 
 @wrap(BsonConverter)

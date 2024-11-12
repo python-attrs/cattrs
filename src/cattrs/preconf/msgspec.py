@@ -27,8 +27,9 @@ from ..converters import BaseConverter, Converter
 from ..dispatch import UnstructureHook
 from ..fns import identity
 from ..gen import make_hetero_tuple_unstructure_fn
+from ..literals import is_literal_containing_enums
 from ..strategies import configure_union_passthrough
-from . import wrap
+from . import literals_with_enums_unstructure_factory, wrap
 
 T = TypeVar("T")
 
@@ -72,16 +73,23 @@ def configure_converter(converter: Converter) -> None:
     * datetimes and dates are passed through to be serialized as RFC 3339 directly
     * enums are passed through to msgspec directly
     * union passthrough configured for str, bool, int, float and None
+    * bare, string and int enums are passed through when unstructuring
+
+    .. versionchanged: 24.2.0
+        Enums are left to the library to unstructure, speeding them up.
     """
     configure_passthroughs(converter)
 
     converter.register_unstructure_hook(Struct, to_builtins)
-    converter.register_unstructure_hook(Enum, to_builtins)
+    converter.register_unstructure_hook(Enum, identity)
 
     converter.register_structure_hook(Struct, convert)
     converter.register_structure_hook(bytes, lambda v, _: b64decode(v))
     converter.register_structure_hook(datetime, lambda v, _: convert(v, datetime))
     converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
+    converter.register_unstructure_hook_factory(
+        is_literal_containing_enums, literals_with_enums_unstructure_factory
+    )
     configure_union_passthrough(Union[str, bool, int, float, None], converter)
 
 
@@ -100,7 +108,7 @@ def configure_passthroughs(converter: Converter) -> None:
     converter.register_unstructure_hook(bytes, to_builtins)
     converter.register_unstructure_hook_factory(is_mapping, mapping_unstructure_factory)
     converter.register_unstructure_hook_factory(is_sequence, seq_unstructure_factory)
-    converter.register_unstructure_hook_factory(has, attrs_unstructure_factory)
+    converter.register_unstructure_hook_factory(has, msgspec_attrs_unstructure_factory)
     converter.register_unstructure_hook_factory(
         is_namedtuple, namedtuple_unstructure_factory
     )
@@ -145,7 +153,9 @@ def mapping_unstructure_factory(type, converter: BaseConverter) -> UnstructureHo
     return converter.gen_unstructure_mapping(type)
 
 
-def attrs_unstructure_factory(type: Any, converter: Converter) -> UnstructureHook:
+def msgspec_attrs_unstructure_factory(
+    type: Any, converter: Converter
+) -> UnstructureHook:
     """Choose whether to use msgspec handling or our own."""
     origin = get_origin(type)
     attribs = fields(origin or type)

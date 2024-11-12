@@ -91,6 +91,7 @@ from .gen import (
 )
 from .gen.typeddicts import make_dict_structure_fn as make_typeddict_dict_struct_fn
 from .gen.typeddicts import make_dict_unstructure_fn as make_typeddict_dict_unstruct_fn
+from .literals import is_literal_containing_enums
 from .types import SimpleStructureHook
 
 __all__ = ["UnstructureStrategy", "BaseConverter", "Converter", "GenConverter"]
@@ -144,10 +145,6 @@ class UnstructureStrategy(Enum):
 
     AS_DICT = "asdict"
     AS_TUPLE = "astuple"
-
-
-def is_literal_containing_enums(typ: type) -> bool:
-    return is_literal(typ) and any(isinstance(val, Enum) for val in typ.__args__)
 
 
 def _is_extended_factory(factory: Callable) -> bool:
@@ -238,6 +235,7 @@ class BaseConverter:
                     lambda t: self.get_unstructure_hook(get_type_alias_base(t)),
                     True,
                 ),
+                (is_literal_containing_enums, self.unstructure),
                 (is_mapping, self._unstructure_mapping),
                 (is_sequence, self._unstructure_seq),
                 (is_mutable_set, self._unstructure_seq),

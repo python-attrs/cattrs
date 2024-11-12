@@ -4,10 +4,10 @@ from enum import Enum, IntEnum, unique
 from json import dumps as json_dumps
 from json import loads as json_loads
 from platform import python_implementation
-from typing import Any, Dict, Final, List, NamedTuple, NewType, Union
+from typing import Any, Dict, Final, List, Literal, NamedTuple, NewType, Union
 
 import pytest
-from attrs import define
+from attrs import define, fields
 from bson import CodecOptions, ObjectId
 from hypothesis import given, settings
 from hypothesis.strategies import (
@@ -43,12 +43,16 @@ from cattrs._compat import (
     Set,
     TupleSubscriptable,
 )
+from cattrs.fns import identity
 from cattrs.preconf.bson import make_converter as bson_make_converter
 from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
 from cattrs.preconf.json import make_converter as json_make_converter
 from cattrs.preconf.msgpack import make_converter as msgpack_make_converter
 from cattrs.preconf.tomlkit import make_converter as tomlkit_make_converter
 from cattrs.preconf.ujson import make_converter as ujson_make_converter
+
+NO_MSGSPEC: Final = python_implementation() == "PyPy" or sys.version_info[:2] >= (3, 13)
+NO_ORJSON: Final = python_implementation() == "PyPy"
 
 
 @define
@@ -75,6 +79,9 @@ class Everything:
     class AStringEnum(str, Enum):
         A = "a"
 
+    class ABareEnum(Enum):
+        B = "b"
+
     string: str
     bytes: bytes
     an_int: int
@@ -93,6 +100,7 @@ class Everything:
     a_frozenset: FrozenSet[str]
     an_int_enum: AnIntEnum
     a_str_enum: AStringEnum
+    a_bare_enum: ABareEnum
     a_datetime: datetime
     a_date: date
     a_string_enum_dict: Dict[AStringEnum, int]
@@ -101,6 +109,8 @@ class Everything:
     native_union_with_spillover: Union[int, str, Set[str]]
     native_union_with_union_spillover: Union[int, str, A, B]
     a_namedtuple: C
+    a_literal: Literal[1, AStringEnum.A]
+    a_literal_with_bare: Literal[1, ABareEnum.B]
 
 
 @composite
@@ -162,6 +172,7 @@ def everythings(
         draw(frozensets(strings)),
         Everything.AnIntEnum.A,
         Everything.AStringEnum.A,
+        Everything.ABareEnum.B,
         draw(dts),
         draw(dates(min_value=date(1970, 1, 1), max_value=date(2038, 1, 1))),
         draw(dictionaries(just(Everything.AStringEnum.A), ints)),
@@ -170,6 +181,8 @@ def everythings(
         draw(one_of(ints, strings, sets(strings))),
         draw(one_of(ints, strings, ints.map(A), strings.map(B))),
         draw(fs.map(C)),
+        draw(one_of(just(1), just(Everything.AStringEnum.A))),
+        draw(one_of(just(1), just(Everything.ABareEnum.B))),
     )
 
 
@@ -325,6 +338,32 @@ def test_stdlib_json_unions_with_spillover(
     assert converter.structure(converter.unstructure(val), type) == val
 
 
+def test_stdlib_json_native_enums():
+    """Bare, string and int enums are handled correctly."""
+    converter = json_make_converter()
+    assert (
+        json_loads(converter.dumps(Everything.AnIntEnum.A))
+        == Everything.AnIntEnum.A.value
+    )
+    assert (
+        json_loads(converter.dumps(Everything.AStringEnum.A))
+        == Everything.AStringEnum.A.value
+    )
+    assert (
+        json_loads(converter.dumps(Everything.ABareEnum.B))
+        == Everything.ABareEnum.B.value
+    )
+
+
+def test_stdlib_json_efficient_enum():
+    """`str` and `int` enums are handled efficiently."""
+    converter = json_make_converter()
+
+    assert converter.get_unstructure_hook(Everything.AnIntEnum) == identity
+    assert converter.get_unstructure_hook(Everything.AStringEnum) == identity
+    assert converter.get_unstructure_hook(fields(Everything).a_literal) == identity
+
+
 @given(
     everythings(
         min_int=-9223372036854775808, max_int=9223372036854775807, allow_inf=False
@@ -377,7 +416,33 @@ def test_ujson_unions(union_and_val: tuple, detailed_validation: bool):
     assert converter.structure(val, type) == val
 
 
-@pytest.mark.skipif(python_implementation() == "PyPy", reason="no orjson on PyPy")
+def test_ujson_native_enums():
+    """Bare, string and int enums are handled correctly."""
+    converter = ujson_make_converter()
+    assert (
+        json_loads(converter.dumps(Everything.AnIntEnum.A))
+        == Everything.AnIntEnum.A.value
+    )
+    assert (
+        json_loads(converter.dumps(Everything.AStringEnum.A))
+        == Everything.AStringEnum.A.value
+    )
+    assert (
+        json_loads(converter.dumps(Everything.ABareEnum.B))
+        == Everything.ABareEnum.B.value
+    )
+
+
+def test_ujson_efficient_enum():
+    """Bare, `str` and `int` enums are handled efficiently."""
+    converter = ujson_make_converter()
+
+    assert converter.get_unstructure_hook(Everything.AnIntEnum) == identity
+    assert converter.get_unstructure_hook(Everything.AStringEnum) == identity
+    assert converter.get_unstructure_hook(fields(Everything).a_literal.type) == identity
+
+
+@pytest.mark.skipif(NO_ORJSON, reason="orjson not available")
 @given(
     everythings(
         min_int=-9223372036854775808, max_int=9223372036854775807, allow_inf=False
@@ -395,7 +460,7 @@ def test_orjson(everything: Everything, detailed_validation: bool):
     assert converter.structure(orjson_loads(raw), Everything) == everything
 
 
-@pytest.mark.skipif(python_implementation() == "PyPy", reason="no orjson on PyPy")
+@pytest.mark.skipif(NO_ORJSON, reason="orjson not available")
 @given(
     everythings(
         min_int=-9223372036854775808, max_int=9223372036854775807, allow_inf=False
@@ -410,7 +475,7 @@ def test_orjson_converter(everything: Everything, detailed_validation: bool):
     assert converter.loads(raw, Everything) == everything
 
 
-@pytest.mark.skipif(python_implementation() == "PyPy", reason="no orjson on PyPy")
+@pytest.mark.skipif(NO_ORJSON, reason="orjson not available")
 @given(
     everythings(
         min_int=-9223372036854775808, max_int=9223372036854775807, allow_inf=False
@@ -428,7 +493,7 @@ def test_orjson_converter_unstruct_collection_overrides(everything: Everything):
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
 
 
-@pytest.mark.skipif(python_implementation() == "PyPy", reason="no orjson on PyPy")
+@pytest.mark.skipif(NO_ORJSON, reason="orjson not available")
 @given(
     union_and_val=native_unions(include_bytes=False, include_datetimes=False),
     detailed_validation=...,
@@ -441,6 +506,44 @@ def test_orjson_unions(union_and_val: tuple, detailed_validation: bool):
     type, val = union_and_val
 
     assert converter.structure(val, type) == val
+
+
+@pytest.mark.skipif(NO_ORJSON, reason="orjson not available")
+def test_orjson_native_enums():
+    """Bare, string and int enums are handled correctly."""
+    from cattrs.preconf.orjson import make_converter as orjson_make_converter
+
+    converter = orjson_make_converter()
+
+    assert (
+        json_loads(converter.dumps(Everything.AnIntEnum.A))
+        == Everything.AnIntEnum.A.value
+    )
+    assert (
+        json_loads(converter.dumps(Everything.AStringEnum.A))
+        == Everything.AStringEnum.A.value
+    )
+    assert (
+        json_loads(converter.dumps(Everything.ABareEnum.B))
+        == Everything.ABareEnum.B.value
+    )
+
+
+@pytest.mark.skipif(NO_ORJSON, reason="orjson not available")
+def test_orjson_efficient_enum():
+    """Bare, `str` and `int` enums are handled efficiently."""
+    from cattrs.preconf.orjson import make_converter as orjson_make_converter
+
+    converter = orjson_make_converter()
+
+    assert converter.get_unstructure_hook(Everything.AnIntEnum) == identity
+    assert converter.get_unstructure_hook(Everything.AStringEnum) == identity
+    assert converter.get_unstructure_hook(Everything.ABareEnum) == identity
+    assert converter.get_unstructure_hook(fields(Everything).a_literal.type) == identity
+    assert (
+        converter.get_unstructure_hook(fields(Everything).a_literal_with_bare.type)
+        == identity
+    )
 
 
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
@@ -481,6 +584,31 @@ def test_msgpack_unions(union_and_val: tuple, detailed_validation: bool):
     type, val = union_and_val
 
     assert converter.structure(val, type) == val
+
+
+def test_msgpack_native_enums():
+    """Bare, string and int enums are handled correctly."""
+
+    converter = msgpack_make_converter()
+
+    assert converter.dumps(Everything.AnIntEnum.A) == converter.dumps(
+        Everything.AnIntEnum.A.value
+    )
+    assert converter.dumps(Everything.AStringEnum.A) == converter.dumps(
+        Everything.AStringEnum.A.value
+    )
+    assert converter.dumps(Everything.ABareEnum.B) == converter.dumps(
+        Everything.ABareEnum.B.value
+    )
+
+
+def test_msgpack_efficient_enum():
+    """`str` and `int` enums are handled efficiently."""
+    converter = msgpack_make_converter()
+
+    assert converter.get_unstructure_hook(Everything.AnIntEnum) == identity
+    assert converter.get_unstructure_hook(Everything.AStringEnum) == identity
+    assert converter.get_unstructure_hook(fields(Everything).a_literal.type) == identity
 
 
 @given(
@@ -551,6 +679,39 @@ def test_bson_unions(union_and_val: tuple, detailed_validation: bool):
     assert converter.structure(val, type) == val
 
 
+def test_bson_objectid():
+    """BSON ObjectIds are supported by default."""
+    converter = bson_make_converter()
+    o = ObjectId()
+    assert o == converter.structure(str(o), ObjectId)
+    assert o == converter.structure(o, ObjectId)
+
+
+def test_bson_native_enums():
+    """Bare, string and int enums are handled correctly."""
+
+    converter = bson_make_converter()
+
+    assert converter.dumps({"a": Everything.AnIntEnum.A}) == converter.dumps(
+        {"a": Everything.AnIntEnum.A.value}
+    )
+    assert converter.dumps({"a": Everything.AStringEnum.A}) == converter.dumps(
+        {"a": Everything.AStringEnum.A.value}
+    )
+    assert converter.dumps({"a": Everything.ABareEnum.B}) == converter.dumps(
+        {"a": Everything.ABareEnum.B.value}
+    )
+
+
+def test_bson_efficient_enum():
+    """`str` and `int` enums are handled efficiently."""
+    converter = bson_make_converter()
+
+    assert converter.get_unstructure_hook(Everything.AnIntEnum) == identity
+    assert converter.get_unstructure_hook(Everything.AStringEnum) == identity
+    assert converter.get_unstructure_hook(fields(Everything).a_literal.type) == identity
+
+
 @given(
     everythings(
         min_key_length=1,
@@ -617,14 +778,6 @@ def test_tomlkit_unions(union_and_val: tuple, detailed_validation: bool):
     assert converter.structure(val, type) == val
 
 
-def test_bson_objectid():
-    """BSON ObjectIds are supported by default."""
-    converter = bson_make_converter()
-    o = ObjectId()
-    assert o == converter.structure(str(o), ObjectId)
-    assert o == converter.structure(o, ObjectId)
-
-
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
 def test_cbor2(everything: Everything):
     from cbor2 import dumps as cbor2_dumps
@@ -662,7 +815,29 @@ def test_cbor2_unions(union_and_val: tuple, detailed_validation: bool):
     assert converter.structure(val, type) == val
 
 
-NO_MSGSPEC: Final = python_implementation() == "PyPy" or sys.version_info[:2] >= (3, 13)
+def test_cbor2_native_enums():
+    """Bare, string and int enums are handled correctly."""
+
+    converter = cbor2_make_converter()
+
+    assert converter.dumps(Everything.AnIntEnum.A) == converter.dumps(
+        Everything.AnIntEnum.A.value
+    )
+    assert converter.dumps(Everything.AStringEnum.A) == converter.dumps(
+        Everything.AStringEnum.A.value
+    )
+    assert converter.dumps(Everything.ABareEnum.B) == converter.dumps(
+        Everything.ABareEnum.B.value
+    )
+
+
+def test_cbor2_efficient_enum():
+    """`str` and `int` enums are handled efficiently."""
+    converter = cbor2_make_converter()
+
+    assert converter.get_unstructure_hook(Everything.AnIntEnum) == identity
+    assert converter.get_unstructure_hook(Everything.AStringEnum) == identity
+    assert converter.get_unstructure_hook(fields(Everything).a_literal.type) == identity
 
 
 @pytest.mark.skipif(NO_MSGSPEC, reason="msgspec not available")
@@ -703,3 +878,38 @@ def test_msgspec_json_unions(union_and_val: tuple, detailed_validation: bool):
     type, val = union_and_val
 
     assert converter.structure(val, type) == val
+
+
+@pytest.mark.skipif(NO_MSGSPEC, reason="msgspec not available")
+def test_msgspec_native_enums():
+    """Bare, string and int enums are handled correctly."""
+    from cattrs.preconf.msgspec import make_converter as msgspec_make_converter
+
+    converter = msgspec_make_converter()
+
+    assert converter.dumps(Everything.AnIntEnum.A) == converter.dumps(
+        Everything.AnIntEnum.A.value
+    )
+    assert converter.dumps(Everything.AStringEnum.A) == converter.dumps(
+        Everything.AStringEnum.A.value
+    )
+    assert converter.dumps(Everything.ABareEnum.B) == converter.dumps(
+        Everything.ABareEnum.B.value
+    )
+
+
+@pytest.mark.skipif(NO_MSGSPEC, reason="msgspec not available")
+def test_msgspec_efficient_enum():
+    """Bare, `str` and `int` enums are handled efficiently."""
+    from cattrs.preconf.msgspec import make_converter as msgspec_make_converter
+
+    converter = msgspec_make_converter()
+
+    assert converter.get_unstructure_hook(Everything.AnIntEnum) == identity
+    assert converter.get_unstructure_hook(Everything.AStringEnum) == identity
+    assert converter.get_unstructure_hook(Everything.ABareEnum) == identity
+    assert converter.get_unstructure_hook(fields(Everything).a_literal.type) == identity
+    assert (
+        converter.get_unstructure_hook(fields(Everything).a_literal_with_bare.type)
+        == identity
+    )

@@ -236,7 +236,8 @@ try:
     # Not present on 3.9.0, so we try carefully.
     from typing import _LiteralGenericAlias
 
-    def is_literal(type) -> bool:
+    def is_literal(type: Any) -> bool:
+        """Is this a literal?"""
         return type in LITERALS or (
             isinstance(
                 type, (_GenericAlias, _LiteralGenericAlias, _SpecialGenericAlias)
