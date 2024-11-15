@@ -48,7 +48,7 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr htmlcov/
 
 lint: ## check style with ruff and black
-	pdm run ruff src/ tests
+	pdm run ruff src/ tests bench
 	pdm run black --check src tests docs/conf.py
 
 test: ## run tests quickly with the default Python

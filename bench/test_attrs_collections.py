@@ -34,7 +34,7 @@ def test_unstructure_attrs_lists(benchmark, converter_cls, unstructure_strat):
         i: List[bytes]
         j: List[E]
         k: List[int]
-        l: List[float]
+        l: List[float]  # noqa: E741
         m: List[str]
         n: List[bytes]
         o: List[E]
@@ -62,32 +62,32 @@ def test_unstructure_attrs_lists(benchmark, converter_cls, unstructure_strat):
             [1] * 3,
             [1.0] * 3,
             ["a small string"] * 3,
-            ["test".encode()] * 3,
+            [b"test"] * 3,
             [E.ONE] * 3,
             [2] * 3,
             [2.0] * 3,
             ["a small string"] * 3,
-            ["test".encode()] * 3,
+            [b"test"] * 3,
             [E.TWO] * 3,
             [3] * 3,
             [3.0] * 3,
             ["a small string"] * 3,
-            ["test".encode()] * 3,
+            [b"test"] * 3,
             [E.ONE] * 3,
             [4] * 3,
             [4.0] * 3,
             ["a small string"] * 3,
-            ["test".encode()] * 3,
+            [b"test"] * 3,
             [E.TWO] * 3,
             [5] * 3,
             [5.0] * 3,
             ["a small string"] * 3,
-            ["test".encode()] * 3,
+            [b"test"] * 3,
             [E.ONE] * 3,
             [6] * 3,
             [6.0] * 3,
             ["a small string"] * 3,
-            ["test".encode()] * 3,
+            [b"test"] * 3,
             [E.TWO] * 3,
         ),
     )
