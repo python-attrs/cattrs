@@ -232,6 +232,23 @@ def test_default_no_literals():
     assert no_lits({"a": "a"}) is D
 
 
+def test_default_none():
+    """The default disambiguator can handle `None`."""
+    c = Converter()
+
+    @define
+    class A:
+        a: int
+
+    @define
+    class B:
+        b: str
+
+    hook = c.get_structure_hook(Union[A, B, None])
+    assert hook({"a": 1}, Union[A, B, None]) == A(1)
+    assert hook(None, Union[A, B, None]) is None
+
+
 def test_converter_no_literals(converter: Converter):
     """A converter can be configured to skip literals."""
 
