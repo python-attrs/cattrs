@@ -40,6 +40,7 @@ Any of these hooks can be overriden if pure validation is required instead.
 ... def validate(value, type) -> int:
 ...     if not isinstance(value, type):
 ...         raise ValueError(f'{value!r} not an instance of {type}')
+...     return value
 
 >>> c.structure("1", int)
 Traceback (most recent call last):
