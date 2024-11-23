@@ -10,6 +10,7 @@ from hypothesis import HealthCheck, assume, given, settings
 
 from cattrs import Converter
 from cattrs.disambiguators import create_default_dis_func, is_supported_union
+from cattrs.errors import StructureHandlerNotFoundError
 from cattrs.gen import make_dict_structure_fn, override
 
 from .untyped import simple_classes
@@ -77,6 +78,13 @@ def test_edge_errors():
     with pytest.raises(TypeError):
         # The discriminator chosen does not actually help
         create_default_dis_func(c, C, D)
+
+    # Not an attrs class or dataclass
+    class J:
+        i: int
+
+    with pytest.raises(StructureHandlerNotFoundError):
+        c.get_structure_hook(Union[A, J])
 
 
 @given(simple_classes(defaults=False))
