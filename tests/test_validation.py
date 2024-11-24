@@ -222,3 +222,59 @@ def test_notes_pickling():
     assert note == "foo"
     assert note.name == "name"
     assert note.type is int
+
+
+def test_error_derive():
+    """Our ExceptionGroups should derive properly."""
+    c = Converter(detailed_validation=True)
+
+    @define
+    class Test:
+        a: int
+        b: str = field(validator=in_(["a", "b"]))
+        c: str
+
+    with pytest.raises(ClassValidationError) as exc:
+        c.structure({"a": "a", "b": "c"}, Test)
+
+    match, rest = exc.value.split(KeyError)
+
+    assert len(match.exceptions) == 1
+    assert len(rest.exceptions) == 1
+
+    assert match.cl == exc.value.cl
+    assert rest.cl == exc.value.cl
+
+
+def test_iterable_note_grouping():
+    """IterableValidationErrors can group their subexceptions by notes."""
+    exc1 = ValueError()
+    exc2 = KeyError()
+    exc3 = TypeError()
+
+    exc2.__notes__ = [note := IterableValidationNote("Test Note", 0, int)]
+    exc3.__notes__ = ["A string note"]
+
+    exc = IterableValidationError("Test", [exc1, exc2, exc3], list[int])
+
+    with_notes, without_notes = exc.group_exceptions()
+
+    assert with_notes == [(exc2, note)]
+    assert without_notes == [exc1, exc3]
+
+
+def test_class_note_grouping():
+    """ClassValidationErrors can group their subexceptions by notes."""
+    exc1 = ValueError()
+    exc2 = KeyError()
+    exc3 = TypeError()
+
+    exc2.__notes__ = [note := AttributeValidationNote("Test Note", "a", int)]
+    exc3.__notes__ = ["A string note"]
+
+    exc = ClassValidationError("Test", [exc1, exc2, exc3], int)
+
+    with_notes, without_notes = exc.group_exceptions()
+
+    assert with_notes == [(exc2, note)]
+    assert without_notes == [exc1, exc3]

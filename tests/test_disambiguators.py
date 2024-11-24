@@ -10,6 +10,7 @@ from hypothesis import HealthCheck, assume, given, settings
 
 from cattrs import Converter
 from cattrs.disambiguators import create_default_dis_func, is_supported_union
+from cattrs.errors import StructureHandlerNotFoundError
 from cattrs.gen import make_dict_structure_fn, override
 
 from .untyped import simple_classes
@@ -76,7 +77,40 @@ def test_edge_errors():
 
     with pytest.raises(TypeError):
         # The discriminator chosen does not actually help
-        create_default_dis_func(c, C, D)
+        create_default_dis_func(c, G, H)
+
+    # Not an attrs class or dataclass
+    class J:
+        i: int
+
+    with pytest.raises(StructureHandlerNotFoundError):
+        c.get_structure_hook(Union[A, J])
+
+    @define
+    class K:
+        x: Literal[2]
+
+    fn = create_default_dis_func(c, G, K)
+    with pytest.raises(ValueError):
+        # The input should be a mapping
+        fn([])
+
+    # A normal class with a required attribute
+    @define
+    class L:
+        b: str
+
+    # C and L both have a required attribute, so there will be no fallback.
+    fn = create_default_dis_func(c, C, L)
+    with pytest.raises(ValueError):
+        # We can't disambiguate based on this payload, so we error
+        fn({"c": 1})
+
+    # A has no attributes, so it ends up being the fallback
+    fn = create_default_dis_func(c, A, C)
+    with pytest.raises(ValueError):
+        # The input should be a mapping
+        fn([])
 
 
 @given(simple_classes(defaults=False))
@@ -230,6 +264,23 @@ def test_default_no_literals():
     no_lits = create_default_dis_func(c, C, D, use_literals=False)
     assert no_lits({"a": "a", "b": 1}) is C
     assert no_lits({"a": "a"}) is D
+
+
+def test_default_none():
+    """The default disambiguator can handle `None`."""
+    c = Converter()
+
+    @define
+    class A:
+        a: int
+
+    @define
+    class B:
+        b: str
+
+    hook = c.get_structure_hook(Union[A, B, None])
+    assert hook({"a": 1}, Union[A, B, None]) == A(1)
+    assert hook(None, Union[A, B, None]) is None
 
 
 def test_converter_no_literals(converter: Converter):

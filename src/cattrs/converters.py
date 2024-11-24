@@ -885,7 +885,7 @@ class BaseConverter:
         # We can't actually have a Union of a Union, so this is safe.
         return self._structure_func.dispatch(other)(obj, other)
 
-    def _structure_tuple(self, obj: Any, tup: type[T]) -> T:
+    def _structure_tuple(self, obj: Iterable, tup: type[T]) -> T:
         """Deal with structuring into a tuple."""
         tup_params = None if tup in (Tuple, tuple) else tup.__args__
         has_ellipsis = tup_params and tup_params[-1] is Ellipsis
@@ -893,7 +893,7 @@ class BaseConverter:
             # Just a Tuple. (No generic information.)
             return tuple(obj)
         if has_ellipsis:
-            # We're dealing with a homogenous tuple, Tuple[int, ...]
+            # We're dealing with a homogenous tuple, tuple[int, ...]
             tup_type = tup_params[0]
             conv = self._structure_func.dispatch(tup_type)
             if self.detailed_validation:
@@ -920,13 +920,6 @@ class BaseConverter:
 
         # We're dealing with a heterogenous tuple.
         exp_len = len(tup_params)
-        try:
-            len_obj = len(obj)
-        except TypeError:
-            pass  # most likely an unsized iterator, eg generator
-        else:
-            if len_obj > exp_len:
-                exp_len = len_obj
         if self.detailed_validation:
             errors = []
             res = []
@@ -940,8 +933,8 @@ class BaseConverter:
                     )
                     exc.__notes__ = [*getattr(exc, "__notes__", []), msg]
                     errors.append(exc)
-            if len(res) < exp_len:
-                problem = "Not enough" if len(res) < len(tup_params) else "Too many"
+            if len(obj) != exp_len:
+                problem = "Not enough" if len(res) < exp_len else "Too many"
                 exc = ValueError(f"{problem} values in {obj!r} to structure as {tup!r}")
                 msg = f"Structuring {tup}"
                 exc.__notes__ = [*getattr(exc, "__notes__", []), msg]
@@ -950,13 +943,12 @@ class BaseConverter:
                 raise IterableValidationError(f"While structuring {tup!r}", errors, tup)
             return tuple(res)
 
-        res = tuple(
+        if len(obj) != exp_len:
+            problem = "Not enough" if len(obj) < len(tup_params) else "Too many"
+            raise ValueError(f"{problem} values in {obj!r} to structure as {tup!r}")
+        return tuple(
             [self._structure_func.dispatch(t)(e, t) for t, e in zip(tup_params, obj)]
         )
-        if len(res) < exp_len:
-            problem = "Not enough" if len(res) < len(tup_params) else "Too many"
-            raise ValueError(f"{problem} values in {obj!r} to structure as {tup!r}")
-        return res
 
     def _get_dis_func(
         self,
@@ -971,11 +963,10 @@ class BaseConverter:
             # logic.
             union_types = tuple(e for e in union_types if e is not NoneType)
 
-        # TODO: technically both disambiguators could support TypedDicts and
-        # dataclasses...
+        # TODO: technically both disambiguators could support TypedDicts too
         if not all(has(get_origin(e) or e) for e in union_types):
             raise StructureHandlerNotFoundError(
-                "Only unions of attrs classes supported "
+                "Only unions of attrs classes and dataclasses supported "
                 "currently. Register a structure hook manually.",
                 type_=union,
             )

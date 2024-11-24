@@ -1,4 +1,4 @@
-from typing import Type, Union
+from typing import Union
 
 import pytest
 from attrs import define
@@ -9,7 +9,7 @@ from ._compat import is_py310_plus
 
 
 @pytest.mark.parametrize("cls", (BaseConverter, Converter))
-def test_custom_union_toplevel_roundtrip(cls: Type[BaseConverter]):
+def test_custom_union_toplevel_roundtrip(cls: type[BaseConverter]):
     """
     Test custom code union handling.
 
@@ -42,7 +42,7 @@ def test_custom_union_toplevel_roundtrip(cls: Type[BaseConverter]):
 
 @pytest.mark.skipif(not is_py310_plus, reason="3.10 union syntax")
 @pytest.mark.parametrize("cls", (BaseConverter, Converter))
-def test_310_custom_union_toplevel_roundtrip(cls: Type[BaseConverter]):
+def test_310_custom_union_toplevel_roundtrip(cls: type[BaseConverter]):
     """
     Test custom code union handling.
 
@@ -74,7 +74,7 @@ def test_310_custom_union_toplevel_roundtrip(cls: Type[BaseConverter]):
 
 
 @pytest.mark.parametrize("cls", (BaseConverter, Converter))
-def test_custom_union_clsfield_roundtrip(cls: Type[BaseConverter]):
+def test_custom_union_clsfield_roundtrip(cls: type[BaseConverter]):
     """
     Test custom code union handling.
 
