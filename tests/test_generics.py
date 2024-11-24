@@ -201,6 +201,30 @@ def test_unstructure_generic_attrs(genconverter):
     assert genconverter.structure(raw, OuterStr) == OuterStr(Inner("1"))
 
 
+def test_unstructure_generic_inheritance(genconverter):
+    """Classes inheriting from generic classes work."""
+    genconverter.register_unstructure_hook(int, lambda v: v + 1)
+    genconverter.register_unstructure_hook(str, lambda v: str(int(v) + 1))
+
+    @define
+    class Parent(Generic[T]):
+        a: T
+
+    @define
+    class Child(Parent, Generic[T]):
+        b: str
+
+    instance = Child(1, "2")
+    assert genconverter.unstructure(instance, Child[int]) == {"a": 2, "b": "3"}
+
+    @define
+    class ExplicitChild(Parent[int]):
+        b: str
+
+    instance = ExplicitChild(1, "2")
+    assert genconverter.unstructure(instance, ExplicitChild) == {"a": 2, "b": "3"}
+
+
 def test_unstructure_optional(genconverter):
     """Generics with optional fields work."""
 
