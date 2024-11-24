@@ -77,7 +77,7 @@ def test_edge_errors():
 
     with pytest.raises(TypeError):
         # The discriminator chosen does not actually help
-        create_default_dis_func(c, C, D)
+        create_default_dis_func(c, G, H)
 
     # Not an attrs class or dataclass
     class J:
@@ -85,6 +85,32 @@ def test_edge_errors():
 
     with pytest.raises(StructureHandlerNotFoundError):
         c.get_structure_hook(Union[A, J])
+
+    @define
+    class K:
+        x: Literal[2]
+
+    fn = create_default_dis_func(c, G, K)
+    with pytest.raises(ValueError):
+        # The input should be a mapping
+        fn([])
+
+    # A normal class with a required attribute
+    @define
+    class L:
+        b: str
+
+    # C and L both have a required attribute, so there will be no fallback.
+    fn = create_default_dis_func(c, C, L)
+    with pytest.raises(ValueError):
+        # We can't disambiguate based on this payload, so we error
+        fn({"c": 1})
+
+    # A has no attributes, so it ends up being the fallback
+    fn = create_default_dis_func(c, A, C)
+    with pytest.raises(ValueError):
+        # The input should be a mapping
+        fn([])
 
 
 @given(simple_classes(defaults=False))
