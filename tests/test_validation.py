@@ -244,3 +244,37 @@ def test_error_derive():
 
     assert match.cl == exc.value.cl
     assert rest.cl == exc.value.cl
+
+
+def test_iterable_note_grouping():
+    """IterableValidationErrors can group their subexceptions by notes."""
+    exc1 = ValueError()
+    exc2 = KeyError()
+    exc3 = TypeError()
+
+    exc2.__notes__ = [note := IterableValidationNote("Test Note", 0, int)]
+    exc3.__notes__ = ["A string note"]
+
+    exc = IterableValidationError("Test", [exc1, exc2, exc3], list[int])
+
+    with_notes, without_notes = exc.group_exceptions()
+
+    assert with_notes == [(exc2, note)]
+    assert without_notes == [exc1, exc3]
+
+
+def test_class_note_grouping():
+    """ClassValidationErrors can group their subexceptions by notes."""
+    exc1 = ValueError()
+    exc2 = KeyError()
+    exc3 = TypeError()
+
+    exc2.__notes__ = [note := AttributeValidationNote("Test Note", "a", int)]
+    exc3.__notes__ = ["A string note"]
+
+    exc = ClassValidationError("Test", [exc1, exc2, exc3], int)
+
+    with_notes, without_notes = exc.group_exceptions()
+
+    assert with_notes == [(exc2, note)]
+    assert without_notes == [exc1, exc3]
