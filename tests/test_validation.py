@@ -222,3 +222,25 @@ def test_notes_pickling():
     assert note == "foo"
     assert note.name == "name"
     assert note.type is int
+
+
+def test_error_derive():
+    """Our ExceptionGroups should derive properly."""
+    c = Converter(detailed_validation=True)
+
+    @define
+    class Test:
+        a: int
+        b: str = field(validator=in_(["a", "b"]))
+        c: str
+
+    with pytest.raises(ClassValidationError) as exc:
+        c.structure({"a": "a", "b": "c"}, Test)
+
+    match, rest = exc.value.split(KeyError)
+
+    assert len(match.exceptions) == 1
+    assert len(rest.exceptions) == 1
+
+    assert match.cl == exc.value.cl
+    assert rest.cl == exc.value.cl

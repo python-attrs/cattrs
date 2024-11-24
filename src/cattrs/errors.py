@@ -1,4 +1,7 @@
+from collections.abc import Sequence
 from typing import Any, Optional, Union
+
+from typing_extensions import Self
 
 from cattrs._compat import ExceptionGroup
 
@@ -17,13 +20,13 @@ class StructureHandlerNotFoundError(Exception):
 class BaseValidationError(ExceptionGroup):
     cl: type
 
-    def __new__(cls, message, excs, cl: type):
+    def __new__(cls, message: str, excs: Sequence[Exception], cl: type):
         obj = super().__new__(cls, message, excs)
         obj.cl = cl
         return obj
 
-    def derive(self, excs):
-        return ClassValidationError(self.message, excs, self.cl)
+    def derive(self, excs: Sequence[Exception]) -> Self:
+        return self.__class__(self.message, excs, self.cl)
 
 
 class IterableValidationNote(str):
