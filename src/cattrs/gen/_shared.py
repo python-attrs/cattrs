@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar, get_type_hints
 
 from attrs import NOTHING, Attribute, Factory
 
@@ -10,8 +10,10 @@ from ..errors import StructureHandlerNotFoundError
 from ..fns import raise_error
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from ..converters import BaseConverter
 
+T = TypeVar("T")
 
 def find_structure_handler(
     a: Attribute, type: Any, c: BaseConverter, prefer_attrs_converters: bool = False
@@ -62,3 +64,28 @@ def find_structure_handler(
     except RecursionError:
         # This means we're dealing with a reference cycle, so use late binding.
         return c.structure
+
+
+def get_fields_annotated_by(cls: type, annotation_type: type[T] | T) -> dict[str, T]:
+    type_hints = get_type_hints(cls, include_extras=True)
+    # Support for both AttributeOverride and AttributeOverride()
+    annotation_type_ = annotation_type if isinstance(annotation_type, type) else type(annotation_type)
+
+    # First pass of filtering to get only fields with annotations
+    fields_with_annotations = (
+        (field_name, param_spec.__metadata__)
+        for field_name, param_spec in type_hints.items()
+        if hasattr(param_spec, "__metadata__")
+    )
+
+    # Now that we have fields with ANY annotations, we need to remove unwanted annotations.
+    fields_with_specific_annotation = (
+        (
+            field_name,
+            next((a for a in annotations if isinstance(a, annotation_type_)), None),
+        )
+        for field_name, annotations in fields_with_annotations
+    )
+
+    # We still might have some `None` values from previous filtering.
+    return {field_name: annotation for field_name, annotation in fields_with_specific_annotation if annotation}

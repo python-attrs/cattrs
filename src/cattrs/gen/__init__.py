@@ -33,7 +33,7 @@ from ..types import SimpleStructureHook
 from ._consts import AttributeOverride, already_generating, neutral
 from ._generics import generate_mapping
 from ._lc import generate_unique_filename
-from ._shared import find_structure_handler
+from ._shared import find_structure_handler, get_fields_annotated_by
 
 if TYPE_CHECKING:
     from ..converters import BaseConverter
@@ -260,6 +260,10 @@ def make_dict_unstructure_fn(
 
     working_set.add(cl)
 
+    # Merge overrides provided via Annotated with kwargs
+    annotated_overrides = get_fields_annotated_by(cl, AttributeOverride)
+    annotated_overrides.update(kwargs)
+
     try:
         return make_dict_unstructure_fn_from_attrs(
             attrs,
@@ -270,7 +274,7 @@ def make_dict_unstructure_fn(
             _cattrs_use_linecache=_cattrs_use_linecache,
             _cattrs_use_alias=_cattrs_use_alias,
             _cattrs_include_init_false=_cattrs_include_init_false,
-            **kwargs,
+            **annotated_overrides,
         )
     finally:
         working_set.remove(cl)
