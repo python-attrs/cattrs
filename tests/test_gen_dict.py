@@ -558,6 +558,7 @@ def test_init_false_no_structure_hook(converter: BaseConverter):
     @define
     class A:
         a: int = field(converter=int, init=False)
+        b: int = field(converter=int, init=False, default=5)
 
     converter.register_structure_hook(
         A,
@@ -636,8 +637,8 @@ def test_detailed_validation_from_converter(converter: BaseConverter):
             converter.structure({"a": "a"}, A)
 
 
-@given(prefer=...)
-def test_prefer_converters_from_converter(prefer: bool):
+@given(prefer=..., dv=...)
+def test_prefer_converters_from_converter(prefer: bool, dv: bool):
     """
     `prefer_attrs_converters` is taken from the converter by default.
     """
@@ -645,13 +646,17 @@ def test_prefer_converters_from_converter(prefer: bool):
     @define
     class A:
         a: int = field(converter=lambda x: x + 1)
+        b: int = field(converter=lambda x: x + 1, default=5)
 
     converter = BaseConverter(prefer_attrib_converters=prefer)
     converter.register_structure_hook(int, lambda x, _: x + 1)
-    converter.register_structure_hook(A, make_dict_structure_fn(A, converter))
+    converter.register_structure_hook(
+        A, make_dict_structure_fn(A, converter, _cattrs_detailed_validation=dv)
+    )
 
     if prefer:
-        assert converter.structure({"a": 1}, A).a == 2
+        assert converter.structure({"a": 1, "b": 2}, A).a == 2
+        assert converter.structure({"a": 1, "b": 2}, A).b == 3
     else:
         assert converter.structure({"a": 1}, A).a == 3
 
