@@ -1,5 +1,5 @@
 import collections
-import typing
+from typing import Hashable, Iterable, Reversible
 
 import pytest
 from attrs import define
@@ -41,9 +41,7 @@ def test_gen_hook_priority(converter: BaseConverter):
     assert converter.structure({"i": 1}, B) == B(2)
 
 
-@pytest.mark.parametrize(
-    "typing_cls", [typing.Hashable, typing.Iterable, typing.Reversible]
-)
+@pytest.mark.parametrize("typing_cls", [Hashable, Iterable, Reversible])
 def test_inherit_typing(converter: BaseConverter, typing_cls):
     """Stuff from typing.* resolves to runtime to collections.abc.*.
 
