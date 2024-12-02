@@ -1,13 +1,12 @@
 import typing
 from copy import deepcopy
 from functools import partial
-from typing import List, Tuple
 
 import pytest
 from attrs import define
 
 from cattrs import Converter, override
-from cattrs.errors import ClassValidationError
+from cattrs.errors import ClassValidationError, StructureHandlerNotFoundError
 from cattrs.strategies import configure_tagged_union, include_subclasses
 
 
@@ -148,7 +147,7 @@ def conv_w_subclasses(request):
     "struct_unstruct", IDS_TO_STRUCT_UNSTRUCT.values(), ids=IDS_TO_STRUCT_UNSTRUCT
 )
 def test_structuring_with_inheritance(
-    conv_w_subclasses: Tuple[Converter, bool], struct_unstruct
+    conv_w_subclasses: tuple[Converter, bool], struct_unstruct
 ) -> None:
     structured, unstructured = struct_unstruct
 
@@ -219,7 +218,7 @@ def test_circular_reference(conv_w_subclasses):
     "struct_unstruct", IDS_TO_STRUCT_UNSTRUCT.values(), ids=IDS_TO_STRUCT_UNSTRUCT
 )
 def test_unstructuring_with_inheritance(
-    conv_w_subclasses: Tuple[Converter, bool], struct_unstruct
+    conv_w_subclasses: tuple[Converter, bool], struct_unstruct
 ):
     structured, unstructured = struct_unstruct
     converter, included_subclasses_param = conv_w_subclasses
@@ -389,5 +388,27 @@ def test_cycles_classes_2(genconverter: Converter):
                 "_type": "Derived",
             }
         ],
-        List[A],
+        list[A],
     ) == [Derived(9, Derived(99, A(999)))]
+
+
+def test_unsupported_class(genconverter: Converter):
+    """Non-attrs/dataclass classes raise proper errors."""
+
+    class NewParent:
+        """Not an attrs class."""
+
+        a: int
+
+    @define
+    class NewChild(NewParent):
+        pass
+
+    @define
+    class NewChild2(NewParent):
+        pass
+
+    genconverter.register_structure_hook(NewParent, lambda v, _: NewParent(v))
+
+    with pytest.raises(StructureHandlerNotFoundError):
+        include_subclasses(NewParent, genconverter)

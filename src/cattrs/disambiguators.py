@@ -30,7 +30,7 @@ __all__ = ["is_supported_union", "create_default_dis_func"]
 
 
 def is_supported_union(typ: Any) -> bool:
-    """Whether the type is a union of attrs classes."""
+    """Whether the type is a union of attrs classes or dataclasses."""
     return is_union_type(typ) and all(
         e is NoneType or has(get_origin(e) or e) for e in typ.__args__
     )
