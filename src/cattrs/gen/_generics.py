@@ -36,14 +36,7 @@ def generate_mapping(cl: type, old_mapping: dict[str, type] = {}) -> dict[str, t
     origin = get_origin(cl)
 
     if origin is not None:
-        # To handle the cases where classes in the typing module are using
-        # the GenericAlias structure but aren't a Generic and hence
-        # end up in this function but do not have an `__parameters__`
-        # attribute. These classes are interface types, for example
-        # `typing.Hashable`.
-        parameters = getattr(get_origin(cl), "__parameters__", None)
-        if parameters is None:
-            return dict(old_mapping)
+        parameters = origin.__parameters__
 
         for p, t in zip(parameters, get_args(cl)):
             if isinstance(t, TypeVar):

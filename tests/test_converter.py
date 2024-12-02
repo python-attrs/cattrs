@@ -16,7 +16,7 @@ from typing import (
 )
 
 import pytest
-from attrs import Factory, define, fields, has, make_class
+from attrs import Factory, define, field, fields, has, make_class
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis.strategies import booleans, just, lists, one_of, sampled_from
 
@@ -27,6 +27,7 @@ from cattrs.errors import (
     ForbiddenExtraKeysError,
     StructureHandlerNotFoundError,
 )
+from cattrs.fns import raise_error
 from cattrs.gen import make_dict_structure_fn, override
 
 from ._compat import is_py310_plus
@@ -423,9 +424,9 @@ def test_type_overrides(cl_and_vals):
     inst = cl(*vals, **kwargs)
     unstructured = converter.unstructure(inst)
 
-    for field, val in zip(fields(cl), vals):
-        if field.type is int and field.default is not None and field.default == val:
-            assert field.name not in unstructured
+    for attr, val in zip(fields(cl), vals):
+        if attr.type is int and attr.default is not None and attr.default == val:
+            assert attr.name not in unstructured
 
 
 def test_calling_back():
@@ -742,6 +743,35 @@ def test_structure_fallbacks(converter_cls: Type[BaseConverter]):
 
     c = converter_cls(structure_fallback_factory=lambda _: lambda v, _: Test())
     assert isinstance(c.structure({}, Test), Test)
+
+
+def test_legacy_structure_fallbacks(converter_cls: Type[BaseConverter]):
+    """Restoring legacy behavior works."""
+
+    class Test:
+        """Unsupported by default."""
+
+        def __init__(self, a):
+            self.a = a
+
+    c = converter_cls(
+        structure_fallback_factory=lambda _: raise_error, detailed_validation=False
+    )
+
+    # We can get the hook, but...
+    hook = c.get_structure_hook(Test)
+
+    # it won't work.
+    with pytest.raises(StructureHandlerNotFoundError):
+        hook({}, Test)
+
+    # If a field has a converter, we honor that instead.
+    @define
+    class Container:
+        a: Test = field(converter=Test)
+
+    hook = c.get_structure_hook(Container)
+    hook({"a": 1}, Container)
 
 
 def test_fallback_chaining(converter_cls: Type[BaseConverter]):

@@ -161,7 +161,10 @@ def test_forbid_extra_keys_default():
     configure_tagged_union(Union[A, B], c, default=A)
 
     data = c.unstructure(A(), Union[A, B])
-    c.structure(data, Union[A, B])
+    assert c.structure(data, Union[A, B]) == A()
+
+    data.pop("_type")
+    assert c.structure(data, Union[A, B]) == A()
 
 
 def test_nested_sequence_union():

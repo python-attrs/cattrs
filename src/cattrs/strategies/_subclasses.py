@@ -84,7 +84,7 @@ def include_subclasses(
 def _include_subclasses_without_union_strategy(
     cl,
     converter: BaseConverter,
-    parent_subclass_tree: tuple[type],
+    parent_subclass_tree: tuple[type, ...],
     overrides: dict[str, AttributeOverride] | None,
 ):
     # The iteration approach is required if subclasses are more than one level deep:

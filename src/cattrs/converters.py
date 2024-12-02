@@ -963,7 +963,6 @@ class BaseConverter:
             # logic.
             union_types = tuple(e for e in union_types if e is not NoneType)
 
-        # TODO: technically both disambiguators could support TypedDicts too
         if not all(has(get_origin(e) or e) for e in union_types):
             raise StructureHandlerNotFoundError(
                 "Only unions of attrs classes and dataclasses supported "
