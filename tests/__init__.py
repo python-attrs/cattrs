@@ -9,7 +9,7 @@ settings.register_profile(
     "CI", settings(suppress_health_check=[HealthCheck.too_slow]), deadline=None
 )
 
-if "CI" in os.environ:
+if "CI" in os.environ:  # pragma: nocover
     settings.load_profile("CI")
 
 unstructure_strats = one_of(just(s) for s in UnstructureStrategy)
