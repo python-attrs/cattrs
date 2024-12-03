@@ -38,7 +38,7 @@ def configure_converter(converter: BaseConverter):
     * datetimes and dates are validated
     * typed namedtuples are serialized as lists
 
-    .. versionchanged: 24.1.0
+    .. versionchanged:: 24.1.0
         Add support for typed namedtuples.
     """
     converter.register_unstructure_hook(
