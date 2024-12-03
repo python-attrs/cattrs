@@ -130,10 +130,7 @@ def test_fallback(cl_and_vals):
     assert fn({}) is A
     assert fn(asdict(cl(*vals, **kwargs))) is cl
 
-    attr_names = {a.name for a in fields(cl)}
-
-    if "xyz" not in attr_names:
-        assert fn({"xyz": 1}) is A  # Uses the fallback.
+    assert fn({"xyz": 1}) is A  # Uses the fallback.
 
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
