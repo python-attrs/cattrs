@@ -280,8 +280,7 @@ def make_typeddict(
     bases_snippet = ", ".join(f"_base{ix}" for ix in range(len(bases)))
     for ix, base in enumerate(bases):
         globs[f"_base{ix}"] = base
-    if bases_snippet:
-        bases_snippet = f", {bases_snippet}"
+    bases_snippet = f", {bases_snippet}"
 
     lines.append(f"class {cls_name}(TypedDict{bases_snippet}, total={total}):")
     for n, t in attrs.items():
