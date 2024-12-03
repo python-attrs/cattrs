@@ -31,7 +31,7 @@ def configure_converter(converter: BaseConverter):
     * sets are serialized as lists
     * string and int enums are passed through when unstructuring
 
-    .. versionchanged: 24.2.0
+    .. versionchanged:: 24.2.0
         Enums are left to the library to unstructure, speeding them up.
     """
     converter.register_unstructure_hook(datetime, lambda v: v.timestamp())

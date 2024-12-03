@@ -75,7 +75,7 @@ def configure_converter(converter: Converter) -> None:
     * union passthrough configured for str, bool, int, float and None
     * bare, string and int enums are passed through when unstructuring
 
-    .. versionchanged: 24.2.0
+    .. versionchanged:: 24.2.0
         Enums are left to the library to unstructure, speeding them up.
     """
     configure_passthroughs(converter)
