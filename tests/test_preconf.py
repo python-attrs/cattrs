@@ -198,8 +198,6 @@ NewBool = NewType("NewBool", bool)
 def native_unions(
     draw: DrawFn,
     include_strings=True,
-    include_bools=True,
-    include_ints=True,
     include_floats=True,
     include_nones=True,
     include_bytes=True,
@@ -207,17 +205,11 @@ def native_unions(
     include_objectids=False,
     include_literals=True,
 ) -> tuple[Any, Any]:
-    types = []
-    strats = {}
+    types = [bool, int]
+    strats = {bool: booleans(), int: integers()}
     if include_strings:
         types.append(str)
         strats[str] = text()
-    if include_bools:
-        types.append(bool)
-        strats[bool] = booleans()
-    if include_ints:
-        types.append(int)
-        strats[int] = integers()
     if include_floats:
         types.append(float)
         strats[float] = floats(allow_nan=False)
