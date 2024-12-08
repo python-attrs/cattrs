@@ -27,10 +27,19 @@ from cattrs.gen.typeddicts import (
 
 from ._compat import is_py311_plus
 from .typeddicts import (
+    gen_typeddict_attr_names,
     generic_typeddicts,
     simple_typeddicts,
     simple_typeddicts_with_extra_keys,
 )
+
+
+def test_gen_attr_names():
+    """We can generate a lot of attribute names."""
+    assert len(list(gen_typeddict_attr_names())) == 697
+
+    # No duplicates!
+    assert len(list(gen_typeddict_attr_names())) == len(set(gen_typeddict_attr_names()))
 
 
 def mk_converter(detailed_validation: bool = True) -> Converter:

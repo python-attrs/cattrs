@@ -36,7 +36,7 @@ def configure_converter(converter: BaseConverter):
     * union passthrough is configured for unions of strings, bools, ints,
       floats and None
 
-    .. versionchanged: 24.2.0
+    .. versionchanged:: 24.2.0
         Enums are left to the library to unstructure, speeding them up.
     """
     converter.register_unstructure_hook(

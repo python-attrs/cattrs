@@ -11,7 +11,7 @@ from orjson import dumps, loads
 
 from .._compat import is_subclass
 from ..cols import is_mapping, is_namedtuple, namedtuple_unstructure_factory
-from ..converters import BaseConverter, Converter
+from ..converters import Converter
 from ..fns import identity
 from ..literals import is_literal_containing_enums
 from ..strategies import configure_union_passthrough
@@ -28,7 +28,7 @@ class OrjsonConverter(Converter):
         return self.structure(loads(data), cl)
 
 
-def configure_converter(converter: BaseConverter):
+def configure_converter(converter: Converter):
     """
     Configure the converter for use with the orjson library.
 
@@ -40,9 +40,9 @@ def configure_converter(converter: BaseConverter):
     * mapping keys are coerced into strings when unstructuring
     * bare, string and int enums are passed through when unstructuring
 
-    .. versionchanged: 24.1.0
+    .. versionchanged:: 24.1.0
         Add support for typed namedtuples.
-    .. versionchanged: 24.2.0
+    .. versionchanged:: 24.2.0
         Enums are left to the library to unstructure, speeding them up.
     """
     converter.register_unstructure_hook(
@@ -53,7 +53,7 @@ def configure_converter(converter: BaseConverter):
     converter.register_structure_hook(datetime, lambda v, _: datetime.fromisoformat(v))
     converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
 
-    def gen_unstructure_mapping(cl: Any, unstructure_to=None):
+    def unstructure_mapping_factory(cl: Any, unstructure_to=None):
         key_handler = str
         args = getattr(cl, "__args__", None)
         if args:
@@ -77,7 +77,7 @@ def configure_converter(converter: BaseConverter):
 
     converter._unstructure_func.register_func_list(
         [
-            (is_mapping, gen_unstructure_mapping, True),
+            (is_mapping, unstructure_mapping_factory, True),
             (
                 is_namedtuple,
                 partial(namedtuple_unstructure_factory, unstructure_to=tuple),

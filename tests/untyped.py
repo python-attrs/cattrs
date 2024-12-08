@@ -167,7 +167,7 @@ def gen_attr_names() -> Iterable[str]:
 def _create_hyp_class(
     attrs_and_strategy: list[tuple[_CountingAttr, st.SearchStrategy[PosArgs]]],
     frozen=None,
-):
+) -> SearchStrategy[tuple]:
     """
     A helper function for Hypothesis to generate attrs classes.
 
