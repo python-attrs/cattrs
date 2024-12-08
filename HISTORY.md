@@ -16,6 +16,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   This helps surfacing problems with missing hooks sooner.
   See [Migrations](https://catt.rs/en/latest/migrations.html#the-default-structure-hook-fallback-factory) for steps to restore legacy behavior.
   ([#577](https://github.com/python-attrs/cattrs/pull/577))
+- Introduce the `list_from_dict` strategy.
+  ([#609](https://github.com/python-attrs/cattrs/pull/609))
 - Add a [Migrations](https://catt.rs/en/latest/migrations.html) page, with instructions on migrating changed behavior for each version.
   ([#577](https://github.com/python-attrs/cattrs/pull/577))
 - Expose {func}`cattrs.cols.mapping_unstructure_factory` through {mod}`cattrs.cols`.
@@ -30,6 +32,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - Preconf converters now handle dictionaries with literal keys properly.
   ([#599](https://github.com/python-attrs/cattrs/pull/599))
 - Replace `cattrs.gen.MappingStructureFn` with `cattrs.SimpleStructureHook[In, T]`.
+- The {func}`is_typeddict <catrs.gen.typeddicts.is_typeddict>` predicate function is now exposed through the {mod}`cattrs.gen.typeddicts` module.
+  ([#609](https://github.com/python-attrs/cattrs/pull/609))
 - Python 3.13 is now supported.
   ([#543](https://github.com/python-attrs/cattrs/pull/543) [#547](https://github.com/python-attrs/cattrs/issues/547))
 - Python 3.8 is no longer supported, as it is end-of-life. Use previous versions on this Python version.
