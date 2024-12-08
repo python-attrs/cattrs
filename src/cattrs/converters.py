@@ -49,7 +49,6 @@ from ._compat import (
     is_sequence,
     is_tuple,
     is_type_alias,
-    is_typeddict,
     is_union_type,
     signature,
 )
@@ -89,6 +88,7 @@ from .gen import (
     make_dict_unstructure_fn,
     make_hetero_tuple_unstructure_fn,
 )
+from .gen.typeddicts import is_typeddict
 from .gen.typeddicts import make_dict_structure_fn as make_typeddict_dict_struct_fn
 from .gen.typeddicts import make_dict_unstructure_fn as make_typeddict_dict_unstruct_fn
 from .literals import is_literal_containing_enums
