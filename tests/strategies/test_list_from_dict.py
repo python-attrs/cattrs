@@ -1,7 +1,7 @@
 """Tests for the list-from-dict strategy."""
 
 from dataclasses import dataclass
-from typing import TypedDict
+from typing import TypedDict, Union
 
 import pytest
 from attrs import define, fields
@@ -29,7 +29,7 @@ class TypedDictA(TypedDict):
 
 @pytest.mark.parametrize("cls", [AttrsA, DataclassA, TypedDictA])
 def test_simple_roundtrip(
-    cls: type[AttrsA] | type[DataclassA], converter: BaseConverter
+    cls: Union[type[AttrsA], type[DataclassA]], converter: BaseConverter
 ):
     hook, hook2 = configure_list_from_dict(list[cls], "a", converter)
 
