@@ -56,7 +56,6 @@ __all__ = [
     "get_type_alias_base",
     "has",
     "is_type_alias",
-    "is_typeddict",
     "TypeAlias",
     "TypedDict",
 ]
