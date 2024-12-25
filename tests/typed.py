@@ -26,7 +26,7 @@ from typing import (
 )
 
 from attr._make import _CountingAttr
-from attrs import NOTHING, Factory, field, frozen
+from attrs import NOTHING, AttrsInstance, Factory, field, frozen
 from hypothesis import note
 from hypothesis.strategies import (
     DrawFn,
@@ -400,8 +400,8 @@ def path_typed_attrs(
 
 @composite
 def dict_typed_attrs(
-    draw, defaults=None, allow_mutable_defaults=True, kw_only=None
-) -> SearchStrategy[tuple[_CountingAttr, SearchStrategy]]:
+    draw: DrawFn, defaults=None, allow_mutable_defaults=True, kw_only=None
+) -> tuple[_CountingAttr, SearchStrategy[dict[str, int]]]:
     """
     Generate a tuple of an attribute and a strategy that yields dictionaries
     for that attribute. The dictionaries map strings to integers.
@@ -819,7 +819,7 @@ def nested_classes(
             tuple[type, SearchStrategy[PosArgs], SearchStrategy[KwArgs]],
         ]
     ],
-) -> SearchStrategy[tuple[Type, SearchStrategy[PosArgs], SearchStrategy[KwArgs]]]:
+) -> tuple[type[AttrsInstance], SearchStrategy[PosArgs], SearchStrategy[KwArgs]]:
     attrs, class_and_strat = draw(attrs_and_classes)
     cls, strat, kw_strat = class_and_strat
     pos_defs = tuple(draw(strat))
