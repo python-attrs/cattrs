@@ -16,7 +16,7 @@ from .typed import nested_typed_classes, simple_typed_classes, simple_typed_data
 from .untyped import nested_classes, simple_classes
 
 
-@given(nested_classes | simple_classes())
+@given(nested_classes() | simple_classes())
 def test_unmodified_generated_unstructuring(cl_and_vals):
     converter = BaseConverter()
     cl, vals, kwargs = cl_and_vals
@@ -33,7 +33,7 @@ def test_unmodified_generated_unstructuring(cl_and_vals):
     assert res_expected == res_actual
 
 
-@given(nested_classes | simple_classes())
+@given(nested_classes() | simple_classes())
 def test_nodefs_generated_unstructuring(cl_and_vals):
     """Test omitting default values on a per-attribute basis."""
     converter = BaseConverter()
@@ -61,7 +61,9 @@ def test_nodefs_generated_unstructuring(cl_and_vals):
         assert attr.name not in res
 
 
-@given(one_of(just(BaseConverter), just(Converter)), nested_classes | simple_classes())
+@given(
+    one_of(just(BaseConverter), just(Converter)), nested_classes() | simple_classes()
+)
 def test_nodefs_generated_unstructuring_cl(
     converter_cls: Type[BaseConverter], cl_and_vals
 ):
@@ -105,7 +107,7 @@ def test_nodefs_generated_unstructuring_cl(
 
 @given(
     one_of(just(BaseConverter), just(Converter)),
-    nested_classes | simple_classes() | simple_typed_dataclasses(),
+    nested_classes() | simple_classes() | simple_typed_dataclasses(),
 )
 def test_individual_overrides(converter_cls, cl_and_vals):
     """

@@ -1,6 +1,5 @@
 """Strategies for attributes with types and classes using them."""
 
-from collections import OrderedDict
 from collections.abc import MutableSequence as AbcMutableSequence
 from collections.abc import MutableSet as AbcMutableSet
 from collections.abc import Sequence as AbcSequence
@@ -293,7 +292,7 @@ def _create_hyp_class_and_strat(
                 attr_name = attr_name[1:]
             kwarg_strats[attr_name] = attr_and_strat[1]
     return tuples(
-        just(make_class("HypClass", OrderedDict(zip(gen_attr_names(), attrs)))),
+        just(make_class("HypClass", dict(zip(gen_attr_names(), attrs)))),
         just(tuples(*vals)),
         just(fixed_dictionaries(kwarg_strats)),
     )
@@ -860,7 +859,12 @@ def nested_typed_classes_and_strat(
 
 @composite
 def nested_typed_classes(
-    draw, defaults=None, min_attrs=0, kw_only=None, newtypes=True, allow_nan=True
+    draw: DrawFn,
+    defaults=None,
+    min_attrs=0,
+    kw_only=None,
+    newtypes=True,
+    allow_nan=True,
 ):
     cl, strat, kwarg_strat = draw(
         nested_typed_classes_and_strat(
