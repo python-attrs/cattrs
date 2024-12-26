@@ -2,7 +2,6 @@
 
 import keyword
 import string
-from collections import OrderedDict
 from enum import Enum
 from typing import (
     Any,
@@ -23,11 +22,15 @@ import attr
 from attr._make import _CountingAttr
 from attrs import NOTHING, AttrsInstance, Factory, make_class
 from hypothesis import strategies as st
-from hypothesis.strategies import SearchStrategy
+from hypothesis.strategies import SearchStrategy, booleans
+from typing_extensions import TypeAlias
+
+from . import FeatureFlag
 
 PosArg = Any
 PosArgs = tuple[PosArg]
 KwArgs = dict[str, Any]
+AttrsAndArgs: TypeAlias = tuple[type[AttrsInstance], PosArgs, KwArgs]
 
 primitive_strategies = st.sampled_from(
     [
@@ -167,7 +170,7 @@ def gen_attr_names() -> Iterable[str]:
 def _create_hyp_class(
     attrs_and_strategy: list[tuple[_CountingAttr, st.SearchStrategy[PosArgs]]],
     frozen=None,
-):
+) -> SearchStrategy[AttrsAndArgs]:
     """
     A helper function for Hypothesis to generate attrs classes.
 
@@ -192,7 +195,7 @@ def _create_hyp_class(
     return st.tuples(
         st.builds(
             lambda f: make_class(
-                "HypClass", OrderedDict(zip(gen_attr_names(), attrs)), frozen=f
+                "HypClass", dict(zip(gen_attr_names(), attrs)), frozen=f
             ),
             st.booleans() if frozen is None else st.just(frozen),
         ),
@@ -209,26 +212,28 @@ def just_class(tup):
     return _create_hyp_class(combined_attrs)
 
 
-def just_class_with_type(tup):
+def just_class_with_type(tup: tuple) -> SearchStrategy[AttrsAndArgs]:
     nested_cl = tup[1][0]
-    default = attr.Factory(nested_cl)
-    combined_attrs = list(tup[0])
-    combined_attrs.append(
-        (attr.ib(default=default, type=nested_cl), st.just(nested_cl()))
-    )
-    return _create_hyp_class(combined_attrs)
 
+    def make_with_default(takes_self: bool) -> SearchStrategy[AttrsAndArgs]:
+        combined_attrs = list(tup[0])
+        combined_attrs.append(
+            (
+                attr.ib(
+                    default=(
+                        Factory(
+                            nested_cl if not takes_self else lambda _: nested_cl(),
+                            takes_self=takes_self,
+                        )
+                    ),
+                    type=nested_cl,
+                ),
+                st.just(nested_cl()),
+            )
+        )
+        return _create_hyp_class(combined_attrs)
 
-def just_class_with_type_takes_self(
-    tup: tuple[list[tuple[_CountingAttr, SearchStrategy]], tuple[type[AttrsInstance]]]
-) -> SearchStrategy[tuple[type[AttrsInstance]]]:
-    nested_cl = tup[1][0]
-    default = Factory(lambda _: nested_cl(), takes_self=True)
-    combined_attrs = list(tup[0])
-    combined_attrs.append(
-        (attr.ib(default=default, type=nested_cl), st.just(nested_cl()))
-    )
-    return _create_hyp_class(combined_attrs)
+    return booleans().flatmap(make_with_default)
 
 
 def just_frozen_class_with_type(tup):
@@ -240,22 +245,45 @@ def just_frozen_class_with_type(tup):
     return _create_hyp_class(combined_attrs)
 
 
-def list_of_class(tup):
+def list_of_class(tup: tuple) -> SearchStrategy[AttrsAndArgs]:
     nested_cl = tup[1][0]
-    default = attr.Factory(lambda: [nested_cl()])
-    combined_attrs = list(tup[0])
-    combined_attrs.append((attr.ib(default=default), st.just([nested_cl()])))
-    return _create_hyp_class(combined_attrs)
+
+    def make_with_default(takes_self: bool) -> SearchStrategy[AttrsAndArgs]:
+        combined_attrs = list(tup[0])
+        combined_attrs.append(
+            (
+                attr.ib(
+                    default=(
+                        Factory(lambda: [nested_cl()])
+                        if not takes_self
+                        else Factory(lambda _: [nested_cl()], takes_self=True)
+                    ),
+                    type=list[nested_cl],
+                ),
+                st.just([nested_cl()]),
+            )
+        )
+        return _create_hyp_class(combined_attrs)
+
+    return booleans().flatmap(make_with_default)
 
 
-def list_of_class_with_type(tup):
+def list_of_class_with_type(tup: tuple) -> SearchStrategy[AttrsAndArgs]:
     nested_cl = tup[1][0]
-    default = attr.Factory(lambda: [nested_cl()])
-    combined_attrs = list(tup[0])
-    combined_attrs.append(
-        (attr.ib(default=default, type=List[nested_cl]), st.just([nested_cl()]))
-    )
-    return _create_hyp_class(combined_attrs)
+
+    def make_with_default(takes_self: bool) -> SearchStrategy[AttrsAndArgs]:
+        default = (
+            Factory(lambda: [nested_cl()])
+            if not takes_self
+            else Factory(lambda _: [nested_cl()], takes_self=True)
+        )
+        combined_attrs = list(tup[0])
+        combined_attrs.append(
+            (attr.ib(default=default, type=List[nested_cl]), st.just([nested_cl()]))
+        )
+        return _create_hyp_class(combined_attrs)
+
+    return booleans().flatmap(make_with_default)
 
 
 def dict_of_class(tup):
@@ -266,7 +294,9 @@ def dict_of_class(tup):
     return _create_hyp_class(combined_attrs)
 
 
-def _create_hyp_nested_strategy(simple_class_strategy):
+def _create_hyp_nested_strategy(
+    simple_class_strategy: SearchStrategy,
+) -> SearchStrategy:
     """
     Create a recursive attrs class.
     Given a strategy for building (simpler) classes, create and return
@@ -275,6 +305,7 @@ def _create_hyp_nested_strategy(simple_class_strategy):
         * a list of simpler classes
         * a dict mapping the string "cls" to a simpler class.
     """
+
     # A strategy producing tuples of the form ([list of attributes], <given
     # class strategy>).
     attrs_and_classes = st.tuples(lists_of_attrs(defaults=True), simple_class_strategy)
@@ -286,7 +317,6 @@ def _create_hyp_nested_strategy(simple_class_strategy):
         | attrs_and_classes.flatmap(list_of_class_with_type)
         | attrs_and_classes.flatmap(dict_of_class)
         | attrs_and_classes.flatmap(just_frozen_class_with_type)
-        | attrs_and_classes.flatmap(just_class_with_type_takes_self)
     )
 
 
@@ -430,9 +460,10 @@ def simple_classes(defaults=None, min_attrs=0, frozen=None, kw_only=None):
     )
 
 
-# Ok, so st.recursive works by taking a base strategy (in this case,
-# simple_classes) and a special function. This function receives a strategy,
-# and returns another strategy (building on top of the base strategy).
-nested_classes = st.recursive(
-    simple_classes(defaults=True), _create_hyp_nested_strategy
-)
+def nested_classes(
+    takes_self: FeatureFlag = "sometimes",
+) -> SearchStrategy[AttrsAndArgs]:
+    # Ok, so st.recursive works by taking a base strategy (in this case,
+    # simple_classes) and a special function. This function receives a strategy,
+    # and returns another strategy (building on top of the base strategy).
+    return st.recursive(simple_classes(defaults=True), _create_hyp_nested_strategy)

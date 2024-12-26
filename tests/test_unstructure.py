@@ -1,6 +1,6 @@
 """Tests for dumping."""
 
-from attr import asdict, astuple
+from attrs import asdict, astuple
 from hypothesis import given
 from hypothesis.strategies import data, just, lists, one_of, sampled_from
 
@@ -69,7 +69,7 @@ def test_enum_unstructure(enum, dump_strat, data):
     assert converter.unstructure(member) == member.value
 
 
-@given(nested_classes)
+@given(nested_classes())
 def test_attrs_asdict_unstructure(nested_class):
     """Our dumping should be identical to `attrs`."""
     converter = BaseConverter()
@@ -77,7 +77,7 @@ def test_attrs_asdict_unstructure(nested_class):
     assert converter.unstructure(instance) == asdict(instance)
 
 
-@given(nested_classes)
+@given(nested_classes())
 def test_attrs_astuple_unstructure(nested_class):
     """Our dumping should be identical to `attrs`."""
     converter = BaseConverter(unstruct_strat=UnstructureStrategy.AS_TUPLE)

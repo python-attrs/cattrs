@@ -88,6 +88,7 @@ class Everything:
     an_int: int
     a_float: float
     a_dict: Dict[str, int]
+    a_bare_dict: dict
     a_list: List[int]
     a_homogenous_tuple: TupleSubscriptable[int, ...]
     a_hetero_tuple: TupleSubscriptable[str, int, float]
@@ -160,6 +161,7 @@ def everythings(
         draw(ints),
         draw(fs),
         draw(dictionaries(key_text, ints)),
+        draw(dictionaries(key_text, strings)),
         draw(lists(ints)),
         tuple(draw(lists(ints))),
         (draw(strings), draw(ints), draw(fs)),
@@ -196,8 +198,6 @@ NewBool = NewType("NewBool", bool)
 def native_unions(
     draw: DrawFn,
     include_strings=True,
-    include_bools=True,
-    include_ints=True,
     include_floats=True,
     include_nones=True,
     include_bytes=True,
@@ -205,17 +205,11 @@ def native_unions(
     include_objectids=False,
     include_literals=True,
 ) -> tuple[Any, Any]:
-    types = []
-    strats = {}
+    types = [bool, int]
+    strats = {bool: booleans(), int: integers()}
     if include_strings:
         types.append(str)
         strats[str] = text()
-    if include_bools:
-        types.append(bool)
-        strats[bool] = booleans()
-    if include_ints:
-        types.append(int)
-        strats[int] = integers()
     if include_floats:
         types.append(float)
         strats[float] = floats(allow_nan=False)
