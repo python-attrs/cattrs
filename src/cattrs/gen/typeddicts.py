@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import re
 import sys
-from typing import TYPE_CHECKING, Any, Callable, Literal, TypeVar
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 from attrs import NOTHING, Attribute
 from typing_extensions import _TypedDictMeta
@@ -42,10 +43,23 @@ from ._generics import generate_mapping
 from ._lc import generate_unique_filename
 from ._shared import find_structure_handler
 
+try:
+    from typing_extensions import is_typeddict as _is_typeddict
+except ImportError:  # pragma: no cover
+    assert sys.version_info >= (3, 10)
+    from typing import is_typeddict as _is_typeddict
+
+
 if TYPE_CHECKING:
     from ..converters import BaseConverter
 
-__all__ = ["make_dict_unstructure_fn", "make_dict_structure_fn"]
+__all__ = ["is_typeddict", "make_dict_unstructure_fn", "make_dict_structure_fn"]
+
+
+def is_typeddict(cls: Any) -> bool:
+    """Is this type a TypedDict?"""
+    return _is_typeddict(getattr(cls, "__origin__", cls))
+
 
 T = TypeVar("T", bound=TypedDict)
 

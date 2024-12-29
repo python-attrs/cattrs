@@ -56,7 +56,6 @@ __all__ = [
     "get_type_alias_base",
     "has",
     "is_type_alias",
-    "is_typeddict",
     "TypeAlias",
     "TypedDict",
 ]
@@ -71,11 +70,6 @@ if sys.version_info >= (3, 11):
 else:
     from exceptiongroup import ExceptionGroup
 
-try:
-    from typing_extensions import is_typeddict as _is_typeddict
-except ImportError:  # pragma: no cover
-    assert sys.version_info >= (3, 10)
-    from typing import is_typeddict as _is_typeddict
 
 try:
     from typing_extensions import TypeAlias
@@ -105,11 +99,6 @@ NoneType = type(None)
 
 def is_optional(typ: Any) -> bool:
     return is_union_type(typ) and NoneType in typ.__args__ and len(typ.__args__) == 2
-
-
-def is_typeddict(cls: Any):
-    """Thin wrapper around typing(_extensions).is_typeddict"""
-    return _is_typeddict(getattr(cls, "__origin__", cls))
 
 
 def is_type_alias(type: Any) -> bool:
