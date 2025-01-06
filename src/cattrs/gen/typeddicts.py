@@ -307,9 +307,16 @@ def make_dict_structure_fn(
         globs["__c_a"] = allowed_fields
         globs["__c_feke"] = ForbiddenExtraKeysError
 
-    lines.append("  res = o.copy()")
-
     if _cattrs_detailed_validation:
+        # When running under detailed validation, be extra careful about copying
+        # so that the correct error is raised if the input isn't a dict.
+        lines.append("  try:")
+        lines.append("    res = o.copy()")
+        lines.append("  except Exception as exc:")
+        lines.append(
+            f"    raise __c_cve('While structuring ' + {cl.__name__!r}, [exc], __cl)"
+        )
+
         lines.append("  errors = []")
         internal_arg_parts["__c_cve"] = ClassValidationError
         internal_arg_parts["__c_avn"] = AttributeValidationNote
@@ -383,6 +390,7 @@ def make_dict_structure_fn(
             f"  if errors: raise __c_cve('While structuring ' + {cl.__name__!r}, errors, __cl)"
         )
     else:
+        lines.append("  res = o.copy()")
         non_required = []
 
         # The first loop deals with required args.
