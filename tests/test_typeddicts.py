@@ -10,7 +10,7 @@ from hypothesis.strategies import booleans
 from pytest import raises
 from typing_extensions import NotRequired, Required
 
-from cattrs import BaseConverter, Converter
+from cattrs import BaseConverter, Converter, transform_error
 from cattrs._compat import ExtensionsTypedDict, get_notrequired_base, is_generic
 from cattrs.errors import (
     ClassValidationError,
@@ -509,3 +509,12 @@ def test_override_entire_hooks(converter: BaseConverter):
 
     assert converter.unstructure({"a": 10, "b": 10}, A) == {"a": 1, "b": 2}
     assert converter.structure({"a": 10, "b": 10}, A) == {"a": 1, "b": 2}
+
+
+def test_nondict_input():
+    """Trying to structure typeddict from a non-dict raises the proper exception."""
+    converter = Converter(detailed_validation=True)
+    with raises(ClassValidationError) as exc:
+        converter.structure(1, TypedDictA)
+
+    assert transform_error(exc.value) == ["expected a mapping @ $"]
