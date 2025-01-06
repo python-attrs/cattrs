@@ -30,7 +30,6 @@ from ._compat import (
     get_final_base,
     get_newtype_base,
     get_origin,
-    get_type_alias_base,
     has,
     has_with_generic,
     is_annotated,
@@ -48,7 +47,6 @@ from ._compat import (
     is_protocol,
     is_sequence,
     is_tuple,
-    is_type_alias,
     is_typeddict,
     is_union_type,
     signature,
@@ -92,6 +90,11 @@ from .gen import (
 from .gen.typeddicts import make_dict_structure_fn as make_typeddict_dict_struct_fn
 from .gen.typeddicts import make_dict_unstructure_fn as make_typeddict_dict_unstruct_fn
 from .literals import is_literal_containing_enums
+from .typealiases import (
+    get_type_alias_base,
+    is_type_alias,
+    type_alias_structure_factory,
+)
 from .types import SimpleStructureHook
 
 __all__ = ["UnstructureStrategy", "BaseConverter", "Converter", "GenConverter"]
@@ -259,7 +262,7 @@ class BaseConverter:
                 ),
                 (is_generic_attrs, self._gen_structure_generic, True),
                 (lambda t: get_newtype_base(t) is not None, self._structure_newtype),
-                (is_type_alias, self._find_type_alias_structure_hook, True),
+                (is_type_alias, type_alias_structure_factory, "extended"),
                 (
                     lambda t: get_final_base(t) is not None,
                     self._structure_final_factory,
@@ -698,14 +701,6 @@ class BaseConverter:
     def _structure_newtype(self, val: UnstructuredValue, type) -> StructuredValue:
         base = get_newtype_base(type)
         return self.get_structure_hook(base)(val, base)
-
-    def _find_type_alias_structure_hook(self, type: Any) -> StructureHook:
-        base = get_type_alias_base(type)
-        res = self.get_structure_hook(base)
-        if res == self._structure_call:
-            # we need to replace the type arg of `structure_call`
-            return lambda v, _, __base=base: __base(v)
-        return lambda v, _, __base=base: res(v, __base)
 
     def _structure_final_factory(self, type):
         base = get_final_base(type)

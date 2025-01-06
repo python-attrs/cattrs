@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from string import ascii_lowercase
-from typing import Any, Generic, List, Optional, TypeVar
+from typing import Any, Generic, List, Optional, TypedDict, TypeVar
 
 from attrs import NOTHING
 from hypothesis import note
@@ -19,13 +19,7 @@ from hypothesis.strategies import (
     text,
 )
 
-from cattrs._compat import (
-    Annotated,
-    ExtensionsTypedDict,
-    NotRequired,
-    Required,
-    TypedDict,
-)
+from cattrs._compat import Annotated, ExtensionsTypedDict, NotRequired, Required
 
 from .untyped import gen_attr_names
 
