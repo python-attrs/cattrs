@@ -323,7 +323,9 @@ def test_typeddict_attribute_errors(c: Converter) -> None:
     try:
         c.structure({"c": 1}, D)
     except Exception as exc:
-        assert transform_error(exc) == ["expected a mapping @ $.c"]
+        assert transform_error(exc) == [
+            "invalid type (expected a mapping, not int) @ $.c"
+        ]
 
     try:
         c.structure({"c": {"a": "str"}}, D)

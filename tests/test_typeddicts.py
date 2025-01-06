@@ -517,4 +517,13 @@ def test_nondict_input():
     with raises(ClassValidationError) as exc:
         converter.structure(1, TypedDictA)
 
-    assert transform_error(exc.value) == ["expected a mapping @ $"]
+    assert transform_error(exc.value) == [
+        "invalid type (expected a mapping, not int) @ $"
+    ]
+
+    with raises(ClassValidationError) as exc:
+        converter.structure([1], TypedDictA)
+
+    assert transform_error(exc.value) == [
+        "invalid type (expected a mapping, not list) @ $"
+    ]
