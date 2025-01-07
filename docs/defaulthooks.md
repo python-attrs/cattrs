@@ -333,6 +333,11 @@ Generic TypedDicts work on Python 3.11 and later, since that is the first Python
 
 [`typing.Required` and `typing.NotRequired`](https://peps.python.org/pep-0655/) are supported.
 
+:::{caution}
+If `from __future__ import annotations` is used or if annotations are given as strings, `Required` and `NotRequired` are ignored by cattrs.
+See [note in the Python documentation](https://docs.python.org/3/library/typing.html#typing.TypedDict.__optional_keys__).
+:::
+
 [Similar to _attrs_ classes](customizing.md#using-cattrsgen-hook-factories), un/structuring can be customized using {meth}`cattrs.gen.typeddicts.make_dict_structure_fn` and {meth}`cattrs.gen.typeddicts.make_dict_unstructure_fn`.
 
 ```{doctest}
