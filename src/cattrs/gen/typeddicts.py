@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import sys
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, Callable, Literal, TypedDict, TypeVar
 
 from attrs import NOTHING, Attribute
@@ -307,15 +308,18 @@ def make_dict_structure_fn(
         globs["__c_feke"] = ForbiddenExtraKeysError
 
     if _cattrs_detailed_validation:
-        # When running under detailed validation, be extra careful about copying
-        # so that the correct error is raised if the input isn't a dict.
-        lines.append("  try:")
-        lines.append("    res = o.copy()")
-        lines.append("  except Exception as exc:")
+        # When running under detailed validation, be extra careful about the
+        # input type so that the correct error is raised if the input isn't a dict.
+        internal_arg_parts["__c_mapping"] = Mapping
+        lines.append("  if not isinstance(o, __c_mapping):")
+        te = "TypeError(f'expected a mapping, not {o.__class__.__name__}')"
         lines.append(
-            f"    raise __c_cve('While structuring ' + {cl.__name__!r}, [exc], __cl)"
+            f"    raise __c_cve('While structuring ' + {cl.__name__!r}, [{te}], __cl)"
         )
 
+    lines.append("  res = o.copy()")
+
+    if _cattrs_detailed_validation:
         lines.append("  errors = []")
         internal_arg_parts["__c_cve"] = ClassValidationError
         internal_arg_parts["__c_avn"] = AttributeValidationNote
@@ -389,7 +393,6 @@ def make_dict_structure_fn(
             f"  if errors: raise __c_cve('While structuring ' + {cl.__name__!r}, errors, __cl)"
         )
     else:
-        lines.append("  res = o.copy()")
         non_required = []
 
         # The first loop deals with required args.
