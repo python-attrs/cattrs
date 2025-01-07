@@ -25,7 +25,6 @@ from typing import (
     Optional,
     Protocol,
     Tuple,
-    TypedDict,
     Union,
     _AnnotatedAlias,
     _GenericAlias,
@@ -53,12 +52,9 @@ __all__ = [
     "fields_dict",
     "ExceptionGroup",
     "ExtensionsTypedDict",
-    "get_type_alias_base",
     "has",
-    "is_type_alias",
     "is_typeddict",
     "TypeAlias",
-    "TypedDict",
 ]
 
 try:
@@ -110,20 +106,6 @@ def is_optional(typ: Any) -> bool:
 def is_typeddict(cls: Any):
     """Thin wrapper around typing(_extensions).is_typeddict"""
     return _is_typeddict(getattr(cls, "__origin__", cls))
-
-
-def is_type_alias(type: Any) -> bool:
-    """Is this a PEP 695 type alias?"""
-    return False
-
-
-def get_type_alias_base(type: Any) -> Any:
-    """
-    What is this a type alias of?
-
-    Works only on 3.12+.
-    """
-    return type.__value__
 
 
 def has(cls):
@@ -271,14 +253,6 @@ def is_tuple(type):
         or (type.__class__ is _GenericAlias and is_subclass(type.__origin__, Tuple))
         or (getattr(type, "__origin__", None) is tuple)
     )
-
-
-if sys.version_info >= (3, 12):
-    from typing import TypeAliasType
-
-    def is_type_alias(type: Any) -> bool:
-        """Is this a PEP 695 type alias?"""
-        return isinstance(type, TypeAliasType)
 
 
 if sys.version_info >= (3, 10):

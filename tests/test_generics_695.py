@@ -89,3 +89,19 @@ def test_type_alias_with_children(converter: BaseConverter):
 
     type TestAlias = TestClass
     assert converter.structure(None, TestAlias) is TestClass
+
+
+def test_generic_type_alias(converter: BaseConverter):
+    """Generic type aliases work.
+
+    See https://docs.python.org/3/reference/compound_stmts.html#generic-type-aliases
+    for details.
+    """
+
+    type Gen1[T] = T
+
+    assert converter.structure("1", Gen1[int]) == 1
+
+    type Gen2[K, V] = dict[K, V]
+
+    assert converter.structure({"a": "1"}, Gen2[str, int]) == {"a": 1}

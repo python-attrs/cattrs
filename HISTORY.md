@@ -10,7 +10,7 @@ The third number is for emergencies when we need to start branches for older rel
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
 
-## 24.2.0 (UNRELEASED)
+## 25.1.0 (UNRELEASED)
 
 - **Potentially breaking**: The converters raise {class}`StructureHandlerNotFoundError` more eagerly (on hook creation, instead of on hook use).
   This helps surfacing problems with missing hooks sooner.
@@ -22,6 +22,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - Some `defaultdicts` are now [supported by default](https://catt.rs/en/latest/defaulthooks.html#defaultdicts), and
   {func}`cattrs.cols.is_defaultdict` and {func}`cattrs.cols.defaultdict_structure_factory` are exposed through {mod}`cattrs.cols`.
   ([#519](https://github.com/python-attrs/cattrs/issues/519) [#588](https://github.com/python-attrs/cattrs/pull/588))
+- Generic PEP 695 type aliases are now supported.
+  ([#611](https://github.com/python-attrs/cattrs/issues/611) [#618](https://github.com/python-attrs/cattrs/pull/618))
 - Many preconf converters (_bson_, stdlib JSON, _cbor2_, _msgpack_, _msgspec_, _orjson_, _ujson_) skip unstructuring `int` and `str` enums,
   leaving them to the underlying libraries to handle with greater efficiency.
   ([#598](https://github.com/python-attrs/cattrs/pull/598))

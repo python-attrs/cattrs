@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 import sys
-from typing import TYPE_CHECKING, Any, Callable, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Literal, TypedDict, TypeVar
 
 from attrs import NOTHING, Attribute
 from typing_extensions import _TypedDictMeta
@@ -20,7 +20,6 @@ except ImportError:
 
 
 from .._compat import (
-    TypedDict,
     get_full_type_hints,
     get_notrequired_base,
     get_origin,

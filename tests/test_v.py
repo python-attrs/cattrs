@@ -8,13 +8,14 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    TypedDict,
 )
 
 from attrs import Factory, define, field
 from pytest import fixture, raises
 
 from cattrs import Converter, transform_error
-from cattrs._compat import Mapping, TypedDict
+from cattrs._compat import Mapping
 from cattrs.errors import IterableValidationError
 from cattrs.gen import make_dict_structure_fn
 from cattrs.v import format_exception
