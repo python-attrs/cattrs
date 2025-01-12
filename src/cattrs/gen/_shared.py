@@ -10,10 +10,10 @@ from ..errors import StructureHandlerNotFoundError
 from ..fns import raise_error
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
     from ..converters import BaseConverter
 
 T = TypeVar("T")
+
 
 def find_structure_handler(
     a: Attribute, type: Any, c: BaseConverter, prefer_attrs_converters: bool = False
@@ -69,7 +69,9 @@ def find_structure_handler(
 def get_fields_annotated_by(cls: type, annotation_type: type[T] | T) -> dict[str, T]:
     type_hints = get_type_hints(cls, include_extras=True)
     # Support for both AttributeOverride and AttributeOverride()
-    annotation_type_ = annotation_type if isinstance(annotation_type, type) else type(annotation_type)
+    annotation_type_ = (
+        annotation_type if isinstance(annotation_type, type) else type(annotation_type)
+    )
 
     # First pass of filtering to get only fields with annotations
     fields_with_annotations = (
@@ -88,4 +90,8 @@ def get_fields_annotated_by(cls: type, annotation_type: type[T] | T) -> dict[str
     )
 
     # We still might have some `None` values from previous filtering.
-    return {field_name: annotation for field_name, annotation in fields_with_specific_annotation if annotation}
+    return {
+        field_name: annotation
+        for field_name, annotation in fields_with_specific_annotation
+        if annotation
+    }
