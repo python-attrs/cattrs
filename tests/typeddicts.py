@@ -32,10 +32,7 @@ T3 = TypeVar("T3")
 
 def gen_typeddict_attr_names():
     """Typed dicts can have periods in their field names."""
-    counter = 0
-    for n in gen_attr_names():
-        counter += 1
-
+    for counter, n in enumerate(gen_attr_names()):
         if counter % 2 == 0:
             n = f"{n}.suffix"
 

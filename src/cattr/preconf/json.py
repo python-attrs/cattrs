@@ -2,4 +2,4 @@
 
 from cattrs.preconf.json import JsonConverter, configure_converter, make_converter
 
-__all__ = ["configure_converter", "JsonConverter", "make_converter"]
+__all__ = ["JsonConverter", "configure_converter", "make_converter"]

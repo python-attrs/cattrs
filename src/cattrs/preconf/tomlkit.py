@@ -15,6 +15,8 @@ from ..converters import BaseConverter, Converter
 from ..strategies import configure_union_passthrough
 from . import validate_datetime, wrap
 
+__all__ = ["TomlkitConverter", "configure_converter", "make_converter"]
+
 T = TypeVar("T")
 _enum_value_getter = attrgetter("_value_")
 

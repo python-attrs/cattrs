@@ -2,4 +2,4 @@
 
 from cattrs.preconf.tomlkit import TomlkitConverter, configure_converter, make_converter
 
-__all__ = ["configure_converter", "make_converter", "TomlkitConverter"]
+__all__ = ["TomlkitConverter", "configure_converter", "make_converter"]

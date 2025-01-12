@@ -69,7 +69,7 @@ def get_annot(t) -> dict:
                         NotRequired[param_to_args[nrb]] if nrb in param_to_args else v
                     )
                 else:
-                    res[k] = param_to_args[v] if v in param_to_args else v
+                    res[k] = param_to_args.get(v, v)
             return res
 
         # Origin is `None`, so this is a subclass for a generic typeddict.
@@ -81,7 +81,7 @@ def get_annot(t) -> dict:
                     NotRequired[mapping[nrb.__name__]] if nrb.__name__ in mapping else v
                 )
             else:
-                res[k] = mapping[v.__name__] if v.__name__ in mapping else v
+                res[k] = mapping.get(v.__name__, v)
         return res
     return get_annots(t)
 

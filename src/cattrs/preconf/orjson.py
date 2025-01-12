@@ -17,6 +17,8 @@ from ..literals import is_literal_containing_enums
 from ..strategies import configure_union_passthrough
 from . import is_primitive_enum, literals_with_enums_unstructure_factory, wrap
 
+__all__ = ["OrjsonConverter", "configure_converter", "make_converter"]
+
 T = TypeVar("T")
 
 
@@ -28,7 +30,7 @@ class OrjsonConverter(Converter):
         return self.structure(loads(data), cl)
 
 
-def configure_converter(converter: Converter):
+def configure_converter(converter: Converter) -> None:
     """
     Configure the converter for use with the orjson library.
 

@@ -116,6 +116,8 @@ exclude_also = [
 
 [tool.ruff]
 src = ["src", "tests"]
+
+[tool.ruff.lint]
 select = [
     "E",   # pycodestyle
     "W",   # pycodestyle
@@ -144,7 +146,6 @@ ignore = [
     "S101",   # assert
     "S307",   # hands off my eval
     "SIM300", # Yoda rocks in asserts
-    "PGH001", # No eval lol?
     "PGH003", # leave my type: ignores alone
     "B006",   # mutable argument defaults
     "DTZ001", # datetimes in tests

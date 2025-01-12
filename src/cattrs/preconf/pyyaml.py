@@ -12,6 +12,8 @@ from ..converters import BaseConverter, Converter
 from ..strategies import configure_union_passthrough
 from . import validate_datetime, wrap
 
+__all__ = ["PyyamlConverter", "configure_converter", "make_converter"]
+
 T = TypeVar("T")
 
 
@@ -29,7 +31,7 @@ class PyyamlConverter(Converter):
         return self.structure(safe_load(data), cl)
 
 
-def configure_converter(converter: BaseConverter):
+def configure_converter(converter: BaseConverter) -> None:
     """
     Configure the converter for use with the pyyaml library.
 

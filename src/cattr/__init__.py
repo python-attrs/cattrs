@@ -2,16 +2,16 @@ from .converters import BaseConverter, Converter, GenConverter, UnstructureStrat
 from .gen import override
 
 __all__ = (
-    "global_converter",
-    "unstructure",
-    "structure",
-    "structure_attrs_fromtuple",
-    "structure_attrs_fromdict",
-    "UnstructureStrategy",
     "BaseConverter",
     "Converter",
     "GenConverter",
+    "UnstructureStrategy",
+    "global_converter",
     "override",
+    "structure",
+    "structure_attrs_fromdict",
+    "structure_attrs_fromtuple",
+    "unstructure",
 )
 from cattrs import global_converter
 

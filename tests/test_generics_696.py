@@ -30,7 +30,7 @@ def test_structure_typevar_default(genconverter):
 
     c_mapping = generate_mapping(C[str])
     atype = fields(C[str]).a.type
-    assert c_mapping[atype.__name__] == str
+    assert c_mapping[atype.__name__] is str
 
     assert genconverter.structure({"a": "1"}, C[str]) == C("1")
 
@@ -40,10 +40,10 @@ def test_structure_typevar_default(genconverter):
 
     d_mapping = generate_mapping(D)
     atype = fields(D).a.type
-    assert d_mapping[atype.__name__] == str
+    assert d_mapping[atype.__name__] is str
 
     # Defaults to string
-    assert d_mapping[atype.__name__] == str
+    assert d_mapping[atype.__name__] is str
     assert genconverter.structure({"a": "1"}, D) == D("1")
 
     # But allows other types

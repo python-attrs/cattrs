@@ -130,5 +130,5 @@ def test_seq_of_simple_classes_unstructure(cls_and_vals, seq_type: type):
 
     inputs = seq_type(cl(*vals, **kwargs) for cl, vals, kwargs in cls_and_vals)
     outputs = converter.unstructure(inputs)
-    assert type(outputs) == seq_type
-    assert all(type(e) is dict for e in outputs)  # noqa: E721
+    assert type(outputs) is seq_type
+    assert all(type(e) is dict for e in outputs)

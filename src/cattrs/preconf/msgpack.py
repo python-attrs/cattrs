@@ -12,6 +12,8 @@ from ..literals import is_literal_containing_enums
 from ..strategies import configure_union_passthrough
 from . import is_primitive_enum, literals_with_enums_unstructure_factory, wrap
 
+__all__ = ["MsgpackConverter", "configure_converter", "make_converter"]
+
 T = TypeVar("T")
 
 
@@ -23,7 +25,7 @@ class MsgpackConverter(Converter):
         return self.structure(loads(data, **kwargs), cl)
 
 
-def configure_converter(converter: BaseConverter):
+def configure_converter(converter: BaseConverter) -> None:
     """
     Configure the converter for use with the msgpack library.
 
