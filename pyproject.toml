@@ -11,7 +11,6 @@ test = [
     "pytest>=8.3.2",
     "pytest-benchmark>=4.0.0",
     "immutables>=0.20",
-    "typing-extensions>=4.7.1",
     "coverage>=7.6.1",
     "pytest-xdist>=3.6.1",
 ]
@@ -22,7 +21,6 @@ docs = [
     "myst-parser>=1.0.0",
     "pendulum>=2.1.2",
     "sphinx-autobuild",
-    "typing-extensions>=4.8.0",
 ]
 bench = [
     "pyperf>=2.6.1",
@@ -42,7 +40,7 @@ authors = [
     {name = "Tin Tvrtkovic", email = "tinchester@gmail.com"},
 ]
 dependencies = [
-    "attrs>=23.1.0",
+    "attrs>=24.3.0",
     "typing-extensions>=4.12.2",
     "exceptiongroup>=1.1.1; python_version < '3.11'",
 ]

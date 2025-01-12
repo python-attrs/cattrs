@@ -42,7 +42,7 @@ from typing import MutableSet as TypingMutableSet
 from typing import Sequence as TypingSequence
 from typing import Set as TypingSet
 
-from attrs import NOTHING, Attribute, Factory, resolve_types
+from attrs import NOTHING, Attribute, Factory, NothingType, resolve_types
 from attrs import fields as attrs_fields
 from attrs import fields_dict as attrs_fields_dict
 
@@ -296,7 +296,7 @@ else:
         return None
 
 
-def get_notrequired_base(type) -> "Union[Any, Literal[NOTHING]]":
+def get_notrequired_base(type) -> Union[Any, NothingType]:
     if is_annotated(type):
         # Handle `Annotated[NotRequired[int]]`
         type = get_args(type)[0]

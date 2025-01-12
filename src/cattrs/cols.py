@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from functools import partial
 from typing import (
     TYPE_CHECKING,
@@ -15,7 +15,7 @@ from typing import (
     get_type_hints,
 )
 
-from attrs import NOTHING, Attribute
+from attrs import NOTHING, Attribute, NothingType
 
 from ._compat import (
     ANIES,
@@ -294,7 +294,9 @@ def is_defaultdict(type: Any) -> bool:
 
 
 def defaultdict_structure_factory(
-    type: type[defaultdict], converter: BaseConverter, default_factory: Any = NOTHING
+    type: type[defaultdict],
+    converter: BaseConverter,
+    default_factory: Callable[[], Any] | NothingType = NOTHING,
 ) -> StructureHook:
     """A structure hook factory for defaultdicts.
 
