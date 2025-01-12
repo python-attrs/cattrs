@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Union
 
 import attrs
 import pytest
@@ -10,7 +10,7 @@ class NotThere: ...
 
 
 class IgnoreMe:
-    def __init__(self, why: str | None = None):
+    def __init__(self, why: Union[str, None] = None):
         self.why = why
 
 
@@ -59,11 +59,16 @@ class PureClassInheritanceExample(PureClassExample):
 )
 @pytest.mark.parametrize("instantiate", [True, False])
 def test_gets_annotated_types(klass, expected, instantiate: bool):
-    annotated = get_fields_annotated_by(klass, FindMe("irrelevant") if instantiate else FindMe)
+    annotated = get_fields_annotated_by(
+        klass, FindMe("irrelevant") if instantiate else FindMe
+    )
 
-    assert set(annotated.keys()) == set(expected.keys()), "Too many or too few annotations"
+    assert set(annotated.keys()) == set(
+        expected.keys()
+    ), "Too many or too few annotations"
     assert all(
-        assertion_func(annotated[field_name], FindMe) for field_name, assertion_func in expected.items()
+        assertion_func(annotated[field_name], FindMe)
+        for field_name, assertion_func in expected.items()
     ), "Unexpected type of annotation"
 
 
