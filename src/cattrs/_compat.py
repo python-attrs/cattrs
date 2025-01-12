@@ -48,13 +48,13 @@ from attrs import fields_dict as attrs_fields_dict
 
 __all__ = [
     "ANIES",
-    "adapted_fields",
-    "fields_dict",
     "ExceptionGroup",
     "ExtensionsTypedDict",
+    "TypeAlias",
+    "adapted_fields",
+    "fields_dict",
     "has",
     "is_typeddict",
-    "TypeAlias",
 ]
 
 try:
@@ -281,10 +281,8 @@ else:
     from typing_extensions import NotRequired, Required
 
     def is_union_type(obj):
-        return (
-            obj is Union
-            or isinstance(obj, _UnionGenericAlias)
-            and obj.__origin__ is Union
+        return obj is Union or (
+            isinstance(obj, _UnionGenericAlias) and obj.__origin__ is Union
         )
 
     def get_newtype_base(typ: Any) -> Optional[type]:
@@ -330,10 +328,8 @@ def is_sequence(type: Any) -> bool:
         or (
             type.__class__ is _GenericAlias
             and (
-                (origin is not tuple)
-                and is_subclass(origin, TypingSequence)
-                or origin is tuple
-                and type.__args__[1] is ...
+                ((origin is not tuple) and is_subclass(origin, TypingSequence))
+                or (origin is tuple and type.__args__[1] is ...)
             )
         )
         or (origin in (list, deque, AbcMutableSequence, AbcSequence))

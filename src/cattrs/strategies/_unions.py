@@ -7,9 +7,9 @@ from cattrs import BaseConverter
 from cattrs._compat import get_newtype_base, is_literal, is_subclass, is_union_type
 
 __all__ = [
-    "default_tag_generator",
     "configure_tagged_union",
     "configure_union_passthrough",
+    "default_tag_generator",
 ]
 
 

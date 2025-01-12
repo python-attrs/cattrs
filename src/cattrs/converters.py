@@ -97,7 +97,7 @@ from .typealiases import (
 )
 from .types import SimpleStructureHook
 
-__all__ = ["UnstructureStrategy", "BaseConverter", "Converter", "GenConverter"]
+__all__ = ["BaseConverter", "Converter", "GenConverter", "UnstructureStrategy"]
 
 T = TypeVar("T")
 V = TypeVar("V")
@@ -165,16 +165,16 @@ class BaseConverter:
     """Converts between structured and unstructured data."""
 
     __slots__ = (
-        "_unstructure_func",
-        "_unstructure_attrs",
-        "_structure_attrs",
         "_dict_factory",
-        "_union_struct_registry",
-        "_structure_func",
         "_prefer_attrib_converters",
-        "detailed_validation",
         "_struct_copy_skip",
+        "_structure_attrs",
+        "_structure_func",
+        "_union_struct_registry",
         "_unstruct_copy_skip",
+        "_unstructure_attrs",
+        "_unstructure_func",
+        "detailed_validation",
     )
 
     def __init__(
@@ -1020,10 +1020,10 @@ class Converter(BaseConverter):
     """A converter which generates specialized un/structuring functions."""
 
     __slots__ = (
-        "omit_if_default",
-        "forbid_extra_keys",
-        "type_overrides",
         "_unstruct_collection_overrides",
+        "forbid_extra_keys",
+        "omit_if_default",
+        "type_overrides",
     )
 
     def __init__(

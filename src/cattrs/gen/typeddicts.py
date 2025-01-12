@@ -45,7 +45,7 @@ from ._shared import find_structure_handler
 if TYPE_CHECKING:
     from ..converters import BaseConverter
 
-__all__ = ["make_dict_unstructure_fn", "make_dict_structure_fn"]
+__all__ = ["make_dict_structure_fn", "make_dict_unstructure_fn"]
 
 T = TypeVar("T", bound=TypedDict)
 

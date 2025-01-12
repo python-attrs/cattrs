@@ -26,7 +26,7 @@ from .gen import AttributeOverride
 if TYPE_CHECKING:
     from .converters import BaseConverter
 
-__all__ = ["is_supported_union", "create_default_dis_func"]
+__all__ = ["create_default_dis_func", "is_supported_union"]
 
 
 def is_supported_union(typ: Any) -> bool:

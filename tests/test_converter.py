@@ -627,7 +627,7 @@ def test_seq_of_bare_classes_structure(seq_type_and_annotation):
         )
         expected = seq_type(C(a=cl(*vals), b=cl(*vals)) for _ in range(5))
 
-        assert type(outputs) == seq_type
+        assert type(outputs) is seq_type
         assert outputs == expected
 
 

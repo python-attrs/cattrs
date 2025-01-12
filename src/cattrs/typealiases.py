@@ -13,7 +13,7 @@ from .gen._generics import generate_mapping
 if TYPE_CHECKING:
     from .converters import BaseConverter
 
-__all__ = ["is_type_alias", "get_type_alias_base", "type_alias_structure_factory"]
+__all__ = ["get_type_alias_base", "is_type_alias", "type_alias_structure_factory"]
 
 if sys.version_info >= (3, 12):
     from types import GenericAlias

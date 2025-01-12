@@ -39,14 +39,14 @@ if TYPE_CHECKING:
     from ..converters import BaseConverter
 
 __all__ = [
-    "make_dict_unstructure_fn",
     "make_dict_structure_fn",
-    "make_iterable_unstructure_fn",
-    "make_hetero_tuple_unstructure_fn",
-    "make_mapping_unstructure_fn",
-    "make_mapping_structure_fn",
-    "make_dict_unstructure_fn_from_attrs",
     "make_dict_structure_fn_from_attrs",
+    "make_dict_unstructure_fn",
+    "make_dict_unstructure_fn_from_attrs",
+    "make_hetero_tuple_unstructure_fn",
+    "make_iterable_unstructure_fn",
+    "make_mapping_structure_fn",
+    "make_mapping_unstructure_fn",
 ]
 
 
@@ -865,7 +865,7 @@ def mapping_unstructure_factory(
 
     lines = [f"def {fn_name}(mapping):"]
 
-    if unstructure_to is dict or unstructure_to is None and origin is dict:
+    if unstructure_to is dict or (unstructure_to is None and origin is dict):
         if kh is None and val_handler is None:
             # Simplest path.
             return dict
