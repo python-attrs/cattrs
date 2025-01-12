@@ -1,7 +1,7 @@
 from collections import defaultdict
-from typing import Any, Callable, Literal, Union
+from typing import Any, Callable, Union
 
-from attrs import NOTHING
+from attrs import NOTHING, NothingType
 
 from cattrs import BaseConverter
 from cattrs._compat import get_newtype_base, is_literal, is_subclass, is_union_type
@@ -23,7 +23,7 @@ def configure_tagged_union(
     converter: BaseConverter,
     tag_generator: Callable[[type], str] = default_tag_generator,
     tag_name: str = "_type",
-    default: Union[type, Literal[NOTHING]] = NOTHING,
+    default: Union[type, NothingType] = NOTHING,
 ) -> None:
     """
     Configure the converter so that `union` (which should be a union) is
