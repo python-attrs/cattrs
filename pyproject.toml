@@ -1,7 +1,7 @@
 [tool.black]
 skip-magic-trailing-comma = true
 
-[tool.pdm.dev-dependencies]
+[dependency-groups]
 lint = [
     "black>=24.2.0",
     "ruff>=0.0.277",
@@ -93,7 +93,7 @@ bson = [
     "pymongo>=4.4.0",
 ]
 msgspec = [
-    "msgspec>=0.18.5; implementation_name == \"cpython\"",
+    "msgspec>=0.19.0; implementation_name == \"cpython\"",
 ]
 
 [tool.pytest.ini_options]
