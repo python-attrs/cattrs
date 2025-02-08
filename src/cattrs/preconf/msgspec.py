@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from base64 import b64decode
+from dataclasses import is_dataclass
 from datetime import date, datetime
 from enum import Enum
 from functools import partial
@@ -13,15 +14,7 @@ from attrs import resolve_types
 from msgspec import Struct, convert, to_builtins
 from msgspec.json import Encoder, decode
 
-from .._compat import (
-    fields,
-    get_args,
-    get_origin,
-    has,
-    is_bare,
-    is_mapping,
-    is_sequence,
-)
+from .._compat import fields, get_args, get_origin, is_bare, is_mapping, is_sequence
 from ..cols import is_namedtuple
 from ..converters import BaseConverter, Converter
 from ..dispatch import UnstructureHook
@@ -104,11 +97,20 @@ def configure_passthroughs(converter: Converter) -> None:
     """Configure optimizing passthroughs.
 
     A passthrough is when we let msgspec handle something automatically.
+
+    .. versionchanged:: 25.1.0
+        Dataclasses with private attributes are now passed through.
     """
     converter.register_unstructure_hook(bytes, to_builtins)
     converter.register_unstructure_hook_factory(is_mapping, mapping_unstructure_factory)
     converter.register_unstructure_hook_factory(is_sequence, seq_unstructure_factory)
-    converter.register_unstructure_hook_factory(has, msgspec_attrs_unstructure_factory)
+    converter.register_unstructure_hook_factory(
+        attrs_has, msgspec_attrs_unstructure_factory
+    )
+    converter.register_unstructure_hook_factory(
+        is_dataclass,
+        partial(msgspec_attrs_unstructure_factory, msgspec_skips_private=False),
+    )
     converter.register_unstructure_hook_factory(
         is_namedtuple, namedtuple_unstructure_factory
     )
@@ -154,16 +156,21 @@ def mapping_unstructure_factory(type, converter: BaseConverter) -> UnstructureHo
 
 
 def msgspec_attrs_unstructure_factory(
-    type: Any, converter: Converter
+    type: Any, converter: Converter, msgspec_skips_private: bool = True
 ) -> UnstructureHook:
-    """Choose whether to use msgspec handling or our own."""
+    """Choose whether to use msgspec handling or our own.
+
+    Args:
+        msgspec_skips_private: Whether the msgspec library skips unstructuring
+            private attributes, making us do the work.
+    """
     origin = get_origin(type)
     attribs = fields(origin or type)
     if attrs_has(type) and any(isinstance(a.type, str) for a in attribs):
         resolve_types(type)
         attribs = fields(origin or type)
 
-    if any(
+    if msgspec_skips_private and any(
         attr.name.startswith("_")
         or (
             converter.get_unstructure_hook(attr.type, cache_result=False)
