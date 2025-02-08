@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
 from typing import (
     Any,
@@ -44,6 +45,18 @@ class B:
 @define
 class C:
     """This class should not be passed through due to a private attribute."""
+
+    _a: int
+
+
+@dataclass
+class DataclassA:
+    a: int
+
+
+@dataclass
+class DataclassC:
+    """Msgspec doesn't skip private attributes on dataclasses, so this should work OOB."""
 
     _a: int
 
@@ -106,6 +119,11 @@ def test_unstructure_pt_product_types(converter: Conv):
     assert is_passthrough(converter.get_unstructure_hook(A))
     assert not is_passthrough(converter.get_unstructure_hook(B))
     assert not is_passthrough(converter.get_unstructure_hook(C))
+
+    assert is_passthrough(converter.get_unstructure_hook(DataclassA))
+    assert is_passthrough(converter.get_unstructure_hook(DataclassC))
+
+    assert converter.unstructure(DataclassC(1)) == {"_a": 1}
 
     assert is_passthrough(converter.get_unstructure_hook(N))
     assert is_passthrough(converter.get_unstructure_hook(NA))
