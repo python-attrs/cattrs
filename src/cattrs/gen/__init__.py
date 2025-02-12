@@ -132,7 +132,7 @@ def make_dict_unstructure_fn_from_attrs(
                     else:
                         handler = converter.unstructure
                 elif is_generic(t) and not is_bare(t) and not is_annotated(t):
-                    t = deep_copy_with(t, typevar_map)
+                    t = deep_copy_with(t, typevar_map, cl)
 
                 if handler is None:
                     if (
@@ -376,7 +376,7 @@ def make_dict_structure_fn_from_attrs(
             if isinstance(t, TypeVar):
                 t = typevar_map.get(t.__name__, t)
             elif is_generic(t) and not is_bare(t) and not is_annotated(t):
-                t = deep_copy_with(t, typevar_map)
+                t = deep_copy_with(t, typevar_map, cl)
 
             # For each attribute, we try resolving the type here and now.
             # If a type is manually overwritten, this function should be
@@ -447,10 +447,8 @@ def make_dict_structure_fn_from_attrs(
                             f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'])"
                         )
                     else:
-                        tn = f"__c_type_{an}"
-                        internal_arg_parts[tn] = t
                         lines.append(
-                            f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'], {tn})"
+                            f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'], {type_name})"
                         )
                 else:
                     lines.append(f"{i}res['{ian}'] = o['{kn}']")
@@ -510,7 +508,7 @@ def make_dict_structure_fn_from_attrs(
             if isinstance(t, TypeVar):
                 t = typevar_map.get(t.__name__, t)
             elif is_generic(t) and not is_bare(t) and not is_annotated(t):
-                t = deep_copy_with(t, typevar_map)
+                t = deep_copy_with(t, typevar_map, cl)
 
             # For each attribute, we try resolving the type here and now.
             # If a type is manually overwritten, this function should be
@@ -576,7 +574,7 @@ def make_dict_structure_fn_from_attrs(
                 if isinstance(t, TypeVar):
                     t = typevar_map.get(t.__name__, t)
                 elif is_generic(t) and not is_bare(t) and not is_annotated(t):
-                    t = deep_copy_with(t, typevar_map)
+                    t = deep_copy_with(t, typevar_map, cl)
 
                 # For each attribute, we try resolving the type here and now.
                 # If a type is manually overwritten, this function should be
@@ -652,8 +650,7 @@ def make_dict_structure_fn_from_attrs(
 
     # At the end, we create the function header.
     internal_arg_line = ", ".join([f"{i}={i}" for i in internal_arg_parts])
-    for k, v in internal_arg_parts.items():
-        globs[k] = v
+    globs.update(internal_arg_parts)
 
     total_lines = [
         f"def {fn_name}(o, _=__cl, {internal_arg_line}):",
