@@ -19,6 +19,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - Add a [Migrations](https://catt.rs/en/latest/migrations.html) page, with instructions on migrating changed behavior for each version.
   ([#577](https://github.com/python-attrs/cattrs/pull/577))
 - [`typing.Self`](https://docs.python.org/3/library/typing.html#typing.Self) is now supported in _attrs_ classes, dataclasses, TypedDicts and the dict NamedTuple factories.
+  ([#299](https://github.com/python-attrs/cattrs/issues/299) [#627](https://github.com/python-attrs/cattrs/pull/627))
 - Expose {func}`cattrs.cols.mapping_unstructure_factory` through {mod}`cattrs.cols`.
 - Some `defaultdicts` are now [supported by default](https://catt.rs/en/latest/defaulthooks.html#defaultdicts), and
   {func}`cattrs.cols.is_defaultdict` and {func}`cattrs.cols.defaultdict_structure_factory` are exposed through {mod}`cattrs.cols`.
