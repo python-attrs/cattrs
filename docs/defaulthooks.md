@@ -662,6 +662,20 @@ Protocols are unstructured according to the actual runtime type of the value.
 Attributes annotated using [the Self type](https://docs.python.org/3/library/typing.html#typing.Self) are supported in _attrs_ classes, dataclasses, TypedDicts and NamedTuples
 (when using [the dict un/structure factories](customizing.md#customizing-named-tuples)).
 
+```{doctest}
+>>> from typing import Self
+
+>>> @define
+... class LinkedListNode:
+...     element: int
+...     next: Self | None = None
+
+>>> cattrs.unstructure(LinkedListNode(1, LinkedListNode(2, None)))
+{'element': 1, 'next': {'element': 2, 'next': None}}
+>>> cattrs.structure({'element': 1, 'next': {'element': 2, 'next': None}}, LinkedListNode)
+LinkedListNode(element=1, next=LinkedListNode(element=2, next=None))
+```
+
 ```{note}
 Attributes annotated with `typing.Self` are not supported by the BaseConverter, as this is too complex for it.
 ```
