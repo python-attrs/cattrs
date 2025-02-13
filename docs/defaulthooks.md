@@ -656,3 +656,16 @@ Protocols are unstructured according to the actual runtime type of the value.
 ```{versionadded} 1.9.0
 
 ```
+
+### `typing.Self`
+
+Attributes annotated using [the Self type](https://docs.python.org/3/library/typing.html#typing.Self) are supported in _attrs_ classes, dataclasses, TypedDicts and NamedTuples
+(when using [the dict un/structure factories](customizing.md#customizing-named-tuples)).
+
+```{note}
+Attributes annotated with `typing.Self` are not supported by the BaseConverter, as this is too complex for it.
+```
+
+```{versionadded} 25.1.0
+
+```

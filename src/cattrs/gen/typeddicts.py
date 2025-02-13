@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 import sys
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Callable, Literal, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Literal, TypeVar
 
 from attrs import NOTHING, Attribute
 from typing_extensions import _TypedDictMeta
@@ -47,7 +47,7 @@ if TYPE_CHECKING:
 
 __all__ = ["make_dict_structure_fn", "make_dict_unstructure_fn"]
 
-T = TypeVar("T", bound=TypedDict)
+T = TypeVar("T")
 
 
 def make_dict_unstructure_fn(
@@ -122,7 +122,7 @@ def make_dict_unstructure_fn(
                     # Unbound typevars use late binding.
                     handler = converter.unstructure
             elif is_generic(t) and not is_bare(t) and not is_annotated(t):
-                t = deep_copy_with(t, mapping)
+                t = deep_copy_with(t, mapping, cl)
 
             if handler is None:
                 nrb = get_notrequired_base(t)
@@ -168,7 +168,7 @@ def make_dict_unstructure_fn(
                     else:
                         handler = converter.unstructure
                 elif is_generic(t) and not is_bare(t) and not is_annotated(t):
-                    t = deep_copy_with(t, mapping)
+                    t = deep_copy_with(t, mapping, cl)
 
                 if handler is None:
                     nrb = get_notrequired_base(t)
@@ -334,14 +334,14 @@ def make_dict_structure_fn(
             if isinstance(t, TypeVar):
                 t = mapping.get(t.__name__, t)
             elif is_generic(t) and not is_bare(t) and not is_annotated(t):
-                t = deep_copy_with(t, mapping)
+                t = deep_copy_with(t, mapping, cl)
 
             nrb = get_notrequired_base(t)
             if nrb is not NOTHING:
                 t = nrb
 
             if is_generic(t) and not is_bare(t) and not is_annotated(t):
-                t = deep_copy_with(t, mapping)
+                t = deep_copy_with(t, mapping, cl)
 
             # For each attribute, we try resolving the type here and now.
             # If a type is manually overwritten, this function should be
@@ -411,7 +411,7 @@ def make_dict_structure_fn(
             if isinstance(t, TypeVar):
                 t = mapping.get(t.__name__, t)
             elif is_generic(t) and not is_bare(t) and not is_annotated(t):
-                t = deep_copy_with(t, mapping)
+                t = deep_copy_with(t, mapping, cl)
 
             nrb = get_notrequired_base(t)
             if nrb is not NOTHING:
@@ -458,7 +458,7 @@ def make_dict_structure_fn(
                 if isinstance(t, TypeVar):
                     t = mapping.get(t.__name__, t)
                 elif is_generic(t) and not is_bare(t) and not is_annotated(t):
-                    t = deep_copy_with(t, mapping)
+                    t = deep_copy_with(t, mapping, cl)
 
                 if override.struct_hook is not None:
                     handler = override.struct_hook
