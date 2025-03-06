@@ -2,6 +2,20 @@
 
 This section describes customizing the unstructuring and structuring processes in _cattrs_.
 
+As you go about customizing converters by registering hooks and hook factories,
+keep in mind that **the order of hook registration matters**.
+
+Technically speaking, whether the order matters or not depends on the actual implementation of hook factories used.
+In practice, the built-in _cattrs_ hooks are optimized to perform early resolution of hooks.
+You will likely compose with these hook factories.
+
+This means that **hooks for simpler types should be registered first**.
+For example, to override hooks for structuring `int` and `list[int]`, the hook for `int`
+must be registered first.
+When the {meth}`list_structure_factory() <cattrs.cols.list_structure_factory>`
+is applied to the `list[int]` type to produce a hook, it will retrieve and store
+the hook for `int`, which should be already present.
+
 ## Custom (Un-)structuring Hooks
 
 You can write your own structuring and unstructuring functions and register them for types using {meth}`Converter.register_structure_hook() <cattrs.BaseConverter.register_structure_hook>` and {meth}`Converter.register_unstructure_hook() <cattrs.BaseConverter.register_unstructure_hook>`.
@@ -11,13 +25,13 @@ This approach is the most flexible but also requires the most amount of boilerpl
 _singledispatch_ is powerful and fast but comes with some limitations; namely that it performs checks using `issubclass()` which doesn't work with many Python types.
 Some examples of this are:
 
-* various generic collections (`list[int]` is not a _subclass_ of `list`)
-* literals (`Literal[1]` is not a _subclass_ of `Literal[1]`)
-* generics (`MyClass[int]` is not a _subclass_ of `MyClass`)
-* protocols, unless they are `runtime_checkable`
-* various modifiers, such as `Final` and `NotRequired`
-* newtypes and 3.12 type aliases
-* `typing.Annotated`
+- various generic collections (`list[int]` is not a _subclass_ of `list`)
+- literals (`Literal[1]` is not a _subclass_ of `Literal[1]`)
+- generics (`MyClass[int]` is not a _subclass_ of `MyClass`)
+- protocols, unless they are `runtime_checkable`
+- various modifiers, such as `Final` and `NotRequired`
+- newtypes and 3.12 type aliases
+- `typing.Annotated`
 
 ... and many others. In these cases, predicate functions should be used instead.
 
@@ -49,6 +63,7 @@ def my_datetime_hook(val: datetime) -> str:
 The non-decorator approach is still recommended when dealing with lambdas, hooks produced elsewhere, unannotated hooks and situations where type introspection doesn't work.
 
 ```{versionadded} 24.1.0
+
 ```
 
 ### Predicate Hooks
@@ -87,7 +102,7 @@ D(a=2)
 
 ### Hook Factories
 
-Hook factories are higher-order predicate hooks: they are functions that *produce* hooks.
+Hook factories are higher-order predicate hooks: they are functions that _produce_ hooks.
 Hook factories are commonly used to create very optimized hooks by offloading part of the work into a separate, earlier step.
 
 Hook factories are registered using {meth}`Converter.register_unstructure_hook_factory() <cattrs.BaseConverter.register_unstructure_hook_factory>` and {meth}`Converter.register_structure_hook_factory() <cattrs.BaseConverter.register_structure_hook_factory>`.
@@ -251,7 +266,6 @@ This behavior can only be applied to classes or to the default for the {class}`C
 The value for the `make_dict_structure_fn._cattrs_forbid_extra_keys` parameter is now taken from the given converter by default.
 ```
 
-
 ### `rename`
 
 Using the rename override makes `cattrs` use the provided name instead of the real attribute name.
@@ -383,18 +397,22 @@ ClassWithInitFalse(number=2)
 
 ## Customizing Collections
 
+```{currentmodule} cattrs.cols
+
+```
+
 The {mod}`cattrs.cols` module contains predicates and hook factories useful for customizing collection handling.
 These hook factories can be wrapped to apply complex customizations.
 
 Available predicates are:
 
-* {meth}`is_any_set <cattrs.cols.is_any_set>`
-* {meth}`is_frozenset <cattrs.cols.is_frozenset>`
-* {meth}`is_set <cattrs.cols.is_set>`
-* {meth}`is_sequence <cattrs.cols.is_sequence>`
-* {meth}`is_mapping <cattrs.cols.is_mapping>`
-* {meth}`is_namedtuple <cattrs.cols.is_namedtuple>`
-* {meth}`is_defaultdict <cattrs.cols.is_defaultdict>`
+- {meth}`is_any_set`
+- {meth}`is_frozenset`
+- {meth}`is_set`
+- {meth}`is_sequence`
+- {meth}`is_mapping`
+- {meth}`is_namedtuple`
+- {meth}`is_defaultdict`
 
 ````{tip}
 These predicates aren't _cattrs_-specific and may be useful in other contexts.
@@ -406,18 +424,17 @@ True
 ```
 ````
 
-
 Available hook factories are:
 
-* {meth}`iterable_unstructure_factory <cattrs.cols.iterable_unstructure_factory>`
-* {meth}`list_structure_factory <cattrs.cols.list_structure_factory>`
-* {meth}`namedtuple_structure_factory <cattrs.cols.namedtuple_structure_factory>`
-* {meth}`namedtuple_unstructure_factory <cattrs.cols.namedtuple_unstructure_factory>`
-* {meth}`namedtuple_dict_structure_factory <cattrs.cols.namedtuple_dict_structure_factory>`
-* {meth}`namedtuple_dict_unstructure_factory <cattrs.cols.namedtuple_dict_unstructure_factory>`
-* {meth}`mapping_structure_factory <cattrs.cols.mapping_structure_factory>`
-* {meth}`mapping_unstructure_factory <cattrs.cols.mapping_unstructure_factory>`
-* {meth}`defaultdict_structure_factory <cattrs.cols.defaultdict_structure_factory>`
+- {meth}`iterable_unstructure_factory`
+- {meth}`list_structure_factory`
+- {meth}`namedtuple_structure_factory`
+- {meth}`namedtuple_unstructure_factory`
+- {meth}`namedtuple_dict_structure_factory`
+- {meth}`namedtuple_dict_unstructure_factory`
+- {meth}`mapping_structure_factory`
+- {meth}`mapping_unstructure_factory`
+- {meth}`defaultdict_structure_factory`
 
 Additional predicates and hook factories will be added as requested.
 
@@ -460,9 +477,8 @@ ValueError: Not a list!
 
 ### Customizing Named Tuples
 
-Named tuples can be un/structured using dictionaries using the {meth}`namedtuple_dict_structure_factory <cattrs.cols.namedtuple_dict_structure_factory>`
-and {meth}`namedtuple_dict_unstructure_factory <cattrs.cols.namedtuple_dict_unstructure_factory>`
-hook factories.
+Named tuples can be un/structured using dictionaries using the {meth}`namedtuple_dict_structure_factory`
+and {meth}`namedtuple_dict_unstructure_factory` hook factories.
 
 To unstructure _all_ named tuples into dictionaries:
 
