@@ -1,6 +1,8 @@
 ---
 name: CI
 
+permissions: {}
+
 on:
   push:
     branches: ["main"]

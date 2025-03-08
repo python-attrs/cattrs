@@ -1,6 +1,8 @@
 ---
 name: Build & maybe upload PyPI package
 
+permissions: {}
+
 on:
   push:
     branches: [main]
