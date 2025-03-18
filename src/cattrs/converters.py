@@ -1364,7 +1364,7 @@ class Converter(BaseConverter):
         omit_if_default: bool | None = None,
         forbid_extra_keys: bool | None = None,
         type_overrides: Mapping[type, AttributeOverride] | None = None,
-        unstruct_collection_overrides: Mapping[type, Callable] | None = None,
+        unstruct_collection_overrides: Mapping[type, UnstructureHook] | None = None,
         prefer_attrib_converters: bool | None = None,
         detailed_validation: bool | None = None,
     ) -> Converter:
