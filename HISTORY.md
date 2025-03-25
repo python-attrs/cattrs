@@ -11,7 +11,7 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
-## 24.1.3 (UNRELEASED)
+## 24.1.3 (2025-03-25)
 
 - Fix structuring of keyword-only dataclass fields when not using detailed validation.
   ([#637](https://github.com/python-attrs/cattrs/issues/637) [#638](https://github.com/python-attrs/cattrs/pull/638))
