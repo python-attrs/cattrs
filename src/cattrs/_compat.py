@@ -170,6 +170,7 @@ def adapted_fields(cl) -> List[Attribute]:
                 True,
                 type=type_hints.get(attr.name, attr.type),
                 alias=attr.name,
+                kw_only=getattr(attr, "kw_only", False),
             )
             for attr in attrs
         ]

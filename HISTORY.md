@@ -1,5 +1,7 @@
 # History
+
 ```{currentmodule} cattrs
+
 ```
 
 This project adheres to [Calendar Versioning](https://calver.org/).
@@ -8,6 +10,11 @@ The second number is incremented with each release, starting at 1 for each year.
 The third number is for emergencies when we need to start branches for older releases.
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
+
+## 24.1.3 (UNRELEASED)
+
+- Fix structuring of keyword-only dataclass fields when not using detailed validation.
+  ([#637](https://github.com/python-attrs/cattrs/issues/637) [#638](https://github.com/python-attrs/cattrs/pull/638))
 
 ## 24.1.2 (2024-09-22)
 
