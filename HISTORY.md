@@ -1,5 +1,7 @@
 # History
+
 ```{currentmodule} cattrs
+
 ```
 
 This project adheres to [Calendar Versioning](https://calver.org/).
@@ -8,7 +10,6 @@ The second number is incremented with each release, starting at 1 for each year.
 The third number is for emergencies when we need to start branches for older releases.
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
-
 
 ## 25.1.0 (UNRELEASED)
 
@@ -46,6 +47,11 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - Change type of `Converter.__init__.unstruct_collection_overrides` from `Callable` to `Mapping[type, UnstructureHook]`
   ([#594](https://github.com/python-attrs/cattrs/pull/594)).
 - Adopt the Contributor Covenant Code of Conduct (just like _attrs_).
+
+## 24.1.3 (2025-03-25)
+
+- Fix structuring of keyword-only dataclass fields when not using detailed validation.
+  ([#637](https://github.com/python-attrs/cattrs/issues/637) [#638](https://github.com/python-attrs/cattrs/pull/638))
 
 ## 24.1.2 (2024-09-22)
 
