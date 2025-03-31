@@ -208,7 +208,7 @@ def test_disambiguate_from_discriminated_enum():
 
     fn = create_default_dis_func(c, E, F, G)
     assert fn({"op": 1}) is E
-    assert fn({"op": 0, "t": "MESSAGE_CREATE"}) is Union[F, G]
+    assert fn({"op": 0, "t": "MESSAGE_CREATE"}) == Union[F, G]
 
     # can it handle multiple literals?
     @define
@@ -224,8 +224,8 @@ def test_disambiguate_from_discriminated_enum():
         a: Literal[0]
 
     fn = create_default_dis_func(c, H, J, K)
-    assert fn({"a": 1}) is Union[H, J]
-    assert fn({"a": 0}) is Union[J, K]
+    assert fn({"a": 1}) == Union[H, J]
+    assert fn({"a": 0}) == Union[J, K]
 
 
 def test_default_no_literals():
