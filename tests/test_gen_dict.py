@@ -77,8 +77,20 @@ def test_nodefs_generated_unstructuring_cl(
     else:
         assume(False)
 
+    def if_default(instance, attribute, value) -> bool:
+        if attribute.default is not NOTHING:
+            if isinstance(attribute.default, Factory):
+                if attribute.default.takes_self:
+                    return value == attribute.default.factory(instance)
+                else:
+                    return value == attribute.default.factory()
+            else:
+                return value == attribute.default
+        else:
+            return False
+
     converter.register_unstructure_hook(
-        cl, make_dict_unstructure_fn(cl, converter, _cattrs_omit_if_default=True)
+        cl, make_dict_unstructure_fn(cl, converter, _cattrs_omit_if_default=True) # _cattrs_omit=if_default
     )
 
     inst = cl(*vals, **kwargs)
@@ -284,6 +296,52 @@ def test_omitting_none(converter: BaseConverter):
     assert converter.structure({"a": 2}, A).a == 2
     assert not hasattr(converter.structure({"a": 2}, A), "b")
 
+
+def test_omit_callable(converter: BaseConverter):
+    """Test omitting via callable."""
+
+    @define
+    class A:
+        a: int
+        b: str
+
+    def not_integer(inst, attr, value):
+        return not issubclass(attr.type, int)
+
+    converter.register_unstructure_hook(
+        A, make_dict_unstructure_fn(A, converter, _cattrs_omit=not_integer)
+    )
+    
+    import inspect
+    print(inspect.getsource(converter.get_unstructure_hook(A)))
+    assert converter.unstructure(A(1, 2)) == {"a": 1}
+
+    @define
+    class Example:
+        a: int
+        b: int | None
+        c: int = 123
+
+    def default_or_none(instance, attribute, value):
+        if value is None:
+            return True
+        elif isinstance(attribute.default, Factory):
+            if attribute.default.takes_self:
+                return value == attribute.default.factory(instance)
+            else:
+                return value == attribute.default.factory()
+        else:
+            return value == attribute.default
+
+    converter.register_unstructure_hook(
+        Example, make_dict_unstructure_fn(
+            Example,
+            converter,
+            _cattrs_omit=default_or_none
+        )
+    )
+
+    assert converter.unstructure(Example(100, None)) == {"a": 100}
 
 @pytest.mark.parametrize("detailed_validation", [True, False])
 def test_omitting_structure(detailed_validation: bool):
