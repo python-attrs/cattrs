@@ -295,29 +295,30 @@ def test_omit_callable_unstructure(converter: BaseConverter):
         c: int = 123
         d: set = field(factory=set)
         e: int = field()
+
         @e.default
         def e_default(self) -> int:
             return self.c
+
         overridden: bool = None
 
     def default_or_none(instance, attribute, value):
         if value is None:
             return True
-        elif isinstance(attribute.default, Factory):
+        if isinstance(attribute.default, Factory):
             if attribute.default.takes_self:
                 return value == attribute.default.factory(instance)
-            else:
-                return value == attribute.default.factory()
-        else:
-            return value == attribute.default
+            return value == attribute.default.factory()
+        return value == attribute.default
 
     converter.register_unstructure_hook(
-        Example, make_dict_unstructure_fn(
+        Example,
+        make_dict_unstructure_fn(
             Example,
             converter,
             _cattrs_omit_if=default_or_none,
-            overridden=override(omit_if=False)
-        )
+            overridden=override(omit_if=False),
+        ),
     )
 
     assert converter.unstructure(Example(100, None)) == {"a": 100, "overridden": None}

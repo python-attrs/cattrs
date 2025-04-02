@@ -11,7 +11,7 @@ from inspect import signature as inspect_signature
 from pathlib import Path
 from typing import Any, Optional, Tuple, TypeVar, overload
 
-from attrs import Attribute, Factory, resolve_types
+from attrs import Attribute, resolve_types
 from attrs import has as attrs_has
 
 from ._compat import (
@@ -1248,7 +1248,11 @@ class Converter(BaseConverter):
         }
 
         return make_dict_unstructure_fn(
-            cl, self, _cattrs_omit_if_default=self.omit_if_default, _cattrs_omit_if=self.omit_if, **attrib_overrides
+            cl,
+            self,
+            _cattrs_omit_if_default=self.omit_if_default,
+            _cattrs_omit_if=self.omit_if,
+            **attrib_overrides,
         )
 
     def gen_unstructure_optional(self, cl: type[T]) -> Callable[[T], Any]:

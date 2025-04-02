@@ -64,13 +64,7 @@ def override(
     :param omit: Whether to skip the field or not. `None` means apply default handling.
     """
     return AttributeOverride(
-        omit_if_default, 
-        rename,
-        location, 
-        omit,
-        omit_if,
-        struct_hook, 
-        unstruct_hook
+        omit_if_default, rename, location, omit, omit_if, struct_hook, unstruct_hook
     )
 
 
@@ -101,7 +95,7 @@ def make_dict_unstructure_fn_from_attrs(
         module name and qualname.
     :param _cattrs_omit_if_default: If true, attributes equal to their default values
         will be omitted in the result dictionary.
-    :param _cattrs_omit: Omits the attribute (at runtime) if the passed-in value 
+    :param _cattrs_omit: Omits the attribute (at runtime) if the passed-in value
         evaluates to true.
     :param _cattrs_use_alias: If true, the attribute alias will be used as the
         dictionary key by default.
@@ -195,14 +189,18 @@ def make_dict_unstructure_fn_from_attrs(
                 lines.append(f"  if instance.{attr_name} != {def_name}:")
                 lines.append(f"    res['{kn}'] = {invoke}")
 
-        elif omit_if: # callable
+        elif omit_if:  # callable
             omit_callable = f"__c_omit_{attr_name}"
             attr_attr = f"__c_attr_{attr_name}"
 
-            lines.append(f"  if not {omit_callable}(instance, {attr_attr}, instance.{attr_name}):")
+            lines.append(
+                f"  if not {omit_callable}(instance, {attr_attr}, instance.{attr_name}):"
+            )
             lines.append(f"    res['{kn}'] = {invoke}")
 
-            globs[omit_callable] = omit_if # _cattrs_omit_if if override.omit_if is None else override.omit_if
+            globs[omit_callable] = (
+                omit_if  # _cattrs_omit_if if override.omit_if is None else override.omit_if
+            )
             globs[attr_attr] = a
 
         else:
@@ -235,7 +233,6 @@ def make_dict_unstructure_fn_from_attrs(
 
     return res
 
-_never = lambda instance, attribute, value: False
 
 def make_dict_unstructure_fn(
     cl: type[T],

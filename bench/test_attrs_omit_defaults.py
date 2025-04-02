@@ -3,7 +3,7 @@ from enum import IntEnum
 import attr
 import pytest
 
-from cattr import BaseConverter, Converter, UnstructureStrategy
+from cattr import Converter, UnstructureStrategy
 
 
 class E(IntEnum):
