@@ -12,7 +12,7 @@ class AttributeOverride:
     rename: str | None = None
     location: str | tuple[str] | None = None,
     omit: bool | None = None  # Omit the field completely.
-    omit_if: Callable[[Any, Any, Any], bool] | None = None # Omit if callable returns True.
+    omit_if: Callable[[Any, Any, Any], bool] | bool | None = None # Omit if callable returns True.
     struct_hook: Callable[[Any, Any], Any] | None = None  # Structure hook to use.
     unstruct_hook: Callable[[Any], Any] | None = None  # Structure hook to use.
 

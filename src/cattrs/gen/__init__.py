@@ -55,7 +55,7 @@ def override(
     rename: str | None = None,
     location: str | tuple[str] | None = None,
     omit: bool | None = None,
-    omit_if: Callable[[Any, Any, Any], bool] | None = None,
+    omit_if: Callable[[Any, Any, Any], bool] | bool | None = None,
     struct_hook: Callable[[Any, Any], Any] | None = None,
     unstruct_hook: Callable[[Any], Any] | None = None,
 ) -> AttributeOverride:
@@ -68,7 +68,7 @@ def override(
         rename,
         location, 
         omit,
-        omit_if, 
+        omit_if,
         struct_hook, 
         unstruct_hook
     )
@@ -83,7 +83,7 @@ def make_dict_unstructure_fn_from_attrs(
     converter: BaseConverter,
     typevar_map: dict[str, Any] = {},
     _cattrs_omit_if_default: bool = False,
-    _cattrs_omit: Callable[[Any, Any, Any], bool] | bool = False,
+    _cattrs_omit_if: Callable[[Any, Any, Any], bool] | None = None,
     _cattrs_use_linecache: bool = True,
     _cattrs_use_alias: bool = False,
     _cattrs_include_init_false: bool = False,
@@ -120,8 +120,7 @@ def make_dict_unstructure_fn_from_attrs(
     for a in attrs:
         attr_name = a.name
         override = kwargs.get(attr_name, neutral)
-        omit = _cattrs_omit if override.omit is None else override.omit
-        if omit is True: # Unconditional omit
+        if override.omit:
             continue
         if override.omit is None and not a.init and not _cattrs_include_init_false:
             continue
@@ -130,6 +129,7 @@ def make_dict_unstructure_fn_from_attrs(
         else:
             kn = override.rename
         d = a.default
+        omit_if = _cattrs_omit_if if override.omit_if is None else override.omit_if
 
         # For each attribute, we try resolving the type here and now.
         # If a type is manually overwritten, this function should be
@@ -195,14 +195,14 @@ def make_dict_unstructure_fn_from_attrs(
                 lines.append(f"  if instance.{attr_name} != {def_name}:")
                 lines.append(f"    res['{kn}'] = {invoke}")
 
-        elif omit: # callable
+        elif omit_if: # callable
             omit_callable = f"__c_omit_{attr_name}"
             attr_attr = f"__c_attr_{attr_name}"
 
             lines.append(f"  if not {omit_callable}(instance, {attr_attr}, instance.{attr_name}):")
             lines.append(f"    res['{kn}'] = {invoke}")
 
-            globs[omit_callable] = _cattrs_omit if override.omit_if is None else override.omit_if
+            globs[omit_callable] = omit_if # _cattrs_omit_if if override.omit_if is None else override.omit_if
             globs[attr_attr] = a
 
         else:
@@ -241,7 +241,7 @@ def make_dict_unstructure_fn(
     cl: type[T],
     converter: BaseConverter,
     _cattrs_omit_if_default: bool = False,
-    _cattrs_omit: Callable[[Any, Any, Any], bool] | bool = False,
+    _cattrs_omit_if: Callable[[Any, Any, Any], bool] | bool | None = None,
     _cattrs_use_linecache: bool = True,
     _cattrs_use_alias: bool = False,
     _cattrs_include_init_false: bool = False,
@@ -293,7 +293,7 @@ def make_dict_unstructure_fn(
             converter,
             mapping,
             _cattrs_omit_if_default=_cattrs_omit_if_default,
-            _cattrs_omit=_cattrs_omit,
+            _cattrs_omit_if=_cattrs_omit_if,
             _cattrs_use_linecache=_cattrs_use_linecache,
             _cattrs_use_alias=_cattrs_use_alias,
             _cattrs_include_init_false=_cattrs_include_init_false,

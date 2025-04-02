@@ -11,7 +11,7 @@ from inspect import signature as inspect_signature
 from pathlib import Path
 from typing import Any, Optional, Tuple, TypeVar, overload
 
-from attrs import Attribute, resolve_types
+from attrs import Attribute, Factory, resolve_types
 from attrs import has as attrs_has
 
 from ._compat import (
@@ -1022,6 +1022,7 @@ class Converter(BaseConverter):
     __slots__ = (
         "_unstruct_collection_overrides",
         "forbid_extra_keys",
+        "omit_if",
         "omit_if_default",
         "type_overrides",
     )
@@ -1030,6 +1031,7 @@ class Converter(BaseConverter):
         self,
         dict_factory: Callable[[], Any] = dict,
         unstruct_strat: UnstructureStrategy = UnstructureStrategy.AS_DICT,
+        omit_if: Callable[[Any, Any, Any], Any] | None = None,
         omit_if_default: bool = False,
         forbid_extra_keys: bool = False,
         type_overrides: Mapping[type, AttributeOverride] = {},
@@ -1063,7 +1065,9 @@ class Converter(BaseConverter):
             unstructure_fallback_factory=unstructure_fallback_factory,
             structure_fallback_factory=structure_fallback_factory,
         )
+        # TODO: error if both `omit_if` and `omit_if_default` are specified
         self.omit_if_default = omit_if_default
+        self.omit_if = omit_if
         self.forbid_extra_keys = forbid_extra_keys
         self.type_overrides = dict(type_overrides)
 
@@ -1244,7 +1248,7 @@ class Converter(BaseConverter):
         }
 
         return make_dict_unstructure_fn(
-            cl, self, _cattrs_omit_if_default=self.omit_if_default, **attrib_overrides
+            cl, self, _cattrs_omit_if_default=self.omit_if_default, _cattrs_omit_if=self.omit_if, **attrib_overrides
         )
 
     def gen_unstructure_optional(self, cl: type[T]) -> Callable[[T], Any]:
@@ -1361,6 +1365,7 @@ class Converter(BaseConverter):
         self,
         dict_factory: Callable[[], Any] | None = None,
         unstruct_strat: UnstructureStrategy | None = None,
+        omit_if: Callable[[Any, Any, Any], bool] | None = None,
         omit_if_default: bool | None = None,
         forbid_extra_keys: bool | None = None,
         type_overrides: Mapping[type, AttributeOverride] | None = None,
@@ -1384,6 +1389,7 @@ class Converter(BaseConverter):
                     else UnstructureStrategy.AS_TUPLE
                 )
             ),
+            omit_if if omit_if is not None else self.omit_if,
             omit_if_default if omit_if_default is not None else self.omit_if_default,
             (
                 forbid_extra_keys
