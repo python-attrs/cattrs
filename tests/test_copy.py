@@ -103,8 +103,8 @@ def test_copy_converter(
     assert c._dict_factory == copy._dict_factory
     assert c.omit_if == copy.omit_if
 
-    # another_copy = c.copy(omit_if_default=not omit_if_default)
-    # assert c.omit_if != another_copy.omit_if
+    another_copy = c.copy(omit_if_default=not omit_if_default)
+    assert c.omit_if_default != another_copy.omit_if_default
 
 
 @given(
