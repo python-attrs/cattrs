@@ -285,43 +285,47 @@ def test_omitting_none(converter: BaseConverter):
     assert not hasattr(converter.structure({"a": 2}, A), "b")
 
 
-def test_omit_callable_unstructure(converter: BaseConverter):
+def test_omit_callable_unstructure():
     """Test omitting via callable."""
 
     @define
     class Example:
         a: int
         b: int | None
-        c: int = 123
-        d: set = field(factory=set)
-        e: int = field()
+        c: int
+        d: int = 123
+        e: set = field(factory=set)
+        f: int = field()
 
-        @e.default
-        def e_default(self) -> int:
-            return self.c
+        @f.default
+        def f_default(self) -> int:
+            return self.d
 
-        overridden: bool = None
+        overridden: None = None
 
-    def default_or_none(instance, attribute, value):
+    converter = Converter()
+
+    def default_or_none(instance, attribute, value) -> bool:
         if value is None:
             return True
         if isinstance(attribute.default, Factory):
             if attribute.default.takes_self:
                 return value == attribute.default.factory(instance)
             return value == attribute.default.factory()
-        return value == attribute.default
-
+        return value == attribute.default    
+    
     converter.register_unstructure_hook(
         Example,
         make_dict_unstructure_fn(
             Example,
             converter,
             _cattrs_omit_if=default_or_none,
+            c=override(omit_if=lambda inst, attr, value: value < 0),
             overridden=override(omit_if=False),
         ),
     )
 
-    assert converter.unstructure(Example(100, None)) == {"a": 100, "overridden": None}
+    assert converter.unstructure(Example(100, None, c=-100, f=123)) == {"a": 100, "overridden": None}
 
 
 @pytest.mark.parametrize("detailed_validation", [True, False])
