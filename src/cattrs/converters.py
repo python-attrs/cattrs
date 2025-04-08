@@ -13,6 +13,7 @@ from typing import Any, Optional, Tuple, TypeVar, overload
 
 from attrs import Attribute, resolve_types
 from attrs import has as attrs_has
+from typing_extensions import Self
 
 from ._compat import (
     ANIES,
@@ -981,7 +982,7 @@ class BaseConverter:
         unstruct_strat: UnstructureStrategy | None = None,
         prefer_attrib_converters: bool | None = None,
         detailed_validation: bool | None = None,
-    ) -> BaseConverter:
+    ) -> Self:
         """Create a copy of the converter, keeping all existing custom hooks.
 
         :param detailed_validation: Whether to use a slightly slower mode for detailed
@@ -1367,7 +1368,7 @@ class Converter(BaseConverter):
         unstruct_collection_overrides: Mapping[type, UnstructureHook] | None = None,
         prefer_attrib_converters: bool | None = None,
         detailed_validation: bool | None = None,
-    ) -> Converter:
+    ) -> Self:
         """Create a copy of the converter, keeping all existing custom hooks.
 
         :param detailed_validation: Whether to use a slightly slower mode for detailed
