@@ -17,11 +17,11 @@ from msgspec.json import Encoder, decode
 from .._compat import fields, get_args, get_origin, is_bare, is_mapping, is_sequence
 from ..cols import is_namedtuple
 from ..converters import BaseConverter, Converter
-from ..dispatch import UnstructureHook
 from ..fns import identity
 from ..gen import make_hetero_tuple_unstructure_fn
 from ..literals import is_literal_containing_enums
 from ..strategies import configure_union_passthrough
+from ..types import UnstructureHook
 from . import literals_with_enums_unstructure_factory, wrap
 
 T = TypeVar("T")
@@ -109,7 +109,7 @@ def configure_passthroughs(converter: Converter) -> None:
     )
     converter.register_unstructure_hook_factory(
         is_dataclass,
-        partial(msgspec_attrs_unstructure_factory, msgspec_skips_private=False),
+        partial(msgspec_attrs_unstructure_factory, msgspec_skips_private=True),
     )
     converter.register_unstructure_hook_factory(
         is_namedtuple, namedtuple_unstructure_factory

@@ -1,6 +1,6 @@
-from typing import Protocol, TypeVar
+from collections.abc import Callable
+from typing import Any, Protocol, TypeAlias, TypeVar
 
-__all__ = ["SimpleStructureHook"]
 __all__ = [
     "Hook",
     "HookFactory",
@@ -8,6 +8,7 @@ __all__ = [
     "StructuredValue",
     "StructureHook",
     "TargetType",
+    "Unavailable",
     "UnstructuredValue",
     "UnstructureHook",
 ]
@@ -30,3 +31,7 @@ class SimpleStructureHook(Protocol[In, T]):
     """A structure hook with an optional (ignored) second argument."""
 
     def __call__(self, _: In, /, cl=...) -> T: ...
+
+
+class Unavailable:
+    """Placeholder class to substitute missing converter class on import."""
