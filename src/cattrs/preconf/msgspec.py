@@ -109,7 +109,7 @@ def configure_passthroughs(converter: Converter) -> None:
     )
     converter.register_unstructure_hook_factory(
         is_dataclass,
-        partial(msgspec_attrs_unstructure_factory, msgspec_skips_private=True),
+        partial(msgspec_attrs_unstructure_factory, msgspec_skips_private=False),
     )
     converter.register_unstructure_hook_factory(
         is_namedtuple, namedtuple_unstructure_factory
