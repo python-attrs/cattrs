@@ -63,15 +63,7 @@ from .cols import (
     namedtuple_unstructure_factory,
 )
 from .disambiguators import create_default_dis_func, is_supported_union
-from .dispatch import (
-    HookFactory,
-    MultiStrategyDispatch,
-    StructuredValue,
-    StructureHook,
-    TargetType,
-    UnstructuredValue,
-    UnstructureHook,
-)
+from .dispatch import MultiStrategyDispatch
 from .errors import (
     IterableValidationError,
     IterableValidationNote,
@@ -90,6 +82,14 @@ from .gen import (
 from .gen.typeddicts import make_dict_structure_fn as make_typeddict_dict_struct_fn
 from .gen.typeddicts import make_dict_unstructure_fn as make_typeddict_dict_unstruct_fn
 from .literals import is_literal_containing_enums
+from .types import (
+    HookFactory,
+    StructuredValue,
+    StructureHook,
+    TargetType,
+    UnstructuredValue,
+    UnstructureHook,
+)
 from .typealiases import (
     get_type_alias_base,
     is_type_alias,

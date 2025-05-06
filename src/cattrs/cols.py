@@ -28,7 +28,6 @@ from ._compat import (
     is_subclass,
 )
 from ._compat import is_mutable_set as is_set
-from .dispatch import StructureHook, UnstructureHook
 from .errors import IterableValidationError, IterableValidationNote
 from .fns import identity
 from .gen import (
@@ -41,6 +40,7 @@ from .gen import (
     mapping_unstructure_factory,
 )
 from .gen import make_iterable_unstructure_fn as iterable_unstructure_factory
+from .types import StructureHook, UnstructureHook
 
 if TYPE_CHECKING:
     from .converters import BaseConverter

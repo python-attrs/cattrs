@@ -4,8 +4,9 @@ from enum import Enum
 from typing import Any, Callable, TypeVar, get_args
 
 from .._compat import is_subclass
-from ..converters import Converter, UnstructureHook
+from ..converters import Converter
 from ..fns import identity
+from ..types import UnstructureHook
 
 if sys.version_info[:2] < (3, 10):
     from typing_extensions import ParamSpec

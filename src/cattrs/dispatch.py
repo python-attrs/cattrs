@@ -5,21 +5,11 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, TypeVar
 
 from attrs import Factory, define
 
-from ._compat import TypeAlias
 from .fns import Predicate
+from .types import Hook, HookFactory, TargetType
 
 if TYPE_CHECKING:
     from .converters import BaseConverter
-
-TargetType: TypeAlias = Any
-UnstructuredValue: TypeAlias = Any
-StructuredValue: TypeAlias = Any
-
-StructureHook: TypeAlias = Callable[[UnstructuredValue, TargetType], StructuredValue]
-UnstructureHook: TypeAlias = Callable[[StructuredValue], UnstructuredValue]
-
-Hook = TypeVar("Hook", StructureHook, UnstructureHook)
-HookFactory: TypeAlias = Callable[[TargetType], Hook]
 
 
 @define
