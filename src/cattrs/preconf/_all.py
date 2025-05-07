@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Literal, TypeAlias, TYPE_CHECKING, TypeIs, Union, get_args, overload
+from typing import TYPE_CHECKING, Literal, TypeAlias, TypeIs, Union, overload
 
 from ..converters import Converter
 from ..types import Unavailable
@@ -14,34 +14,34 @@ if TYPE_CHECKING:
         from cattrs.preconf.cbor2 import Cbor2Converter
     except ModuleNotFoundError:
         Cbor2Converter = Unavailable
-    
+
     from cattrs.preconf.json import JsonConverter
-    
+
     try:
         from cattrs.preconf.msgpack import MsgpackConverter
     except ModuleNotFoundError:
         MsgpackConverter = Unavailable
-    
+
     try:
         from cattrs.preconf.msgspec import MsgspecJsonConverter
     except ModuleNotFoundError:
         MsgspecJsonConverter = Unavailable
-    
+
     try:
         from cattrs.preconf.orjson import OrjsonConverter
     except ModuleNotFoundError:
         OrjsonConverter = Unavailable
-    
+
     try:
         from cattrs.preconf.pyyaml import PyyamlConverter
     except ModuleNotFoundError:
         PyyamlConverter = Unavailable
-    
+
     try:
         from cattrs.preconf.tomlkit import TomlkitConverter
     except ModuleNotFoundError:
         TomlkitConverter = Unavailable
-    
+
     try:
         from cattrs.preconf.ujson import UjsonConverter
     except ModuleNotFoundError:
@@ -147,7 +147,3 @@ def has_format(converter: C, fmt: ConverterFormat | str | Sequence[ConverterForm
         return isinstance(converter, UjsonConverter)
 
     return False
-
-
-def  is_preconfigured(converter: Converter) -> bool:
-    return any(has_format(converter, fmt) for fmt in get_args(ConverterFormat))

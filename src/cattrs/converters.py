@@ -83,20 +83,20 @@ from .gen import (
 from .gen.typeddicts import make_dict_structure_fn as make_typeddict_dict_struct_fn
 from .gen.typeddicts import make_dict_unstructure_fn as make_typeddict_dict_unstruct_fn
 from .literals import is_literal_containing_enums
+from .typealiases import (
+    get_type_alias_base,
+    is_type_alias,
+    type_alias_structure_factory,
+)
 from .types import (
     HookFactory,
+    SimpleStructureHook,
     StructuredValue,
     StructureHook,
     TargetType,
     UnstructuredValue,
     UnstructureHook,
 )
-from .typealiases import (
-    get_type_alias_base,
-    is_type_alias,
-    type_alias_structure_factory,
-)
-from .types import SimpleStructureHook
 
 __all__ = ["BaseConverter", "Converter", "GenConverter", "UnstructureStrategy"]
 

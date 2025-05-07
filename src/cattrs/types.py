@@ -5,12 +5,12 @@ __all__ = [
     "Hook",
     "HookFactory",
     "SimpleStructureHook",
-    "StructuredValue",
     "StructureHook",
+    "StructuredValue",
     "TargetType",
     "Unavailable",
-    "UnstructuredValue",
     "UnstructureHook",
+    "UnstructuredValue",
 ]
 
 In = TypeVar("In")
