@@ -37,9 +37,9 @@ if python_implementation() != "PyPy":
 else:
     msgspec = "msgspec"
     orjson = "orjson"
+# isort: on
 
 PRECONF_MODULES = [bson, cbor2, json, msgpack, msgspec, orjson, pyyaml, tomlkit, ujson]
-# isort: on
 
 
 @define

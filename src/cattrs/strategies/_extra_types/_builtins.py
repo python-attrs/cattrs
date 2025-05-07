@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from contextlib import suppress
 from functools import cache, partial
 from numbers import Real
 
@@ -35,15 +36,12 @@ def structure_complex(obj: object, _) -> complex:
         and len(obj) == 2
         and all(isinstance(x, (Real, str)) for x in obj)
     ):
-        try:
-            # for all converters, string inf and nan are allowed
-            obj = [
+        with suppress(ValueError):
+            obj = [  # for all converters, string inf and nan are allowed
                 float(x) if (isinstance(x, str) and x.lower() in SPECIAL_STR) else x
                 for x in obj
             ]
             return complex(*obj)
-        except ValueError:
-            pass  # to error
     raise_unexpected_structure(complex, type(obj))  # noqa: RET503 # NoReturn
 
 
