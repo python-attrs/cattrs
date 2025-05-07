@@ -44,12 +44,11 @@ def structure_complex(obj: object, _) -> complex:
             return complex(*obj)
         except ValueError:
             pass  # to error
-    raise_unexpected_structure(complex, type(obj))  # noqa: RET503 # NoReturn not handled by Ruff
+    raise_unexpected_structure(complex, type(obj))  # noqa: RET503 # NoReturn
 
 
 def unstructure_complex(
-    value: complex,
-    special_as_string: bool = False,
+    value: complex, special_as_string: bool = False
 ) -> list[float | str]:
     return [
         str(x) if (x in SPECIAL and special_as_string) else x

@@ -20,9 +20,11 @@ def identity(obj: T) -> T:
 
 def bypass(target: type, structure_hook: StructureHook) -> StructureHook:
     """Bypass structure hook when given object of target type."""
+
     @wraps(structure_hook)
     def wrapper(obj: UnstructuredValue, cl: TargetType) -> StructuredValue:
         return obj if type(obj) is target else structure_hook(obj, cl)
+
     return wrapper
 
 

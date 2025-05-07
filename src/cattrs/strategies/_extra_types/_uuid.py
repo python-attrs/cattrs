@@ -7,7 +7,7 @@ from ...preconf import has_format
 from ...types import StructureHook, UnstructureHook
 from . import raise_unexpected_structure
 
-SUPPORTS_UUID = ('bson', 'cbor', 'msgspec', 'orjson')
+SUPPORTS_UUID = ("bson", "cbor", "msgspec", "orjson")
 
 
 @cache
@@ -31,4 +31,4 @@ def structure_uuid(value: bytes | int | str, _) -> UUID:
         return UUID(int=value)
     if isinstance(value, str):
         return UUID(value)
-    raise_unexpected_structure(UUID, type(value))  # noqa: RET503 # NoReturn not handled by Ruff
+    raise_unexpected_structure(UUID, type(value))  # noqa: RET503 # NoReturn
