@@ -7,7 +7,7 @@ from ...fns import identity
 from ...preconf import has_format
 from . import raise_unexpected_structure
 
-SUPPORTS_UUID = ("bson", "cbor", "msgspec", "orjson")
+SUPPORTS_UUID = ("bson", "cbor", "msgspec-json", "orjson")
 
 
 @cache

@@ -67,7 +67,7 @@ ConverterFormat: TypeAlias = Literal[
     "cbor2",
     "json",
     "msgpack",
-    "msgspec",
+    "msgspec-json",
     "orjson",
     "pyyaml",
     "tomlkit",
@@ -87,7 +87,7 @@ def has_format(converter: C, fmt: Literal["json"]) -> TypeIs["JsonConverter"]: .
 def has_format(converter: C, fmt: Literal["msgpack"]) -> TypeIs["MsgpackConverter"]: ...
 @overload
 def has_format(
-    converter: C, fmt: Literal["msgspec"]
+    converter: C, fmt: Literal["msgspec-json"]
 ) -> TypeIs["MsgspecJsonConverter"]: ...
 @overload
 def has_format(converter: C, fmt: Literal["orjson"]) -> TypeIs["OrjsonConverter"]: ...
@@ -123,7 +123,7 @@ def has_format(
 
         return isinstance(converter, MsgpackConverter)
 
-    if "msgspec" in fmt and converter.__class__.__name__ == "MsgspecJsonConverter":
+    if "msgspec-json" in fmt and converter.__class__.__name__ == "MsgspecJsonConverter":
         from .msgspec import MsgspecJsonConverter
 
         return isinstance(converter, MsgspecJsonConverter)

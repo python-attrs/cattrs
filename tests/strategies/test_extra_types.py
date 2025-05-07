@@ -133,7 +133,7 @@ def test_dumpload_attrs(preconf_converter, item: Extras):
         )
         dumps = partial(preconf_converter.dumps, codec_options=codec_options)
         loads = partial(preconf_converter.loads, codec_options=codec_options)
-    elif has_format(preconf_converter, "msgspec"):
+    elif has_format(preconf_converter, "msgspec-json"):
         # MsgspecJsonConverter can be used with dumps/loads factories for extra types
         dumps = preconf_converter.get_dumps_hook(Extras)
         loads = lambda v, cl: preconf_converter.get_loads_hook(cl)(v)  # noqa: E731

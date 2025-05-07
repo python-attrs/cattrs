@@ -8,7 +8,7 @@ from ...dispatch import StructureHook, UnstructureHook
 from ...preconf import has_format
 from . import raise_unexpected_structure
 
-MISSING_SPECIAL_FLOATS = ("msgspec", "orjson")
+MISSING_SPECIAL_FLOATS = ("msgspec-json", "orjson")
 
 SPECIAL = (float("inf"), float("-inf"), float("nan"))
 SPECIAL_STR = ("inf", "+inf", "-inf", "infinity", "+infinity", "-infinity", "nan")
