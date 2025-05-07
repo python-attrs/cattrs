@@ -1,10 +1,10 @@
-from functools import cache
+from functools import cache, wraps
 from importlib import import_module
 from types import ModuleType
 from typing import NoReturn
 
 from ...converters import Converter
-from ...fns import bypass
+from ...dispatch import StructuredValue, StructureHook, TargetType, UnstructuredValue
 
 
 def register_extra_types(converter: Converter, *classes: type) -> None:
@@ -24,6 +24,16 @@ def register_extra_types(converter: Converter, *classes: type) -> None:
         if unstruct_hook is None:
             raise_unsupported(cl)
         converter.register_unstructure_hook(cl, unstruct_hook)
+
+
+def bypass(target: type, structure_hook: StructureHook) -> StructureHook:
+    """Bypass structure hook when given object of target type."""
+
+    @wraps(structure_hook)
+    def wrapper(obj: UnstructuredValue, cl: TargetType) -> StructuredValue:
+        return obj if type(obj) is target else structure_hook(obj, cl)
+
+    return wrapper
 
 
 @cache

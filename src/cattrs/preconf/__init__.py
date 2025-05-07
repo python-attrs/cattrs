@@ -5,8 +5,8 @@ from typing import Any, Callable, TypeVar, get_args
 
 from .._compat import is_subclass
 from ..converters import Converter
+from ..dispatch import UnstructureHook
 from ..fns import identity
-from ..types import UnstructureHook
 from ._all import ConverterFormat as ConverterFormat
 from ._all import PreconfiguredConverter as PreconfiguredConverter
 from ._all import has_format as has_format

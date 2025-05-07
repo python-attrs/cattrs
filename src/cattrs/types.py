@@ -1,30 +1,9 @@
-from collections.abc import Callable
-from typing import Any, Protocol, TypeAlias, TypeVar
+from typing import Protocol, TypeVar
 
-__all__ = [
-    "Hook",
-    "HookFactory",
-    "SimpleStructureHook",
-    "StructureHook",
-    "StructuredValue",
-    "TargetType",
-    "Unavailable",
-    "UnstructureHook",
-    "UnstructuredValue",
-]
+__all__ = ["SimpleStructureHook", "Unavailable"]
 
 In = TypeVar("In")
 T = TypeVar("T")
-
-TargetType: TypeAlias = Any
-UnstructuredValue: TypeAlias = Any
-StructuredValue: TypeAlias = Any
-
-StructureHook: TypeAlias = Callable[[UnstructuredValue, TargetType], StructuredValue]
-UnstructureHook: TypeAlias = Callable[[StructuredValue], UnstructuredValue]
-
-Hook = TypeVar("Hook", StructureHook, UnstructureHook)
-HookFactory: TypeAlias = Callable[[TargetType], Hook]
 
 
 class SimpleStructureHook(Protocol[In, T]):
@@ -34,4 +13,4 @@ class SimpleStructureHook(Protocol[In, T]):
 
 
 class Unavailable:
-    """Placeholder class to substitute missing converter class on import."""
+    """Placeholder class to substitute missing class on import."""

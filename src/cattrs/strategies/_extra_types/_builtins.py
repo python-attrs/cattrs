@@ -3,8 +3,8 @@ from functools import cache, partial
 from numbers import Real
 
 from ...converters import Converter
+from ...dispatch import StructureHook, UnstructureHook
 from ...preconf import has_format
-from ...types import StructureHook, UnstructureHook
 from . import raise_unexpected_structure
 
 MISSING_SPECIAL_FLOATS = ("msgspec", "orjson")

@@ -1,15 +1,24 @@
 from __future__ import annotations
 
 from functools import lru_cache, singledispatch
-from typing import TYPE_CHECKING, Any, Callable, Generic, Literal
+from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, TypeAlias, TypeVar
 
 from attrs import Factory, define
 
 from .fns import Predicate
-from .types import Hook, HookFactory, TargetType
 
 if TYPE_CHECKING:
     from .converters import BaseConverter
+
+TargetType: TypeAlias = Any
+UnstructuredValue: TypeAlias = Any
+StructuredValue: TypeAlias = Any
+
+StructureHook: TypeAlias = Callable[[UnstructuredValue, TargetType], StructuredValue]
+UnstructureHook: TypeAlias = Callable[[StructuredValue], UnstructuredValue]
+
+Hook = TypeVar("Hook", StructureHook, UnstructureHook)
+HookFactory: TypeAlias = Callable[[TargetType], Hook]
 
 
 @define

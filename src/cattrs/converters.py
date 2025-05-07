@@ -64,7 +64,15 @@ from .cols import (
     namedtuple_unstructure_factory,
 )
 from .disambiguators import create_default_dis_func, is_supported_union
-from .dispatch import MultiStrategyDispatch
+from .dispatch import (
+    HookFactory,
+    MultiStrategyDispatch,
+    StructuredValue,
+    StructureHook,
+    TargetType,
+    UnstructuredValue,
+    UnstructureHook,
+)
 from .errors import (
     IterableValidationError,
     IterableValidationNote,
@@ -88,15 +96,7 @@ from .typealiases import (
     is_type_alias,
     type_alias_structure_factory,
 )
-from .types import (
-    HookFactory,
-    SimpleStructureHook,
-    StructuredValue,
-    StructureHook,
-    TargetType,
-    UnstructuredValue,
-    UnstructureHook,
-)
+from .types import SimpleStructureHook
 
 __all__ = ["BaseConverter", "Converter", "GenConverter", "UnstructureStrategy"]
 

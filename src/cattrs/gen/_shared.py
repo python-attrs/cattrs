@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Any
 from attrs import NOTHING, Attribute, Factory
 
 from .._compat import is_bare_final
+from ..dispatch import StructureHook
 from ..errors import StructureHandlerNotFoundError
 from ..fns import raise_error
-from ..types import StructureHook
 
 if TYPE_CHECKING:
     from ..converters import BaseConverter

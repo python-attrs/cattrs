@@ -2,9 +2,9 @@ from functools import cache
 from uuid import UUID
 
 from ...converters import Converter
+from ...dispatch import StructureHook, UnstructureHook
 from ...fns import identity
 from ...preconf import has_format
-from ...types import StructureHook, UnstructureHook
 from . import raise_unexpected_structure
 
 SUPPORTS_UUID = ("bson", "cbor", "msgspec", "orjson")

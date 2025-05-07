@@ -10,10 +10,10 @@ from bson import DEFAULT_CODEC_OPTIONS, CodecOptions, Int64, ObjectId, decode, e
 from .._compat import is_mapping, is_subclass
 from ..cols import mapping_structure_factory
 from ..converters import BaseConverter, Converter
+from ..dispatch import StructureHook
 from ..fns import identity
 from ..literals import is_literal_containing_enums
 from ..strategies import configure_union_passthrough
-from ..types import StructureHook
 from . import (
     is_primitive_enum,
     literals_with_enums_unstructure_factory,

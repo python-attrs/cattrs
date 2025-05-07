@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING, Any
 
 from ._compat import is_generic
 from ._generics import deep_copy_with
+from .dispatch import StructureHook
 from .gen._generics import generate_mapping
-from .types import StructureHook
 
 if TYPE_CHECKING:
     from .converters import BaseConverter

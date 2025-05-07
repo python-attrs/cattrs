@@ -19,6 +19,7 @@ from .._compat import (
     is_generic,
 )
 from .._generics import deep_copy_with
+from ..dispatch import UnstructureHook
 from ..errors import (
     AttributeValidationNote,
     ClassValidationError,
@@ -28,7 +29,7 @@ from ..errors import (
     StructureHandlerNotFoundError,
 )
 from ..fns import identity
-from ..types import SimpleStructureHook, UnstructureHook
+from ..types import SimpleStructureHook
 from ._consts import AttributeOverride, already_generating, neutral
 from ._generics import generate_mapping
 from ._lc import generate_unique_filename

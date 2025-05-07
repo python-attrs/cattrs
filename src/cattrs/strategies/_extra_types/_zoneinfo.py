@@ -1,7 +1,7 @@
 from functools import cache
 from zoneinfo import ZoneInfo
 
-from ...types import StructureHook, UnstructureHook
+from ...dispatch import StructureHook, UnstructureHook
 
 
 @cache
