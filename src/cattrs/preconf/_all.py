@@ -71,33 +71,33 @@ C: TypeAlias = Converter | Unavailable
 
 
 @overload
-def has_type(converter: C, fmt: Literal["bson"]) -> TypeIs["BsonConverter"]:
+def has_format(converter: C, fmt: Literal["bson"]) -> TypeIs["BsonConverter"]:
     ...
 @overload
-def has_type(converter: C, fmt: Literal["cbor2"]) -> TypeIs["Cbor2Converter"]:
+def has_format(converter: C, fmt: Literal["cbor2"]) -> TypeIs["Cbor2Converter"]:
     ...
 @overload
-def has_type(converter: C, fmt: Literal["json"]) -> TypeIs["JsonConverter"]:
+def has_format(converter: C, fmt: Literal["json"]) -> TypeIs["JsonConverter"]:
     ...
 @overload
-def has_type(converter: C, fmt: Literal["msgpack"]) -> TypeIs["MsgpackConverter"]:
+def has_format(converter: C, fmt: Literal["msgpack"]) -> TypeIs["MsgpackConverter"]:
     ...
 @overload
-def has_type(converter: C, fmt: Literal["msgspec"]) -> TypeIs["MsgspecJsonConverter"]:
+def has_format(converter: C, fmt: Literal["msgspec"]) -> TypeIs["MsgspecJsonConverter"]:
     ...
 @overload
-def has_type(converter: C, fmt: Literal["orjson"]) -> TypeIs["OrjsonConverter"]:
+def has_format(converter: C, fmt: Literal["orjson"]) -> TypeIs["OrjsonConverter"]:
     ...
 @overload
-def has_type(converter: C, fmt: Literal["pyyaml"]) -> TypeIs["PyyamlConverter"]:
+def has_format(converter: C, fmt: Literal["pyyaml"]) -> TypeIs["PyyamlConverter"]:
     ...
 @overload
-def has_type(converter: C, fmt: Literal["tomlkit"]) -> TypeIs["TomlkitConverter"]:
+def has_format(converter: C, fmt: Literal["tomlkit"]) -> TypeIs["TomlkitConverter"]:
     ...
 @overload
-def has_type(converter: C, fmt: Literal["ujson"]) -> TypeIs["UjsonConverter"]:
+def has_format(converter: C, fmt: Literal["ujson"]) -> TypeIs["UjsonConverter"]:
     ...
-def has_type(converter: C, fmt: ConverterFormat | str | Sequence[ConverterFormat]) -> bool:
+def has_format(converter: C, fmt: ConverterFormat | str | Sequence[ConverterFormat]) -> bool:
     if isinstance(fmt, str):
         fmt = (fmt,)
 
@@ -150,4 +150,4 @@ def has_type(converter: C, fmt: ConverterFormat | str | Sequence[ConverterFormat
 
 
 def  is_preconfigured(converter: Converter) -> bool:
-    return any(has_type(converter, fmt) for fmt in get_args(ConverterFormat))
+    return any(has_format(converter, fmt) for fmt in get_args(ConverterFormat))
