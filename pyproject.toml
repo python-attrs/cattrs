@@ -139,15 +139,15 @@ select = [
     "I",   # isort
 ]
 ignore = [
+    "B006",   # mutable argument defaults
+    "DTZ001", # datetimes in tests
+    "DTZ006", # datetimes in tests
     "E501",   # line length is handled by black
+    "PGH003", # leave my type: ignores alone
     "RUF001", # leave my smart characters alone
     "S101",   # assert
     "S307",   # hands off my eval
     "SIM300", # Yoda rocks in asserts
-    "PGH003", # leave my type: ignores alone
-    "B006",   # mutable argument defaults
-    "DTZ001", # datetimes in tests
-    "DTZ006", # datetimes in tests
     "UP006",  # We support old typing constructs at runtime
     "UP035",  # We support old typing constructs at runtime
 ]
