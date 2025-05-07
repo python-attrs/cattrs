@@ -4,8 +4,7 @@ from enum import Enum
 from typing import Any, Callable, TypeVar, get_args
 
 from .._compat import is_subclass
-from ..converters import Converter
-from ..dispatch import UnstructureHook
+from ..converters import Converter, UnstructureHook
 from ..fns import identity
 from ._all import ConverterFormat as ConverterFormat
 from ._all import PreconfiguredConverter as PreconfiguredConverter

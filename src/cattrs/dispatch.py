@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from functools import lru_cache, singledispatch
-from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, TypeVar
 
 from attrs import Factory, define
 
+from ._compat import TypeAlias
 from .fns import Predicate
 
 if TYPE_CHECKING:
