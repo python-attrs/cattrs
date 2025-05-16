@@ -64,6 +64,17 @@ def test_type_aliases(converter: BaseConverter):
     assert converter.unstructure(100, my_other_int) == 80
 
 
+def test_type_aliases_simple_hooks(converter: BaseConverter):
+    """PEP 695 type aliases work with `register_un/structure_hook`."""
+    type my_other_int = int
+
+    converter.register_structure_hook(my_other_int, lambda v, _: v + 10)
+    converter.register_unstructure_hook(my_other_int, lambda v: v - 20)
+
+    assert converter.structure(1, my_other_int) == 11
+    assert converter.unstructure(100, my_other_int) == 80
+
+
 def test_type_aliases_overwrite_base_hooks(converter: BaseConverter):
     """Overwriting base hooks should affect type aliases."""
     converter.register_structure_hook(int, lambda v, _: v + 10)
