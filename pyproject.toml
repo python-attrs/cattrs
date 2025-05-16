@@ -19,7 +19,7 @@ docs = [
     "furo>=2024.1.29",
     "sphinx-copybutton>=0.5.2",
     "myst-parser>=1.0.0",
-    "pendulum>=2.1.2",
+    "pendulum>=3.1.0",
     "sphinx-autobuild",
 ]
 bench = [

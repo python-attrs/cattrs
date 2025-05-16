@@ -353,6 +353,8 @@ class BaseConverter:
             resolve_types(cls)
         if is_union_type(cls):
             self._unstructure_func.register_func_list([(lambda t: t == cls, func)])
+        elif is_type_alias(cls):
+            self._unstructure_func.register_func_list([(lambda t: t is cls, func)])
         elif get_newtype_base(cls) is not None:
             # This is a newtype, so we handle it specially.
             self._unstructure_func.register_func_list([(lambda t: t is cls, func)])
@@ -488,6 +490,9 @@ class BaseConverter:
         if is_union_type(cl):
             self._union_struct_registry[cl] = func
             self._structure_func.clear_cache()
+        elif is_type_alias(cl):
+            # Type aliases are special-cased.
+            self._structure_func.register_func_list([(lambda t: t is cl, func)])
         elif get_newtype_base(cl) is not None:
             # This is a newtype, so we handle it specially.
             self._structure_func.register_func_list([(lambda t: t is cl, func)])

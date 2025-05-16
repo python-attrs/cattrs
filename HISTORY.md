@@ -22,6 +22,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - [`typing.Self`](https://docs.python.org/3/library/typing.html#typing.Self) is now supported in _attrs_ classes, dataclasses, TypedDicts and the dict NamedTuple factories.
   See [`typing.Self`](https://catt.rs/en/latest/defaulthooks.html#typing-self) for details.
   ([#299](https://github.com/python-attrs/cattrs/issues/299) [#627](https://github.com/python-attrs/cattrs/pull/627))
+- PEP 695 type aliases can now be used with {meth}`Converter.register_structure_hook` and {meth}`Converter.register_unstructure_hook`.
+  Previously, they required the use of {meth}`Converter.register_structure_hook_func` (which is still supported).
 - Expose {func}`cattrs.cols.mapping_unstructure_factory` through {mod}`cattrs.cols`.
 - Some `defaultdicts` are now [supported by default](https://catt.rs/en/latest/defaulthooks.html#defaultdicts), and
   {func}`cattrs.cols.is_defaultdict` and {func}`cattrs.cols.defaultdict_structure_factory` are exposed through {mod}`cattrs.cols`.
