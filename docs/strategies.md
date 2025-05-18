@@ -67,6 +67,10 @@ This also means union members can be reused in multiple unions easily.
 {'a': 1}
 ```
 
+```{versionchanged} 25.1.0
+The strategy can also be called with a type alias of a union.
+```
+
 ### Real-life Case Study
 
 The Apple App Store supports [server callbacks](https://developer.apple.com/documentation/appstoreservernotifications), by which Apple sends a JSON payload to a URL of your choice.

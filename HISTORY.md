@@ -22,14 +22,17 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - [`typing.Self`](https://docs.python.org/3/library/typing.html#typing.Self) is now supported in _attrs_ classes, dataclasses, TypedDicts and the dict NamedTuple factories.
   See [`typing.Self`](https://catt.rs/en/latest/defaulthooks.html#typing-self) for details.
   ([#299](https://github.com/python-attrs/cattrs/issues/299) [#627](https://github.com/python-attrs/cattrs/pull/627))
-- PEP 695 type aliases can now be used with {meth}`Converter.register_structure_hook` and {meth}`Converter.register_unstructure_hook`.
-  Previously, they required the use of {meth}`Converter.register_structure_hook_func` (which is still supported).
+- PEP 695 type aliases can now be used with {meth}`BaseConverter.register_structure_hook` and {meth}`BaseConverter.register_unstructure_hook`.
+  Previously, they required the use of {meth}`BaseConverter.register_structure_hook_func` (which is still supported).
+  ([#647](https://github.com/python-attrs/cattrs/pull/647))
 - Expose {func}`cattrs.cols.mapping_unstructure_factory` through {mod}`cattrs.cols`.
 - Some `defaultdicts` are now [supported by default](https://catt.rs/en/latest/defaulthooks.html#defaultdicts), and
   {func}`cattrs.cols.is_defaultdict` and {func}`cattrs.cols.defaultdict_structure_factory` are exposed through {mod}`cattrs.cols`.
   ([#519](https://github.com/python-attrs/cattrs/issues/519) [#588](https://github.com/python-attrs/cattrs/pull/588))
 - Generic PEP 695 type aliases are now supported.
   ([#611](https://github.com/python-attrs/cattrs/issues/611) [#618](https://github.com/python-attrs/cattrs/pull/618))
+- The [tagged union strategy](https://catt.rs/en/stable/strategies.html#tagged-unions-strategy) now also supports type aliases of unions.
+  ([#649](https://github.com/python-attrs/cattrs/pull/649))
 - {meth}`Converter.copy` and {meth}`BaseConverter.copy` are correctly annotated as returning `Self`.
   ([#644](https://github.com/python-attrs/cattrs/pull/644))
 - Many preconf converters (_bson_, stdlib JSON, _cbor2_, _msgpack_, _msgspec_, _orjson_, _ujson_) skip unstructuring `int` and `str` enums,

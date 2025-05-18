@@ -3,8 +3,9 @@ from typing import Any, Callable, Union
 
 from attrs import NOTHING, NothingType
 
-from cattrs import BaseConverter
-from cattrs._compat import get_newtype_base, is_literal, is_subclass, is_union_type
+from .. import BaseConverter
+from .._compat import get_newtype_base, is_literal, is_subclass, is_union_type
+from ..typealiases import is_type_alias
 
 __all__ = [
     "configure_tagged_union",
@@ -26,8 +27,8 @@ def configure_tagged_union(
     default: Union[type, NothingType] = NOTHING,
 ) -> None:
     """
-    Configure the converter so that `union` (which should be a union) is
-    un/structured with the help of an additional piece of data in the
+    Configure the converter so that `union` (which should be a union, or a type alias
+    of one) is un/structured with the help of an additional piece of data in the
     unstructured payload, the tag.
 
     :param converter: The converter to apply the strategy to.
@@ -44,7 +45,12 @@ def configure_tagged_union(
     un/structuring base strategy.
 
     .. versionadded:: 23.1.0
+
+    ..  versionchanged:: 25.1
+        Type aliases of unions are now also supported.
     """
+    if is_type_alias(union):
+        union = union.__value__
     args = union.__args__
     tag_to_hook = {}
     exact_cl_unstruct_hooks = {}
