@@ -339,6 +339,8 @@ class BaseConverter:
 
         .. versionchanged:: 24.1.0
             This method may now be used as a decorator.
+        .. versionchanged:: 25.1.0
+            Modern type aliases are now supported.
         """
         if func is None:
             # Autodetecting decorator.
@@ -477,6 +479,8 @@ class BaseConverter:
 
         .. versionchanged:: 24.1.0
             This method may now be used as a decorator.
+        .. versionchanged:: 25.1.0
+            Modern type aliases are now supported.
         """
         if func is None:
             # The autodetecting decorator.
