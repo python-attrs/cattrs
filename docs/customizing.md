@@ -19,7 +19,6 @@ the hook for `int`, which should be already present.
 ## Custom (Un-)structuring Hooks
 
 You can write your own structuring and unstructuring functions and register them for types using {meth}`Converter.register_structure_hook() <cattrs.BaseConverter.register_structure_hook>` and {meth}`Converter.register_unstructure_hook() <cattrs.BaseConverter.register_unstructure_hook>`.
-This approach is the most flexible but also requires the most amount of boilerplate.
 
 {meth}`register_structure_hook() <cattrs.BaseConverter.register_structure_hook>` and {meth}`register_unstructure_hook() <cattrs.BaseConverter.register_unstructure_hook>` use a Python [_singledispatch_](https://docs.python.org/3/library/functools.html#functools.singledispatch) under the hood.
 _singledispatch_ is powerful and fast but comes with some limitations; namely that it performs checks using `issubclass()` which doesn't work with many Python types.
@@ -30,10 +29,15 @@ Some examples of this are:
 - generics (`MyClass[int]` is not a _subclass_ of `MyClass`)
 - protocols, unless they are `runtime_checkable`
 - various modifiers, such as `Final` and `NotRequired`
-- newtypes and 3.12 type aliases
 - `typing.Annotated`
 
-... and many others. In these cases, predicate functions should be used instead.
+... and many others. In these cases, [predicate hooks](#predicate-hooks) should be used instead.
+
+Even though unions, [newtypes](https://docs.python.org/3/library/typing.html#newtype)
+and [modern type aliases](https://docs.python.org/3/library/typing.html#type-aliases)
+do not work with _singledispatch_,
+these methods have special support for these type forms and can be used with them.
+Instead of using _singledispatch_, predicate hooks will automatically be used instead.
 
 ### Use as Decorators
 

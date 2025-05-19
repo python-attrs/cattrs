@@ -3,7 +3,8 @@
 ```
 
 All _cattrs_ functionality is exposed through a {class}`cattrs.Converter` object.
-A global converter is provided for convenience as {data}`cattrs.global_converter` but more complex customizations should be performed on private instances, any number of which can be made.
+A global converter is provided for convenience as {data}`cattrs.global_converter`
+but more complex customizations should be performed on private instances, any number of which can be made.
 
 
 ## Converters and Hooks
