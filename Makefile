@@ -22,12 +22,12 @@ for line in sys.stdin:
 endef
 export PRINT_HELP_PYSCRIPT
 BROWSER := python -c "$$BROWSER_PYSCRIPT"
+TESTS ?= tests
 
 help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
 clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
-
 
 clean-build: ## remove build artifacts
 	rm -fr build/
@@ -51,9 +51,8 @@ lint: ## check style with ruff and black
 	pdm run ruff check src/ tests bench
 	pdm run black --check src tests docs/conf.py
 
-test: ## run tests quickly with the default Python
-	pdm run pytest -x --ff -n auto tests
-
+test: ## run tests quickly with the default Python; pass TESTS= for specific path
+	pdm run pytest -x --ff $(if $(filter $(TESTS),tests),-n auto ,)$(TESTS)
 
 test-all: ## run tests on every Python version with tox
 	tox
