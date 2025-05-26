@@ -46,6 +46,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#599](https://github.com/python-attrs/cattrs/pull/599))
 - Structuring TypedDicts from invalid inputs now properly raises a {class}`ClassValidationError`.
   ([#615](https://github.com/python-attrs/cattrs/issues/615) [#616](https://github.com/python-attrs/cattrs/pull/616))
+- {func} `cattrs.strategies.include_subclasses` now properly working with generic parent classes.
+  ([#649](https://github.com/python-attrs/cattrs/pull/650))
 - Replace `cattrs.gen.MappingStructureFn` with {class}`cattrs.SimpleStructureHook`.
 - Python 3.13 is now supported.
   ([#543](https://github.com/python-attrs/cattrs/pull/543) [#547](https://github.com/python-attrs/cattrs/issues/547))

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import typing
 from gc import collect
 from typing import Any, Callable, TypeVar, Union
 
@@ -11,8 +12,12 @@ from ..gen._consts import already_generating
 
 
 def _make_subclasses_tree(cl: type) -> list[type]:
+    # get class origin for accessing subclasses (see #648 for more info)
+    cls_origin = typing.get_origin(cl) or cl
     return [cl] + [
-        sscl for scl in cl.__subclasses__() for sscl in _make_subclasses_tree(scl)
+        sscl
+        for scl in cls_origin.__subclasses__()
+        for sscl in _make_subclasses_tree(scl)
     ]
 
 

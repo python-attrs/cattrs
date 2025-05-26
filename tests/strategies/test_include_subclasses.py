@@ -9,6 +9,8 @@ from cattrs import Converter, override
 from cattrs.errors import ClassValidationError, StructureHandlerNotFoundError
 from cattrs.strategies import configure_tagged_union, include_subclasses
 
+T = typing.TypeVar("T")
+
 
 @define
 class Parent:
@@ -412,3 +414,21 @@ def test_unsupported_class(genconverter: Converter):
 
     with pytest.raises(StructureHandlerNotFoundError):
         include_subclasses(NewParent, genconverter)
+
+
+def test_parents_with_generics(genconverter: Converter):
+    """Ensure proper handling of generic parents #648."""
+
+    @define
+    class GenericParent(typing.Generic[T]):
+        p: T
+
+    @define
+    class Child1G(GenericParent[str]):
+        c: str
+
+    include_subclasses(GenericParent[str], genconverter)
+
+    assert genconverter.structure({"p": 5, "c": 5}, GenericParent[str]) == Child1G(
+        "5", "5"
+    )
