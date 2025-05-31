@@ -11,7 +11,7 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
-## 25.1.0 (UNRELEASED)
+## 25.1.0 (2025-05-31)
 
 - **Potentially breaking**: The converters raise {class}`StructureHandlerNotFoundError` more eagerly (on hook creation, instead of on hook use).
   This helps surfacing problems with missing hooks sooner.
