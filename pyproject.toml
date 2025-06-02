@@ -76,7 +76,7 @@ ujson = [
     "ujson>=5.10.0",
 ]
 orjson = [
-    "orjson>=3.10.7; implementation_name == \"cpython\"",
+    "orjson>=3.10.18; implementation_name == \"cpython\"",
 ]
 msgpack = [
     "msgpack>=1.0.5",
