@@ -41,7 +41,7 @@ def test_gen_hook_priority(converter: BaseConverter):
     assert converter.structure({"i": 1}, B) == B(2)
 
 
-@pytest.mark.parametrize("typing_cls", [Hashable, Iterable, Reversible])
+@pytest.mark.parametrize("typing_cls", [Hashable, Iterable, Reversible, Iterable[int]])
 def test_inherit_typing(converter: BaseConverter, typing_cls):
     """Stuff from typing.* resolves to runtime to collections.abc.*.
 
@@ -67,7 +67,12 @@ def test_inherit_typing(converter: BaseConverter, typing_cls):
 
 @pytest.mark.parametrize(
     "collections_abc_cls",
-    [collections.abc.Hashable, collections.abc.Iterable, collections.abc.Reversible],
+    [
+        collections.abc.Hashable,
+        collections.abc.Iterable,
+        collections.abc.Reversible,
+        collections.abc.Iterable[int],
+    ],
 )
 def test_inherit_collections_abc(converter: BaseConverter, collections_abc_cls):
     """As extension of test_inherit_typing, check if collections.abc.* work."""

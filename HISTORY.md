@@ -11,6 +11,11 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
+## 25.1.1 (UNRELEASED)
+
+- Fixed `AttributeError: no attribute '__parameters__'` while structuring attrs classes that inherit from parametrized generic aliases from `collections.abc`.
+  ([#654](https://github.com/python-attrs/cattrs/issues/654) [#655](https://github.com/python-attrs/cattrs/pull/655))
+
 ## 25.1.0 (2025-05-31)
 
 - **Potentially breaking**: The converters raise {class}`StructureHandlerNotFoundError` more eagerly (on hook creation, instead of on hook use).
