@@ -411,8 +411,10 @@ def is_generic(type) -> bool:
     """Whether `type` is a generic type."""
     # Inheriting from protocol will inject `Generic` into the MRO
     # without `__orig_bases__`.
-    return isinstance(type, (_GenericAlias, GenericAlias)) or (
-        is_subclass(type, Generic) and hasattr(type, "__orig_bases__")
+    return (
+        isinstance(type, (_GenericAlias, GenericAlias))
+        or (is_subclass(type, Generic) and hasattr(type, "__orig_bases__"))
+        or type.__class__ is Union  # On 3.14, unions are no longer typing._GenericAlias
     )
 
 

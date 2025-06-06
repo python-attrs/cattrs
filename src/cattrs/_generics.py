@@ -1,10 +1,10 @@
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, get_args
 
 from attrs import NOTHING
 from typing_extensions import Self
 
-from ._compat import copy_with, get_args, is_annotated, is_generic
+from ._compat import copy_with, is_annotated, is_generic
 
 
 def deep_copy_with(t, mapping: Mapping[str, Any], self_is=NOTHING):
