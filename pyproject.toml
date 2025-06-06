@@ -41,7 +41,7 @@ authors = [
 ]
 dependencies = [
     "attrs>=24.3.0",
-    "typing-extensions>=4.12.2",
+    "typing-extensions>=4.14.0",
     "exceptiongroup>=1.1.1; python_version < '3.11'",
 ]
 requires-python = ">=3.9"
@@ -57,7 +57,6 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
     "Typing :: Typed",
@@ -76,7 +75,7 @@ ujson = [
     "ujson>=5.10.0",
 ]
 orjson = [
-    "orjson>=3.10.18; implementation_name == \"cpython\"",
+    "orjson>=3.10.7; implementation_name == \"cpython\" and python_version < \"3.14\"",
 ]
 msgpack = [
     "msgpack>=1.0.5",
