@@ -694,7 +694,7 @@ def make_dict_structure_fn(
         bool | Literal["from_converter"]
     ) = "from_converter",
     _cattrs_detailed_validation: bool | Literal["from_converter"] = "from_converter",
-    _cattrs_use_alias: bool = False,
+    _cattrs_use_alias: bool | Literal["from_converter"] = "from_converter",
     _cattrs_include_init_false: bool = False,
     **kwargs: AttributeOverride,
 ) -> SimpleStructureHook[Mapping[str, Any], T]:
@@ -726,6 +726,9 @@ def make_dict_structure_fn(
     ..  versionchanged:: 24.1.0
         The `_cattrs_prefer_attrib_converters` parameter takes its value from the given
         converter by default.
+    ..  versionchanged:: 25.2.0
+        The `_cattrs_use_alias` parameter takes its value from the given converter
+        by default.
     """
 
     mapping = {}
