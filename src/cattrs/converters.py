@@ -1034,6 +1034,7 @@ class Converter(BaseConverter):
         "forbid_extra_keys",
         "omit_if_default",
         "type_overrides",
+        "use_alias",
     )
 
     def __init__(
@@ -1050,6 +1051,7 @@ class Converter(BaseConverter):
         structure_fallback_factory: HookFactory[StructureHook] = lambda t: raise_error(
             None, t
         ),
+        use_alias: bool = False,
     ):
         """
         :param detailed_validation: Whether to use a slightly slower mode for detailed
@@ -1064,6 +1066,7 @@ class Converter(BaseConverter):
         ..  versionchanged:: 24.2.0
             The default `structure_fallback_factory` now raises errors for missing handlers
             more eagerly, surfacing problems earlier.
+        ..  versionadded:: 25.2.0 *use_alias*
         """
         super().__init__(
             dict_factory=dict_factory,
@@ -1076,6 +1079,7 @@ class Converter(BaseConverter):
         self.omit_if_default = omit_if_default
         self.forbid_extra_keys = forbid_extra_keys
         self.type_overrides = dict(type_overrides)
+        self.use_alias = use_alias
 
         unstruct_collection_overrides = {
             get_origin(k) or k: v for k, v in unstruct_collection_overrides.items()
@@ -1299,6 +1303,7 @@ class Converter(BaseConverter):
             _cattrs_forbid_extra_keys=self.forbid_extra_keys,
             _cattrs_prefer_attrib_converters=self._prefer_attrib_converters,
             _cattrs_detailed_validation=self.detailed_validation,
+            _cattrs_use_alias=self.use_alias,
             **attrib_overrides,
         )
 
@@ -1377,6 +1382,7 @@ class Converter(BaseConverter):
         unstruct_collection_overrides: Mapping[type, UnstructureHook] | None = None,
         prefer_attrib_converters: bool | None = None,
         detailed_validation: bool | None = None,
+        use_alias: bool | None = None,
     ) -> Self:
         """Create a copy of the converter, keeping all existing custom hooks.
 
@@ -1416,6 +1422,7 @@ class Converter(BaseConverter):
                 if detailed_validation is not None
                 else self.detailed_validation
             ),
+            use_alias=(use_alias if use_alias is not None else self.use_alias),
         )
 
         self._unstructure_func.copy_to(
