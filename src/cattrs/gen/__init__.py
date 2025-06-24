@@ -74,7 +74,7 @@ def make_dict_unstructure_fn_from_attrs(
     typevar_map: dict[str, Any] = {},
     _cattrs_omit_if_default: bool = False,
     _cattrs_use_linecache: bool = True,
-    _cattrs_use_alias: bool = False,
+    _cattrs_use_alias: bool | Literal["from_converter"] = "from_converter",
     _cattrs_include_init_false: bool = False,
     **kwargs: AttributeOverride,
 ) -> Callable[[T], dict[str, Any]]:
@@ -96,6 +96,9 @@ def make_dict_unstructure_fn_from_attrs(
         will be included.
 
     ..  versionadded:: 24.1.0
+    ..  versionchanged:: 25.2.0
+        The `_cattrs_use_alias` parameter takes its value from the given converter
+        by default.
     """
 
     fn_name = "unstructure_" + cl.__name__
@@ -103,6 +106,10 @@ def make_dict_unstructure_fn_from_attrs(
     lines = []
     invocation_lines = []
     internal_arg_parts = {}
+
+    if _cattrs_use_alias == "from_converter":
+        # BaseConverter doesn't have it so we're careful.
+        _cattrs_use_alias = getattr(converter, "use_alias", False)
 
     for a in attrs:
         attr_name = a.name
