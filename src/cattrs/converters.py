@@ -1060,6 +1060,8 @@ class Converter(BaseConverter):
             registered unstructuring hooks match.
         :param structure_fallback_factory: A hook factory to be called when no
             registered structuring hooks match.
+        :param use_alias: Whether to use the field alias instead of the field name as
+            the un/structured dictionary key by default.
 
         ..  versionadded:: 23.2.0 *unstructure_fallback_factory*
         ..  versionadded:: 23.2.0 *structure_fallback_factory*
