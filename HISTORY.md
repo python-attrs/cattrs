@@ -14,9 +14,9 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 ## 25.2.0 (unreleased)
 
 - Add a `use_alias` parameter to {class}`cattrs.Converter`. 
-  {py:func}`cattrs.gen.make_dict_unstructure_fn_from_attrs`, {py:func}`cattrs.gen.make_dict_unstructure_fn`,
-  {py:func}`cattrs.gen.make_dict_structure_fn_from_attrs`, {py:func}`cattrs.gen.make_dict_structure_fn`
-  and {py:func}`cattrs.gen.typeddicts.make_dict_structure_fn` will use the value for the `use_alias` parameter from the given converter by default now.
+  {func}`cattrs.gen.make_dict_unstructure_fn_from_attrs`, {func}`cattrs.gen.make_dict_unstructure_fn`,
+  {func}`cattrs.gen.make_dict_structure_fn_from_attrs`, {func}`cattrs.gen.make_dict_structure_fn`
+  and {func}`cattrs.gen.typeddicts.make_dict_structure_fn` will use the value for the `use_alias` parameter from the given converter by default now.
   If you're using these functions directly, the old behavior can be restored by passing in the desired value directly.
   ([#596](https://github.com/python-attrs/cattrs/issues/596) [#660](https://github.com/python-attrs/cattrs/pull/660))
 
