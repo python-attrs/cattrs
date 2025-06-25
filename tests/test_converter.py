@@ -146,23 +146,30 @@ def test_forbid_extra_keys(cls_and_vals):
     assert cve.value.exceptions[0].extra_fields == {bad_key}
 
 
-@given(cls_and_vals=simple_typed_classes())
 @pytest.mark.parametrize("use_alias", [True, False])
-def test_use_alias(cls_and_vals, use_alias):
+def test_use_alias(use_alias):
     """
     (Un)structuring with use_alias=True generates/uses aliased keys.
     """
+
+    @define
+    class C:
+        a: int = field(default=0, alias="_alias")
+        b: int = field(default=0)
+
+    inst = C()
     converter = Converter(use_alias=use_alias)
-    cl, vals, kwargs = cls_and_vals
-    flds = fields(cl)
-    inst = cl(*vals, **kwargs)
     unstructured = converter.unstructure(inst)
-    for fld in flds:
+    for fld in fields(C):
         if use_alias:
             assert fld.alias in unstructured
+            if fld.name != fld.alias:
+                assert fld.name not in unstructured
         else:
             assert fld.name in unstructured
-    converter.structure(unstructured, cl)
+            if fld.name != fld.alias:
+                assert fld.alias not in unstructured
+    converter.structure(unstructured, C)
 
 
 @given(simple_typed_attrs(defaults=True))
