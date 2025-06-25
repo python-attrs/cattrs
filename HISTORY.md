@@ -11,9 +11,9 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
-## 25.2.0 (2025-06-24)
+## 25.2.0 (unreleased)
 
-- **Potentially breaking**: {class}`cattrs.Converter` now accepts a `use_alias` parameters. 
+- Add a `use_alias` parameter to {class}`cattrs.Converter`. 
   {py:func}`cattrs.gen.make_dict_unstructure_fn_from_attrs`, {py:func}`cattrs.gen.make_dict_unstructure_fn`,
   {py:func}`cattrs.gen.make_dict_structure_fn_from_attrs`, {py:func}`cattrs.gen.make_dict_structure_fn`
   and {py:func}`cattrs.gen.typeddicts.make_dict_structure_fn` will use the value for the `use_alias` parameter from the given converter by default now.
