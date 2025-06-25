@@ -234,7 +234,6 @@ def make_dict_structure_fn(
     _cattrs_forbid_extra_keys: bool | Literal["from_converter"] = "from_converter",
     _cattrs_use_linecache: bool = True,
     _cattrs_detailed_validation: bool | Literal["from_converter"] = "from_converter",
-    _cattrs_use_alias: bool | Literal["from_converter"] = "from_converter",
     **kwargs: AttributeOverride,
 ) -> Callable[[dict, Any], Any]:
     """Generate a specialized dict structuring function for typed dicts.
@@ -253,9 +252,6 @@ def make_dict_structure_fn(
     ..  versionchanged:: 23.2.0
         The `_cattrs_forbid_extra_keys` and `_cattrs_detailed_validation` parameters
         take their values from the given converter by default.
-    ..  versionchanged:: 25.2.0
-        The `_cattrs_use_alias` parameter takes its value from the given converter
-        by default.
     """
 
     mapping = {}
@@ -304,9 +300,6 @@ def make_dict_structure_fn(
     if _cattrs_forbid_extra_keys == "from_converter":
         # BaseConverter doesn't have it so we're careful.
         _cattrs_forbid_extra_keys = getattr(converter, "forbid_extra_keys", False)
-    if _cattrs_use_alias == "from_converter":
-        # BaseConverter doesn't have it so we're careful.
-        _cattrs_use_alias = getattr(converter, "use_alias", False)
     if _cattrs_detailed_validation == "from_converter":
         _cattrs_detailed_validation = converter.detailed_validation
 
