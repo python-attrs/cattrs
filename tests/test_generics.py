@@ -365,4 +365,5 @@ def test_nongeneric_protocols(converter):
 def test_generics_with_forward_refs():
     """Type resolution works with forward references."""
     converter = cattrs.Converter()
-    converter.unstructure(GenericClass(42), unstructure_as=GenericClass[int])
+    dct = converter.unstructure(GenericClass(42), unstructure_as=GenericClass[int])
+    assert dct == {"t": 42}
