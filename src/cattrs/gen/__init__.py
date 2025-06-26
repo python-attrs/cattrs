@@ -74,7 +74,7 @@ def make_dict_unstructure_fn_from_attrs(
     typevar_map: dict[str, Any] = {},
     _cattrs_omit_if_default: bool = False,
     _cattrs_use_linecache: bool = True,
-    _cattrs_use_alias: bool = False,
+    _cattrs_use_alias: bool | Literal["from_converter"] = "from_converter",
     _cattrs_include_init_false: bool = False,
     **kwargs: AttributeOverride,
 ) -> Callable[[T], dict[str, Any]]:
@@ -96,6 +96,9 @@ def make_dict_unstructure_fn_from_attrs(
         will be included.
 
     ..  versionadded:: 24.1.0
+    ..  versionchanged:: 25.2.0
+        The `_cattrs_use_alias` parameter takes its value from the given converter
+        by default.
     """
 
     fn_name = "unstructure_" + cl.__name__
@@ -103,6 +106,10 @@ def make_dict_unstructure_fn_from_attrs(
     lines = []
     invocation_lines = []
     internal_arg_parts = {}
+
+    if _cattrs_use_alias == "from_converter":
+        # BaseConverter doesn't have it so we're careful.
+        _cattrs_use_alias = getattr(converter, "use_alias", False)
 
     for a in attrs:
         attr_name = a.name
@@ -217,7 +224,7 @@ def make_dict_unstructure_fn(
     converter: BaseConverter,
     _cattrs_omit_if_default: bool = False,
     _cattrs_use_linecache: bool = True,
-    _cattrs_use_alias: bool = False,
+    _cattrs_use_alias: bool | Literal["from_converter"] = "from_converter",
     _cattrs_include_init_false: bool = False,
     **kwargs: AttributeOverride,
 ) -> Callable[[T], dict[str, Any]]:
@@ -237,11 +244,17 @@ def make_dict_unstructure_fn(
 
     ..  versionadded:: 23.2.0 *_cattrs_use_alias*
     ..  versionadded:: 23.2.0 *_cattrs_include_init_false*
+    ..  versionchanged:: 25.2.0
+        The `_cattrs_use_alias` parameter takes its value from the given converter
+        by default.
     """
     origin = get_origin(cl)
     attrs = adapted_fields(origin or cl)  # type: ignore
 
     mapping = {}
+    if _cattrs_use_alias == "from_converter":
+        # BaseConverter doesn't have it so we're careful.
+        _cattrs_use_alias = getattr(converter, "use_alias", False)
     if is_generic(cl):
         mapping = generate_mapping(cl, mapping)
 
@@ -289,7 +302,7 @@ def make_dict_structure_fn_from_attrs(
         bool | Literal["from_converter"]
     ) = "from_converter",
     _cattrs_detailed_validation: bool | Literal["from_converter"] = "from_converter",
-    _cattrs_use_alias: bool = False,
+    _cattrs_use_alias: bool | Literal["from_converter"] = "from_converter",
     _cattrs_include_init_false: bool = False,
     **kwargs: AttributeOverride,
 ) -> SimpleStructureHook[Mapping[str, Any], T]:
@@ -315,6 +328,9 @@ def make_dict_structure_fn_from_attrs(
         will be included.
 
     ..  versionadded:: 24.1.0
+    ..  versionchanged:: 25.2.0
+        The `_cattrs_use_alias` parameter takes its value from the given converter
+        by default.
     """
 
     cl_name = cl.__name__
@@ -350,6 +366,9 @@ def make_dict_structure_fn_from_attrs(
     if _cattrs_forbid_extra_keys == "from_converter":
         # BaseConverter doesn't have it so we're careful.
         _cattrs_forbid_extra_keys = getattr(converter, "forbid_extra_keys", False)
+    if _cattrs_use_alias == "from_converter":
+        # BaseConverter doesn't have it so we're careful.
+        _cattrs_use_alias = getattr(converter, "use_alias", False)
     if _cattrs_detailed_validation == "from_converter":
         _cattrs_detailed_validation = converter.detailed_validation
     if _cattrs_prefer_attrib_converters == "from_converter":
@@ -682,7 +701,7 @@ def make_dict_structure_fn(
         bool | Literal["from_converter"]
     ) = "from_converter",
     _cattrs_detailed_validation: bool | Literal["from_converter"] = "from_converter",
-    _cattrs_use_alias: bool = False,
+    _cattrs_use_alias: bool | Literal["from_converter"] = "from_converter",
     _cattrs_include_init_false: bool = False,
     **kwargs: AttributeOverride,
 ) -> SimpleStructureHook[Mapping[str, Any], T]:
@@ -714,6 +733,9 @@ def make_dict_structure_fn(
     ..  versionchanged:: 24.1.0
         The `_cattrs_prefer_attrib_converters` parameter takes its value from the given
         converter by default.
+    ..  versionchanged:: 25.2.0
+        The `_cattrs_use_alias` parameter takes its value from the given converter
+        by default.
     """
 
     mapping = {}
