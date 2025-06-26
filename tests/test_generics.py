@@ -4,6 +4,7 @@ from typing import Deque, Dict, Generic, List, Optional, TypeVar, Union
 import pytest
 from attrs import asdict, define
 
+import cattrs
 from cattrs import BaseConverter, Converter
 from cattrs._compat import Protocol
 from cattrs._generics import deep_copy_with
@@ -11,6 +12,7 @@ from cattrs.errors import StructureHandlerNotFoundError
 from cattrs.gen._generics import generate_mapping
 
 from ._compat import Dict_origin, List_origin, is_py310_plus, is_py311_plus
+from .forwardrefs import GenericClass
 
 T = TypeVar("T")
 T2 = TypeVar("T2")
@@ -358,3 +360,9 @@ def test_nongeneric_protocols(converter):
     assert generate_mapping(GenericEntity) == {"T": int}
 
     assert converter.structure({"a": 1}, GenericEntity) == GenericEntity(1)
+
+
+def test_generics_with_forward_refs():
+    """Type resolution works with forward references."""
+    converter = cattrs.Converter()
+    converter.unstructure(GenericClass(42), unstructure_as=GenericClass[int])
