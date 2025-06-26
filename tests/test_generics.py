@@ -361,7 +361,7 @@ def test_nongeneric_protocols(converter):
     assert converter.structure({"a": 1}, GenericEntity) == GenericEntity(1)
 
 
-def test_generics_with_forward_refs():
+def test_generics_with_stringified_annotations():
     """Type resolution works with stringified annotations."""
     converter = Converter()
     dct = converter.unstructure(GenericClass(42), unstructure_as=GenericClass[int])
