@@ -4,7 +4,6 @@ from typing import Deque, Dict, Generic, List, Optional, TypeVar, Union
 import pytest
 from attrs import asdict, define
 
-import cattrs
 from cattrs import BaseConverter, Converter
 from cattrs._compat import Protocol
 from cattrs._generics import deep_copy_with
@@ -364,6 +363,6 @@ def test_nongeneric_protocols(converter):
 
 def test_generics_with_forward_refs():
     """Type resolution works with forward references."""
-    converter = cattrs.Converter()
+    converter = Converter()
     dct = converter.unstructure(GenericClass(42), unstructure_as=GenericClass[int])
     assert dct == {"t": 42}
