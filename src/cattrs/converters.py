@@ -46,11 +46,11 @@ from ._compat import (
     is_mutable_set,
     is_optional,
     is_protocol,
-    is_sequence,
     is_tuple,
     is_typeddict,
     is_union_type,
     signature,
+    is_mutable_sequence,
 )
 from .cols import (
     defaultdict_structure_factory,
@@ -58,10 +58,12 @@ from .cols import (
     is_namedtuple,
     iterable_unstructure_factory,
     list_structure_factory,
+    homogenous_tuple_structure_factory,
     mapping_structure_factory,
     mapping_unstructure_factory,
     namedtuple_structure_factory,
     namedtuple_unstructure_factory,
+    is_sequence,
 )
 from .disambiguators import create_default_dis_func, is_supported_union
 from .dispatch import (
@@ -271,7 +273,8 @@ class BaseConverter:
                 ),
                 (is_literal, self._structure_simple_literal),
                 (is_literal_containing_enums, self._structure_enum_literal),
-                (is_sequence, list_structure_factory, "extended"),
+                (is_sequence, homogenous_tuple_structure_factory, "extended"),
+                (is_mutable_sequence, list_structure_factory, "extended"),
                 (is_deque, self._structure_deque),
                 (is_mutable_set, self._structure_set),
                 (is_frozenset, self._structure_frozenset),

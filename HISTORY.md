@@ -13,7 +13,10 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## 25.2.0 (unreleased)
 
-- Add a `use_alias` parameter to {class}`cattrs.Converter`. 
+- **Potentially breaking**: Sequences are now structured into tuples.
+  This allows hashability, better immutability and is more consistent with the [`collections.abc.Sequence`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence) type.
+  See [Migrations](https://catt.rs/en/latest/migrations.html#sequences-structuring-into-tuples) for steps to restore legacy behavior.
+- Add a `use_alias` parameter to {class}`cattrs.Converter`.
   {func}`cattrs.gen.make_dict_unstructure_fn_from_attrs`, {func}`cattrs.gen.make_dict_unstructure_fn`,
   {func}`cattrs.gen.make_dict_structure_fn_from_attrs`, {func}`cattrs.gen.make_dict_structure_fn`
   and {func}`cattrs.gen.typeddicts.make_dict_structure_fn` will use the value for the `use_alias` parameter from the given converter by default now.
