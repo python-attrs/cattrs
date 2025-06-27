@@ -364,5 +364,7 @@ def test_nongeneric_protocols(converter):
 def test_generics_with_stringified_annotations():
     """Type resolution works with stringified annotations."""
     converter = Converter()
-    dct = converter.unstructure(GenericClass(42), unstructure_as=GenericClass[int])
+    inst = GenericClass(42)
+    dct = converter.unstructure(inst, unstructure_as=GenericClass[int])
     assert dct == {"t": 42}
+    assert converter.structure(dct, GenericClass[int])
