@@ -24,8 +24,8 @@ from ._compat import (
     is_bare,
     is_frozenset,
     is_mapping,
-    is_sequence,
     is_mutable_sequence,
+    is_sequence,
     is_subclass,
 )
 from ._compat import is_mutable_set as is_set
@@ -48,17 +48,17 @@ if TYPE_CHECKING:
 
 __all__ = [
     "defaultdict_structure_factory",
+    "homogenous_tuple_structure_factory",
     "is_any_set",
     "is_defaultdict",
     "is_frozenset",
     "is_mapping",
-    "is_namedtuple",
     "is_mutable_sequence",
+    "is_namedtuple",
     "is_sequence",
     "is_set",
     "iterable_unstructure_factory",
     "list_structure_factory",
-    "homogenous_tuple_structure_factory",
     "mapping_structure_factory",
     "mapping_unstructure_factory",
     "namedtuple_dict_structure_factory",

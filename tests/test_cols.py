@@ -9,10 +9,10 @@ from cattrs import BaseConverter, Converter
 from cattrs._compat import FrozenSet
 from cattrs.cols import (
     is_any_set,
-    iterable_unstructure_factory,
-    mapping_unstructure_factory,
     is_sequence,
+    iterable_unstructure_factory,
     list_structure_factory,
+    mapping_unstructure_factory,
 )
 
 from ._compat import is_py310_plus

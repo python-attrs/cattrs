@@ -43,6 +43,7 @@ from ._compat import (
     is_hetero_tuple,
     is_literal,
     is_mapping,
+    is_mutable_sequence,
     is_mutable_set,
     is_optional,
     is_protocol,
@@ -50,20 +51,19 @@ from ._compat import (
     is_typeddict,
     is_union_type,
     signature,
-    is_mutable_sequence,
 )
 from .cols import (
     defaultdict_structure_factory,
+    homogenous_tuple_structure_factory,
     is_defaultdict,
     is_namedtuple,
+    is_sequence,
     iterable_unstructure_factory,
     list_structure_factory,
-    homogenous_tuple_structure_factory,
     mapping_structure_factory,
     mapping_unstructure_factory,
     namedtuple_structure_factory,
     namedtuple_unstructure_factory,
-    is_sequence,
 )
 from .disambiguators import create_default_dis_func, is_supported_union
 from .dispatch import (
