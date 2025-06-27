@@ -11,7 +11,7 @@ from cattrs.errors import StructureHandlerNotFoundError
 from cattrs.gen._generics import generate_mapping
 
 from ._compat import Dict_origin, List_origin, is_py310_plus, is_py311_plus
-from .forwardrefs import GenericClass
+from .generics import GenericClass
 
 T = TypeVar("T")
 T2 = TypeVar("T2")

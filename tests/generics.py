@@ -1,4 +1,4 @@
-"""Class definitions using forward references."""
+"""Generic classes for testing."""
 
 from __future__ import annotations
 
