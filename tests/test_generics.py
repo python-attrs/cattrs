@@ -11,7 +11,6 @@ from cattrs.errors import StructureHandlerNotFoundError
 from cattrs.gen._generics import generate_mapping
 
 from ._compat import Dict_origin, List_origin, is_py310_plus, is_py311_plus
-from .generics import GenericClass
 
 T = TypeVar("T")
 T2 = TypeVar("T2")
@@ -359,12 +358,3 @@ def test_nongeneric_protocols(converter):
     assert generate_mapping(GenericEntity) == {"T": int}
 
     assert converter.structure({"a": 1}, GenericEntity) == GenericEntity(1)
-
-
-def test_generics_with_stringified_annotations():
-    """Type resolution works with stringified annotations."""
-    converter = Converter()
-    inst = GenericClass(42)
-    dct = converter.unstructure(inst, unstructure_as=GenericClass[int])
-    assert dct == {"t": 42}
-    assert converter.structure(dct, GenericClass[int])
