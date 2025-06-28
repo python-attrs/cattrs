@@ -53,8 +53,8 @@ from cattrs.preconf.pyyaml import make_converter as pyyaml_make_converter
 from cattrs.preconf.tomlkit import make_converter as tomlkit_make_converter
 from cattrs.preconf.ujson import make_converter as ujson_make_converter
 
-NO_MSGSPEC: Final = python_implementation() == "PyPy" or sys.version_info[:2] >= (3, 13)
-NO_ORJSON: Final = python_implementation() == "PyPy"
+NO_MSGSPEC: Final = python_implementation() == "PyPy"
+NO_ORJSON: Final = python_implementation() == "PyPy" or sys.version_info[:2] >= (3, 14)
 
 
 @define
