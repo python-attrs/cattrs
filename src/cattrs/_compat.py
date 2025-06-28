@@ -306,6 +306,25 @@ def get_notrequired_base(type) -> Union[Any, NothingType]:
     return NOTHING
 
 
+def is_mutable_sequence(type: Any) -> bool:
+    """A predicate function for mutable sequences.
+
+    Matches lists, mutable sequences, and deques.
+    """
+    origin = getattr(type, "__origin__", None)
+    return (
+        type in (List, list, TypingMutableSequence, AbcMutableSequence, deque, Deque)
+        or (
+            type.__class__ is _GenericAlias
+            and (
+                ((origin is not tuple) and is_subclass(origin, TypingMutableSequence))
+                or (origin is tuple and type.__args__[1] is ...)
+            )
+        )
+        or (origin in (list, deque, AbcMutableSequence))
+    )
+
+
 def is_sequence(type: Any) -> bool:
     """A predicate function for sequences.
 
@@ -313,19 +332,8 @@ def is_sequence(type: Any) -> bool:
     tuples.
     """
     origin = getattr(type, "__origin__", None)
-    return (
-        type
-        in (
-            List,
-            list,
-            TypingSequence,
-            TypingMutableSequence,
-            AbcMutableSequence,
-            tuple,
-            Tuple,
-            deque,
-            Deque,
-        )
+    return is_mutable_sequence(type) or (
+        type in (TypingSequence, tuple, Tuple)
         or (
             type.__class__ is _GenericAlias
             and (
@@ -333,7 +341,7 @@ def is_sequence(type: Any) -> bool:
                 or (origin is tuple and type.__args__[1] is ...)
             )
         )
-        or (origin in (list, deque, AbcMutableSequence, AbcSequence))
+        or (origin is AbcSequence)
         or (origin is tuple and type.__args__[1] is ...)
     )
 

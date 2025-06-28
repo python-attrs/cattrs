@@ -1,4 +1,5 @@
 from collections import deque
+from collections.abc import Sequence
 from typing import Deque, Dict, Generic, List, Optional, TypeVar, Union
 
 import pytest
@@ -109,9 +110,16 @@ def test_structure_nested_generics_with_cols(t, result, genconverter: Converter)
     (
         (TClass[int, int, int], str, int, TClass(TClass(1, 2), "a")),
         (List[TClass[int, int, int]], str, int, TClass([TClass(1, 2)], "a")),
+        (
+            Sequence[TClass[str, str, str]],
+            str,
+            str,
+            TClass((TClass("a", "b", "c"),), "b", "c"),
+        ),
     ),
 )
 def test_structure_nested_generics(converter: BaseConverter, t, t2, t3, result):
+    """Structuring nested generics works."""
     res = converter.structure(asdict(result), TClass[t, t2, t3])
 
     assert res == result

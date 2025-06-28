@@ -154,6 +154,7 @@ def simple_typed_attrs(
         | str_typed_attrs(defaults, kw_only, text_codec)
         | float_typed_attrs(defaults, kw_only, allow_infinity, allow_nan)
         | frozenset_typed_attrs(defaults, kw_only=kw_only)
+        | seq_typed_attrs(defaults, allow_mutable_defaults, kw_only=kw_only)
         | homo_tuple_typed_attrs(defaults, kw_only=kw_only)
         | path_typed_attrs(defaults, kw_only=kw_only)
     )
@@ -172,7 +173,6 @@ def simple_typed_attrs(
             | set_typed_attrs(defaults, allow_mutable_defaults, kw_only=kw_only)
             | list_typed_attrs(defaults, allow_mutable_defaults, kw_only=kw_only)
             | mutable_seq_typed_attrs(defaults, allow_mutable_defaults, kw_only=kw_only)
-            | seq_typed_attrs(defaults, allow_mutable_defaults, kw_only=kw_only)
         )
 
     return res
@@ -573,11 +573,14 @@ def seq_typed_attrs(
     kw_only=None,
 ):
     """
-    Generate a tuple of an attribute and a strategy that yields lists
-    for that attribute. The lists contain integers.
+    Generate a tuple of an attribute and a strategy that yields tuples
+    for that attribute. The tuples contain integers.
+
+    Args:
+        allow_mutable_defaults: When false, the default will always be a factory.
     """
     default_val = NOTHING
-    val_strat = lists(integers())
+    val_strat = lists(integers()).map(tuple)
     if defaults is True or (defaults is None and draw(booleans())):
         default_val = draw(val_strat)
         if not allow_mutable_defaults or draw(booleans()):

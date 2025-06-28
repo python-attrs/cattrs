@@ -24,6 +24,7 @@ from ._compat import (
     is_bare,
     is_frozenset,
     is_mapping,
+    is_mutable_sequence,
     is_sequence,
     is_subclass,
 )
@@ -47,10 +48,12 @@ if TYPE_CHECKING:
 
 __all__ = [
     "defaultdict_structure_factory",
+    "homogenous_tuple_structure_factory",
     "is_any_set",
     "is_defaultdict",
     "is_frozenset",
     "is_mapping",
+    "is_mutable_sequence",
     "is_namedtuple",
     "is_sequence",
     "is_set",
@@ -149,6 +152,47 @@ def list_structure_factory(type: type, converter: BaseConverter) -> StructureHoo
             return [_handler(e, _elem_type) for e in obj]
 
     return structure_list
+
+
+def homogenous_tuple_structure_factory(
+    type: type, converter: BaseConverter
+) -> StructureHook:
+    """A hook factory for homogenous (all elements the same, indeterminate length) tuples.
+
+    Converts any given iterable into a tuple.
+    """
+
+    if is_bare(type) or type.__args__[0] in ANIES:
+
+        def structure_tuple(obj: Iterable[T], _: type = type) -> tuple[T, ...]:
+            return tuple(obj)
+
+        return structure_tuple
+
+    elem_type = type.__args__[0]
+
+    try:
+        handler = converter.get_structure_hook(elem_type)
+    except RecursionError:
+        # Break the cycle by using late binding.
+        handler = converter.structure
+
+    if converter.detailed_validation:
+
+        # We have to structure into a list first anyway.
+        list_structure = list_structure_factory(type, converter)
+
+        def structure_tuple(obj: Iterable[T], _: type = type) -> tuple[T, ...]:
+            return tuple(list_structure(obj, _))
+
+    else:
+
+        def structure_tuple(
+            obj: Iterable[T], _: type = type, _handler=handler, _elem_type=elem_type
+        ) -> tuple[T, ...]:
+            return tuple([_handler(e, _elem_type) for e in obj])
+
+    return structure_tuple
 
 
 def namedtuple_unstructure_factory(
