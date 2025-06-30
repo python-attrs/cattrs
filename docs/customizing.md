@@ -413,6 +413,7 @@ Available predicates are:
 - {meth}`is_any_set`
 - {meth}`is_frozenset`
 - {meth}`is_set`
+- {meth}`is_mutable_sequence`
 - {meth}`is_sequence`
 - {meth}`is_mapping`
 - {meth}`is_namedtuple`
@@ -432,6 +433,7 @@ Available hook factories are:
 
 - {meth}`iterable_unstructure_factory`
 - {meth}`list_structure_factory`
+- {meth}`homogenous_tuple_structure_factory`
 - {meth}`namedtuple_structure_factory`
 - {meth}`namedtuple_unstructure_factory`
 - {meth}`namedtuple_dict_structure_factory`
@@ -442,15 +444,15 @@ Available hook factories are:
 
 Additional predicates and hook factories will be added as requested.
 
-For example, by default sequences are structured from any iterable into lists.
+For example, by default mutable sequences are structured from any iterable into lists.
 This may be too lax, and additional validation may be applied by wrapping the default list structuring hook factory.
 
 ```{testcode} list-customization
-from cattrs.cols import is_sequence, list_structure_factory
+from cattrs.cols import is_mutable_sequence, list_structure_factory
 
 c = Converter()
 
-@c.register_structure_hook_factory(is_sequence)
+@c.register_structure_hook_factory(is_mutable_sequence)
 def strict_list_hook_factory(type, converter):
 
     # First, we generate the default hook...
@@ -466,7 +468,7 @@ def strict_list_hook_factory(type, converter):
     return strict_list_hook
 ```
 
-Now, all sequence structuring will be stricter:
+Now, all mutable sequence structuring will be stricter:
 
 ```{doctest} list-customization
 >>> c.structure({"a", "b", "c"}, list[str])
@@ -477,6 +479,9 @@ ValueError: Not a list!
 
 ```{versionadded} 24.1.0
 
+```
+```{versionchanged} 25.2.0
+Added the {meth}`is_mutable_sequence` predicate and {meth}`homogenous_tuple_structure_factory` hook factory.
 ```
 
 ### Customizing Named Tuples

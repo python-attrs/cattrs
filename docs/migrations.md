@@ -3,6 +3,20 @@
 _cattrs_ sometimes changes in backwards-incompatible ways.
 This page contains guidance for changes and workarounds for restoring legacy behavior.
 
+## 25.2.0
+
+### Sequences structuring into tuples
+
+Sequences were changed to structure into tuples instead of lists.
+
+The old behavior can be restored by registering the `list_structure_factory` using the `is_sequence` predicate on a converter.
+
+```python
+>>> from cattrs.cols import is_sequence, list_structure_factory
+
+>>> converter.register_structure_hook_factory(is_sequence, list_structure_factory)
+```
+
 ## 24.2.0
 
 ### The default structure hook fallback factory

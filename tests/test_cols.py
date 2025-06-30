@@ -1,6 +1,6 @@
 """Tests for the `cattrs.cols` module."""
 
-from collections.abc import Set
+from collections.abc import MutableSequence, Sequence, Set
 from typing import Dict
 
 from immutables import Map
@@ -9,7 +9,9 @@ from cattrs import BaseConverter, Converter
 from cattrs._compat import FrozenSet
 from cattrs.cols import (
     is_any_set,
+    is_sequence,
     iterable_unstructure_factory,
+    list_structure_factory,
     mapping_unstructure_factory,
 )
 
@@ -53,3 +55,23 @@ def test_mapping_unstructure_to(genconverter: Converter):
     """`unstructure_to` works."""
     hook = mapping_unstructure_factory(Dict[str, str], genconverter, unstructure_to=Map)
     assert hook({"a": "a"}).__class__ is Map
+
+
+def test_structure_sequences(converter: BaseConverter):
+    """Sequences are structured to tuples."""
+
+    assert converter.structure(["1", 2, 3.0], Sequence[int]) == (1, 2, 3)
+
+
+def test_structure_sequences_override(converter: BaseConverter):
+    """Sequences can be overriden to structure to lists, as previously."""
+
+    converter.register_structure_hook_factory(is_sequence, list_structure_factory)
+
+    assert converter.structure(["1", 2, 3.0], Sequence[int]) == [1, 2, 3]
+
+
+def test_structure_mut_sequences(converter: BaseConverter):
+    """Mutable sequences are structured to lists."""
+
+    assert converter.structure(["1", 2, 3.0], MutableSequence[int]) == [1, 2, 3]

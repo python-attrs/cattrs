@@ -137,8 +137,7 @@ None
 Lists can be structured from any iterable object.
 Types converting to lists are:
 
-- `typing.Sequence[T]`
-- `typing.MutableSequence[T]`
+- `collections.abc.MutableSequence[T]`
 - `typing.List[T]`
 - `list[T]`
 
@@ -154,6 +153,10 @@ A bare type, for example `Sequence` instead of `Sequence[int]`, is equivalent to
 When unstructuring, lists are copied and their contents are handled according to their inner type.
 A useful use case for unstructuring collections is to create a deep copy of a complex or recursive collection.
 
+```{versionchanged} 25.2.0
+Sequences are no longer structured into lists by default, but tuples.
+```
+
 ### Dictionaries
 
 Dictionaries can be produced from other mapping objects.
@@ -162,8 +165,8 @@ and be able to be passed to the `dict` constructor as an argument.
 Types converting to dictionaries are:
 
 - `dict[K, V]` and `typing.Dict[K, V]`
-- `collections.abc.MutableMapping[K, V]` and `typing.MutableMapping[K, V]`
-- `collections.abc.Mapping[K, V]` and `typing.Mapping[K, V]`
+- `collections.abc.MutableMapping[K, V]`
+- `collections.abc.Mapping[K, V]`
 
 In all cases, a new dict will be returned, so this operation can be used to copy a mapping into a dict.
 Any type parameters set to `typing.Any` will be passed through unconverted.
@@ -234,14 +237,15 @@ _cattrs_ will be able to structure it by default.
 Homogeneous and heterogeneous tuples can be structured from iterable objects.
 Heterogeneous tuples require an iterable with the number of elements matching the number of type parameters exactly.
 
-Use:
+Heterogenous tuples use:
 
-- `Tuple[A, B, C, D]`
+- `typing.Tuple[A, B, C, D]`
 - `tuple[A, B, C, D]`
 
 Homogeneous tuples use:
 
-- `Tuple[T, ...]`
+- `collections.abc.Sequence[T]`
+- `typing.Tuple[T, ...]`
 - `tuple[T, ...]`
 
 In all cases a tuple will be produced.
@@ -261,6 +265,10 @@ When unstructuring, heterogeneous tuples unstructure into tuples since it's fast
 
 ```{note}
 Structuring heterogenous tuples are not supported by the BaseConverter.
+```
+
+```{versionchanged} 25.2.0
+Sequences are now structured into tuples.
 ```
 
 ### Deques
@@ -293,13 +301,12 @@ Deques are unstructured into lists, or into deques when using the {class}`BaseCo
 Sets and frozensets can be structured from any iterable object.
 Types converting to sets are:
 
-- `typing.Set[T]`
-- `typing.MutableSet[T]`
+- `collections.abc.Set[T]`
+- `collections.abc.MutableSet[T]`
 - `set[T]`
 
 Types converting to frozensets are:
 
-- `typing.FrozenSet[T]`
 - `frozenset[T]`
 
 In all cases, a new set or frozenset will be returned.
