@@ -17,7 +17,7 @@ The old behavior can be restored by registering the `list_structure_factory` usi
 >>> converter.register_structure_hook_factory(is_sequence, list_structure_factory)
 ```
 
-## 24.2.0
+## 25.1.0
 
 ### The default structure hook fallback factory
 
