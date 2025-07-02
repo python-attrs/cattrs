@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from exceptiongroup import ExceptionGroup
 
+from cattrs._compat import ExceptionGroup
 from cattrs.errors import (
     BaseValidationError,
     ClassValidationError,
