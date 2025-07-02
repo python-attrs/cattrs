@@ -13,14 +13,18 @@ class StructureHandlerNotFoundError(Exception):
     """
 
     def __init__(self, message: str, type_: type) -> None:
-        super().__init__(message)
+        super().__init__(message, type_)
+        self.message = message
         self.type_ = type_
+
+    def __str__(self) -> str:
+        return self.message
 
 
 class BaseValidationError(ExceptionGroup):
     cl: type
 
-    def __new__(cls, message: str, excs: Sequence[Exception], cl: type):
+    def __new__(cls, message: str, excs: Sequence[Exception], cl: type) -> Self:
         obj = super().__new__(cls, message, excs)
         obj.cl = cl
         return obj
@@ -35,9 +39,7 @@ class IterableValidationNote(str):
     index: Union[int, str]  # Ints for list indices, strs for dict keys
     type: Any
 
-    def __new__(
-        cls, string: str, index: Union[int, str], type: Any
-    ) -> "IterableValidationNote":
+    def __new__(cls, string: str, index: Union[int, str], type: Any) -> Self:
         instance = str.__new__(cls, string)
         instance.index = index
         instance.type = type
@@ -76,7 +78,7 @@ class AttributeValidationNote(str):
     name: str
     type: Any
 
-    def __new__(cls, string: str, name: str, type: Any) -> "AttributeValidationNote":
+    def __new__(cls, string: str, name: str, type: Any) -> Self:
         instance = str.__new__(cls, string)
         instance.name = name
         instance.type = type
@@ -122,11 +124,15 @@ class ForbiddenExtraKeysError(Exception):
     def __init__(
         self, message: Optional[str], cl: type, extra_fields: set[str]
     ) -> None:
+        self.message = message
         self.cl = cl
         self.extra_fields = extra_fields
-        cln = cl.__name__
 
-        super().__init__(
-            message
-            or f"Extra fields in constructor for {cln}: {', '.join(extra_fields)}"
+        super().__init__(message, cl, extra_fields)
+
+    def __str__(self) -> str:
+        return (
+            self.message
+            or f"Extra fields in constructor for {self.cl.__name__}: "
+            f"{', '.join(self.extra_fields)}"
         )
