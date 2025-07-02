@@ -24,7 +24,10 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   If you're using these functions directly, the old behavior can be restored by passing in the desired value directly.
   ([#596](https://github.com/python-attrs/cattrs/issues/596) [#660](https://github.com/python-attrs/cattrs/pull/660))
 - Fix unstructuring of generic classes with stringified annotations.
-  ([#661](https://github.com/python-attrs/cattrs/issues/661) [#662](https://github.com/python-attrs/cattrs/issues/662))
+  ([#661](https://github.com/python-attrs/cattrs/issues/661) [#662](https://github.com/python-attrs/cattrs/issues/662)
+- For {class}`cattrs.errors.StructureHandlerNotFoundError` and {class}`cattrs.errors.ForbiddenExtraKeysError` 
+  correctly set {attr}`BaseException.args` in `super()` and hence make them pickable. 
+  ([#666](https://github.com/python-attrs/cattrs/pull/666))
 
 ## 25.1.1 (2025-06-04)
 

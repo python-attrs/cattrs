@@ -382,13 +382,7 @@ def test_forbid_extra_keys(
         assert repr(ctx.value) == repr(
             ClassValidationError(
                 f"While structuring {cls.__name__}",
-                [
-                    ForbiddenExtraKeysError(
-                        f"Extra fields in constructor for {cls.__name__}: test",
-                        cls,
-                        {"test"},
-                    )
-                ],
+                [ForbiddenExtraKeysError("", cls, {"test"})],
                 cls,
             )
         )
