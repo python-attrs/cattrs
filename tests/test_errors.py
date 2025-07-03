@@ -18,9 +18,9 @@ from cattrs.errors import (
     "err_cls, err_args",
     [
         (StructureHandlerNotFoundError, ("Structure Message", int)),
-        (ForbiddenExtraKeysError, ("Forbidden Message", int, {"foo", "bar"})),
-        (ForbiddenExtraKeysError, ("", str, {"foo", "bar"})),
-        (ForbiddenExtraKeysError, (None, list, {"foo", "bar"})),
+        (ForbiddenExtraKeysError, ("Forbidden Message", int, {"foo"})),
+        (ForbiddenExtraKeysError, ("", str, {"foo"})),
+        (ForbiddenExtraKeysError, (None, list, {"foo"})),
         (
             BaseValidationError,
             ("BaseValidation Message", [ValueError("Test BaseValidation")], int),
