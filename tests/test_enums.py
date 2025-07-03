@@ -1,5 +1,6 @@
 """Tests for enums."""
 
+from attrs import NOTHING
 from hypothesis import given
 from hypothesis.strategies import data, sampled_from
 from pytest import raises
@@ -29,3 +30,17 @@ def test_enum_failure(enum):
         converter.structure("", type)
 
     assert exc_info.value.args[0] == f" not in literal {type!r}"
+
+
+def test_nothing_from_attrs():
+    """Test that `NOTHING` from attrs does not unstructure to `1` (int), but remains `NOTHING`."""
+    converter = BaseConverter()
+
+    assert (
+        converter.unstructure(NOTHING) != 1
+    ), "NOTHING should not unstructure to 1 (int)."
+    assert not isinstance(converter.unstructure(NOTHING), int)
+    assert not converter.unstructure(
+        NOTHING
+    )  # bool(NOTHING) should be False although `bool(1)` is True
+    assert converter.unstructure(NOTHING) is NOTHING

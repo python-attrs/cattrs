@@ -28,6 +28,10 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - For {class}`cattrs.errors.StructureHandlerNotFoundError` and {class}`cattrs.errors.ForbiddenExtraKeysError` 
   correctly set {attr}`BaseException.args` in `super()` and hence make them pickable. 
   ([#666](https://github.com/python-attrs/cattrs/pull/666))
+- Do not Unstructure the faulty state {data}`attrs.NOTHING` instead of to `1` (int). The unstructure to `1` was caused
+  by a change in attrs 22.2 that {data}`attrs.NOTHING` is internally represented as an integer {class}`enum.Enum`, 
+  but as it is logically just a Singleton we apply now the identity-function on unstructuring it. 
+  ([#667](https://github.com/python-attrs/cattrs/pull/667))
 
 ## 25.1.1 (2025-06-04)
 

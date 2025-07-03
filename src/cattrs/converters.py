@@ -11,6 +11,7 @@ from inspect import signature as inspect_signature
 from pathlib import Path
 from typing import Any, Optional, Tuple, TypeVar, overload
 
+from attr._make import _Nothing
 from attrs import Attribute, resolve_types
 from attrs import has as attrs_has
 from typing_extensions import Self
@@ -223,7 +224,7 @@ class BaseConverter:
             unstructure_fallback_factory, self
         )
         self._unstructure_func.register_cls_list(
-            [(bytes, identity), (str, identity), (Path, str)]
+            [(bytes, identity), (str, identity), (Path, str), (_Nothing, identity)]
         )
         self._unstructure_func.register_func_list(
             [
