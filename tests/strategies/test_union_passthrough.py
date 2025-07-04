@@ -9,7 +9,7 @@ from typing import List, Optional, Union
 import pytest
 from attrs import define
 
-from cattrs import BaseConverter
+from cattrs import BaseConverter, ClassValidationError, Converter
 from cattrs.strategies import configure_union_passthrough
 
 
@@ -109,3 +109,35 @@ def test_multiple_spillover(converter: BaseConverter) -> None:
 
     with pytest.raises(TypeError):
         converter.structure((), union)
+
+
+def test_int_is_float(converter: BaseConverter) -> None:
+    """By default, ints can also be accepted when floats are.
+
+    When the strategy gets initialized with both ints and floats,
+    unions that only contain floats also accept ints by default.
+    """
+
+    configure_union_passthrough(Union[int, float, str, None], converter)
+
+    assert converter.structure(1, Union[float, str, None]) == 1
+    assert isinstance(converter.structure(1, Union[float, str, None]), int)
+
+
+def test_int_is_not_float(converter: BaseConverter) -> None:
+    """Ints can be configured to be separate."""
+
+    @define
+    class A:
+        a: int
+
+    configure_union_passthrough(
+        Union[int, float], converter, accept_ints_as_floats=False
+    )
+
+    with pytest.raises(
+        ClassValidationError
+        if isinstance(converter, Converter) and converter.detailed_validation
+        else TypeError
+    ):
+        converter.structure(1, Union[float, A])
