@@ -139,7 +139,9 @@ def configure_tagged_union(
     converter.register_structure_hook(union, structure_tagged_union)
 
 
-def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
+def configure_union_passthrough(
+    union: Any, converter: BaseConverter, accept_ints_as_floats: bool = True
+) -> None:
     """
     Configure the converter to support validating and passing through unions of the
     provided types and their subsets.
@@ -204,6 +206,16 @@ def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
             if (get_newtype_base(a) or a) not in non_literal_classes
             and not is_literal(a)
         }
+
+        # By default, when floats are part of the union, accept ints too.
+        if (
+            accept_ints_as_floats
+            and int in args
+            and float in args
+            and float in non_literal_classes
+            and int not in non_literal_classes
+        ):
+            non_literal_classes.add(int)
 
         if spillover:
             spillover_type = (
