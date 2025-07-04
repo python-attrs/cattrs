@@ -169,7 +169,7 @@ def test_structure_deque_of_generic_unions(converter):
 
 
 def test_raises_if_no_generic_params_supplied(
-    converter: Union[Converter, BaseConverter]
+    converter: Union[Converter, BaseConverter],
 ):
     data = TClass(1, "a")
 
