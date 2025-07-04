@@ -42,15 +42,18 @@ def test_errors_pickling(
     before = err_cls(*err_args)
 
     assert before.args == err_args
-
-    with (tmp_path / (err_cls.__name__.lower() + ".pypickle")).open("wb") as f:
-        pickle.dump(before, f)
-
-    with (tmp_path / (err_cls.__name__.lower() + ".pypickle")).open("rb") as f:
-        after = pickle.load(f)  # noqa: S301
+    after = pickle.loads(pickle.dumps(before))  # noqa: S301
 
     assert isinstance(after, err_cls)
-    assert str(after) == str(before)
+
+    if err_cls is ForbiddenExtraKeysError and err_args[0] == "":
+        # This comparison is slightly tricky since this class uses sets, which do
+        # not have a stable ordering.
+        # We skip it and rely on comparing the args below.
+        pass
+    else:
+        assert str(after) == str(before)
+
     if issubclass(err_cls, ExceptionGroup):
         assert after.message == before.message
         assert after.args[0] == before.args[0]
