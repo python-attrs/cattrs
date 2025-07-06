@@ -46,13 +46,7 @@ def test_errors_pickling(
 
     assert isinstance(after, err_cls)
 
-    if err_cls is ForbiddenExtraKeysError and err_args[0] == "":
-        # This comparison is slightly tricky since this class uses sets, which do
-        # not have a stable ordering.
-        # We skip it and rely on comparing the args below.
-        pass
-    else:
-        assert str(after) == str(before)
+    assert str(after) == str(before)
 
     if issubclass(err_cls, ExceptionGroup):
         assert after.message == before.message
