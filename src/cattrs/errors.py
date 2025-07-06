@@ -134,5 +134,5 @@ class ForbiddenExtraKeysError(Exception):
         return (
             self.message
             or f"Extra fields in constructor for {self.cl.__name__}: "
-            f"{', '.join(self.extra_fields)}"
+            f"{', '.join(sorted(self.extra_fields))}"
         )
