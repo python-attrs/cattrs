@@ -23,10 +23,14 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   and {func}`cattrs.gen.typeddicts.make_dict_structure_fn` will use the value for the `use_alias` parameter from the given converter by default now.
   If you're using these functions directly, the old behavior can be restored by passing in the desired value directly.
   ([#596](https://github.com/python-attrs/cattrs/issues/596) [#660](https://github.com/python-attrs/cattrs/pull/660))
+- The [union passthrough strategy](https://catt.rs/en/stable/strategies.html#union-passthrough) now by default accepts ints for unions that contain floats but not ints,
+  when configured to be able to handle both ints and floats.
+  This more closely matches the [current typing behavior](https://typing.python.org/en/latest/spec/special-types.html#special-cases-for-float-and-complex).
+  ([#656](https://github.com/python-attrs/cattrs/issues/656) [#668](https://github.com/python-attrs/cattrs/pull/668))
 - Fix unstructuring of generic classes with stringified annotations.
   ([#661](https://github.com/python-attrs/cattrs/issues/661) [#662](https://github.com/python-attrs/cattrs/issues/662)
-- For {class}`cattrs.errors.StructureHandlerNotFoundError` and {class}`cattrs.errors.ForbiddenExtraKeysError` 
-  correctly set {attr}`BaseException.args` in `super()` and hence make them pickable. 
+- For {class}`cattrs.errors.StructureHandlerNotFoundError` and {class}`cattrs.errors.ForbiddenExtraKeysError`
+  correctly set {attr}`BaseException.args` in `super()` and hence make them pickable.
   ([#666](https://github.com/python-attrs/cattrs/pull/666))
 
 ## 25.1.1 (2025-06-04)

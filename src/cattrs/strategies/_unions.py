@@ -164,7 +164,14 @@ def configure_union_passthrough(
     If the union contains a class and one or more of its subclasses, the subclasses
     will also be included when validating the superclass.
 
+    :param accept_ints_as_floats: When set (the default), if the provided union
+        contains both ints and floats, actual unions containing only floats will also accept
+        ints. See https://typing.python.org/en/latest/spec/special-types.html#special-cases-for-float-and-complex
+        for more information.
+
     .. versionadded:: 23.2.0
+    .. versionchanged:: 25.2.0
+        Introduced the `accept_ints_as_floats` parameter.
     """
     args = set(union.__args__)
 
