@@ -139,7 +139,9 @@ def configure_tagged_union(
     converter.register_structure_hook(union, structure_tagged_union)
 
 
-def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
+def configure_union_passthrough(
+    union: Any, converter: BaseConverter, accept_ints_as_floats: bool = True
+) -> None:
     """
     Configure the converter to support validating and passing through unions of the
     provided types and their subsets.
@@ -162,7 +164,14 @@ def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
     If the union contains a class and one or more of its subclasses, the subclasses
     will also be included when validating the superclass.
 
+    :param accept_ints_as_floats: When set (the default), if the provided union
+        contains both ints and floats, actual unions containing only floats will also accept
+        ints. See https://typing.python.org/en/latest/spec/special-types.html#special-cases-for-float-and-complex
+        for more information.
+
     .. versionadded:: 23.2.0
+    .. versionchanged:: 25.2.0
+        Introduced the `accept_ints_as_floats` parameter.
     """
     args = set(union.__args__)
 
@@ -204,6 +213,16 @@ def configure_union_passthrough(union: Any, converter: BaseConverter) -> None:
             if (get_newtype_base(a) or a) not in non_literal_classes
             and not is_literal(a)
         }
+
+        # By default, when floats are part of the union, accept ints too.
+        if (
+            accept_ints_as_floats
+            and int in args
+            and float in args
+            and float in non_literal_classes
+            and int not in non_literal_classes
+        ):
+            non_literal_classes.add(int)
 
         if spillover:
             spillover_type = (
