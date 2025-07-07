@@ -2,6 +2,7 @@
 
 from collections import deque
 from typing import (
+    Annotated,
     Any,
     Deque,
     FrozenSet,
@@ -659,7 +660,6 @@ def test_seq_of_bare_classes_structure(seq_type_and_annotation):
 
 def test_annotated_attrs():
     """Annotation support works for attrs classes."""
-    from typing import Annotated
 
     converter = Converter()
 
@@ -693,10 +693,6 @@ def test_annotated_attrs():
 
 def test_annotated_with_typing_extensions_attrs():
     """Annotation support works for attrs classes."""
-    from typing import List
-
-    from typing_extensions import Annotated
-
     converter = Converter()
 
     @define

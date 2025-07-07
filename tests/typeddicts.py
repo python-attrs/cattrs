@@ -200,9 +200,9 @@ def simple_typeddicts_with_extra_keys(
     """Generate TypedDicts, with the instances having extra keys."""
     cls, success = draw(simple_typeddicts(total, typeddict_cls=typeddict_cls))
 
-    # The normal attributes are 2 characters or less.
+    # The normal attributes are 2 characters or fewer.
     extra_keys = draw(sets(text(ascii_lowercase, min_size=3, max_size=3)))
-    success.update({k: 1 for k in extra_keys})
+    success.update(dict.fromkeys(extra_keys, 1))
 
     return cls, success, extra_keys
 

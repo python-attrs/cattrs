@@ -4,7 +4,7 @@ Note that a significant amount of test coverage for this is in the
 preconf tests.
 """
 
-from typing import List, Optional, Union
+from typing import List, Literal, Optional, Union
 
 import pytest
 from attrs import define
@@ -31,7 +31,6 @@ def test_only_primitives(converter: BaseConverter) -> None:
 
 def test_literals(converter: BaseConverter) -> None:
     """A union with primitives and literals works."""
-    from typing import Literal
 
     union = Union[int, str, None]
     exact_type = Union[int, Literal["test"], None]

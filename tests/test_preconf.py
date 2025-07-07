@@ -1,3 +1,4 @@
+# ruff: noqa: PLC0415
 import sys
 from collections.abc import Callable, Set
 from datetime import date, datetime, timezone
