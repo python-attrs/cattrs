@@ -3,7 +3,7 @@ skip-magic-trailing-comma = true
 
 [dependency-groups]
 lint = [
-    "black>=24.2.0",
+    "black>=25.1.0",
     "ruff>=0.12.2",
 ]
 test = [
