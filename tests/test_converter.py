@@ -18,7 +18,7 @@ from typing import (
 
 import pytest
 from attrs import Factory, define, field, fields, has, make_class
-from hypothesis import HealthCheck, assume, given, settings
+from hypothesis import assume, given
 from hypothesis.strategies import booleans, just, lists, one_of, sampled_from
 
 from cattrs import BaseConverter, Converter, UnstructureStrategy
