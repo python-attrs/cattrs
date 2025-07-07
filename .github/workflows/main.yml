@@ -24,8 +24,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: extractions/setup-just@v3
-      - uses: hynek/setup-cached-uv@v2
+      - uses: extractions/setup-just@e33e0265a09d6d736e2ee1e0eb685ef1de4669ff  # v3.0.0
+      - uses: hynek/setup-cached-uv@757bedc3f972eb7227a1aa657651f15a8527c817
 
       - name: "Run Tests"
         run: |
@@ -55,7 +55,7 @@ jobs:
           pattern: coverage-data-*
           merge-multiple: true
 
-      - uses: hynek/setup-cached-uv@v2
+      - uses: hynek/setup-cached-uv@757bedc3f972eb7227a1aa657651f15a8527c817
 
       - name: "Combine coverage"
         run: |
@@ -88,7 +88,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: hynek/setup-cached-uv@v2
+      - uses: hynek/setup-cached-uv@757bedc3f972eb7227a1aa657651f15a8527c817
 
       - name: "Build package"
         run: "uvx pdm build"
