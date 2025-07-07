@@ -7,11 +7,11 @@ lint = [
     "ruff>=0.12.2",
 ]
 test = [
-    "hypothesis>=6.135.26",
+    "hypothesis==6.111.2",
     "pytest>=8.4.1",
     "pytest-benchmark>=5.1.0",
     "immutables>=0.21",
-    "coverage>=7.6.1",
+    "coverage>=7.9.2",
     "pytest-xdist>=3.8.0",
 ]
 docs = [

@@ -342,8 +342,12 @@ def test_union_field_roundtrip_tuple(cl_and_vals_a, cl_and_vals_b):
 @pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
 @settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
 @given(
-    simple_typed_classes(defaults="never", newtypes=False, allow_nan=False),
-    simple_typed_classes(defaults="never", newtypes=False, allow_nan=False),
+    simple_typed_classes(
+        defaults="never", newtypes=False, allow_nan=False, min_attrs=1
+    ),
+    simple_typed_classes(
+        defaults="never", newtypes=False, allow_nan=False, min_attrs=1
+    ),
     unstructure_strats,
 )
 def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
@@ -356,8 +360,6 @@ def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     assume(strat is UnstructureStrategy.AS_DICT or not kwargs_a)
     a_field_names = {a.name for a in fields(cl_a)}
     b_field_names = {a.name for a in fields(cl_b)}
-    assume(a_field_names)
-    assume(b_field_names)
 
     common_names = a_field_names & b_field_names
     assume(len(a_field_names) > len(common_names))
@@ -373,7 +375,7 @@ def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
         assert inst == converter.structure(converter.unstructure(unstructured), C)
     else:
         # Our disambiguation functions only support dictionaries for now.
-        with pytest.raises(ValueError):
+        with pytest.raises(StructureHandlerNotFoundError):
             converter.structure(converter.unstructure(inst), C)
 
         def handler(obj, _):
