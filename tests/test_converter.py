@@ -77,7 +77,7 @@ def test_simple_roundtrip_tuple(cls_and_vals, dv: bool):
     assert inst == converter.structure(unstructured, cl)
 
 
-@given(simple_typed_attrs(defaults=True, allow_nan=False))
+@given(simple_typed_attrs(defaults="always", allow_nan=False))
 def test_simple_roundtrip_defaults(attr_and_vals):
     """
     Simple classes with metadata can be unstructured and restructured.
@@ -93,7 +93,9 @@ def test_simple_roundtrip_defaults(attr_and_vals):
 
 
 @given(
-    simple_typed_attrs(defaults=True, kw_only=False, newtypes=False, allow_nan=False)
+    simple_typed_attrs(
+        defaults="always", kw_only=False, newtypes=False, allow_nan=False
+    )
 )
 def test_simple_roundtrip_defaults_tuple(attr_and_vals):
     """
@@ -173,7 +175,7 @@ def test_use_alias(use_alias):
     converter.structure(unstructured, C)
 
 
-@given(simple_typed_attrs(defaults=True))
+@given(simple_typed_attrs(defaults="always"))
 def test_forbid_extra_keys_defaults(attr_and_vals):
     """
     Restructuring fails when a dict key is renamed (if forbid_extra_keys set)
@@ -234,7 +236,9 @@ def test_forbid_extra_keys_nested_override():
     assert cve.value.exceptions[0].extra_fields == {"b"}
 
 
-@given(nested_typed_classes(defaults=True, min_attrs=1, allow_nan=False), booleans())
+@given(
+    nested_typed_classes(defaults="always", min_attrs=1, allow_nan=False), booleans()
+)
 def test_nested_roundtrip(cls_and_vals, omit_if_default):
     """
     Nested classes with metadata can be unstructured and restructured.
@@ -249,7 +253,7 @@ def test_nested_roundtrip(cls_and_vals, omit_if_default):
 
 @given(
     nested_typed_classes(
-        defaults=True, min_attrs=1, kw_only=False, newtypes=False, allow_nan=False
+        defaults="always", min_attrs=1, kw_only=False, newtypes=False, allow_nan=False
     ),
     booleans(),
 )
@@ -269,8 +273,12 @@ def test_nested_roundtrip_tuple(cls_and_vals, omit_if_default: bool):
 
 @settings(suppress_health_check=[HealthCheck.too_slow])
 @given(
-    simple_typed_classes(defaults=False, newtypes=False, allow_nan=False, min_attrs=2),
-    simple_typed_classes(defaults=False, newtypes=False, allow_nan=False, min_attrs=1),
+    simple_typed_classes(
+        defaults="never", newtypes=False, allow_nan=False, min_attrs=2
+    ),
+    simple_typed_classes(
+        defaults="never", newtypes=False, allow_nan=False, min_attrs=1
+    ),
 )
 def test_union_field_roundtrip_dict(cl_and_vals_a, cl_and_vals_b):
     """
@@ -334,8 +342,8 @@ def test_union_field_roundtrip_tuple(cl_and_vals_a, cl_and_vals_b):
 @pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
 @settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
 @given(
-    simple_typed_classes(defaults=False, newtypes=False, allow_nan=False),
-    simple_typed_classes(defaults=False, newtypes=False, allow_nan=False),
+    simple_typed_classes(defaults="never", newtypes=False, allow_nan=False),
+    simple_typed_classes(defaults="never", newtypes=False, allow_nan=False),
     unstructure_strats,
 )
 def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
@@ -398,7 +406,7 @@ def test_optional_field_roundtrip(cl_and_vals):
 
 
 @pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
-@given(simple_typed_classes(defaults=False, allow_nan=False))
+@given(simple_typed_classes(defaults="never", allow_nan=False))
 def test_310_optional_field_roundtrip(cl_and_vals):
     """
     Classes with optional fields can be unstructured and structured.
@@ -419,7 +427,7 @@ def test_310_optional_field_roundtrip(cl_and_vals):
     assert inst == converter.structure(unstructured, C)
 
 
-@given(simple_typed_classes(defaults=True, allow_nan=False))
+@given(simple_typed_classes(defaults="always", allow_nan=False))
 def test_omit_default_roundtrip(cl_and_vals):
     """
     Omit default on the converter works.
@@ -460,7 +468,7 @@ def test_dict_roundtrip_with_alias():
     assert converter.structure(unstructured, C) == inst
 
 
-@given(simple_typed_classes(defaults=True))
+@given(simple_typed_classes(defaults="always"))
 def test_type_overrides(cl_and_vals):
     """
     Type overrides on the GenConverter work.

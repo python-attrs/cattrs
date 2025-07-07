@@ -28,7 +28,7 @@ def test_simple_roundtrip(cls_and_vals, strat):
 
 
 @given(
-    simple_typed_attrs(defaults=True, newtypes=False, allow_nan=False),
+    simple_typed_attrs(defaults="always", newtypes=False, allow_nan=False),
     unstructure_strats,
 )
 def test_simple_roundtrip_defaults(attr_and_strat, strat):
@@ -73,8 +73,8 @@ def test_nested_roundtrip_tuple(cls_and_vals):
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
 @given(
-    simple_typed_classes(defaults=False, newtypes=False, allow_nan=False),
-    simple_typed_classes(defaults=False, newtypes=False, allow_nan=False),
+    simple_typed_classes(defaults="never", newtypes=False, allow_nan=False),
+    simple_typed_classes(defaults="never", newtypes=False, allow_nan=False),
     unstructure_strats,
 )
 def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
@@ -116,8 +116,8 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
 @pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
 @settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
 @given(
-    simple_typed_classes(defaults=False, newtypes=False, allow_nan=False),
-    simple_typed_classes(defaults=False, newtypes=False, allow_nan=False),
+    simple_typed_classes(defaults="never", newtypes=False, allow_nan=False),
+    simple_typed_classes(defaults="never", newtypes=False, allow_nan=False),
     unstructure_strats,
 )
 def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
@@ -156,7 +156,7 @@ def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
         assert inst == converter.structure(converter.unstructure(inst), C)
 
 
-@given(simple_typed_classes(defaults=False, newtypes=False, allow_nan=False))
+@given(simple_typed_classes(defaults="never", newtypes=False, allow_nan=False))
 def test_optional_field_roundtrip(cl_and_vals):
     """
     Classes with optional fields can be unstructured and structured.
@@ -178,7 +178,7 @@ def test_optional_field_roundtrip(cl_and_vals):
 
 
 @pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
-@given(simple_typed_classes(defaults=False, newtypes=False, allow_nan=False))
+@given(simple_typed_classes(defaults="never", newtypes=False, allow_nan=False))
 def test_310_optional_field_roundtrip(cl_and_vals):
     """
     Classes with optional fields can be unstructured and structured.

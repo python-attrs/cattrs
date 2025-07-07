@@ -49,6 +49,7 @@ from hypothesis.strategies import (
     tuples,
 )
 
+from . import FeatureFlag
 from .untyped import gen_attr_names, make_class
 
 PosArg = Any
@@ -58,7 +59,7 @@ T = TypeVar("T")
 
 
 def simple_typed_classes(
-    defaults=None,
+    defaults: FeatureFlag = "sometimes",
     min_attrs=0,
     frozen=False,
     kw_only=None,
@@ -81,7 +82,11 @@ def simple_typed_classes(
 
 
 def simple_typed_dataclasses(
-    defaults=None, min_attrs=0, frozen=False, newtypes=True, allow_nan=True
+    defaults: FeatureFlag = "sometimes",
+    min_attrs=0,
+    frozen=False,
+    newtypes=True,
+    allow_nan=True,
 ):
     """Yield tuples of (class, values)."""
     return lists_of_typed_attrs(
@@ -95,7 +100,11 @@ def simple_typed_dataclasses(
 
 
 def simple_typed_classes_and_strats(
-    defaults=None, min_attrs=0, kw_only=None, newtypes=True, allow_nan=True
+    defaults: FeatureFlag = "sometimes",
+    min_attrs=0,
+    kw_only=None,
+    newtypes=True,
+    allow_nan=True,
 ) -> SearchStrategy[tuple[type, SearchStrategy[PosArgs], SearchStrategy[KwArgs]]]:
     """Yield tuples of (class, (strategies))."""
     return lists_of_typed_attrs(
@@ -108,7 +117,7 @@ def simple_typed_classes_and_strats(
 
 
 def lists_of_typed_attrs(
-    defaults=None,
+    defaults: FeatureFlag = "sometimes",
     min_size=0,
     for_frozen=False,
     allow_mutable_defaults=True,
@@ -140,7 +149,7 @@ def lists_of_typed_attrs(
 
 
 def simple_typed_attrs(
-    defaults=None,
+    defaults: FeatureFlag = "sometimes",
     for_frozen=False,
     allow_mutable_defaults=True,
     kw_only=None,
@@ -301,11 +310,11 @@ def _create_hyp_class_and_strat(
 
 @composite
 def any_typed_attrs(
-    draw: DrawFn, defaults=None, kw_only=None
+    draw: DrawFn, defaults: FeatureFlag = "sometimes", kw_only=None
 ) -> tuple[_CountingAttr, SearchStrategy[None]]:
     """Attributes typed as `Any`, having values of `None`."""
     default = NOTHING
-    if defaults is True or (defaults is None and draw(booleans())):
+    if defaults == "always" or (defaults == "sometimes" and draw(booleans())):
         default = None
     return (
         field(
@@ -318,13 +327,13 @@ def any_typed_attrs(
 
 
 @composite
-def int_typed_attrs(draw, defaults=None, kw_only=None):
+def int_typed_attrs(draw, defaults: FeatureFlag = "sometimes", kw_only=None):
     """
     Generate a tuple of an attribute and a strategy that yields ints for that
     attribute.
     """
     default = NOTHING
-    if defaults is True or (defaults is None and draw(booleans())):
+    if defaults == "always" or (defaults == "sometimes" and draw(booleans())):
         default = draw(integers())
     return (
         field(
@@ -337,13 +346,15 @@ def int_typed_attrs(draw, defaults=None, kw_only=None):
 
 
 @composite
-def str_typed_attrs(draw, defaults=None, kw_only=None, codec: str = "utf8"):
+def str_typed_attrs(
+    draw, defaults: FeatureFlag = "sometimes", kw_only=None, codec: str = "utf8"
+):
     """
     Generate a tuple of an attribute and a strategy that yields strs for that
     attribute.
     """
     default = NOTHING
-    if defaults is True or (defaults is None and draw(booleans())):
+    if defaults == "always" or (defaults == "sometimes" and draw(booleans())):
         default = draw(text())
     return (
         field(
@@ -357,14 +368,18 @@ def str_typed_attrs(draw, defaults=None, kw_only=None, codec: str = "utf8"):
 
 @composite
 def float_typed_attrs(
-    draw, defaults=None, kw_only=None, allow_infinity=None, allow_nan=True
+    draw,
+    defaults: FeatureFlag = "sometimes",
+    kw_only=None,
+    allow_infinity=None,
+    allow_nan=True,
 ):
     """
     Generate a tuple of an attribute and a strategy that yields floats for that
     attribute.
     """
     default = NOTHING
-    if defaults is True or (defaults is None and draw(booleans())):
+    if defaults == "always" or (defaults == "sometimes" and draw(booleans())):
         default = draw(floats(allow_infinity=allow_infinity, allow_nan=allow_nan))
     return (
         field(
@@ -378,7 +393,7 @@ def float_typed_attrs(
 
 @composite
 def path_typed_attrs(
-    draw: DrawFn, defaults: Optional[bool] = None, kw_only: Optional[bool] = None
+    draw: DrawFn, defaults: FeatureFlag = "sometimes", kw_only: Optional[bool] = None
 ) -> tuple[_CountingAttr, SearchStrategy[Path]]:
     """
     Generate a tuple of an attribute and a strategy that yields paths for that
@@ -386,7 +401,7 @@ def path_typed_attrs(
     """
 
     default = NOTHING
-    if defaults is True or (defaults is None and draw(booleans())):
+    if defaults == "always" or (defaults == "sometimes" and draw(booleans())):
         default = Path(draw(text(ascii_lowercase, min_size=1)))
     return (
         field(
@@ -400,7 +415,10 @@ def path_typed_attrs(
 
 @composite
 def dict_typed_attrs(
-    draw: DrawFn, defaults=None, allow_mutable_defaults=True, kw_only=None
+    draw: DrawFn,
+    defaults: FeatureFlag = "sometimes",
+    allow_mutable_defaults=True,
+    kw_only=None,
 ) -> tuple[_CountingAttr, SearchStrategy[dict[str, int]]]:
     """
     Generate a tuple of an attribute and a strategy that yields dictionaries
@@ -409,7 +427,7 @@ def dict_typed_attrs(
     """
     default = NOTHING
     val_strat = dictionaries(keys=text(), values=integers())
-    if defaults is True or (defaults is None and draw(booleans())):
+    if defaults == "always" or (defaults == "sometimes" and draw(booleans())):
         default_val = draw(val_strat)
         if not allow_mutable_defaults or draw(booleans()):
             default = Factory(lambda: default_val)
@@ -428,7 +446,7 @@ def dict_typed_attrs(
 
 @composite
 def new_dict_typed_attrs(
-    draw, defaults=None, allow_mutable_defaults=True, kw_only=None
+    draw, defaults: FeatureFlag = "sometimes", allow_mutable_defaults=True, kw_only=None
 ):
     """
     Generate a tuple of an attribute and a strategy that yields dictionaries
@@ -438,7 +456,7 @@ def new_dict_typed_attrs(
     """
     default_val = NOTHING
     val_strat = dictionaries(keys=text(), values=integers())
-    if defaults is True or (defaults is None and draw(booleans())):
+    if defaults == "always" or (defaults == "sometimes" and draw(booleans())):
         default_val = draw(val_strat)
         if not allow_mutable_defaults or draw(booleans()):
             default = Factory(lambda: default_val)
@@ -460,7 +478,7 @@ def new_dict_typed_attrs(
 @composite
 def set_typed_attrs(
     draw: DrawFn,
-    defaults=None,
+    defaults: FeatureFlag = "sometimes",
     allow_mutable_defaults=True,
     legacy_types_only=False,
     kw_only=None,
@@ -471,7 +489,7 @@ def set_typed_attrs(
     """
     default_val = NOTHING
     val_strat = sets(integers())
-    if defaults is True or (defaults is None and draw(booleans())):
+    if defaults == "always" or (defaults == "sometimes" and draw(booleans())):
         default_val = draw(val_strat)
         if not allow_mutable_defaults or draw(booleans()):
             default = Factory(lambda: default_val)
@@ -499,7 +517,10 @@ def set_typed_attrs(
 
 @composite
 def frozenset_typed_attrs(
-    draw: DrawFn, defaults=None, legacy_types_only=False, kw_only=None
+    draw: DrawFn,
+    defaults: FeatureFlag = "sometimes",
+    legacy_types_only=False,
+    kw_only=None,
 ):
     """
     Generate a tuple of an attribute and a strategy that yields frozensets
@@ -507,7 +528,7 @@ def frozenset_typed_attrs(
     """
     default = NOTHING
     val_strat = frozensets(integers())
-    if defaults is True or (defaults is None and draw(booleans())):
+    if defaults == "always" or (defaults == "sometimes" and draw(booleans())):
         default = draw(val_strat)
     type = draw(
         sampled_from(
@@ -529,7 +550,7 @@ def frozenset_typed_attrs(
 @composite
 def list_typed_attrs(
     draw: DrawFn,
-    defaults=None,
+    defaults: FeatureFlag = "sometimes",
     allow_mutable_defaults=True,
     legacy_types_only=False,
     kw_only=None,
@@ -540,7 +561,7 @@ def list_typed_attrs(
     """
     default_val = NOTHING
     val_strat = lists(floats(allow_infinity=False, allow_nan=False))
-    if defaults is True or (defaults is None and draw(booleans())):
+    if defaults == "always" or (defaults == "sometimes" and draw(booleans())):
         default_val = draw(val_strat)
         if not allow_mutable_defaults or draw(booleans()):
             default = Factory(lambda: default_val)
@@ -567,7 +588,7 @@ def list_typed_attrs(
 @composite
 def seq_typed_attrs(
     draw,
-    defaults=None,
+    defaults: FeatureFlag = "sometimes",
     allow_mutable_defaults=True,
     legacy_types_only=False,
     kw_only=None,
@@ -581,7 +602,7 @@ def seq_typed_attrs(
     """
     default_val = NOTHING
     val_strat = lists(integers()).map(tuple)
-    if defaults is True or (defaults is None and draw(booleans())):
+    if defaults == "always" or (defaults == "sometimes" and draw(booleans())):
         default_val = draw(val_strat)
         if not allow_mutable_defaults or draw(booleans()):
             default = Factory(lambda: default_val)
@@ -603,7 +624,7 @@ def seq_typed_attrs(
 @composite
 def mutable_seq_typed_attrs(
     draw,
-    defaults=None,
+    defaults: FeatureFlag = "sometimes",
     allow_mutable_defaults=True,
     legacy_types_only=False,
     kw_only=None,
@@ -614,7 +635,7 @@ def mutable_seq_typed_attrs(
     """
     default_val = NOTHING
     val_strat = lists(floats(allow_infinity=False, allow_nan=False))
-    if defaults is True or (defaults is None and draw(booleans())):
+    if defaults == "always" or (defaults == "sometimes" and draw(booleans())):
         default_val = draw(val_strat)
         if not allow_mutable_defaults or draw(booleans()):
             default = Factory(lambda: default_val)
@@ -638,14 +659,16 @@ def mutable_seq_typed_attrs(
 
 
 @composite
-def homo_tuple_typed_attrs(draw, defaults=None, legacy_types_only=False, kw_only=None):
+def homo_tuple_typed_attrs(
+    draw, defaults: FeatureFlag = "sometimes", legacy_types_only=False, kw_only=None
+):
     """
     Generate a tuple of an attribute and a strategy that yields homogenous
     tuples for that attribute. The tuples contain strings.
     """
     default = NOTHING
     val_strat = tuples(text(), text(), text())
-    if defaults is True or (defaults is None and draw(booleans())):
+    if defaults == "always" or (defaults == "sometimes" and draw(booleans())):
         default = draw(val_strat)
     return (
         field(
@@ -664,13 +687,15 @@ def homo_tuple_typed_attrs(draw, defaults=None, legacy_types_only=False, kw_only
 
 
 @composite
-def newtype_int_typed_attrs(draw: DrawFn, defaults=None, kw_only=None):
+def newtype_int_typed_attrs(
+    draw: DrawFn, defaults: FeatureFlag = "sometimes", kw_only=None
+):
     """
     Generate a tuple of an attribute and a strategy that yields ints for that
     attribute.
     """
     default = NOTHING
-    if defaults is True or (defaults is None and draw(booleans())):
+    if defaults == "always" or (defaults == "sometimes" and draw(booleans())):
         default = draw(integers())
     NewInt = NewType("NewInt", int)
     return (
@@ -684,7 +709,9 @@ def newtype_int_typed_attrs(draw: DrawFn, defaults=None, kw_only=None):
 
 
 @composite
-def newtype_attrs_typed_attrs(draw: DrawFn, defaults=None, kw_only=None):
+def newtype_attrs_typed_attrs(
+    draw: DrawFn, defaults: FeatureFlag = "sometimes", kw_only=None
+):
     """
     Generate a tuple of an attribute and a strategy that yields values for that
     attribute.
@@ -695,7 +722,7 @@ def newtype_attrs_typed_attrs(draw: DrawFn, defaults=None, kw_only=None):
     class NewTypeAttrs:
         a: int
 
-    if defaults is True or (defaults is None and draw(booleans())):
+    if defaults == "always" or (defaults == "sometimes" and draw(booleans())):
         default = NewTypeAttrs(draw(integers()))
 
     NewAttrs = NewType("NewAttrs", NewTypeAttrs)
@@ -840,7 +867,11 @@ def nested_classes(
 
 
 def nested_typed_classes_and_strat(
-    defaults=None, min_attrs=0, kw_only=None, newtypes=True, allow_nan=True
+    defaults: FeatureFlag = "sometimes",
+    min_attrs=0,
+    kw_only=None,
+    newtypes=True,
+    allow_nan=True,
 ) -> SearchStrategy[tuple[type, SearchStrategy[PosArgs]]]:
     return recursive(
         simple_typed_classes_and_strats(
@@ -863,7 +894,7 @@ def nested_typed_classes_and_strat(
 @composite
 def nested_typed_classes(
     draw: DrawFn,
-    defaults=None,
+    defaults: FeatureFlag = "sometimes",
     min_attrs=0,
     kw_only=None,
     newtypes=True,
