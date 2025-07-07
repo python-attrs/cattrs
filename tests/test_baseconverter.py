@@ -74,8 +74,12 @@ def test_nested_roundtrip_tuple(cls_and_vals):
 
 @settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
 @given(
-    simple_typed_classes(defaults="never", newtypes=False, allow_nan=False),
-    simple_typed_classes(defaults="never", newtypes=False, allow_nan=False),
+    simple_typed_classes(
+        defaults="never", newtypes=False, allow_nan=False, min_attrs=1
+    ),
+    simple_typed_classes(
+        defaults="never", newtypes=False, allow_nan=False, min_attrs=1
+    ),
     unstructure_strats,
 )
 def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
@@ -85,11 +89,9 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
     converter = BaseConverter(unstruct_strat=strat)
     cl_a, vals_a, kwargs_a = cl_and_vals_a
     assume(strat is UnstructureStrategy.AS_DICT or not kwargs_a)
-    cl_b, vals_b, _ = cl_and_vals_b
+    cl_b, _, _ = cl_and_vals_b
     a_field_names = {a.name for a in fields(cl_a)}
     b_field_names = {a.name for a in fields(cl_b)}
-    assume(a_field_names)
-    assume(b_field_names)
 
     common_names = a_field_names & b_field_names
     assume(len(a_field_names) > len(common_names))
@@ -104,7 +106,7 @@ def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
         assert inst == converter.structure(converter.unstructure(inst), C)
     else:
         # Our disambiguation functions only support dictionaries for now.
-        with pytest.raises(ValueError):
+        with pytest.raises(StructureHandlerNotFoundError):
             converter.structure(converter.unstructure(inst), C)
 
         def handler(obj, _):
