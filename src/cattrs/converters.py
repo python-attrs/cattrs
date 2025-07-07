@@ -281,7 +281,11 @@ class BaseConverter:
                 (is_tuple, self._structure_tuple),
                 (is_namedtuple, namedtuple_structure_factory, "extended"),
                 (is_mapping, self._structure_dict),
-                (is_supported_union, self._gen_attrs_union_structure, True),
+                *(
+                    [(is_supported_union, self._gen_attrs_union_structure, True)]
+                    if unstruct_strat is UnstructureStrategy.AS_DICT
+                    else []
+                ),
                 (is_optional, self._structure_optional),
                 (
                     lambda t: is_union_type(t) and t in self._union_struct_registry,
