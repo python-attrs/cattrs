@@ -5,7 +5,7 @@
 groups = ["default", "bench", "bson", "cbor2", "docs", "lint", "msgpack", "msgspec", "orjson", "pyyaml", "test", "tomlkit", "ujson"]
 strategy = []
 lock_version = "4.5.0"
-content_hash = "sha256:d317bca9bc2ecd6e03c6d6015ccd9be078c0c8f3b89b2930b7b286a36deae596"
+content_hash = "sha256:b18f05d0d3bad30caebab3d0bf0c9fc98ea29232ce336c6203a34aae1bd78ed0"
 
 [[metadata.targets]]
 requires_python = ">=3.9"
@@ -370,8 +370,8 @@ files = [
 
 [[package]]
 name = "hypothesis"
-version = "6.111.2"
-requires_python = ">=3.8"
+version = "6.135.26"
+requires_python = ">=3.9"
 summary = "A library for property-based testing"
 dependencies = [
     "attrs>=22.2.0",
@@ -379,8 +379,8 @@ dependencies = [
     "sortedcontainers<3.0.0,>=2.1.0",
 ]
 files = [
-    {file = "hypothesis-6.111.2-py3-none-any.whl", hash = "sha256:055e8228958e22178d6077e455fd86a72044d02dac130dbf9c8b31e161b9809c"},
-    {file = "hypothesis-6.111.2.tar.gz", hash = "sha256:0496ad28c7240ee9ba89fcc7fb1dc74e89f3e40fbcbbb5f73c0091558dec8e6e"},
+    {file = "hypothesis-6.135.26-py3-none-any.whl", hash = "sha256:fa237cbe2ae2c31d65f7230dcb866139ace635dcfec6c30dddf25974dd8ff4b9"},
+    {file = "hypothesis-6.135.26.tar.gz", hash = "sha256:73af0e46cd5039c6806f514fed6a3c185d91ef88b5a1577477099ddbd1a2e300"},
 ]
 
 [[package]]

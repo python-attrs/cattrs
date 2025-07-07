@@ -28,7 +28,7 @@ settings.register_profile(
 )
 settings.register_profile("fast", settings.get_profile("tests"), max_examples=10)
 
-settings.load_profile("fast" if "FAST" in environ else "tests")
+settings.load_profile("fast" if environ.get("FAST") == "1" else "tests")
 
 collect_ignore_glob = []
 if sys.version_info < (3, 10):

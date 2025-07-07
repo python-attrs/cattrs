@@ -7,7 +7,7 @@ lint = [
     "ruff>=0.12.2",
 ]
 test = [
-    "hypothesis==6.111.2",
+    "hypothesis>=6.135.26",
     "pytest>=8.4.1",
     "pytest-benchmark>=5.1.0",
     "immutables>=0.21",
