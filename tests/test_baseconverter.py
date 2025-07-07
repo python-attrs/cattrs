@@ -59,7 +59,7 @@ def test_nested_roundtrip(cls_and_vals):
     assert inst == converter.structure(converter.unstructure(inst), cl)
 
 
-@given(nested_typed_classes(kw_only=False, newtypes=False, allow_nan=False))
+@given(nested_typed_classes(kw_only="never", newtypes=False, allow_nan=False))
 def test_nested_roundtrip_tuple(cls_and_vals):
     """
     Nested classes with metadata can be unstructured and restructured.
@@ -107,10 +107,10 @@ def test_union_field_roundtrip_dict(cl_and_vals_a, cl_and_vals_b):
 @settings(suppress_health_check=[HealthCheck.too_slow])
 @given(
     simple_typed_classes(
-        defaults=False, newtypes=False, allow_nan=False, kw_only=False, min_attrs=2
+        defaults="never", newtypes=False, allow_nan=False, kw_only="never", min_attrs=2
     ),
     simple_typed_classes(
-        defaults=False, newtypes=False, allow_nan=False, kw_only=False, min_attrs=1
+        defaults="never", newtypes=False, allow_nan=False, kw_only="never", min_attrs=1
     ),
 )
 def test_union_field_roundtrip_tuple(cl_and_vals_a, cl_and_vals_b):

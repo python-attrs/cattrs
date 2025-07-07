@@ -59,7 +59,7 @@ def test_simple_roundtrip(cls_and_vals, detailed_validation):
 
 
 @given(
-    simple_typed_classes(kw_only=False, newtypes=False, allow_nan=False)
+    simple_typed_classes(kw_only="never", newtypes=False, allow_nan=False)
     | simple_typed_dataclasses(newtypes=False, allow_nan=False),
     booleans(),
 )
@@ -94,7 +94,7 @@ def test_simple_roundtrip_defaults(attr_and_vals):
 
 @given(
     simple_typed_attrs(
-        defaults="always", kw_only=False, newtypes=False, allow_nan=False
+        defaults="always", kw_only="never", newtypes=False, allow_nan=False
     )
 )
 def test_simple_roundtrip_defaults_tuple(attr_and_vals):
@@ -253,7 +253,7 @@ def test_nested_roundtrip(cls_and_vals, omit_if_default):
 
 @given(
     nested_typed_classes(
-        defaults="always", min_attrs=1, kw_only=False, newtypes=False, allow_nan=False
+        defaults="always", min_attrs=1, kw_only="never", newtypes=False, allow_nan=False
     ),
     booleans(),
 )
