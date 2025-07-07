@@ -28,6 +28,8 @@ jobs:
       - uses: hynek/setup-cached-uv@757bedc3f972eb7227a1aa657651f15a8527c817
 
       - name: "Run Tests"
+        env:
+          FAST: ${{ startsWith(matrix.python-version, 'pypy') && '1' || '' }}
         run: |
           just cov ${{ startsWith(matrix.python-version, 'pypy') && matrix.python-version || format('python{0}', matrix.python-version) }}
 
