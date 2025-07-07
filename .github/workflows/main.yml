@@ -31,7 +31,7 @@ jobs:
         env:
           FAST: ${{ startsWith(matrix.python-version, 'pypy') && '1' || '' }}
         run: |
-          just cov ${{ startsWith(matrix.python-version, 'pypy') && matrix.python-version || format('python{0}', matrix.python-version) }}
+          just --set python ${{ startsWith(matrix.python-version, 'pypy') && matrix.python-version || format('python{0}', matrix.python-version) }} cov
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
@@ -62,8 +62,8 @@ jobs:
       - name: "Combine coverage"
         run: |
           uv run --group test coverage combine
-          uv run --group test  coverage html
-          uv run --group test  coverage json
+          uv run --group test coverage html
+          uv run --group test coverage json
 
           # Report and write to summary.
           uv run --group test coverage report --format=markdown >> $GITHUB_STEP_SUMMARY

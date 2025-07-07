@@ -42,29 +42,6 @@ clean-pyc: ## remove Python file artifacts
 	find . -name '*~' -exec rm -f {} +
 	find . -name '__pycache__' -exec rm -fr {} +
 
-clean-test: ## remove test and coverage artifacts
-	rm -fr .tox/
-	rm -f .coverage
-	rm -fr htmlcov/
-
-lint: ## check style with ruff and black
-	pdm run ruff check src/ tests bench
-	pdm run black --check src tests docs/conf.py
-
-test: ## run tests quickly with the default Python
-	pdm run pytest -x --ff -n auto tests
-
-
-test-all: ## run tests on every Python version with tox
-	tox
-
-coverage: ## check code coverage quickly with the default Python
-	pdm run coverage run --source cattrs -m pytest -n auto tests
-
-	pdm run coverage report -m
-	pdm run coverage html
-	$(BROWSER) htmlcov/index.html
-
 docs: ## generate Sphinx HTML documentation, including API docs
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs doctest
