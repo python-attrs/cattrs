@@ -3,8 +3,8 @@ skip-magic-trailing-comma = true
 
 [dependency-groups]
 lint = [
-    "black>=24.2.0",
-    "ruff>=0.0.277",
+    "black>=25.1.0",
+    "ruff>=0.12.2",
 ]
 test = [
     "hypothesis>=6.111.2",
@@ -114,6 +114,9 @@ exclude_also = [
 
 [tool.ruff]
 src = ["src", "tests"]
+
+[tool.ruff.per-file-target-version]
+"*_695.py" = "py312"
 
 [tool.ruff.lint]
 select = [

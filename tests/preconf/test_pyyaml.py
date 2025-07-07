@@ -5,6 +5,7 @@ from datetime import date, datetime, timezone
 from attrs import define
 from hypothesis import given
 from pytest import raises
+from yaml import safe_dump, safe_load
 
 from cattrs._compat import FrozenSetSubscriptable
 from cattrs.errors import ClassValidationError
@@ -15,7 +16,6 @@ from ..test_preconf import Everything, everythings, native_unions
 
 @given(everythings())
 def test_pyyaml(everything: Everything):
-    from yaml import safe_dump, safe_load
 
     converter = make_converter()
     unstructured = converter.unstructure(everything)

@@ -8,6 +8,7 @@ from dataclasses import field as dc_field
 from dataclasses import make_dataclass
 from functools import partial
 from pathlib import Path
+from string import ascii_lowercase
 from typing import (
     Any,
     Dict,
@@ -275,7 +276,7 @@ def _create_dataclass(
 
 
 def _create_hyp_class_and_strat(
-    attrs_and_strategy: list[tuple[_CountingAttr, SearchStrategy[PosArg]]]
+    attrs_and_strategy: list[tuple[_CountingAttr, SearchStrategy[PosArg]]],
 ) -> SearchStrategy[tuple[type, SearchStrategy[PosArgs], SearchStrategy[KwArgs]]]:
     def key(t):
         return (t[0].default is not NOTHING, t[0].kw_only)
@@ -383,7 +384,6 @@ def path_typed_attrs(
     Generate a tuple of an attribute and a strategy that yields paths for that
     attribute.
     """
-    from string import ascii_lowercase
 
     default = NOTHING
     if defaults is True or (defaults is None and draw(booleans())):

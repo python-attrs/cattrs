@@ -1,6 +1,7 @@
 """Tests for generated dict functions."""
 
-from typing import Dict, Type
+from math import ceil
+from typing import Annotated, Dict, Literal, Type, Union
 
 import pytest
 from attrs import NOTHING, Factory, define, field, frozen
@@ -316,7 +317,6 @@ def test_omitting_structure(detailed_validation: bool):
 
 def test_type_names_with_quotes():
     """Types with quote characters in their reprs should work."""
-    from typing import Annotated, Literal, Union
 
     converter = Converter()
 
@@ -332,7 +332,6 @@ def test_type_names_with_quotes():
 
 def test_overriding_struct_hook(converter: BaseConverter) -> None:
     """Overriding structure hooks works."""
-    from math import ceil
 
     @define
     class A:

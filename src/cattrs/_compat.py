@@ -259,7 +259,7 @@ def is_tuple(type):
 if sys.version_info >= (3, 10):
 
     def is_union_type(obj):
-        from types import UnionType
+        from types import UnionType  # noqa: PLC0415
 
         return (
             obj is Union

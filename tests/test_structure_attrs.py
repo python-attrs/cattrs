@@ -6,6 +6,7 @@ from typing import Literal, Union
 from unittest.mock import Mock
 
 import pytest
+import typing_extensions
 from attrs import NOTHING, Factory, asdict, astuple, define, field, fields, make_class
 from hypothesis import assume, given
 from hypothesis.strategies import data, lists, sampled_from
@@ -155,7 +156,6 @@ def test_structure_literal(converter_cls):
 def test_structure_typing_extensions_literal(converter_cls):
     """Structuring a class with a typing_extensions.Literal field works."""
     converter = converter_cls()
-    import typing_extensions
 
     @define
     class ClassWithLiteral:

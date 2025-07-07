@@ -1,6 +1,6 @@
 from collections import deque
 from collections.abc import Sequence
-from typing import Deque, Dict, Generic, List, Optional, TypeVar, Union
+from typing import Deque, Dict, Generic, List, Optional, TypedDict, TypeVar, Union
 
 import pytest
 from attrs import asdict, define
@@ -169,7 +169,7 @@ def test_structure_deque_of_generic_unions(converter):
 
 
 def test_raises_if_no_generic_params_supplied(
-    converter: Union[Converter, BaseConverter]
+    converter: Union[Converter, BaseConverter],
 ):
     data = TClass(1, "a")
 
@@ -320,7 +320,6 @@ def test_roundtrip_generic_with_union() -> None:
 
 @pytest.mark.skipif(not is_py311_plus, reason="3.11+ only")
 def test_generate_typeddict_mapping() -> None:
-    from typing import Generic, TypedDict, TypeVar
 
     T = TypeVar("T")
     U = TypeVar("U")
