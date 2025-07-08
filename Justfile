@@ -10,3 +10,9 @@ test *args="-x --ff -n auto tests":
 cov *args="-x --ff -n auto tests":
     @uv run {{ if python != '' { '-p ' + python } else { '' } }} python -c 'import pathlib, site; pathlib.Path(f"{site.getsitepackages()[0]}/cov.pth").write_text("import coverage; coverage.process_startup()")'
     COVERAGE_PROCESS_START={{justfile_directory()}}/pyproject.toml uv run {{ if python != '' { '-p ' + python } else { '' } }} --all-extras --group test coverage run -m pytest {{args}}
+
+bench-cmp:
+	uv run pytest bench --benchmark-compare
+
+bench:
+	uv run pytest bench --benchmark-save base

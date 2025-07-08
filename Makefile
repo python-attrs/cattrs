@@ -49,9 +49,3 @@ docs: ## generate Sphinx HTML documentation, including API docs
 
 htmllive: docs ## compile the docs watching for changes
 	$(MAKE) -C docs htmllive
-
-bench-cmp:
-	pytest bench --benchmark-compare
-
-bench:
-	pytest bench --benchmark-save base

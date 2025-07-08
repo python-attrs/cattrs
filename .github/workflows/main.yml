@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
 
       - uses: extractions/setup-just@e33e0265a09d6d736e2ee1e0eb685ef1de4669ff  # v3.0.0
-      - uses: hynek/setup-cached-uv@757bedc3f972eb7227a1aa657651f15a8527c817
+      - uses: hynek/setup-cached-uv@757bedc3f972eb7227a1aa657651f15a8527c817  # v2.3.0
 
       - name: "Run Tests"
         env:
@@ -57,7 +57,7 @@ jobs:
           pattern: coverage-data-*
           merge-multiple: true
 
-      - uses: hynek/setup-cached-uv@757bedc3f972eb7227a1aa657651f15a8527c817
+      - uses: hynek/setup-cached-uv@757bedc3f972eb7227a1aa657651f15a8527c817  # v2.3.0
 
       - name: "Combine coverage"
         run: |
@@ -80,6 +80,21 @@ jobs:
           name: "html-report"
           path: "htmlcov"
         if: always()
+
+  lint:
+    name: "Run linters"
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v4"
+        with:
+          persist-credentials: false
+
+      - uses: extractions/setup-just@e33e0265a09d6d736e2ee1e0eb685ef1de4669ff  # v3.0.0
+      - uses: hynek/setup-cached-uv@757bedc3f972eb7227a1aa657651f15a8527c817  # v2.3.0
+
+      - name: "Run linters"
+        run: |
+          just lint
 
   package:
     name: "Build & verify package"
