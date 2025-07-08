@@ -18,7 +18,6 @@ from typing import (
     MutableSequence,
     MutableSet,
     NewType,
-    Optional,
     Sequence,
     Set,
     Tuple,
