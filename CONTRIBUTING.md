@@ -55,27 +55,27 @@ Ready to contribute? Here's how to set up _cattrs_ for local development.
 $ git clone git@github.com:your_name_here/cattrs.git
 ```
 
-3. Install your local copy into a virtualenv. Assuming you have [PDM](https://pdm.fming.dev/latest/) installed, this is how you set up your fork for local development::
+3. Install your local copy into a virtualenv. Assuming you have [uv](https://docs.astral.sh/uv/) installed, this is how you set up your fork for local development::
 
 ```shell
 $ cd cattrs/
-$ pdm install -d -G :all
+$ uv sync --all-groups --all-extras
 ```
 
 4. Create a branch for local development::
 
 ```shell
-$ git checkout -b name-of-your-bugfix-or-feature
+$ git switch -c name-of-your-bugfix-or-feature
 ```
 
 Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the tests, including testing other Python versions with tox::
+5. When you're done making changes, check that your changes pass lints and the tests, including testing other Python versions::
 
 ```shell
 $ make lint
-$ make test
-$ tox
+$ just test
+$ just --set python python3.9 test  # Test on other versions
 ```
 
 6. Commit your changes and push your branch to GitHub::
@@ -106,5 +106,5 @@ Before you submit a pull request, check that it meets these guidelines:
 To run a subset of tests:
 
 ```shell
-$ pdm run pytest tests.test_unstructure
+$ just test tests/test_unstructure.py
 ```
