@@ -2,12 +2,12 @@
 
 import keyword
 import string
+from collections.abc import Iterable
 from enum import Enum
 from typing import (
     Any,
     Deque,
     Dict,
-    Iterable,
     List,
     Mapping,
     MutableMapping,
@@ -24,8 +24,6 @@ from attrs import NOTHING, AttrsInstance, Factory, make_class
 from hypothesis import strategies as st
 from hypothesis.strategies import SearchStrategy, booleans
 from typing_extensions import TypeAlias
-
-from . import FeatureFlag
 
 PosArg = Any
 PosArgs = tuple[PosArg]
@@ -206,7 +204,7 @@ def _create_hyp_class(
 
 def just_class(tup):
     nested_cl = tup[1][0]
-    default = attr.Factory(nested_cl)
+    default = Factory(nested_cl)
     combined_attrs = list(tup[0])
     combined_attrs.append((attr.ib(default=default), st.just(nested_cl())))
     return _create_hyp_class(combined_attrs)
@@ -288,7 +286,7 @@ def list_of_class_with_type(tup: tuple) -> SearchStrategy[AttrsAndArgs]:
 
 def dict_of_class(tup):
     nested_cl = tup[1][0]
-    default = attr.Factory(lambda: {"cls": nested_cl()})
+    default = Factory(lambda: {"cls": nested_cl()})
     combined_attrs = list(tup[0])
     combined_attrs.append((attr.ib(default=default), st.just({"cls": nested_cl()})))
     return _create_hyp_class(combined_attrs)
@@ -404,7 +402,7 @@ def dict_attrs(draw, defaults=None, kw_only=None):
     val_strat = st.dictionaries(keys=st.text(), values=st.integers())
     if defaults is True or (defaults is None and draw(st.booleans())):
         default_val = draw(val_strat)
-        default = attr.Factory(lambda: default_val)
+        default = Factory(lambda: default_val)
     return (
         attr.ib(
             default=default, kw_only=draw(st.booleans()) if kw_only is None else kw_only
@@ -460,9 +458,7 @@ def simple_classes(defaults=None, min_attrs=0, frozen=None, kw_only=None):
     )
 
 
-def nested_classes(
-    takes_self: FeatureFlag = "sometimes",
-) -> SearchStrategy[AttrsAndArgs]:
+def nested_classes() -> SearchStrategy[AttrsAndArgs]:
     # Ok, so st.recursive works by taking a base strategy (in this case,
     # simple_classes) and a special function. This function receives a strategy,
     # and returns another strategy (building on top of the base strategy).

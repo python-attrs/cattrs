@@ -18,7 +18,7 @@ from typing import (
 
 import pytest
 from attrs import Factory, define, field, fields, has, make_class
-from hypothesis import HealthCheck, assume, given, settings
+from hypothesis import assume, given
 from hypothesis.strategies import booleans, just, lists, one_of, sampled_from
 
 from cattrs import BaseConverter, Converter, UnstructureStrategy
@@ -59,7 +59,7 @@ def test_simple_roundtrip(cls_and_vals, detailed_validation):
 
 
 @given(
-    simple_typed_classes(kw_only=False, newtypes=False, allow_nan=False)
+    simple_typed_classes(kw_only="never", newtypes=False, allow_nan=False)
     | simple_typed_dataclasses(newtypes=False, allow_nan=False),
     booleans(),
 )
@@ -77,7 +77,7 @@ def test_simple_roundtrip_tuple(cls_and_vals, dv: bool):
     assert inst == converter.structure(unstructured, cl)
 
 
-@given(simple_typed_attrs(defaults=True, allow_nan=False))
+@given(simple_typed_attrs(defaults="always", allow_nan=False))
 def test_simple_roundtrip_defaults(attr_and_vals):
     """
     Simple classes with metadata can be unstructured and restructured.
@@ -93,7 +93,9 @@ def test_simple_roundtrip_defaults(attr_and_vals):
 
 
 @given(
-    simple_typed_attrs(defaults=True, kw_only=False, newtypes=False, allow_nan=False)
+    simple_typed_attrs(
+        defaults="always", kw_only="never", newtypes=False, allow_nan=False
+    )
 )
 def test_simple_roundtrip_defaults_tuple(attr_and_vals):
     """
@@ -173,7 +175,7 @@ def test_use_alias(use_alias):
     converter.structure(unstructured, C)
 
 
-@given(simple_typed_attrs(defaults=True))
+@given(simple_typed_attrs(defaults="always"))
 def test_forbid_extra_keys_defaults(attr_and_vals):
     """
     Restructuring fails when a dict key is renamed (if forbid_extra_keys set)
@@ -234,7 +236,9 @@ def test_forbid_extra_keys_nested_override():
     assert cve.value.exceptions[0].extra_fields == {"b"}
 
 
-@given(nested_typed_classes(defaults=True, min_attrs=1, allow_nan=False), booleans())
+@given(
+    nested_typed_classes(defaults="always", min_attrs=1, allow_nan=False), booleans()
+)
 def test_nested_roundtrip(cls_and_vals, omit_if_default):
     """
     Nested classes with metadata can be unstructured and restructured.
@@ -249,7 +253,7 @@ def test_nested_roundtrip(cls_and_vals, omit_if_default):
 
 @given(
     nested_typed_classes(
-        defaults=True, min_attrs=1, kw_only=False, newtypes=False, allow_nan=False
+        defaults="always", min_attrs=1, kw_only="never", newtypes=False, allow_nan=False
     ),
     booleans(),
 )
@@ -265,95 +269,6 @@ def test_nested_roundtrip_tuple(cls_and_vals, omit_if_default: bool):
     inst = cl(*vals)
     unstructured = converter.unstructure(inst)
     assert inst == converter.structure(unstructured, cl)
-
-
-@settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
-@given(
-    simple_typed_classes(defaults=False, newtypes=False, allow_nan=False),
-    simple_typed_classes(defaults=False, newtypes=False, allow_nan=False),
-    unstructure_strats,
-)
-def test_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
-    """
-    Classes with union fields can be unstructured and structured.
-    """
-    converter = Converter(unstruct_strat=strat)
-    cl_a, vals_a, kwargs_a = cl_and_vals_a
-    cl_b, _, _ = cl_and_vals_b
-    assume(strat is UnstructureStrategy.AS_DICT or not kwargs_a)
-    a_field_names = {a.name for a in fields(cl_a)}
-    b_field_names = {a.name for a in fields(cl_b)}
-    assume(a_field_names)
-    assume(b_field_names)
-
-    common_names = a_field_names & b_field_names
-    assume(len(a_field_names) > len(common_names))
-
-    @define
-    class C:
-        a: Union[cl_a, cl_b]
-
-    inst = C(a=cl_a(*vals_a, **kwargs_a))
-
-    if strat is UnstructureStrategy.AS_DICT:
-        unstructured = converter.unstructure(inst)
-        assert inst == converter.structure(converter.unstructure(unstructured), C)
-    else:
-        # Our disambiguation functions only support dictionaries for now.
-        with pytest.raises(ValueError):
-            converter.structure(converter.unstructure(inst), C)
-
-        def handler(obj, _):
-            return converter.structure(obj, cl_a)
-
-        converter.register_structure_hook(Union[cl_a, cl_b], handler)
-        unstructured = converter.unstructure(inst)
-        assert inst == converter.structure(unstructured, C)
-
-
-@pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
-@settings(suppress_health_check=[HealthCheck.filter_too_much, HealthCheck.too_slow])
-@given(
-    simple_typed_classes(defaults=False, newtypes=False, allow_nan=False),
-    simple_typed_classes(defaults=False, newtypes=False, allow_nan=False),
-    unstructure_strats,
-)
-def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
-    """
-    Classes with union fields can be unstructured and structured.
-    """
-    converter = Converter(unstruct_strat=strat)
-    cl_a, vals_a, kwargs_a = cl_and_vals_a
-    cl_b, _, _ = cl_and_vals_b
-    assume(strat is UnstructureStrategy.AS_DICT or not kwargs_a)
-    a_field_names = {a.name for a in fields(cl_a)}
-    b_field_names = {a.name for a in fields(cl_b)}
-    assume(a_field_names)
-    assume(b_field_names)
-
-    common_names = a_field_names & b_field_names
-    assume(len(a_field_names) > len(common_names))
-
-    @define
-    class C:
-        a: cl_a | cl_b
-
-    inst = C(a=cl_a(*vals_a, **kwargs_a))
-
-    if strat is UnstructureStrategy.AS_DICT:
-        unstructured = converter.unstructure(inst)
-        assert inst == converter.structure(converter.unstructure(unstructured), C)
-    else:
-        # Our disambiguation functions only support dictionaries for now.
-        with pytest.raises(ValueError):
-            converter.structure(converter.unstructure(inst), C)
-
-        def handler(obj, _):
-            return converter.structure(obj, cl_a)
-
-        converter.register_structure_hook(Union[cl_a, cl_b], handler)
-        unstructured = converter.unstructure(inst)
-        assert inst == converter.structure(unstructured, C)
 
 
 @given(simple_typed_classes(defaults=False, allow_nan=False))
@@ -378,7 +293,7 @@ def test_optional_field_roundtrip(cl_and_vals):
 
 
 @pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
-@given(simple_typed_classes(defaults=False, allow_nan=False))
+@given(simple_typed_classes(defaults="never", allow_nan=False))
 def test_310_optional_field_roundtrip(cl_and_vals):
     """
     Classes with optional fields can be unstructured and structured.
@@ -399,7 +314,7 @@ def test_310_optional_field_roundtrip(cl_and_vals):
     assert inst == converter.structure(unstructured, C)
 
 
-@given(simple_typed_classes(defaults=True, allow_nan=False))
+@given(simple_typed_classes(defaults="always", allow_nan=False))
 def test_omit_default_roundtrip(cl_and_vals):
     """
     Omit default on the converter works.
@@ -440,7 +355,7 @@ def test_dict_roundtrip_with_alias():
     assert converter.structure(unstructured, C) == inst
 
 
-@given(simple_typed_classes(defaults=True))
+@given(simple_typed_classes(defaults="always"))
 def test_type_overrides(cl_and_vals):
     """
     Type overrides on the GenConverter work.

@@ -113,6 +113,30 @@ def test_edge_errors():
         fn([])
 
 
+def test_input_not_mapping():
+    """Correct errors are raised when the raw payload isn't a mapping."""
+    c = Converter()
+
+    @define
+    class A:
+        a: int
+
+    @define
+    class B:
+        b: int
+
+    @define
+    class C:
+        pass
+
+    with pytest.raises(ValueError):
+        c.structure([], Union[A, B])
+
+    # Also test the fallback case
+    with pytest.raises(ValueError):
+        c.structure([], Union[A, B, C])
+
+
 @given(simple_classes(defaults=False))
 def test_fallback(cl_and_vals):
     """The fallback case works."""

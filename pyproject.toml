@@ -7,12 +7,12 @@ lint = [
     "ruff>=0.12.2",
 ]
 test = [
-    "hypothesis>=6.111.2",
-    "pytest>=8.3.2",
-    "pytest-benchmark>=4.0.0",
-    "immutables>=0.20",
-    "coverage>=7.6.1",
-    "pytest-xdist>=3.6.1",
+    "hypothesis>=6.135.26",
+    "pytest>=8.4.1",
+    "pytest-benchmark>=5.1.0",
+    "immutables>=0.21",
+    "coverage>=7.9.2",
+    "pytest-xdist>=3.8.0",
 ]
 docs = [
     "sphinx>=5.3.0",

@@ -32,6 +32,9 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - For {class}`cattrs.errors.StructureHandlerNotFoundError` and {class}`cattrs.errors.ForbiddenExtraKeysError`
   correctly set {attr}`BaseException.args` in `super()` and hence make them pickable.
   ([#666](https://github.com/python-attrs/cattrs/pull/666))
+- The default disambiguation hook factory is now only enabled for converters with `unstructure_strat=AS_DICT` (the default).
+  Since the strategy doesn't support tuples, it is skipped for `unstructure_strat=AS_TUPLE` converters.
+  ([#673](https://github.com/python-attrs/cattrs/pull/673))
 
 ## 25.1.1 (2025-06-04)
 
