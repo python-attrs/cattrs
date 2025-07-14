@@ -10,9 +10,7 @@ build:
     python: "3.11"
   jobs:
     create_environment:
-      - asdf plugin add uv
-      - asdf install uv latest
-      - asdf global uv latest
+      - pipx install uv
       - uv tool install rust-just
     # Need the tags to calculate the version
     install:
