@@ -16,3 +16,11 @@ bench-cmp:
 
 bench:
 	uv run pytest bench --benchmark-save base
+
+docs: ## generate Sphinx HTML documentation, including API docs
+	make -C docs clean
+	make -C docs doctest
+	make -C docs html
+
+htmllive: docs ## compile the docs watching for changes
+	make -C docs htmllive
