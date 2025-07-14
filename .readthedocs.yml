@@ -9,10 +9,15 @@ build:
     # Keep version in sync with tox.ini (docs and gh-actions).
     python: "3.11"
   jobs:
+    create_environment:
+      - asdf plugin add uv
+      - asdf install uv latest
+      - asdf global uv latest
+      - uv tool install rust-just
     # Need the tags to calculate the version
-    post_checkout:
-      - git fetch --tags
-    post_create_environment:
-      - "curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -"
     post_install:
-      - "VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH ~/.local/bin/pdm sync -dG :all,docs"
+      - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv sync --group docs --link-mode=copy
+      - git fetch --tags
+    build:
+      html:
+        - just docs
