@@ -6,8 +6,7 @@ sphinx:
 build:
   os: ubuntu-lts-latest
   tools:
-    # Keep version in sync with tox.ini (docs and gh-actions).
-    python: "3.11"
+    python: "3.13"
   jobs:
     create_environment:
       - asdf plugin add uv
