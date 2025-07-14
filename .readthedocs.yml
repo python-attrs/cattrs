@@ -10,8 +10,11 @@ build:
     python: "3.11"
   jobs:
     create_environment:
-      - pipx install uv
-      - uv tool install rust-just
+      - asdf plugin add uv
+      - asdf plugin add just
+      - asdf install uv latest
+      - asdf global uv latest
+      - asdf install just latest
     # Need the tags to calculate the version
     install:
       - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv sync --group docs --all-extras --link-mode=copy
@@ -19,4 +22,4 @@ build:
       - git fetch --tags
     build:
       html:
-        - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH /home/docs/.local/bin/just docs $READTHEDOCS_OUTPUT
+        - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH just docs $READTHEDOCS_OUTPUT
