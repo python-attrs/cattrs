@@ -16,9 +16,9 @@ build:
       - uv tool install rust-just
     # Need the tags to calculate the version
     install:
-      - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv sync --group docs --link-mode=copy
+      - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv sync --group docs --all-extras --link-mode=copy
     post_install:
       - git fetch --tags
     build:
       html:
-        - /home/docs/.local/bin/just docs $READTHEDOCS_OUTPUT
+        - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH /home/docs/.local/bin/just docs $READTHEDOCS_OUTPUT
