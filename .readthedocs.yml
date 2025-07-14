@@ -15,10 +15,11 @@ build:
       - asdf install uv latest
       - asdf global uv latest
       - asdf install just latest
-    # Need the tags to calculate the version
+      - asdf global just latest
     install:
       - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv sync --group docs --all-extras --link-mode=copy
     post_install:
+      # Need the tags to calculate the version
       - git fetch --tags
     build:
       html:
