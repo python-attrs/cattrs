@@ -13,10 +13,10 @@ build:
       - asdf plugin add uv
       - asdf install uv latest
       - asdf global uv latest
+      - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv sync --group docs --link-mode=copy
       - uv tool install rust-just
     # Need the tags to calculate the version
     post_install:
-      - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv sync --group docs --link-mode=copy
       - git fetch --tags
     build:
       html:
