@@ -21,4 +21,4 @@ build:
       - git fetch --tags
     build:
       html:
-        - just docs
+        - /home/docs/.local/bin/just docs
