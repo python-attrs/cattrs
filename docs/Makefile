@@ -3,7 +3,7 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = pdm run sphinx-build
+SPHINXBUILD   = uv run --all-extras --group docs sphinx-build
 PAPER         =
 BUILDDIR      = _build
 
@@ -173,15 +173,15 @@ pseudoxml:
 
 .PHONY: apidoc
 apidoc:
-	pdm run sphinx-apidoc -o . ../src/cattrs/ '../**/converters.py' -f -M
+	uv run sphinx-apidoc -o . ../src/cattrs/ '../**/converters.py' -f -M
 
 ## htmlview       to open the index page built by the html target in your browser
 .PHONY: htmlview
 htmlview: html
-	pdm run python -c "import os, webbrowser; webbrowser.open('file://' + os.path.realpath('$(BUILDDIR)/html/index.html'))"
+	uv run python -c "import os, webbrowser; webbrowser.open('file://' + os.path.realpath('$(BUILDDIR)/html/index.html'))"
 
 ## htmllive       to rebuild and reload HTML files in your browser
 .PHONY: htmllive
-htmllive: SPHINXBUILD = pdm run sphinx-autobuild
+htmllive: SPHINXBUILD = uv run sphinx-autobuild
 htmllive: SPHINXERRORHANDLING = --re-ignore="/\.idea/|/venv/|/pep-0000.rst|/topic/"
 htmllive: html
