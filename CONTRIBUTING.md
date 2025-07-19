@@ -73,12 +73,19 @@ Now you can make your changes locally.
 5. When you're done making changes, check that your changes pass lints and the tests, including testing other Python versions::
 
 ```shell
-$ make lint
+$ just lint
 $ just test
 $ just --set python python3.9 test  # Test on other versions
 ```
 
-6. Commit your changes and push your branch to GitHub::
+6. Write any necessary documentation, including updating the changelog (HISTORY.md). The docs can be built like so:
+
+```shell
+$ just docs
+$ just htmllive  # Build the docs, serve then and autoreload on changes
+```
+
+7. Commit your changes and push your branch to GitHub::
 
 ```shell
 $ git add .
@@ -86,7 +93,7 @@ $ git commit -m "Your detailed description of your changes."
 $ git push origin name-of-your-bugfix-or-feature
 ```
 
-7. Submit a pull request through the GitHub website.
+8. Submit a pull request through the GitHub website.
 
 ## Pull Request Guidelines
 

@@ -35,6 +35,9 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - The default disambiguation hook factory is now only enabled for converters with `unstructure_strat=AS_DICT` (the default).
   Since the strategy doesn't support tuples, it is skipped for `unstructure_strat=AS_TUPLE` converters.
   ([#673](https://github.com/python-attrs/cattrs/pull/673))
+- Switch to [`uv`](https://docs.astral.sh/uv/) and [`just`](https://just.systems/man/en/) in lieu of PDM, tox and Make.
+  See [the Contributing section](https://catt.rs/en/v25.2.0/contributing.html#get-started) for new workflow instructions.
+  ([#671](https://github.com/python-attrs/cattrs/pull/671))
 
 ## 25.1.1 (2025-06-04)
 
