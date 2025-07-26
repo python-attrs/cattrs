@@ -31,7 +31,7 @@ jobs:
         env:
           FAST: ${{ startsWith(matrix.python-version, 'pypy') && '1' || '' }}
         run: |
-          just --set python ${{ startsWith(matrix.python-version, 'pypy') && matrix.python-version || format('python{0}', matrix.python-version) }} cov
+          just python=${{ startsWith(matrix.python-version, 'pypy') && matrix.python-version || format('python{0}', matrix.python-version) }} covcleanup="false" cov
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
