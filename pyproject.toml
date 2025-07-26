@@ -103,6 +103,7 @@ addopts = "-l --benchmark-sort=fullname --benchmark-warmup=true --benchmark-warm
 parallel = true
 source_pkgs = ["cattrs", "tests"]
 core = "sysmon"
+patch = ["subprocess"]
 
 [tool.coverage.report]
 show_missing = true
