@@ -28,7 +28,7 @@ covall:
     just python=python3.11 covcleanup=false cov
     just python=python3.12 covcleanup=false cov
     just python=python3.13 covcleanup=false cov
-    just python=pypy3.9 covcleanup=false cov
+    just python=pypy3.10 covcleanup=false cov
     uv run coverage combine
     uv run coverage report
     @rm .coverage*
