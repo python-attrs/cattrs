@@ -29,7 +29,6 @@ from typing import (
     _AnnotatedAlias,
     _GenericAlias,
     _SpecialGenericAlias,
-    _UnionGenericAlias,
     get_args,
     get_origin,
     get_type_hints,
@@ -256,7 +255,22 @@ def is_tuple(type):
     )
 
 
-if sys.version_info >= (3, 10):
+if sys.version_info >= (3, 14):
+
+    def is_union_type(obj):
+        from types import UnionType  # noqa: PLC0415
+
+        return obj is Union or isinstance(obj, UnionType)
+
+    def get_newtype_base(typ: Any) -> Optional[type]:
+        if typ is NewType or isinstance(typ, NewType):
+            return typ.__supertype__
+        return None
+
+    from typing import NotRequired, Required
+
+elif sys.version_info >= (3, 10):
+    from typing import _UnionGenericAlias
 
     def is_union_type(obj):
         from types import UnionType  # noqa: PLC0415
@@ -279,6 +293,8 @@ if sys.version_info >= (3, 10):
 
 else:
     # 3.9
+    from typing import _UnionGenericAlias
+
     from typing_extensions import NotRequired, Required
 
     def is_union_type(obj):
