@@ -140,7 +140,7 @@ msgspec = [
     { name = "msgspec", marker = "implementation_name == 'cpython'" },
 ]
 orjson = [
-    { name = "orjson", marker = "implementation_name == 'cpython'" },
+    { name = "orjson", marker = "python_full_version < '3.14' and implementation_name == 'cpython'" },
 ]
 pyyaml = [
     { name = "pyyaml" },
@@ -187,11 +187,11 @@ requires-dist = [
     { name = "exceptiongroup", marker = "python_full_version < '3.11'", specifier = ">=1.1.1" },
     { name = "msgpack", marker = "extra == 'msgpack'", specifier = ">=1.0.5" },
     { name = "msgspec", marker = "implementation_name == 'cpython' and extra == 'msgspec'", specifier = ">=0.19.0" },
-    { name = "orjson", marker = "implementation_name == 'cpython' and extra == 'orjson'", specifier = ">=3.10.7" },
+    { name = "orjson", marker = "python_full_version < '3.14' and implementation_name == 'cpython' and extra == 'orjson'", specifier = ">=3.10.7" },
     { name = "pymongo", marker = "extra == 'bson'", specifier = ">=4.4.0" },
     { name = "pyyaml", marker = "extra == 'pyyaml'", specifier = ">=6.0" },
     { name = "tomlkit", marker = "extra == 'tomlkit'", specifier = ">=0.11.8" },
-    { name = "typing-extensions", specifier = ">=4.12.2" },
+    { name = "typing-extensions", specifier = ">=4.14.0" },
     { name = "ujson", marker = "extra == 'ujson'", specifier = ">=5.10.0" },
 ]
 provides-extras = ["bson", "cbor2", "msgpack", "msgspec", "orjson", "pyyaml", "tomlkit", "ujson"]
