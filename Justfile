@@ -6,7 +6,7 @@ lint:
 	uv run -p python3.13 --group lint black --check src tests docs/conf.py
 
 test *args="-x --ff -n auto tests":
-    uv run {{ if python != '' { '-p ' + python } else { '' } }} --all-extras --group test pytest {{args}}
+    uv run {{ if python != '' { '-p ' + python } else { '' } }} --all-extras --group test --group lint pytest {{args}}
 
 testall:
     just python=python3.9 test
@@ -14,10 +14,10 @@ testall:
     just python=python3.11 test
     just python=python3.12 test
     just python=python3.13 test
-    just python=pypy3.9 test
+    just python=pypy3.10 test
 
 cov *args="-x --ff -n auto tests":
-    uv run {{ if python != '' { '-p ' + python } else { '' } }} --all-extras --group test coverage run -m pytest {{args}}
+    uv run {{ if python != '' { '-p ' + python } else { '' } }} --all-extras --group test --group lint coverage run -m pytest {{args}}
     {{ if covcleanup == "true" { "uv run coverage combine" } else { "" } }}
     {{ if covcleanup == "true" { "uv run coverage report" } else { "" } }}
     {{ if covcleanup == "true" { "@rm .coverage*" } else { "" } }}
