@@ -1,6 +1,7 @@
 import functools
 import typing
 from copy import deepcopy
+from dataclasses import dataclass
 from functools import partial
 from typing import Any
 
@@ -10,6 +11,8 @@ from attrs import define
 from cattrs import Converter, override
 from cattrs.errors import ClassValidationError, StructureHandlerNotFoundError
 from cattrs.strategies import configure_tagged_union, include_subclasses
+
+from .._compat import is_py311_plus
 
 T = typing.TypeVar("T")
 
@@ -473,3 +476,36 @@ def test_parents_with_generics_tagged_union(genconverter: Converter):
     assert genconverter.structure(
         {"p": 1, "c": "5", "_type": "Child2G"}, GenericParent[Any]
     ) == Child2G(1, "5")
+
+
+def test_dataclasses(genconverter: Converter):
+    """Dict dataclasses work."""
+
+    @dataclass
+    class ParentDC:
+        a: int
+
+    @dataclass
+    class ChildDC1(ParentDC):
+        b: str
+
+    include_subclasses(ParentDC, genconverter)
+
+    assert genconverter.structure({"a": 1, "b": "a"}, ParentDC) == ChildDC1(1, "a")
+
+
+@pytest.mark.skipif(not is_py311_plus, reason="slotted dataclasses supported on 3.11+")
+def test_dataclasses_slots(genconverter: Converter):
+    """Slotted dataclasses work."""
+
+    @dataclass(slots=True)
+    class ParentDC:
+        a: int
+
+    @dataclass(slots=True)
+    class ChildDC1(ParentDC):
+        b: str
+
+    include_subclasses(ParentDC, genconverter)
+
+    assert genconverter.structure({"a": 1, "b": "a"}, ParentDC) == ChildDC1(1, "a")
