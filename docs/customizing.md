@@ -147,8 +147,9 @@ A complex use case for hook factories is described over at [](usage.md#using-fac
 Here's an example of using an unstructure hook factory to handle unstructuring [queues](https://docs.python.org/3/library/queue.html#queue.Queue).
 
 ```{doctest}
+>>> from collections.abc import Callable
 >>> from queue import Queue
->>> from typing import Any, Callable, get_args, get_origin
+>>> from typing import Any, get_args, get_origin
 >>> from cattrs import Converter
 
 >>> c = Converter()
