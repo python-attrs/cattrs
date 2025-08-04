@@ -148,7 +148,7 @@ Here's an example of using an unstructure hook factory to handle unstructuring [
 
 ```{doctest}
 >>> from queue import Queue
->>> from typing import get_origin
+>>> from typing import Any, Callable, get_args, get_origin
 >>> from cattrs import Converter
 
 >>> c = Converter()
