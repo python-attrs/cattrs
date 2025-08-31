@@ -11,7 +11,7 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
-## 25.2.0 (unreleased)
+## 25.2.0 (2025-08-31)
 
 - **Potentially breaking**: Sequences are now structured into tuples.
   This allows hashability, better immutability and is more consistent with the [`collections.abc.Sequence`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence) type.
