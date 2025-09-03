@@ -23,7 +23,8 @@ def _make_subclasses_tree(cl: type) -> list[type]:
 
 def _has_subclasses(cl: type, given_subclasses: tuple[type, ...]) -> bool:
     """Whether the given class has subclasses from `given_subclasses`."""
-    actual = set(cl.__subclasses__())
+    cls_origin = typing.get_origin(cl) or cl
+    actual = set(cls_origin.__subclasses__())
     given = set(given_subclasses)
     return bool(actual & given)
 
@@ -231,7 +232,13 @@ def _include_subclasses_with_union_strategy(
             return cls is _cl
 
         converter.register_unstructure_hook_func(cls_is_cl, unstruct_hook)
-        subclasses = tuple([c for c in union_classes if issubclass(c, cl)])
+        subclasses = tuple(
+            [
+                c
+                for c in union_classes
+                if issubclass(typing.get_origin(c) or c, typing.get_origin(cl) or cl)
+            ]
+        )
         if len(subclasses) > 1:
             u = Union[subclasses]  # type: ignore
             union_strategy(u, converter)

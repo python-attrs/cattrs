@@ -1,6 +1,8 @@
+import functools
 import typing
 from copy import deepcopy
 from functools import partial
+from typing import Any
 
 import pytest
 from attrs import define
@@ -432,3 +434,42 @@ def test_parents_with_generics(genconverter: Converter):
     assert genconverter.structure({"p": 5, "c": 5}, GenericParent[str]) == Child1G(
         "5", "5"
     )
+
+
+def test_parents_with_generics_tagged_union(genconverter: Converter):
+    """Ensure proper handling of generic parents with configure_tagged_union, #682."""
+
+    @define
+    class GenericParent(typing.Generic[T]):
+        p: T
+
+    @define
+    class Child1G(GenericParent[str]):
+        c: str
+
+    @define
+    class Child2G(GenericParent[int]):
+        c: str
+
+    union_strategy = functools.partial(
+        configure_tagged_union,
+        tag_generator=lambda cl: (typing.get_origin(cl) or cl).__name__,
+    )
+    include_subclasses(GenericParent[Any], genconverter, union_strategy=union_strategy)
+
+    assert genconverter.unstructure(Child1G("5", "5")) == {
+        "p": "5",
+        "c": "5",
+        "_type": "Child1G",
+    }
+    assert genconverter.unstructure(Child2G(1, "5")) == {
+        "p": 1,
+        "c": "5",
+        "_type": "Child2G",
+    }
+    assert genconverter.structure(
+        {"p": "5", "c": "5", "_type": "Child1G"}, GenericParent[Any]
+    ) == Child1G("5", "5")
+    assert genconverter.structure(
+        {"p": 1, "c": "5", "_type": "Child2G"}, GenericParent[Any]
+    ) == Child2G(1, "5")

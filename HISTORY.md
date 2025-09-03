@@ -17,6 +17,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#684](https://github.com/python-attrs/cattrs/pull/684))
 - Make some Hypothesis tests more robust.
   ([#684](https://github.com/python-attrs/cattrs/pull/684))
+- {func} `cattrs.strategies.include_subclasses` now works with generic parent classes and the tagged union strategy.
+  ([#683](https://github.com/python-attrs/cattrs/pull/683))
 
 ## 25.2.0 (2025-08-31)
 
