@@ -327,7 +327,7 @@ def test_type_names_with_quotes():
     assert converter.structure({1: 1}, Dict[Annotated[int, "'"], int]) == {1: 1}
 
     converter.register_structure_hook_func(
-        lambda t: t is Union[Literal["a", 2, 3], Literal[4]], lambda v, _: v
+        lambda t: t == Union[Literal["a", 2, 3], Literal[4]], lambda v, _: v
     )
     assert converter.structure(
         {2: "a"}, Dict[Union[Literal["a", 2, 3], Literal[4]], str]
