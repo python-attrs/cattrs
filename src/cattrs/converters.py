@@ -228,6 +228,10 @@ class BaseConverter:
         self._unstructure_func.register_func_list(
             [
                 (
+                    lambda t: get_newtype_base(t) is not None,
+                    lambda o: self.unstructure(o, unstructure_as=o.__class__),
+                ),
+                (
                     is_protocol,
                     lambda o: self.unstructure(o, unstructure_as=o.__class__),
                 ),

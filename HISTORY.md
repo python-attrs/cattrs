@@ -11,6 +11,13 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
+## NEXT (UNRELEASED)
+
+- Fix unstructuring NewTypes with the {class}`BaseConverter`.
+  ([#684](https://github.com/python-attrs/cattrs/pull/684))
+- Make some Hypothesis tests more robust.
+  ([#684](https://github.com/python-attrs/cattrs/pull/684))
+
 ## 25.2.0 (2025-08-31)
 
 - **Potentially breaking**: Sequences are now structured into tuples.

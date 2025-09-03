@@ -32,6 +32,7 @@ from cattrs.fns import raise_error
 from cattrs.gen import make_dict_structure_fn, override
 
 from ._compat import is_py310_plus
+from .helpers import assert_only_unstructured
 from .typed import (
     nested_typed_classes,
     simple_typed_attrs,
@@ -54,7 +55,7 @@ def test_simple_roundtrip(cls_and_vals, detailed_validation):
     cl, vals, kwargs = cls_and_vals
     inst = cl(*vals, **kwargs)
     unstructured = converter.unstructure(inst)
-    assert "Hyp" not in repr(unstructured)
+    assert_only_unstructured(unstructured)
     assert inst == converter.structure(unstructured, cl)
 
 
@@ -73,7 +74,7 @@ def test_simple_roundtrip_tuple(cls_and_vals, dv: bool):
     cl, vals, _ = cls_and_vals
     inst = cl(*vals)
     unstructured = converter.unstructure(inst)
-    assert "Hyp" not in repr(unstructured)
+    assert_only_unstructured(unstructured)
     assert inst == converter.structure(unstructured, cl)
 
 
@@ -125,7 +126,7 @@ def test_simple_roundtrip_with_extra_keys_forbidden(cls_and_vals, strat):
     assume(strat is UnstructureStrategy.AS_DICT or not kwargs)
     inst = cl(*vals, **kwargs)
     unstructured = converter.unstructure(inst)
-    assert "Hyp" not in repr(unstructured)
+    assert_only_unstructured(unstructured)
     assert inst == converter.structure(unstructured, cl)
 
 

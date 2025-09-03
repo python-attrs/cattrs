@@ -13,6 +13,7 @@ from cattrs._compat import adapted_fields, fields
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
+from .helpers import assert_only_unstructured
 from .typed import nested_typed_classes, simple_typed_classes, simple_typed_dataclasses
 from .untyped import nested_classes, simple_classes
 
@@ -143,8 +144,7 @@ def test_individual_overrides(converter_cls, cl_and_vals):
     inst = cl(*vals, **kwargs)
 
     res = converter.unstructure(inst)
-    assert "Hyp" not in repr(res)
-    assert "Factory" not in repr(res)
+    assert_only_unstructured(res)
 
     for attr, val in zip(fields, vals):
         if attr.name == chosen_name:
@@ -181,7 +181,7 @@ def test_unmodified_generated_structuring(cl_and_vals, dv: bool):
 
     unstructured = converter.unstructure(inst)
 
-    assert "Hyp" not in repr(unstructured)
+    assert_only_unstructured(unstructured)
 
     converter.register_structure_hook(cl, fn)
 
