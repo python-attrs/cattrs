@@ -32,7 +32,7 @@ from cattrs.fns import raise_error
 from cattrs.gen import make_dict_structure_fn, override
 
 from ._compat import is_py310_plus
-from .asserts import assert_only_unstructured
+from .helpers import assert_only_unstructured
 from .typed import (
     nested_typed_classes,
     simple_typed_attrs,

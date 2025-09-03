@@ -13,7 +13,7 @@ from cattrs._compat import adapted_fields, fields
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
-from .asserts import assert_only_unstructured
+from .helpers import assert_only_unstructured
 from .typed import nested_typed_classes, simple_typed_classes, simple_typed_dataclasses
 from .untyped import nested_classes, simple_classes
 

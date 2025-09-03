@@ -1,4 +1,4 @@
-"""Helpers for assertions."""
+"""Helpers for tests."""
 
 from typing import Any
 
