@@ -19,6 +19,7 @@ from attrs import NOTHING, Attribute, NothingType
 
 from ._compat import (
     ANIES,
+    AbcSet,
     get_args,
     get_origin,
     is_bare,
@@ -49,6 +50,7 @@ if TYPE_CHECKING:
 __all__ = [
     "defaultdict_structure_factory",
     "homogenous_tuple_structure_factory",
+    "is_abstract_set",
     "is_any_set",
     "is_defaultdict",
     "is_frozenset",
@@ -71,6 +73,11 @@ __all__ = [
 def is_any_set(type) -> bool:
     """A predicate function for both mutable and frozensets."""
     return is_set(type) or is_frozenset(type)
+
+
+def is_abstract_set(type) -> bool:
+    """A predicate function for abstract (collection.abc) sets."""
+    return type is AbcSet or (getattr(type, "__origin__", None) is AbcSet)
 
 
 def is_namedtuple(type: Any) -> bool:

@@ -8,6 +8,7 @@ from immutables import Map
 from cattrs import BaseConverter, Converter
 from cattrs._compat import FrozenSet
 from cattrs.cols import (
+    is_abstract_set,
     is_any_set,
     is_sequence,
     iterable_unstructure_factory,
@@ -75,3 +76,27 @@ def test_structure_mut_sequences(converter: BaseConverter):
     """Mutable sequences are structured to lists."""
 
     assert converter.structure(["1", 2, 3.0], MutableSequence[int]) == [1, 2, 3]
+
+
+def test_abstract_set_predicate():
+    """`is_abstract_set` works."""
+
+    assert is_abstract_set(Set)
+    assert is_abstract_set(Set[str])
+
+    assert not is_abstract_set(set)
+    assert not is_abstract_set(set[str])
+
+
+def test_structure_abstract_sets(converter: BaseConverter):
+    """Abstract sets structure to frozensets."""
+
+    assert converter.structure(["1", "2", "3"], Set[int]) == frozenset([1, 2, 3])
+    assert isinstance(converter.structure([1, 2, 3], Set[int]), frozenset)
+
+
+def test_structure_abstract_sets_override(converter: BaseConverter):
+    """Abstract sets can be overridden to structure to mutable sets, as before."""
+    converter.register_structure_hook_func(is_abstract_set, converter._structure_set)
+
+    assert converter.structure(["1", 2, 3.0], Set[int]) == {1, 2, 3}

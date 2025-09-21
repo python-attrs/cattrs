@@ -55,6 +55,7 @@ from ._compat import (
 from .cols import (
     defaultdict_structure_factory,
     homogenous_tuple_structure_factory,
+    is_abstract_set,
     is_defaultdict,
     is_namedtuple,
     is_sequence,
@@ -281,6 +282,7 @@ class BaseConverter:
                 (is_mutable_sequence, list_structure_factory, "extended"),
                 (is_deque, self._structure_deque),
                 (is_mutable_set, self._structure_set),
+                (is_abstract_set, self._structure_frozenset),
                 (is_frozenset, self._structure_frozenset),
                 (is_tuple, self._structure_tuple),
                 (is_namedtuple, namedtuple_structure_factory, "extended"),
