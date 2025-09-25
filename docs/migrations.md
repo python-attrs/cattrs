@@ -1,7 +1,24 @@
 # Migrations
 
+```{currentmodule} cattrs
+```
+
 _cattrs_ sometimes changes in backwards-incompatible ways.
 This page contains guidance for changes and workarounds for restoring legacy behavior.
+
+## 25.3.0
+
+### Abstract sets structuring into frozensets
+
+From this version on, abstract sets (`collection.abc.Set`) structure into frozensets.
+
+The old behavior can be restored by registering the {meth}`BaseConverter._structure_set <cattrs.BaseConverter._structure_set>` method using the {meth}`is_abstract_set <cattrs.cols.is_abstract_set>` predicate on a converter.
+
+```python
+>>> from cattrs.cols import is_abstract_set
+
+>>> converter.register_structure_hook_func(is_abstract_set, converter._structure_set)
+```
 
 ## 25.2.0
 

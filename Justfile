@@ -1,6 +1,9 @@
 python := ""
 covcleanup := "true"
 
+sync:
+    uv sync {{ if python != '' { '-p ' + python } else { '' } }} --all-groups --all-extras
+
 lint:
 	uv run -p python3.13 --group lint ruff check src/ tests bench
 	uv run -p python3.13 --group lint black --check src tests docs/conf.py
@@ -10,11 +13,11 @@ test *args="-x --ff -n auto tests":
 
 testall:
     just python=python3.9 test
+    just python=pypy3.9 test
     just python=python3.10 test
     just python=python3.11 test
     just python=python3.12 test
     just python=python3.13 test
-    just python=pypy3.9 test
 
 cov *args="-x --ff -n auto tests":
     uv run {{ if python != '' { '-p ' + python } else { '' } }} --all-extras --group test coverage run -m pytest {{args}}
