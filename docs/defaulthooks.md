@@ -301,13 +301,15 @@ Deques are unstructured into lists, or into deques when using the {class}`BaseCo
 Sets and frozensets can be structured from any iterable object.
 Types converting to sets are:
 
-- `collections.abc.Set[T]`
 - `collections.abc.MutableSet[T]`
 - `set[T]`
+- `typing.Set[T]` (deprecated since Python 3.9, use `set[T]` instead)
 
 Types converting to frozensets are:
 
+- `collections.abc.Set[T]`
 - `frozenset[T]`
+- `typing.FrozenSet[T]` (deprecated since Python 3.9, use `frozenset[T]` instead)
 
 In all cases, a new set or frozenset will be returned.
 A bare type, for example `MutableSet` instead of `MutableSet[int]`, is equivalent to `MutableSet[Any]`.
@@ -318,8 +320,11 @@ A bare type, for example `MutableSet` instead of `MutableSet[int]`, is equivalen
 {1, 2, 3, 4}
 ```
 
-Sets and frozensets are unstructured into the same class.
+Sets and frozensets are unstructured into the matching class.
 
+```{versionchanged} NEXT
+Abstract sets are now structured into frozensets instead of sets.
+```
 
 ### Typed Dicts
 
