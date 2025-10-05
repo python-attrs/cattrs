@@ -1,8 +1,9 @@
 python := ""
 covcleanup := "true"
 
-sync:
-    uv sync {{ if python != '' { '-p ' + python } else { '' } }} --all-groups --all-extras
+# Sync the environment, to a particular version if provided. The `python` variable takes precedence over the argument.
+sync version="":
+    uv sync {{ if python != '' { '-p ' + python } else if version != '' { '-p ' + version } else  { '' } }} --all-groups --all-extras
 
 lint:
 	uv run -p python3.13 --group lint ruff check src/ tests bench
@@ -13,8 +14,8 @@ test *args="-x --ff -n auto tests":
 
 testall:
     just python=python3.9 test
-    just python=pypy3.9 test
     just python=python3.10 test
+    just python=pypy3.10 test
     just python=python3.11 test
     just python=python3.12 test
     just python=python3.13 test
@@ -28,10 +29,10 @@ cov *args="-x --ff -n auto tests":
 covall:
     just python=python3.9 covcleanup=false cov
     just python=python3.10 covcleanup=false cov
+    just python=pypy3.10 covcleanup=false cov
     just python=python3.11 covcleanup=false cov
     just python=python3.12 covcleanup=false cov
     just python=python3.13 covcleanup=false cov
-    just python=pypy3.10 covcleanup=false cov
     uv run coverage combine
     uv run coverage report
     @rm .coverage*
