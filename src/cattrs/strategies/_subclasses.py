@@ -23,7 +23,7 @@ def _make_subclasses_tree(cl: type) -> list[type]:
 def _has_subclasses(cl: type, given_subclasses: tuple[type, ...]) -> bool:
     """Whether the given class has subclasses from `given_subclasses`."""
     cls_origin = typing.get_origin(cl) or cl
-    actual = set(subclasses(cls_origin.__subclasses__()))
+    actual = set(subclasses(cls_origin))
     given = set(given_subclasses)
     return bool(actual & given)
 
