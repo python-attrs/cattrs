@@ -1,8 +1,9 @@
 python := ""
 covcleanup := "true"
 
-sync:
-    uv sync {{ if python != '' { '-p ' + python } else { '' } }} --all-groups --all-extras
+# Sync the environment, to a particular version if provided. The `python` variable takes precedence over the argument.
+sync version="":
+    uv sync {{ if python != '' { '-p ' + python } else if version != '' { '-p ' + version } else  { '' } }} --all-groups --all-extras
 
 lint:
 	uv run -p python3.13 --group lint ruff check src/ tests bench

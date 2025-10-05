@@ -141,7 +141,6 @@ def test_union_field_roundtrip_tuple(cl_and_vals_a, cl_and_vals_b):
 
 
 @pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
-@settings(suppress_health_check=[HealthCheck.too_slow])
 @given(
     simple_typed_classes(
         defaults="never", newtypes=False, allow_nan=False, min_attrs=1
@@ -149,16 +148,14 @@ def test_union_field_roundtrip_tuple(cl_and_vals_a, cl_and_vals_b):
     simple_typed_classes(
         defaults="never", newtypes=False, allow_nan=False, min_attrs=1
     ),
-    unstructure_strats,
 )
-def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
+def test_310_union_field_roundtrip_dict(cl_and_vals_a, cl_and_vals_b):
     """
     Classes with union fields can be unstructured and structured.
     """
-    converter = BaseConverter(unstruct_strat=strat)
+    converter = BaseConverter()
     cl_a, vals_a, kwargs_a = cl_and_vals_a
     cl_b, _, _ = cl_and_vals_b
-    assume(strat is UnstructureStrategy.AS_DICT or not kwargs_a)
     a_field_names = {a.name for a in fields(cl_a)}
     b_field_names = {a.name for a in fields(cl_b)}
 
@@ -171,18 +168,47 @@ def test_310_union_field_roundtrip(cl_and_vals_a, cl_and_vals_b, strat):
 
     inst = C(a=cl_a(*vals_a, **kwargs_a))
 
-    if strat is UnstructureStrategy.AS_DICT:
-        assert inst == converter.structure(converter.unstructure(inst), C)
-    else:
-        # Our disambiguation functions only support dictionaries for now.
-        with pytest.raises(StructureHandlerNotFoundError):
-            converter.structure(converter.unstructure(inst), C)
+    assert inst == converter.structure(converter.unstructure(inst), C)
 
-        def handler(obj, _):
-            return converter.structure(obj, cl_a)
 
-        converter.register_structure_hook(cl_a | cl_b, handler)
-        assert inst == converter.structure(converter.unstructure(inst), C)
+@pytest.mark.skipif(not is_py310_plus, reason="3.10+ union syntax")
+@given(
+    simple_typed_classes(
+        defaults="never", newtypes=False, allow_nan=False, min_attrs=2, kw_only="never"
+    ),
+    simple_typed_classes(
+        defaults="never", newtypes=False, allow_nan=False, min_attrs=1
+    ),
+)
+def test_310_union_field_roundtrip_tuple(cl_and_vals_a, cl_and_vals_b):
+    """
+    Classes with union fields can be unstructured and structured.
+    """
+    converter = BaseConverter(unstruct_strat=UnstructureStrategy.AS_TUPLE)
+    cl_a, vals_a, kwargs_a = cl_and_vals_a
+    cl_b, _, _ = cl_and_vals_b
+    assert not kwargs_a
+    a_field_names = {a.name for a in fields(cl_a)}
+    b_field_names = {a.name for a in fields(cl_b)}
+
+    common_names = a_field_names & b_field_names
+    assume(len(a_field_names) > len(common_names))
+
+    @define
+    class C:
+        a: cl_a | cl_b
+
+    inst = C(a=cl_a(*vals_a, **kwargs_a))
+
+    # Our disambiguation functions only support dictionaries for now.
+    with pytest.raises(StructureHandlerNotFoundError):
+        converter.structure(converter.unstructure(inst), C)
+
+    def handler(obj, _):
+        return converter.structure(obj, cl_a)
+
+    converter.register_structure_hook(cl_a | cl_b, handler)
+    assert inst == converter.structure(converter.unstructure(inst), C)
 
 
 @given(simple_typed_classes(defaults="never", newtypes=False, allow_nan=False))
