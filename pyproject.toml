@@ -40,7 +40,7 @@ authors = [
     {name = "Tin Tvrtkovic", email = "tinchester@gmail.com"},
 ]
 dependencies = [
-    "attrs>=24.3.0",
+    "attrs>=25.4.0",
     "typing-extensions>=4.14.0",
     "exceptiongroup>=1.1.1; python_version < '3.11'",
 ]

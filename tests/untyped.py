@@ -177,7 +177,7 @@ def _create_hyp_class(
     """
 
     def key(t):
-        return (t[0].default is not NOTHING, t[0].kw_only)
+        return (t[0].default is not NOTHING, t[0].kw_only or False)
 
     attrs_and_strat = sorted(attrs_and_strategy, key=key)
     attrs = [a[0] for a in attrs_and_strat]

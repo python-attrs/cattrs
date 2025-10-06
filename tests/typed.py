@@ -287,7 +287,7 @@ def _create_hyp_class_and_strat(
     attrs_and_strategy: list[tuple[_CountingAttr, SearchStrategy[PosArg]]],
 ) -> SearchStrategy[tuple[type, SearchStrategy[PosArgs], SearchStrategy[KwArgs]]]:
     def key(t):
-        return (t[0].default is not NOTHING, t[0].kw_only)
+        return (t[0].default is not NOTHING, t[0].kw_only or False)
 
     attrs_and_strat = sorted(attrs_and_strategy, key=key)
     attrs = [a[0] for a in attrs_and_strat]
