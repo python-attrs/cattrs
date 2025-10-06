@@ -17,11 +17,13 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   This allows hashability, better immutability and is more consistent with the [`collections.abc.Set`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Set) type.
   See [Migrations](https://catt.rs/en/latest/migrations.html#abstract-sets-structuring-into-frozensets) for steps to restore legacy behavior.
   ([#](https://github.com/python-attrs/cattrs/pull/))
+- Python 3.14 is now supported and part of the test matrix.
+  ([#653](https://github.com/python-attrs/cattrs/pull/653))
 - Fix unstructuring NewTypes with the {class}`BaseConverter`.
   ([#684](https://github.com/python-attrs/cattrs/pull/684))
 - Make some Hypothesis tests more robust.
   ([#684](https://github.com/python-attrs/cattrs/pull/684))
-- {func} `cattrs.strategies.include_subclasses` now works with generic parent classes and the tagged union strategy.
+- {func}`cattrs.strategies.include_subclasses` now works with generic parent classes and the tagged union strategy.
   ([#683](https://github.com/python-attrs/cattrs/pull/683))
 
 ## 25.2.0 (2025-08-31)
@@ -30,8 +32,6 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   This allows hashability, better immutability and is more consistent with the [`collections.abc.Sequence`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence) type.
   See [Migrations](https://catt.rs/en/latest/migrations.html#sequences-structuring-into-tuples) for steps to restore legacy behavior.
   ([#663](https://github.com/python-attrs/cattrs/pull/663))
-- Python 3.14 is now supported and part of the test matrix.
-  ([#653](https://github.com/python-attrs/cattrs/pull/653))
 - Add a `use_alias` parameter to {class}`cattrs.Converter`.
   {func}`cattrs.gen.make_dict_unstructure_fn_from_attrs`, {func}`cattrs.gen.make_dict_unstructure_fn`,
   {func}`cattrs.gen.make_dict_structure_fn_from_attrs`, {func}`cattrs.gen.make_dict_structure_fn`
