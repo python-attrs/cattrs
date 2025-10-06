@@ -1,5 +1,4 @@
 # ruff: noqa: PLC0415
-import sys
 from collections.abc import Callable, Set
 from datetime import date, datetime, timezone
 from enum import Enum, IntEnum, unique
@@ -53,7 +52,7 @@ from cattrs.preconf.pyyaml import make_converter as pyyaml_make_converter
 from cattrs.preconf.tomlkit import make_converter as tomlkit_make_converter
 from cattrs.preconf.ujson import make_converter as ujson_make_converter
 
-NO_MSGSPEC: Final = python_implementation() == "PyPy" or sys.version_info[:2] >= (3, 13)
+NO_MSGSPEC: Final = python_implementation() == "PyPy"
 NO_ORJSON: Final = python_implementation() == "PyPy"
 
 

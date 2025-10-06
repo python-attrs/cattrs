@@ -9,22 +9,21 @@ from typing import Any, Callable, TypeVar, Union
 from ..converters import BaseConverter
 from ..gen import AttributeOverride, make_dict_structure_fn, make_dict_unstructure_fn
 from ..gen._consts import already_generating
+from ..subclasses import subclasses
 
 
 def _make_subclasses_tree(cl: type) -> list[type]:
     # get class origin for accessing subclasses (see #648 for more info)
     cls_origin = typing.get_origin(cl) or cl
     return [cl] + [
-        sscl
-        for scl in cls_origin.__subclasses__()
-        for sscl in _make_subclasses_tree(scl)
+        sscl for scl in subclasses(cls_origin) for sscl in _make_subclasses_tree(scl)
     ]
 
 
 def _has_subclasses(cl: type, given_subclasses: tuple[type, ...]) -> bool:
     """Whether the given class has subclasses from `given_subclasses`."""
     cls_origin = typing.get_origin(cl) or cl
-    actual = set(cls_origin.__subclasses__())
+    actual = set(subclasses(cls_origin))
     given = set(given_subclasses)
     return bool(actual & given)
 
@@ -69,6 +68,9 @@ def include_subclasses(
     .. versionchanged:: 24.1.0
        When overrides are not provided, hooks for individual classes are retrieved from
        the converter instead of generated with no overrides, using converter defaults.
+    .. versionchanged:: 25.2.0
+       Slotted dataclasses work on Python 3.14 via :func:`cattrs.subclasses.subclasses`,
+       which filters out duplicate classes caused by slotting.
     """
     # Due to https://github.com/python-attrs/attrs/issues/1047
     collect()

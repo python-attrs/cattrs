@@ -336,7 +336,7 @@ def test_structuring_unsupported():
     with raises(StructureHandlerNotFoundError) as exc:
         converter.structure(1, Union[int, str])
 
-    assert exc.value.type_ is Union[int, str]
+    assert exc.value.type_ == Union[int, str]
 
 
 def test_subclass_registration_is_honored():

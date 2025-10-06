@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from dataclasses import MISSING
 from functools import reduce
 from operator import or_
-from typing import TYPE_CHECKING, Any, Callable, Literal, Union
+from typing import TYPE_CHECKING, Any, Callable, Literal, Union, get_origin
 
 from attrs import NOTHING, Attribute, AttrsInstance
 
@@ -16,7 +16,6 @@ from ._compat import (
     adapted_fields,
     fields_dict,
     get_args,
-    get_origin,
     has,
     is_literal,
     is_union_type,

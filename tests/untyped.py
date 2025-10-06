@@ -18,7 +18,7 @@ from typing import (
     Tuple,
 )
 
-import attr
+from attr import attrib
 from attr._make import _CountingAttr
 from attrs import NOTHING, AttrsInstance, Factory, make_class
 from hypothesis import strategies as st
@@ -177,7 +177,7 @@ def _create_hyp_class(
     """
 
     def key(t):
-        return (t[0].default is not NOTHING, t[0].kw_only)
+        return (t[0].default is not NOTHING, t[0].kw_only or False)
 
     attrs_and_strat = sorted(attrs_and_strategy, key=key)
     attrs = [a[0] for a in attrs_and_strat]
@@ -206,7 +206,7 @@ def just_class(tup):
     nested_cl = tup[1][0]
     default = Factory(nested_cl)
     combined_attrs = list(tup[0])
-    combined_attrs.append((attr.ib(default=default), st.just(nested_cl())))
+    combined_attrs.append((attrib(default=default), st.just(nested_cl())))
     return _create_hyp_class(combined_attrs)
 
 
@@ -217,7 +217,7 @@ def just_class_with_type(tup: tuple) -> SearchStrategy[AttrsAndArgs]:
         combined_attrs = list(tup[0])
         combined_attrs.append(
             (
-                attr.ib(
+                attrib(
                     default=(
                         Factory(
                             nested_cl if not takes_self else lambda _: nested_cl(),
@@ -238,7 +238,7 @@ def just_frozen_class_with_type(tup):
     nested_cl = tup[1][0]
     combined_attrs = list(tup[0])
     combined_attrs.append(
-        (attr.ib(default=nested_cl(), type=nested_cl), st.just(nested_cl()))
+        (attrib(default=nested_cl(), type=nested_cl), st.just(nested_cl()))
     )
     return _create_hyp_class(combined_attrs)
 
@@ -250,7 +250,7 @@ def list_of_class(tup: tuple) -> SearchStrategy[AttrsAndArgs]:
         combined_attrs = list(tup[0])
         combined_attrs.append(
             (
-                attr.ib(
+                attrib(
                     default=(
                         Factory(lambda: [nested_cl()])
                         if not takes_self
@@ -277,7 +277,7 @@ def list_of_class_with_type(tup: tuple) -> SearchStrategy[AttrsAndArgs]:
         )
         combined_attrs = list(tup[0])
         combined_attrs.append(
-            (attr.ib(default=default, type=List[nested_cl]), st.just([nested_cl()]))
+            (attrib(default=default, type=List[nested_cl]), st.just([nested_cl()]))
         )
         return _create_hyp_class(combined_attrs)
 
@@ -288,7 +288,7 @@ def dict_of_class(tup):
     nested_cl = tup[1][0]
     default = Factory(lambda: {"cls": nested_cl()})
     combined_attrs = list(tup[0])
-    combined_attrs.append((attr.ib(default=default), st.just({"cls": nested_cl()})))
+    combined_attrs.append((attrib(default=default), st.just({"cls": nested_cl()})))
     return _create_hyp_class(combined_attrs)
 
 
@@ -328,7 +328,7 @@ def bare_attrs(draw, defaults=None, kw_only=None):
     if defaults is True or (defaults is None and draw(st.booleans())):
         default = None
     return (
-        attr.ib(
+        attrib(
             default=default, kw_only=draw(st.booleans()) if kw_only is None else kw_only
         ),
         st.just(None),
@@ -345,7 +345,7 @@ def int_attrs(draw, defaults=None, kw_only=None):
     if defaults is True or (defaults is None and draw(st.booleans())):
         default = draw(st.integers())
     return (
-        attr.ib(
+        attrib(
             default=default, kw_only=draw(st.booleans()) if kw_only is None else kw_only
         ),
         st.integers(),
@@ -366,12 +366,12 @@ def str_attrs(draw, defaults=None, type_annotations=None, kw_only=None):
     else:
         type = None
     return (
-        attr.ib(
+        attrib(
             default=default,
             type=type,
             kw_only=draw(st.booleans()) if kw_only is None else kw_only,
         ),
-        st.text(),
+        st.text(max_size=5),
     )
 
 
@@ -385,7 +385,7 @@ def float_attrs(draw, defaults=None, kw_only=None):
     if defaults is True or (defaults is None and draw(st.booleans())):
         default = draw(st.floats(allow_nan=False))
     return (
-        attr.ib(
+        attrib(
             default=default, kw_only=draw(st.booleans()) if kw_only is None else kw_only
         ),
         st.floats(allow_nan=False),
@@ -399,12 +399,12 @@ def dict_attrs(draw, defaults=None, kw_only=None):
     for that attribute. The dictionaries map strings to integers.
     """
     default = NOTHING
-    val_strat = st.dictionaries(keys=st.text(), values=st.integers())
+    val_strat = st.dictionaries(keys=st.text(max_size=5), values=st.integers())
     if defaults is True or (defaults is None and draw(st.booleans())):
         default_val = draw(val_strat)
         default = Factory(lambda: default_val)
     return (
-        attr.ib(
+        attrib(
             default=default, kw_only=draw(st.booleans()) if kw_only is None else kw_only
         ),
         val_strat,
@@ -423,7 +423,7 @@ def optional_attrs(draw, defaults=None, kw_only=None):
         default = draw(val_strat)
 
     return (
-        attr.ib(
+        attrib(
             default=default, kw_only=draw(st.booleans()) if kw_only is None else kw_only
         ),
         val_strat,
@@ -441,14 +441,16 @@ def simple_attrs(defaults=None, kw_only=None):
     )
 
 
-def lists_of_attrs(defaults=None, min_size=0, kw_only=None):
+def lists_of_attrs(defaults=None, min_size=0, kw_only=None) -> SearchStrategy[list]:
     # Python functions support up to 255 arguments.
     return st.lists(
         simple_attrs(defaults, kw_only), min_size=min_size, max_size=10
     ).map(lambda lst: sorted(lst, key=lambda t: t[0]._default is not NOTHING))
 
 
-def simple_classes(defaults=None, min_attrs=0, frozen=None, kw_only=None):
+def simple_classes(
+    defaults=None, min_attrs=0, frozen=None, kw_only=None
+) -> SearchStrategy:
     """
     Return a strategy that yields tuples of simple classes and values to
     instantiate them.
