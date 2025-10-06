@@ -57,6 +57,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
     "Typing :: Typed",
@@ -75,7 +76,7 @@ ujson = [
     "ujson>=5.10.0",
 ]
 orjson = [
-    "orjson>=3.10.7; implementation_name == \"cpython\" and python_version < \"3.14\"",
+    "orjson>=3.11.3; implementation_name == \"cpython\"",
 ]
 msgpack = [
     "msgpack>=1.0.5",
