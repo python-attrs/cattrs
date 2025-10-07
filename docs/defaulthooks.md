@@ -322,7 +322,7 @@ A bare type, for example `MutableSet` instead of `MutableSet[int]`, is equivalen
 
 Sets and frozensets are unstructured into the matching class.
 
-```{versionchanged} NEXT
+```{versionchanged} 25.3.0
 Abstract sets are now structured into frozensets instead of sets.
 ```
 

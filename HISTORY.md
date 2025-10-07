@@ -11,7 +11,7 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
-## NEXT (UNRELEASED)
+## 25.3.0 (2025-10-07)
 
 - **Potentially breaking**: [Abstract sets](https://docs.python.org/3/library/collections.abc.html#collections.abc.Set) are now structured into frozensets.
   This allows hashability, better immutability and is more consistent with the [`collections.abc.Set`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Set) type.
