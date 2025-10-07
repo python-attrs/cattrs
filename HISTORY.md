@@ -16,7 +16,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - **Potentially breaking**: [Abstract sets](https://docs.python.org/3/library/collections.abc.html#collections.abc.Set) are now structured into frozensets.
   This allows hashability, better immutability and is more consistent with the [`collections.abc.Set`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Set) type.
   See [Migrations](https://catt.rs/en/latest/migrations.html#abstract-sets-structuring-into-frozensets) for steps to restore legacy behavior.
-  ([#](https://github.com/python-attrs/cattrs/pull/))
+  ([#686](https://github.com/python-attrs/cattrs/pull/686))
 - Python 3.14 is now supported and part of the test matrix.
   ([#653](https://github.com/python-attrs/cattrs/pull/653))
 - Fix unstructuring NewTypes with the {class}`BaseConverter`.
