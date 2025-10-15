@@ -1,4 +1,4 @@
-"""Tests un/structure of nested generics"""
+"""Tests un/structure of nested generic classes (stringified only)"""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from typing import Generic, TypeVar
 
 from attrs import define
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def test_structure_nested_roundtrip(genconverter):
@@ -18,7 +18,6 @@ def test_structure_nested_roundtrip(genconverter):
     class Container(Generic[T]):
         data: T
 
-
-    raw = {'data': {'value': 42}}
+    raw = {"data": {"value": 42}}
     structured = genconverter.structure(raw, Container[Inner])
     assert genconverter.unstructure(structured, Container[Inner]) == raw
