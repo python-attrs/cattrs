@@ -1303,10 +1303,11 @@ class Converter(BaseConverter):
     def gen_structure_attrs_fromdict(
         self, cl: type[T]
     ) -> Callable[[Mapping[str, Any], Any], T]:
-        attribs = fields(get_origin(cl) or cl if is_generic(cl) else cl)
+        origin = get_origin(cl)
+        attribs = fields(origin or cl if is_generic(cl) else cl)
         if attrs_has(cl) and any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.
-            resolve_types(cl)
+            resolve_types(origin or cl)
         attrib_overrides = {
             a.name: self.type_overrides[a.type]
             for a in attribs
