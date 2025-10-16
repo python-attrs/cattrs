@@ -11,6 +11,11 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
+## 25.4.0 (UNRELEASED)
+
+- Fix structuring of nested generic classes with stringified annotations.
+  ([#688](https://github.com/python-attrs/cattrs/pull/688))
+
 ## 25.3.0 (2025-10-07)
 
 - **Potentially breaking**: [Abstract sets](https://docs.python.org/3/library/collections.abc.html#collections.abc.Set) are now structured into frozensets.
