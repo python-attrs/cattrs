@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Iterable, Mapping
-from typing import TYPE_CHECKING, Any, Final, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Final, Literal, TypeVar, get_args, get_origin
 
 from attrs import NOTHING, Attribute, Converter, Factory, evolve
 from typing_extensions import NoDefault
@@ -11,8 +11,6 @@ from .._compat import (
     ANIES,
     TypeAlias,
     adapted_fields,
-    get_args,
-    get_origin,
     is_annotated,
     is_bare,
     is_bare_final,
