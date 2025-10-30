@@ -1,9 +1,8 @@
-from collections.abc import Callable, Generator, Iterable, Sized
-from dataclasses import dataclass
+from collections.abc import Callable, Iterable, Sized
 from functools import wraps
 from typing import Annotated, Any, Generic, TypeAlias, TypeVar, get_args
 
-from attrs import define, frozen
+from attrs import frozen
 
 from cattrs import global_converter
 from cattrs._compat import is_annotated
@@ -57,7 +56,7 @@ class ConstraintGroupError(BaseValidationError):
     """Raised during detailed validation; may contain multiple constraint violations."""
 
 
-ValHookFactory = Callable[[T], Iterable[Constraint[T]]]
+ConstraintHookFactory = Callable[[T], Iterable[Constraint[T]]]
 
 
 def _extract_from_annotated(type: Any, cls_to_extract: type[T]) -> list[T]:
@@ -103,10 +102,12 @@ class _ValDummy:
         return _ValDummy(path=(*self.__dict__[".path"], name))
 
 
-def _gen_val_hooks(type: Any, val_hook_factory: ValHookFactory[Any]) -> tuple[Any, ...]:
+def _gen_val_hooks(
+    type: Any, val_hook_factory: ConstraintHookFactory[Any]
+) -> tuple[Any, ...]:
     """Generate a mapping of attributes to their validation hooks.
 
-    An empty string means the root object itself.
+    An empty tuple means the root object itself.
     """
     res: dict[ConstraintPath, list[ConstraintHook[Any]]] = {}
     exprs = list(val_hook_factory(_ValDummy(())))
@@ -157,20 +158,3 @@ def direct_constraint_factory(type: Any, conv: BaseConverter) -> StructureHook:
         return res
 
     return check_constraints
-
-
-@define
-class B:
-    a: int
-    b: list[int]
-
-
-@dataclass
-class C:
-    c: dict[str, int]
-
-
-def val(a: B) -> Generator[Constraint[Any]]:
-    yield Constraint.for_(a)(lambda b: "b too small" if b.a >= 1 else None)
-    yield Constraint.for_(a.a)(lambda a: None if a > 1 else "a too small")
-    # yield ValExpr.for_(a.b)(lambda b: len(b) > 0)
