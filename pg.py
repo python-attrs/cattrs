@@ -1,5 +1,6 @@
 from collections.abc import Callable, Generator, Iterable, Sized
 from dataclasses import dataclass
+from functools import wraps
 from typing import Annotated, Any, Generic, TypeAlias, TypeVar, get_args
 
 from attrs import define, frozen
@@ -8,7 +9,7 @@ from cattrs import global_converter
 from cattrs._compat import is_annotated
 from cattrs.converters import BaseConverter
 from cattrs.dispatch import StructureHook
-from cattrs.errors import ClassValidationError
+from cattrs.errors import BaseValidationError
 
 T = TypeVar("T")
 A = TypeVar("A")
@@ -20,7 +21,7 @@ AnyType: TypeAlias = Any
 ConstraintPath: TypeAlias = tuple[()] | tuple[str, ...]
 """A path for a constraint check. Empty tuple means the object itself."""
 
-ConstraintCheck: TypeAlias = Callable[[T], str | None]
+ConstraintHook: TypeAlias = Callable[[T], str | None]
 """A constraint validation check for T. Returns an error string if failed, else None."""
 
 
@@ -30,11 +31,16 @@ def nonempty_check(val: S) -> str | None:
 
 @frozen
 class Constraint(Generic[T]):
-    _hook: ConstraintCheck[T]
+    """Used to create constraint hooks, which can later be called by cattrs.
+
+    Do not instantiate this class directly; use the provided classmethods instead.
+    """
+
+    _hook: ConstraintHook[T]
     _target: Any
 
     @classmethod
-    def for_(cls, arg: A) -> "Callable[[ConstraintCheck[A]], Constraint[A]]":
+    def for_(cls, arg: A) -> "Callable[[ConstraintHook[A]], Constraint[A]]":
         return lambda v: Constraint(v, arg)
 
     @classmethod
@@ -45,6 +51,10 @@ class Constraint(Generic[T]):
 
 class ConstraintError(Exception):
     pass
+
+
+class ConstraintGroupError(BaseValidationError):
+    """Raised during detailed validation; may contain multiple constraint violations."""
 
 
 ValHookFactory = Callable[[T], Iterable[Constraint[T]]]
@@ -78,7 +88,7 @@ def split_from_annotated(type: Any, cls_to_split: type[T]) -> tuple[Any, list[T]
 class Val:
     """For use in `Annotated`, to add val hooks."""
 
-    hooks: tuple[tuple[ConstraintPath, tuple[ConstraintCheck[Any], ...]]]
+    hooks: tuple[tuple[ConstraintPath, tuple[ConstraintHook[Any], ...]]]
 
 
 @frozen(slots=False, init=False)
@@ -98,7 +108,7 @@ def _gen_val_hooks(type: Any, val_hook_factory: ValHookFactory[Any]) -> tuple[An
 
     An empty string means the root object itself.
     """
-    res: dict[ConstraintPath, list[ConstraintCheck[Any]]] = {}
+    res: dict[ConstraintPath, list[ConstraintHook[Any]]] = {}
     exprs = list(val_hook_factory(_ValDummy(())))
 
     for expr in exprs:
@@ -132,14 +142,18 @@ def direct_constraint_factory(type: Any, conv: BaseConverter) -> StructureHook:
     ]
     hook = conv.get_structure_hook(base)
 
+    @wraps(hook)
     def check_constraints(val: Any, type: Any) -> Any:
         res = hook(val, type)
-        errors = []
+        errors: list[Exception] = []
         for con in instance_constraints:
-            if (error := con(res)) is not None:
-                errors.append(ConstraintError(error))
+            try:
+                if (error := con(res)) is not None:
+                    errors.append(ConstraintError(error))
+            except Exception as exc:
+                errors.append(exc)
         if errors:
-            raise ClassValidationError("Constraint violations", errors, type)
+            raise ConstraintGroupError("Constraint violations", errors, base)
         return res
 
     return check_constraints
@@ -160,11 +174,3 @@ def val(a: B) -> Generator[Constraint[Any]]:
     yield Constraint.for_(a)(lambda b: "b too small" if b.a >= 1 else None)
     yield Constraint.for_(a.a)(lambda a: None if a > 1 else "a too small")
     # yield ValExpr.for_(a.b)(lambda b: len(b) > 0)
-
-
-structure({"a": 1, "b": []}, B, val)
-structure({}, C, val)
-
-# structure({}, B, lambda a: [ValExpr.for_(a.a)(lambda a: a > 1)])
-
-structure([], list[int], lambda lst: [Constraint.nonempty(lst)])
