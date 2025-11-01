@@ -14,6 +14,6 @@ settings.register_profile(
 if "CI" in os.environ:  # pragma: nocover
     settings.load_profile("CI")
 
-unstructure_strats = one_of(just(s) for s in UnstructureStrategy)
+unstructure_strats = one_of([just(s) for s in UnstructureStrategy])
 
 FeatureFlag: TypeAlias = Literal["always", "never", "sometimes"]

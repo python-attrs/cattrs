@@ -25,8 +25,8 @@ def test_direct_attrs_constraints() -> None:
             {"a": -1, "b": []},
             A,
             lambda cl: [
-                Constraint.for_(cl)(lambda a: too_small if a.a < 0 else None),
-                Constraint.for_(cl)(lambda a: too_short if len(a.b) < 1 else None),
+                Constraint.for_(cl, lambda a: too_small if a.a < 0 else None),
+                Constraint.for_(cl, lambda a: too_short if len(a.b) < 1 else None),
             ],
         )
 
@@ -36,3 +36,18 @@ def test_direct_attrs_constraints() -> None:
     assert exc_info.value.exceptions[0].args[0] == too_small
     assert isinstance(exc_info.value.exceptions[1], ConstraintError)
     assert exc_info.value.exceptions[1].args[0] == too_short
+
+
+def test_attr_field_constrains() -> None:
+    """Attrs fields can be constrained."""
+    too_small = "too small"
+    too_short = "too short"
+    with pytest.raises(ConstraintGroupError) as exc_info:
+        structure(
+            {"a": -1, "b": []},
+            A,
+            lambda cl: [
+                Constraint.for_(cl.a, lambda a: too_small if a < 0 else None),
+                Constraint.for_(cl.b, lambda b: too_short if len(b) < 1 else None),
+            ],
+        )

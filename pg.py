@@ -17,8 +17,6 @@ S = TypeVar("S", bound=Sized)
 AnyType: TypeAlias = Any
 """Any type (i.e. not an instance). Can be a class, ABC, Protocol, Literal, etc."""
 
-ConstraintPath: TypeAlias = tuple[()] | tuple[str, ...]
-"""A path for a constraint check. Empty tuple means the object itself."""
 
 ConstraintHook: TypeAlias = Callable[[T], str | None]
 """A constraint validation check for T. Returns an error string if failed, else None."""
@@ -39,8 +37,8 @@ class Constraint(Generic[T]):
     _target: Any
 
     @classmethod
-    def for_(cls, arg: A) -> "Callable[[ConstraintHook[A]], Constraint[A]]":
-        return lambda v: Constraint(v, arg)
+    def for_(cls, arg: A, hook: ConstraintHook[A]) -> "Constraint[A]":
+        return Constraint(hook, arg)
 
     @classmethod
     def nonempty(cls, arg: S) -> "Constraint[S]":
@@ -59,7 +57,7 @@ class ConstraintGroupError(BaseValidationError):
 ConstraintHookFactory = Callable[[T], Iterable[Constraint[T]]]
 
 
-def _extract_from_annotated(type: Any, cls_to_extract: type[T]) -> list[T]:
+def _get_from_annotated(type: Any, cls_to_extract: type[T]) -> list[T]:
     if not is_annotated(type):
         return []
     return [cls for cls in get_args(type)[1:] if isinstance(cls, cls_to_extract)]
@@ -83,11 +81,22 @@ def split_from_annotated(type: Any, cls_to_split: type[T]) -> tuple[Any, list[T]
     return Annotated[(args[0], *left)] if left else args[0], extracted
 
 
-@frozen
-class Val:
-    """For use in `Annotated`, to add val hooks."""
+ConstraintPath: TypeAlias = tuple[()] | tuple[str, ...]
+"""
+A path for a constraint check.
 
-    hooks: tuple[tuple[ConstraintPath, tuple[ConstraintHook[Any], ...]]]
+* Empty tuple means the object itself.
+* A string means an attribute.
+
+"""
+type frozenlist[T] = tuple[T, ...]
+
+
+@frozen
+class ConstraintAnnotated:
+    """For use in `Annotated`, to add constraint hooks."""
+
+    hooks: frozenlist[tuple[ConstraintPath, tuple[ConstraintHook[Any], ...]]]
 
 
 @frozen(slots=False, init=False)
@@ -102,10 +111,10 @@ class _ValDummy:
         return _ValDummy(path=(*self.__dict__[".path"], name))
 
 
-def _gen_val_hooks(
+def _gen_constraint_hooks(
     type: Any, val_hook_factory: ConstraintHookFactory[Any]
 ) -> tuple[Any, ...]:
-    """Generate a mapping of attributes to their validation hooks.
+    """Generate a mapping of attributes to their constraint hooks.
 
     An empty tuple means the root object itself.
     """
@@ -127,27 +136,43 @@ def structure(
     structure_as: type[T],
     val_hook: Callable[[T], Iterable[Constraint[T]]] | None = None,
 ) -> T:
-    if val_hook is not None:
-        hooks = _gen_val_hooks(structure_as, val_hook)
-        structure_as = Annotated[structure_as, Val(hooks)]  # type: ignore
+    if val_hook:
+        hooks = _gen_constraint_hooks(structure_as, val_hook)
+        structure_as = Annotated[structure_as, ConstraintAnnotated(hooks)]  # type: ignore
     return global_converter.structure(obj, structure_as)
 
 
 @global_converter.register_structure_hook_factory(
-    lambda t: bool(_extract_from_annotated(t, Val))
+    lambda t: any(
+        hook[0] == ()
+        for annotated in _get_from_annotated(t, ConstraintAnnotated)
+        for hook in annotated.hooks
+    )
 )
 def direct_constraint_factory(type: Any, conv: BaseConverter) -> StructureHook:
-    base, constraints = split_from_annotated(type, Val)
-    instance_constraints = [
+    base, constraints = split_from_annotated(type, ConstraintAnnotated)
+    instance_constraint_hooks = [
         c for con in constraints[0].hooks if con[0] == () for c in con[1]
     ]
-    hook = conv.get_structure_hook(base)
+    noninstance_constraints = tuple(
+        [
+            hook
+            for constraint in constraints
+            for hook in constraint.hooks
+            if hook[0] != ()
+        ]
+    )
+    hook = conv.get_structure_hook(
+        Annotated[(base, ConstraintAnnotated(noninstance_constraints))]
+        if noninstance_constraints
+        else base
+    )
 
     @wraps(hook)
     def check_constraints(val: Any, type: Any) -> Any:
         res = hook(val, type)
         errors: list[Exception] = []
-        for con in instance_constraints:
+        for con in instance_constraint_hooks:
             try:
                 if (error := con(res)) is not None:
                     errors.append(ConstraintError(error))
