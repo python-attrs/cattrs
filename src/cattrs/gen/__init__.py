@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Iterable, Mapping
+from functools import wraps
 from typing import TYPE_CHECKING, Any, Final, Literal, TypeVar, get_args, get_origin
 
 from attrs import NOTHING, Attribute, Converter, Factory, evolve
@@ -17,6 +18,7 @@ from .._compat import (
     is_generic,
 )
 from .._generics import deep_copy_with
+from ..constraints import ConstraintError, ConstraintGroupError
 from ..dispatch import UnstructureHook
 from ..errors import (
     AttributeValidationNote,
@@ -31,7 +33,7 @@ from ..types import SimpleStructureHook
 from ._consts import AttributeOverride, already_generating, neutral
 from ._generics import generate_mapping
 from ._lc import generate_unique_filename
-from ._shared import find_structure_handler
+from ._shared import find_structure_handler, make_constraints_dict
 
 if TYPE_CHECKING:
     from ..converters import BaseConverter
@@ -398,6 +400,8 @@ def make_dict_structure_fn_from_attrs(
         globs["__c_a"] = allowed_fields
         globs["__c_feke"] = ForbiddenExtraKeysError
 
+    attr_constraints = make_constraints_dict(cl)
+
     if _cattrs_detailed_validation:
         lines.append("  res = {}")
         lines.append("  errors = []")
@@ -430,6 +434,34 @@ def make_dict_structure_fn_from_attrs(
 
             struct_handler_name = f"__c_structure_{an}"
             if handler is not None:
+                if an in attr_constraints:
+
+                    constraint_hooks = attr_constraints[an]
+
+                    @wraps(handler)
+                    def check_constraints(
+                        val: Any,
+                        type: Any,
+                        *,
+                        _handler=handler,
+                        _constraints=constraint_hooks,
+                    ) -> Any:
+                        res = _handler(val, type)
+                        errors: list[Exception] = []
+                        for con in _constraints:
+                            try:
+                                if (error := con(res)) is not None:
+                                    errors.append(ConstraintError(error))
+                            except Exception as exc:
+                                errors.append(exc)
+                        if errors:
+                            raise ConstraintGroupError(
+                                "Constraint violations", errors, t
+                            )
+                        return res
+
+                    handler = check_constraints
+
                 internal_arg_parts[struct_handler_name] = handler
 
             ian = a.alias
