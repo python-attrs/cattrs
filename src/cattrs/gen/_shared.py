@@ -5,12 +5,32 @@ from typing import TYPE_CHECKING, Any
 from attrs import NOTHING, Attribute, Factory
 
 from .._compat import is_bare_final
+from ..annotated import get_from_annotated
+from ..constraints import (
+    ConstraintAnnotated,
+    ConstraintHook,
+    ConstraintPath,
+    frozenlist,
+)
 from ..dispatch import StructureHook
 from ..errors import StructureHandlerNotFoundError
 from ..fns import raise_error
 
 if TYPE_CHECKING:
     from ..converters import BaseConverter
+
+
+def make_constraints_dict(type: Any) -> dict[str, frozenlist[ConstraintHook[Any]]]:
+    """
+    Given a type that may contain ConstraintAnnotated, extract attribute constraints.
+    """
+    annots = get_from_annotated(type, ConstraintAnnotated)
+    return {
+        path[0]: hooks
+        for a in annots
+        for path, hooks in a.hooks
+        if len(path) == 1 and isinstance(path[0], str)
+    }
 
 
 def find_structure_handler(

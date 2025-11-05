@@ -6,9 +6,16 @@ from attrs import frozen
 
 from cattrs import global_converter
 from cattrs._compat import is_annotated
+from cattrs.annotated import get_from_annotated
+from cattrs.constraints import (
+    ConstraintAnnotated,
+    ConstraintError,
+    ConstraintGroupError,
+    ConstraintHook,
+    ConstraintPath,
+)
 from cattrs.converters import BaseConverter
 from cattrs.dispatch import StructureHook
-from cattrs.errors import BaseValidationError
 
 T = TypeVar("T")
 A = TypeVar("A")
@@ -16,10 +23,6 @@ S = TypeVar("S", bound=Sized)
 
 AnyType: TypeAlias = Any
 """Any type (i.e. not an instance). Can be a class, ABC, Protocol, Literal, etc."""
-
-
-ConstraintHook: TypeAlias = Callable[[T], str | None]
-"""A constraint validation check for T. Returns an error string if failed, else None."""
 
 
 def nonempty_check(val: S) -> str | None:
@@ -46,21 +49,7 @@ class Constraint(Generic[T]):
         return Constraint(nonempty_check, arg)
 
 
-class ConstraintError(Exception):
-    pass
-
-
-class ConstraintGroupError(BaseValidationError):
-    """Raised during detailed validation; may contain multiple constraint violations."""
-
-
 ConstraintHookFactory = Callable[[T], Iterable[Constraint[T]]]
-
-
-def _get_from_annotated(type: Any, cls_to_extract: type[T]) -> list[T]:
-    if not is_annotated(type):
-        return []
-    return [cls for cls in get_args(type)[1:] if isinstance(cls, cls_to_extract)]
 
 
 def split_from_annotated(type: Any, cls_to_split: type[T]) -> tuple[Any, list[T]]:
@@ -79,24 +68,6 @@ def split_from_annotated(type: Any, cls_to_split: type[T]) -> tuple[Any, list[T]
     for t in args[1:]:
         (extracted if isinstance(t, cls_to_split) else left).append(t)
     return Annotated[(args[0], *left)] if left else args[0], extracted
-
-
-ConstraintPath: TypeAlias = tuple[()] | tuple[str, ...]
-"""
-A path for a constraint check.
-
-* Empty tuple means the object itself.
-* A string means an attribute.
-
-"""
-type frozenlist[T] = tuple[T, ...]
-
-
-@frozen
-class ConstraintAnnotated:
-    """For use in `Annotated`, to add constraint hooks."""
-
-    hooks: frozenlist[tuple[ConstraintPath, tuple[ConstraintHook[Any], ...]]]
 
 
 @frozen(slots=False, init=False)
@@ -145,7 +116,7 @@ def structure(
 @global_converter.register_structure_hook_factory(
     lambda t: any(
         hook[0] == ()
-        for annotated in _get_from_annotated(t, ConstraintAnnotated)
+        for annotated in get_from_annotated(t, ConstraintAnnotated)
         for hook in annotated.hooks
     )
 )
