@@ -4,7 +4,7 @@ import re
 from collections.abc import Callable, Iterable, Mapping
 from typing import TYPE_CHECKING, Any, Final, Literal, TypeVar
 
-from attrs import NOTHING, Attribute, Factory, Converter
+from attrs import NOTHING, Attribute, Converter, Factory
 from typing_extensions import NoDefault
 
 from .._compat import (
@@ -177,10 +177,7 @@ def make_dict_unstructure_fn_from_attrs(
             if isinstance(d, Factory):
                 globs[def_name] = d.factory
                 internal_arg_parts[def_name] = d.factory
-                if d.takes_self:
-                    def_str = f"{def_name}(instance)"
-                else:
-                    def_str = f"{def_name}()"
+                def_str = f"{def_name}(instance)" if d.takes_self else f"{def_name}()"
             else:
                 globs[def_name] = d
                 internal_arg_parts[def_name] = d
