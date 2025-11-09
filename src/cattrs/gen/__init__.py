@@ -796,10 +796,12 @@ def make_dict_structure_fn(
         by default.
     """
 
+    annotated_base = get_args(cl)[0] if is_annotated(cl) else cl
+
     mapping = {}
-    if is_generic(cl):
-        base = get_origin(cl)
-        mapping = generate_mapping(cl, mapping)
+    if is_generic(annotated_base):
+        base = get_origin(annotated_base)
+        mapping = generate_mapping(annotated_base, mapping)
         if base is not None:
             cl = base
 

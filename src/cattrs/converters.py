@@ -9,7 +9,7 @@ from enum import Enum
 from inspect import Signature
 from inspect import signature as inspect_signature
 from pathlib import Path
-from typing import Any, Optional, Tuple, TypeVar, overload
+from typing import Any, Optional, Tuple, TypeVar, get_args, get_origin, overload
 
 from attrs import Attribute, resolve_types
 from attrs import has as attrs_has
@@ -30,10 +30,7 @@ from ._compat import (
     fields,
     get_final_base,
     get_newtype_base,
-    get_origin,
     has,
-    has_with_generic,
-    is_annotated,
     is_bare,
     is_counter,
     is_deque,
@@ -53,6 +50,7 @@ from ._compat import (
     is_union_type,
     signature,
 )
+from .annotated import is_annotated
 from .cols import (
     defaultdict_structure_factory,
     homogenous_tuple_structure_factory,
@@ -96,6 +94,7 @@ from .gen import (
 from .gen.typeddicts import make_dict_structure_fn as make_typeddict_dict_struct_fn
 from .gen.typeddicts import make_dict_unstructure_fn as make_typeddict_dict_unstruct_fn
 from .literals import is_literal_containing_enums
+from .predicates import is_attrs_or_dataclass
 from .typealiases import (
     get_type_alias_base,
     is_type_alias,
@@ -1144,10 +1143,7 @@ class Converter(BaseConverter):
         if unstruct_strat is UnstructureStrategy.AS_DICT:
             # Override the attrs handler.
             self.register_unstructure_hook_factory(
-                has_with_generic, self.gen_unstructure_attrs_fromdict
-            )
-            self.register_structure_hook_factory(
-                has_with_generic, self.gen_structure_attrs_fromdict
+                is_attrs_or_dataclass, self.gen_unstructure_attrs_fromdict
             )
         self.register_unstructure_hook_factory(
             is_annotated, self.gen_unstructure_annotated
@@ -1182,6 +1178,11 @@ class Converter(BaseConverter):
         )
 
         self.register_structure_hook_factory(is_annotated, self.gen_structure_annotated)
+        # Needs to come after the generic `Annotated` hook.
+        if unstruct_strat is UnstructureStrategy.AS_DICT:
+            self.register_structure_hook_factory(
+                is_attrs_or_dataclass, self.gen_structure_attrs_fromdict
+            )
         self.register_structure_hook_factory(is_mapping, self.gen_structure_mapping)
         self.register_structure_hook_factory(is_counter, self.gen_structure_counter)
         self.register_structure_hook_factory(
@@ -1301,11 +1302,12 @@ class Converter(BaseConverter):
     def gen_structure_attrs_fromdict(
         self, cl: type[T]
     ) -> Callable[[Mapping[str, Any], Any], T]:
-        origin = get_origin(cl)
-        attribs = fields(origin or cl if is_generic(cl) else cl)
-        if attrs_has(cl) and any(isinstance(a.type, str) for a in attribs):
+        base = get_args(cl)[0] if is_annotated(cl) else cl
+        origin = get_origin(base)
+        attribs = fields(origin or base if is_generic(base) else base)
+        if attrs_has(base) and any(isinstance(a.type, str) for a in attribs):
             # PEP 563 annotations - need to be resolved.
-            resolve_types(origin or cl)
+            resolve_types(origin or base)
         attrib_overrides = {
             a.name: self.type_overrides[a.type]
             for a in attribs
@@ -1314,7 +1316,7 @@ class Converter(BaseConverter):
         return make_dict_structure_fn(
             cl,
             self,
-            _cattrs_forbid_extra_keys=self.forbid_extra_keys,
+            self.forbid_extra_keys,
             _cattrs_prefer_attrib_converters=self._prefer_attrib_converters,
             _cattrs_detailed_validation=self.detailed_validation,
             _cattrs_use_alias=self.use_alias,

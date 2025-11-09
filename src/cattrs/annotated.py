@@ -6,6 +6,8 @@ from ._compat import is_annotated
 
 T = TypeVar("T")
 
+__all__ = ["get_from_annotated", "is_annotated"]
+
 
 def get_from_annotated(type: Any, cls_to_extract: type[T]) -> list[T]:
     if not is_annotated(type):
