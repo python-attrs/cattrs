@@ -16,6 +16,7 @@ from typing import (
     Union,
 )
 
+import attrs
 import pytest
 from attrs import Factory, define, field, fields, has, make_class
 from hypothesis import assume, given
@@ -336,6 +337,31 @@ def test_omit_default_roundtrip(cl_and_vals):
     inst = C(0)
     unstructured = converter.unstructure(inst)
     assert unstructured == {"a": 0}
+    assert inst == converter.structure(unstructured, C)
+
+
+@given(simple_typed_classes(defaults="always", allow_nan=False))
+def test_omit_default_with_attrs_converter_roundtrip(cl_and_vals):
+    """
+    Omit default with attrs' converter on the converter works.
+    """
+    converter = Converter(omit_if_default=True)
+    cl, vals, kwargs = cl_and_vals
+
+    @define
+    class C:
+        a1: int = field(default="1", converter=int)
+        a2: int = field(default="1", converter=attrs.Converter(int))
+        c: cl = Factory(lambda: cl(*vals, **kwargs))
+
+    inst = C()
+    unstructured = converter.unstructure(inst)
+    assert unstructured == {}
+    assert inst == converter.structure(unstructured, C)
+
+    inst = C(0, 0)
+    unstructured = converter.unstructure(inst)
+    assert unstructured == {"a1": 0, "a2": 0}
     assert inst == converter.structure(unstructured, C)
 
 

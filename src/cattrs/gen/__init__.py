@@ -184,14 +184,17 @@ def make_dict_unstructure_fn_from_attrs(
                 def_str = def_name
 
             c = a.converter
-            if isinstance(c, Converter):
+            if c is not None:
                 conv_name = f"__c_conv_{attr_name}"
                 globs[conv_name] = c
                 internal_arg_parts[conv_name] = c
-                field_name = f"__c_field_{attr_name}"
-                globs[field_name] = a
-                internal_arg_parts[field_name] = a
-                def_str = f"{conv_name}({def_str}, instance, {field_name})"
+                if isinstance(c, Converter):
+                    field_name = f"__c_field_{attr_name}"
+                    globs[field_name] = a
+                    internal_arg_parts[field_name] = a
+                    def_str = f"{conv_name}({def_str}, instance, {field_name})"
+                else:
+                    def_str = f"{conv_name}({def_str})"
 
             lines.append(f"  if instance.{attr_name} != {def_str}:")
             lines.append(f"    res['{kn}'] = {invoke}")
