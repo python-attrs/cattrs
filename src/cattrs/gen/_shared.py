@@ -9,7 +9,6 @@ from ..annotated import get_from_annotated
 from ..constraints import (
     ConstraintAnnotated,
     ConstraintHook,
-    ConstraintPath,
     frozenlist,
 )
 from ..dispatch import StructureHook

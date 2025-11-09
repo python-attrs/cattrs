@@ -2,6 +2,9 @@ import pytest
 from attrs import define
 from pg import Constraint, ConstraintError, ConstraintGroupError, structure
 
+from cattrs.errors import ClassValidationError
+from cattrs.v import transform_error
+
 
 @define
 class A:
@@ -42,7 +45,7 @@ def test_attr_field_constrains() -> None:
     """Attrs fields can be constrained."""
     too_small = "too small"
     too_short = "too short"
-    with pytest.raises(ConstraintGroupError) as exc_info:
+    with pytest.raises(ClassValidationError) as exc_info:
         structure(
             {"a": -1, "b": []},
             A,
@@ -51,3 +54,8 @@ def test_attr_field_constrains() -> None:
                 Constraint.for_(cl.b, lambda b: too_short if len(b) < 1 else None),
             ],
         )
+
+    assert transform_error(exc_info.value) == [
+        "unknown error (Constraint violations (1 sub-exception)) @ $.a",
+        "unknown error (Constraint violations (1 sub-exception)) @ $.b",
+    ]

@@ -107,11 +107,11 @@ def is_typeddict(cls: Any):
     return _is_typeddict(getattr(cls, "__origin__", cls))
 
 
-def has(cls):
+def has(cls: Any) -> bool:
     return hasattr(cls, "__attrs_attrs__") or hasattr(cls, "__dataclass_fields__")
 
 
-def has_with_generic(cls):
+def has_with_generic(cls: Any) -> bool:
     """Test whether the class if a normal or generic attrs or dataclass."""
     return has(cls) or has(get_origin(cls))
 
@@ -135,6 +135,9 @@ def adapted_fields(cl: type) -> list[Attribute]:
 
     Resolves `attrs` stringified annotations, if present.
     """
+    # If `Annotated`, look at the base type.
+    if is_annotated(cl):
+        cl = get_args(cl)[0]
     if is_dataclass(cl):
         attrs = dataclass_fields(cl)
         if any(isinstance(a.type, str) for a in attrs):
@@ -243,11 +246,7 @@ FrozenSetSubscriptable = frozenset
 TupleSubscriptable = tuple
 
 
-def is_annotated(type) -> bool:
-    return getattr(type, "__class__", None) is _AnnotatedAlias
-
-
-def is_tuple(type):
+def is_tuple(type) -> bool:
     return (
         type in (Tuple, tuple)
         or (type.__class__ is _GenericAlias and is_subclass(type.__origin__, Tuple))
@@ -257,7 +256,7 @@ def is_tuple(type):
 
 if sys.version_info >= (3, 14):
 
-    def is_union_type(obj):
+    def is_union_type(obj: Any) -> bool:
         from types import UnionType  # noqa: PLC0415
 
         return obj is Union or isinstance(obj, UnionType)
@@ -272,7 +271,7 @@ if sys.version_info >= (3, 14):
 elif sys.version_info >= (3, 10):
     from typing import _UnionGenericAlias
 
-    def is_union_type(obj):
+    def is_union_type(obj: Any) -> bool:
         from types import UnionType  # noqa: PLC0415
 
         return (
@@ -311,6 +310,12 @@ else:
         ):
             return supertype
         return None
+
+
+# Has to be here because of circular dependencies.
+def is_annotated(type: Any) -> bool:
+    """A predicate for `typing.Annotated.`"""
+    return getattr(type, "__class__", None) is _AnnotatedAlias
 
 
 def get_notrequired_base(type) -> Union[Any, NothingType]:
