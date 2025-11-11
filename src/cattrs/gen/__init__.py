@@ -18,11 +18,12 @@ from .._compat import (
     is_generic,
 )
 from .._generics import deep_copy_with
-from ..constraints import ConstraintError, ConstraintGroupError
 from ..dispatch import UnstructureHook
 from ..errors import (
     AttributeValidationNote,
     ClassValidationError,
+    ConstraintError,
+    ConstraintGroupError,
     ForbiddenExtraKeysError,
     IterableValidationError,
     IterableValidationNote,
@@ -355,11 +356,12 @@ def make_dict_structure_fn_from_attrs(
         by default.
     """
 
-    cl_name = cl.__name__
+    cl_base = get_args(cl)[0] if is_annotated(cl) else cl
+    cl_name = cl_base.__name__
     fn_name = "structure_" + cl_name
 
     # We have generic parameters and need to generate a unique name for the function
-    for p in getattr(cl, "__parameters__", ()):
+    for p in getattr(cl_base, "__parameters__", ()):
         # This is nasty, I am not sure how best to handle `typing.List[str]` or
         # `TClass[int, int]` as a parameter type here
         try:
@@ -377,7 +379,7 @@ def make_dict_structure_fn_from_attrs(
         name = re.sub(r"\|", "u", name)
         fn_name += f"_{name}"
 
-    internal_arg_parts = {"__cl": cl}
+    internal_arg_parts = {"__cl": cl_base}
     globs = {}
     lines = []
     post_lines = []
@@ -445,6 +447,7 @@ def make_dict_structure_fn_from_attrs(
                         *,
                         _handler=handler,
                         _constraints=constraint_hooks,
+                        _t=t,
                     ) -> Any:
                         res = _handler(val, type)
                         errors: list[Exception] = []
@@ -456,7 +459,7 @@ def make_dict_structure_fn_from_attrs(
                                 errors.append(exc)
                         if errors:
                             raise ConstraintGroupError(
-                                "Constraint violations", errors, t
+                                "Constraint violations", errors, _t
                             )
                         return res
 

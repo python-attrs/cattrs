@@ -4,6 +4,8 @@ from typing import Callable, Union
 
 from .errors import (
     ClassValidationError,
+    ConstraintError,
+    ConstraintGroupError,
     ForbiddenExtraKeysError,
     IterableValidationError,
 )
@@ -21,6 +23,7 @@ def format_exception(exc: BaseException, type: Union[type, None]) -> str:
     * `TypeErrors` (`invalid value for type, expected <type>` and a couple special
       cases for iterables)
     * `cattrs.ForbiddenExtraKeysError`
+    * `cattrs.ConstraintError`
     * some `AttributeErrors` (special cased for structing mappings)
     """
     if isinstance(exc, KeyError):
@@ -47,6 +50,8 @@ def format_exception(exc: BaseException, type: Union[type, None]) -> str:
     ):
         # This was supposed to be a mapping (and have .items()) but it something else.
         res = "expected a mapping"
+    elif isinstance(exc, ConstraintError):
+        res = f"constraint violated: {exc}"
     else:
         res = f"unknown error ({exc})"
 
@@ -54,7 +59,12 @@ def format_exception(exc: BaseException, type: Union[type, None]) -> str:
 
 
 def transform_error(
-    exc: Union[ClassValidationError, IterableValidationError, BaseException],
+    exc: Union[
+        ClassValidationError,
+        IterableValidationError,
+        ConstraintGroupError,
+        BaseException,
+    ],
     path: str = "$",
     format_exception: Callable[
         [BaseException, Union[type, None]], str
@@ -95,12 +105,23 @@ def transform_error(
         with_notes, without = exc.group_exceptions()
         for exc, note in with_notes:
             p = f"{path}.{note.name}"
-            if isinstance(exc, (ClassValidationError, IterableValidationError)):
+            if isinstance(
+                exc,
+                (ClassValidationError, IterableValidationError, ConstraintGroupError),
+            ):
                 errors.extend(transform_error(exc, p, format_exception))
             else:
                 errors.append(f"{format_exception(exc, note.type)} @ {p}")
         for exc in without:
             errors.append(f"{format_exception(exc, None)} @ {path}")
+    elif isinstance(exc, ConstraintGroupError):
+        errors.extend(
+            [
+                error
+                for subexc in exc.exceptions
+                for error in transform_error(subexc, path, format_exception)
+            ]
+        )
     else:
         errors.append(f"{format_exception(exc, None)} @ {path}")
     return errors
