@@ -136,3 +136,11 @@ class ForbiddenExtraKeysError(Exception):
             or f"Extra fields in constructor for {self.cl.__name__}: "
             f"{', '.join(sorted(self.extra_fields))}"
         )
+
+
+class ConstraintError(Exception):
+    """A cattrs constraint validation."""
+
+
+class ConstraintGroupError(BaseValidationError):
+    """Raised during detailed validation; may contain multiple constraint violations."""

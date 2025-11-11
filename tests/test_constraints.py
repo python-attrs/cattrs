@@ -41,7 +41,7 @@ def test_direct_attrs_constraints() -> None:
     assert exc_info.value.exceptions[1].args[0] == too_short
 
 
-def test_attr_field_constrains() -> None:
+def test_attr_field_constraints() -> None:
     """Attrs fields can be constrained."""
     too_small = "too small"
     too_short = "too short"
@@ -56,6 +56,6 @@ def test_attr_field_constrains() -> None:
         )
 
     assert transform_error(exc_info.value) == [
-        "unknown error (Constraint violations (1 sub-exception)) @ $.a",
-        "unknown error (Constraint violations (1 sub-exception)) @ $.b",
+        f"constraint violated: {too_small} @ $.a",
+        f"constraint violated: {too_short} @ $.b",
     ]

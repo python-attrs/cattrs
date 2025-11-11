@@ -7,15 +7,10 @@ from attrs import frozen
 from cattrs import global_converter
 from cattrs._compat import is_annotated
 from cattrs.annotated import get_from_annotated
-from cattrs.constraints import (
-    ConstraintAnnotated,
-    ConstraintError,
-    ConstraintGroupError,
-    ConstraintHook,
-    ConstraintPath,
-)
+from cattrs.constraints import ConstraintAnnotated, ConstraintHook, ConstraintPath
 from cattrs.converters import BaseConverter
 from cattrs.dispatch import StructureHook
+from cattrs.errors import ConstraintError, ConstraintGroupError
 
 T = TypeVar("T")
 A = TypeVar("A")
