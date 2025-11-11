@@ -1,13 +1,18 @@
 from collections.abc import Callable, Iterable, Sized
 from functools import wraps
-from typing import Annotated, Any, Generic, TypeAlias, TypeVar, get_args
+from typing import Annotated, Any, TypeAlias, TypeVar, get_args
 
 from attrs import frozen
 
 from cattrs import global_converter
 from cattrs._compat import is_annotated
 from cattrs.annotated import get_from_annotated
-from cattrs.constraints import ConstraintAnnotated, ConstraintHook, ConstraintPath
+from cattrs.constraints import (
+    Constraint,
+    ConstraintAnnotated,
+    ConstraintHook,
+    ConstraintPath,
+)
 from cattrs.converters import BaseConverter
 from cattrs.dispatch import StructureHook
 from cattrs.errors import ConstraintError, ConstraintGroupError
@@ -18,30 +23,6 @@ S = TypeVar("S", bound=Sized)
 
 AnyType: TypeAlias = Any
 """Any type (i.e. not an instance). Can be a class, ABC, Protocol, Literal, etc."""
-
-
-def nonempty_check(val: S) -> str | None:
-    return "Collection is empty" if not len(val) else None
-
-
-@frozen
-class Constraint(Generic[T]):
-    """Used to create constraint hooks, which can later be called by cattrs.
-
-    Do not instantiate this class directly; use the provided classmethods instead.
-    """
-
-    _hook: ConstraintHook[T]
-    _target: Any
-
-    @classmethod
-    def for_(cls, arg: A, hook: ConstraintHook[A]) -> "Constraint[A]":
-        return Constraint(hook, arg)
-
-    @classmethod
-    def nonempty(cls, arg: S) -> "Constraint[S]":
-        """Ensure the collection is not empty."""
-        return Constraint(nonempty_check, arg)
 
 
 ConstraintHookFactory = Callable[[T], Iterable[Constraint[T]]]

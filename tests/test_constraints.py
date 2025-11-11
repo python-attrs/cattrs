@@ -1,8 +1,14 @@
 import pytest
 from attrs import define
-from pg import Constraint, ConstraintError, ConstraintGroupError, structure
+from pg import structure
 
-from cattrs.errors import ClassValidationError
+from cattrs.constraints import Constraint
+from cattrs.errors import (
+    ClassValidationError,
+    ConstraintError,
+    ConstraintGroupError,
+    IterableValidationError,
+)
 from cattrs.v import transform_error
 
 
@@ -12,11 +18,27 @@ class A:
     b: list[int]
 
 
-def test_list_constaints() -> None:
+def test_direct_list_constaints() -> None:
     with pytest.raises(ConstraintGroupError) as exc_info:
         structure([], list[int], lambda lst: [Constraint.nonempty(lst)])
 
     assert exc_info.value.cl == list[int]
+
+
+def test_list_element_constraints() -> None:
+    """List elements can be constrained."""
+
+    def is_positive(val: int) -> str | None:
+        return "too small" if val < 1 else None
+
+    with pytest.raises(IterableValidationError) as exc_info:
+        structure(
+            [1, 0, "a"], list[int], lambda lst: [Constraint.each(lst, is_positive)]
+        )
+    assert transform_error(exc_info.value) == [
+        "constraint violated: too small @ $[1]",
+        "invalid value for type, expected int @ $[2]",
+    ]
 
 
 def test_direct_attrs_constraints() -> None:
