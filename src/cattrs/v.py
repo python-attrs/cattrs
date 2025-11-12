@@ -95,7 +95,10 @@ def transform_error(
         with_notes, without = exc.group_exceptions()
         for exc, note in with_notes:
             p = f"{path}[{note.index!r}]"
-            if isinstance(exc, (ClassValidationError, IterableValidationError)):
+            if isinstance(
+                exc,
+                (ClassValidationError, IterableValidationError, ConstraintGroupError),
+            ):
                 errors.extend(transform_error(exc, p, format_exception))
             else:
                 errors.append(f"{format_exception(exc, note.type)} @ {p}")

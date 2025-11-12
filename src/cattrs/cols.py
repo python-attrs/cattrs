@@ -30,6 +30,8 @@ from ._compat import (
     is_subclass,
 )
 from ._compat import is_mutable_set as is_set
+from .annotated import add_to_annotated, get_from_annotated, is_annotated
+from .constraints import ConstraintAnnotated, ConstraintPathSentinel
 from .dispatch import StructureHook, UnstructureHook
 from .errors import IterableValidationError, IterableValidationNote
 from .fns import identity
@@ -108,16 +110,34 @@ def list_structure_factory(type: type, converter: BaseConverter) -> StructureHoo
     """A hook factory for structuring lists.
 
     Converts any given iterable into a list.
-    """
 
-    if is_bare(type) or type.__args__[0] in ANIES:
+    .. versionchanged:: NEXT
+       Works with `Annotated` types and constraints.
+    """
+    base = get_args(type)[0] if is_annotated(type) else type
+
+    if is_bare(base) or base.__args__[0] in ANIES:
 
         def structure_list(obj: Iterable[T], _: type = type) -> list[T]:
             return list(obj)
 
         return structure_list
 
-    elem_type = type.__args__[0]
+    elem_type = base_elem_type = base.__args__[0]
+
+    constraints = get_from_annotated(type, ConstraintAnnotated)
+    element_constraints = tuple(
+        [
+            (path[1:], checks)
+            for constraint in constraints
+            for path, checks in constraint.hooks
+            if len(path) >= 1 and path[0] is ConstraintPathSentinel.EACH
+        ]
+    )
+    if element_constraints:
+        elem_type = add_to_annotated(
+            elem_type, ConstraintAnnotated(element_constraints)
+        )
 
     try:
         handler = converter.get_structure_hook(elem_type)
@@ -138,7 +158,7 @@ def list_structure_factory(type: type, converter: BaseConverter) -> StructureHoo
                     res.append(handler(e, _elem_type))
                 except Exception as e:
                     msg = IterableValidationNote(
-                        f"Structuring {type} @ index {ix}", ix, elem_type
+                        f"Structuring {base} @ index {ix}", ix, base_elem_type
                     )
                     e.__notes__ = [*getattr(e, "__notes__", []), msg]
                     errors.append(e)
@@ -146,7 +166,7 @@ def list_structure_factory(type: type, converter: BaseConverter) -> StructureHoo
                     ix += 1
             if errors:
                 raise IterableValidationError(
-                    f"While structuring {type!r}", errors, type
+                    f"While structuring {base!r}", errors, type
                 )
 
             return res
