@@ -72,9 +72,11 @@ def _gen_constraint_hooks(
         target = expr._target
         path = target.__dict__[".path"]
         if not path:
-            res.setdefault((), []).append(expr._hook)
+            res.setdefault(() if not expr._op else (expr._op,), []).append(expr._hook)
         else:
-            res.setdefault(tuple(path), []).append(expr._hook)
+            if expr._op:
+                path = (*path, expr._op)
+            res.setdefault(path, []).append(expr._hook)
     return tuple((k, tuple(v)) for k, v in res.items())
 
 

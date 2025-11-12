@@ -307,7 +307,11 @@ def is_mutable_sequence(type: Any) -> bool:
     """A predicate function for mutable sequences.
 
     Matches lists, mutable sequences, and deques.
+
+    .. versionchanged:: NEXT
+       Also matches mutable sequence types in `Annotated` types.
     """
+    type = type.__args__[0] if is_annotated(type) else type
     origin = getattr(type, "__origin__", None)
     return (
         type in (List, list, TypingMutableSequence, AbcMutableSequence, deque, Deque)

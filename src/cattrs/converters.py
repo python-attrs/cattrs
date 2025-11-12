@@ -258,13 +258,13 @@ class BaseConverter:
                 (lambda t: t in ANIES, self.unstructure),
             ]
         )
-
         # Per-instance register of to-attrs converters.
         # Singledispatch dispatches based on the first argument, so we
         # store the function and switch the arguments in self.loads.
         self._structure_func = MultiStrategyDispatch(structure_fallback_factory, self)
         self._structure_func.register_func_list(
             [
+                (is_annotated, self.gen_structure_annotated, True),
                 (
                     lambda cl: cl in ANIES or cl is Optional or cl is None,
                     lambda v, _: v,
@@ -693,6 +693,12 @@ class BaseConverter:
                 return self.structure(obj, dis_fn(obj))
 
         return structure_attrs_union
+
+    def gen_structure_annotated(self, type) -> StructureHook:
+        """A hook factory for annotated types."""
+        origin = type.__origin__
+        hook = self.get_structure_hook(origin)
+        return lambda v, _: hook(v, origin)
 
     @staticmethod
     def _structure_call(obj: Any, cl: type[T]) -> Any:
@@ -1177,7 +1183,6 @@ class Converter(BaseConverter):
             lambda t: self.get_unstructure_hook(get_newtype_base(t)),
         )
 
-        self.register_structure_hook_factory(is_annotated, self.gen_structure_annotated)
         # Needs to come after the generic `Annotated` hook.
         if unstruct_strat is UnstructureStrategy.AS_DICT:
             self.register_structure_hook_factory(
@@ -1243,12 +1248,6 @@ class Converter(BaseConverter):
     def gen_unstructure_annotated(self, type):
         origin = type.__origin__
         return self.get_unstructure_hook(origin)
-
-    def gen_structure_annotated(self, type) -> Callable:
-        """A hook factory for annotated types."""
-        origin = type.__origin__
-        hook = self.get_structure_hook(origin)
-        return lambda v, _: hook(v, origin)
 
     def gen_unstructure_typeddict(self, cl: Any) -> Callable[[dict], dict]:
         """Generate a TypedDict unstructure function.

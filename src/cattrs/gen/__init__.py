@@ -354,6 +354,8 @@ def make_dict_structure_fn_from_attrs(
     ..  versionchanged:: 25.2.0
         The `_cattrs_use_alias` parameter takes its value from the given converter
         by default.
+    .. versionchanged:: NEXT
+       Annotated types and constraints are supported.
     """
 
     cl_base = get_args(cl)[0] if is_annotated(cl) else cl
