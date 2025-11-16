@@ -191,6 +191,8 @@ Currently, the overrides only support generating dictionary un/structuring hooks
 and support `omit_if_default`, `forbid_extra_keys`, `rename` and `omit`.
 
 ### `omit_if_default`
+```{currentmodule} cattrs.gen
+```
 
 This override can be applied on a per-class or per-attribute basis.
 The generated unstructuring hook will skip unstructuring values that are equal to their default or factory values.
@@ -205,7 +207,10 @@ The generated unstructuring hook will skip unstructuring values that are equal t
 ...    b: dict = Factory(dict)
 
 >>> c = cattrs.Converter()
->>> c.register_unstructure_hook(WithDefault, make_dict_unstructure_fn(WithDefault, c, b=override(omit_if_default=True)))
+>>> c.register_unstructure_hook(
+...     WithDefault, 
+...     make_dict_unstructure_fn(WithDefault, c, b=override(omit_if_default=True)),
+... )
 >>> c.unstructure(WithDefault(1))
 {'a': 1}
 ```
@@ -216,7 +221,7 @@ For example, consider a class with a `dateTime` field and a factory for it: skip
 So we apply the `omit_if_default` rule to the class, but not to the `dateTime` field.
 
 ```{note}
-    The parameter to `make_dict_unstructure_function` is named ``_cattrs_omit_if_default`` instead of just ``omit_if_default`` to avoid potential collisions with an override for a field named ``omit_if_default``.
+The parameter to {meth}`make_dict_unstructure_fn` is named ``_cattrs_omit_if_default`` instead of just ``omit_if_default`` to avoid potential collisions with an override for a field named ``omit_if_default``.
 ```
 
 ```{doctest}
@@ -226,11 +231,16 @@ So we apply the `omit_if_default` rule to the class, but not to the `dateTime` f
 
 >>> @define
 ... class TestClass:
-...     a: Optional[int] = None
+...     a: int | None = None
 ...     b: datetime = Factory(datetime.utcnow)
 
 >>> c = cattrs.Converter()
->>> hook = make_dict_unstructure_fn(TestClass, c, _cattrs_omit_if_default=True, b=override(omit_if_default=False))
+>>> hook = make_dict_unstructure_fn(
+...     TestClass, 
+...     c,
+...     _cattrs_omit_if_default=True, 
+...     b=override(omit_if_default=False)
+... )
 >>> c.register_unstructure_hook(TestClass, hook)
 >>> c.unstructure(TestClass())
 {'b': ...}
@@ -283,7 +293,7 @@ This is useful if an attribute name is a reserved keyword in Python.
 
 >>> @define
 ... class ExampleClass:
-...     klass: Optional[int]
+...     klass: int | None
 
 >>> c = cattrs.Converter()
 >>> unst_hook = make_dict_unstructure_fn(ExampleClass, c, klass=override(rename="class"))
