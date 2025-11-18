@@ -208,10 +208,7 @@ def get_final_base(type) -> Optional[type]:
 OriginAbstractSet = AbcSet
 OriginMutableSet = AbcMutableSet
 
-signature = _signature
-
-if sys.version_info >= (3, 10):
-    signature = partial(_signature, eval_str=True)
+signature = partial(_signature, eval_str=True)
 
 
 try:
@@ -269,7 +266,7 @@ if sys.version_info >= (3, 14):
 
     from typing import NotRequired, Required
 
-elif sys.version_info >= (3, 10):
+else:
     from typing import _UnionGenericAlias
 
     def is_union_type(obj):
@@ -290,27 +287,6 @@ elif sys.version_info >= (3, 10):
         from typing import NotRequired, Required
     else:
         from typing_extensions import NotRequired, Required
-
-else:
-    # 3.9
-    from typing import _UnionGenericAlias
-
-    from typing_extensions import NotRequired, Required
-
-    def is_union_type(obj):
-        return obj is Union or (
-            isinstance(obj, _UnionGenericAlias) and obj.__origin__ is Union
-        )
-
-    def get_newtype_base(typ: Any) -> Optional[type]:
-        supertype = getattr(typ, "__supertype__", None)
-        if (
-            supertype is not None
-            and getattr(typ, "__qualname__", "") == "NewType.<locals>.new_type"
-            and typ.__module__ in ("typing", "typing_extensions")
-        ):
-            return supertype
-        return None
 
 
 def get_notrequired_base(type) -> Union[Any, NothingType]:

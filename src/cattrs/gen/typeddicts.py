@@ -3,22 +3,11 @@ from __future__ import annotations
 import re
 import sys
 from collections.abc import Mapping
+from inspect import get_annotations
 from typing import TYPE_CHECKING, Any, Callable, Literal, TypeVar
 
 from attrs import NOTHING, Attribute
 from typing_extensions import _TypedDictMeta
-
-try:
-    from inspect import get_annotations
-
-    def get_annots(cl) -> dict[str, Any]:
-        return get_annotations(cl, eval_str=True)
-
-except ImportError:
-    # https://docs.python.org/3/howto/annotations.html#accessing-the-annotations-dict-of-an-object-in-python-3-9-and-older
-    def get_annots(cl) -> dict[str, Any]:
-        return cl.__dict__.get("__annotations__", {})
-
 
 from .._compat import (
     get_full_type_hints,
@@ -48,6 +37,10 @@ if TYPE_CHECKING:
 __all__ = ["make_dict_structure_fn", "make_dict_unstructure_fn"]
 
 T = TypeVar("T")
+
+
+def get_annots(cl) -> dict[str, Any]:
+    return get_annotations(cl, eval_str=True)
 
 
 def make_dict_unstructure_fn(

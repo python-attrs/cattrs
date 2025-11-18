@@ -15,6 +15,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 - Fix structuring of nested generic classes with stringified annotations.
   ([#688](https://github.com/python-attrs/cattrs/pull/688))
+- Python 3.9 is no longer supported, as it is end-of-life. Use previous versions on this Python version.
+  ([#698](https://github.com/python-attrs/cattrs/pull/698))
 
 ## 25.3.0 (2025-10-07)
 

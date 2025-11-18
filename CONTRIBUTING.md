@@ -75,7 +75,7 @@ Now you can make your changes locally.
 ```shell
 $ just lint
 $ just test
-$ just --set python python3.9 test  # Test on other versions
+$ just --set python python3.10 test  # Test on other versions
 ```
 
 6. Write any necessary documentation, including updating the changelog (HISTORY.md). The docs can be built like so:
