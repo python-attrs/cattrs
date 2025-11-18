@@ -19,10 +19,6 @@ The new copy may be changed through the `copy` arguments, but will retain all ma
 
 ## Customizing Collection Unstructuring
 
-```{important}
-This feature is supported for Python 3.9 and later.
-```
-
 ```{tip}
 See [](customizing.md#customizing-collections) for a more modern and more powerful way of customizing collection handling.
 ```

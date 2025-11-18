@@ -21,10 +21,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          version: "latest"
+      - uses: hynek/setup-cached-uv@757bedc3f972eb7227a1aa657651f15a8527c817  # v2.3.0
       - name: Run zizmor 🌈
         run: uvx zizmor --format sarif . > results.sarif
         env:

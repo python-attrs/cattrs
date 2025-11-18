@@ -44,7 +44,7 @@ dependencies = [
     "typing-extensions>=4.14.0",
     "exceptiongroup>=1.1.1; python_version < '3.11'",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 readme = "README.md"
 license = {text = "MIT"}
 keywords = ["attrs", "serialization", "dataclasses"]
@@ -52,7 +52,6 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -152,10 +151,14 @@ ignore = [
     "SIM300", # Yoda rocks in asserts
     "PGH003", # leave my type: ignores alone
     "B006",   # mutable argument defaults
+    "B905",   # zip strictness, too noisy
     "DTZ001", # datetimes in tests
     "DTZ006", # datetimes in tests
     "UP006",  # We support old typing constructs at runtime
+    "UP007",  # We support old typing constructs at runtime
     "UP035",  # We support old typing constructs at runtime
+    "UP038",  # Dubious rule
+    "UP045",  # We support old typing constructs at runtime
 ]
 
 [tool.ruff.lint.pyupgrade]

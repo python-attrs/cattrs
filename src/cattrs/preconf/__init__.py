@@ -1,16 +1,10 @@
-import sys
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, TypeVar, get_args
+from typing import Any, Callable, ParamSpec, TypeVar, get_args
 
 from .._compat import is_subclass
 from ..converters import Converter, UnstructureHook
 from ..fns import identity
-
-if sys.version_info[:2] < (3, 10):
-    from typing_extensions import ParamSpec
-else:
-    from typing import ParamSpec
 
 
 def validate_datetime(v, _):
