@@ -343,7 +343,7 @@ def test_omit_default_roundtrip(cl_and_vals):
 @given(simple_typed_classes(defaults="always", allow_nan=False))
 def test_omit_default_with_attrs_converter_roundtrip(cl_and_vals):
     """
-    Omit default with attrs' converter on the converter works.
+    Omit default with an attrs converter works.
     """
     converter = Converter(omit_if_default=True)
     cl, vals, kwargs = cl_and_vals
@@ -352,6 +352,8 @@ def test_omit_default_with_attrs_converter_roundtrip(cl_and_vals):
     class C:
         a1: int = field(default="1", converter=int)
         a2: int = field(default="1", converter=attrs.Converter(int))
+        a3: int = field(factory=lambda: "1", converter=int)
+        a4: int = field(factory=lambda: "1", converter=attrs.Converter(int))
         c: cl = Factory(lambda: cl(*vals, **kwargs))
 
     inst = C()
@@ -359,9 +361,9 @@ def test_omit_default_with_attrs_converter_roundtrip(cl_and_vals):
     assert unstructured == {}
     assert inst == converter.structure(unstructured, C)
 
-    inst = C(0, 0)
+    inst = C(0, 0, 0, 0)
     unstructured = converter.unstructure(inst)
-    assert unstructured == {"a1": 0, "a2": 0}
+    assert unstructured == {"a1": 0, "a2": 0, "a3": 0, "a4": 0}
     assert inst == converter.structure(unstructured, C)
 
 
