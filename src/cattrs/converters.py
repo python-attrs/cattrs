@@ -9,7 +9,7 @@ from enum import Enum
 from inspect import Signature
 from inspect import signature as inspect_signature
 from pathlib import Path
-from typing import Any, Optional, Tuple, TypeVar, overload
+from typing import Any, Optional, Tuple, TypeVar, get_type_hints, overload
 
 from attrs import Attribute, resolve_types
 from attrs import has as attrs_has
@@ -308,7 +308,7 @@ class BaseConverter:
                 (bytes, self._structure_call),
                 (int, self._structure_call),
                 (float, self._structure_call),
-                (Enum, self._structure_call),
+                (Enum, self._structure_enum),
                 (Path, self._structure_call),
             ]
         )
@@ -632,7 +632,7 @@ class BaseConverter:
 
     def _unstructure_enum(self, obj: Enum) -> Any:
         """Convert an enum to its value."""
-        return obj.value
+        return self._unstructure_func.dispatch(obj.value.__class__)(obj.value)
 
     def _unstructure_seq(self, seq: Sequence[T]) -> Sequence[T]:
         """Convert a sequence to primitive equivalents."""
@@ -712,6 +712,12 @@ class BaseConverter:
         if val not in type.__args__:
             raise Exception(f"{val} not in literal {type}")
         return val
+
+    def _structure_enum(self, val: Any, cl: type[Enum]) -> Enum:
+        hints = get_type_hints(cl)
+        if "_value_" in hints:
+            val = self.structure(val, hints["_value_"])
+        return cl(val)
 
     @staticmethod
     def _structure_enum_literal(val, type):
