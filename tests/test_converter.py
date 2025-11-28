@@ -354,6 +354,29 @@ def test_omit_default_with_attrs_converter_roundtrip(cl_and_vals):
         a2: int = field(default="1", converter=attrs.Converter(int))
         a3: int = field(factory=lambda: "1", converter=int)
         a4: int = field(factory=lambda: "1", converter=attrs.Converter(int))
+        a5: int = field(
+            factory=lambda: "2",
+            converter=attrs.Converter(
+                lambda obj, self: int(obj) + self.a4, takes_self=True
+            ),
+        )
+        a6: int = field(
+            factory=lambda: "2",
+            converter=attrs.Converter(
+                lambda obj, field: int(obj) + int(field.default.factory()) - 2,
+                takes_field=True,
+            ),
+        )
+        a7: int = field(
+            factory=lambda: "3",
+            converter=attrs.Converter(
+                lambda obj, self, field: (
+                    int(obj) + self.a6 + int(field.default.factory()) - 3
+                ),
+                takes_self=True,
+                takes_field=True,
+            ),
+        )
         c: cl = Factory(lambda: cl(*vals, **kwargs))
 
     inst = C()
@@ -361,9 +384,17 @@ def test_omit_default_with_attrs_converter_roundtrip(cl_and_vals):
     assert unstructured == {}
     assert inst == converter.structure(unstructured, C)
 
-    inst = C(0, 0, 0, 0)
+    inst = C(0, 0, 0, 0, 0, 0, 0)
     unstructured = converter.unstructure(inst)
-    assert unstructured == {"a1": 0, "a2": 0, "a3": 0, "a4": 0}
+    assert unstructured == {
+        "a1": 0,
+        "a2": 0,
+        "a3": 0,
+        "a4": 0,
+        "a5": 0,
+        "a6": 0,
+        "a7": 0,
+    }
     assert inst == converter.structure(unstructured, C)
 
 
