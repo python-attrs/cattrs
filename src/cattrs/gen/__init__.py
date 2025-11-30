@@ -4,7 +4,7 @@ import re
 from collections.abc import Callable, Iterable, Mapping
 from typing import TYPE_CHECKING, Any, Final, Literal, TypeVar
 
-from attrs import NOTHING, Attribute, Factory
+from attrs import NOTHING, Attribute, Converter, Factory
 from typing_extensions import NoDefault
 
 from .._compat import (
@@ -99,6 +99,10 @@ def make_dict_unstructure_fn_from_attrs(
     ..  versionchanged:: 25.2.0
         The `_cattrs_use_alias` parameter takes its value from the given converter
         by default.
+    .. versionchanged:: NEXT
+        When `_cattrs_omit_if_default` is true and the attribute has an attrs converter
+        specified, the converter is applied to the default value before checking if it
+        is equal to the attribute's value.
     """
 
     fn_name = "unstructure_" + cl.__name__
@@ -177,16 +181,32 @@ def make_dict_unstructure_fn_from_attrs(
             if isinstance(d, Factory):
                 globs[def_name] = d.factory
                 internal_arg_parts[def_name] = d.factory
-                if d.takes_self:
-                    lines.append(f"  if instance.{attr_name} != {def_name}(instance):")
-                else:
-                    lines.append(f"  if instance.{attr_name} != {def_name}():")
-                lines.append(f"    res['{kn}'] = {invoke}")
+                def_str = f"{def_name}(instance)" if d.takes_self else f"{def_name}()"
             else:
                 globs[def_name] = d
                 internal_arg_parts[def_name] = d
-                lines.append(f"  if instance.{attr_name} != {def_name}:")
-                lines.append(f"    res['{kn}'] = {invoke}")
+                def_str = def_name
+
+            c = a.converter
+            if c is not None:
+                conv_name = f"__c_conv_{attr_name}"
+                if isinstance(c, Converter):
+                    globs[conv_name] = c
+                    internal_arg_parts[conv_name] = c
+                    field_name = f"__c_field_{attr_name}"
+                    globs[field_name] = a
+                    internal_arg_parts[field_name] = a
+                    def_str = f"{conv_name}({def_str}, instance, {field_name})"
+                elif isinstance(d, Factory):
+                    globs[conv_name] = c
+                    internal_arg_parts[conv_name] = c
+                    def_str = f"{conv_name}({def_str})"
+                else:
+                    globs[def_name] = c(d)
+                    internal_arg_parts[def_name] = c(d)
+
+            lines.append(f"  if instance.{attr_name} != {def_str}:")
+            lines.append(f"    res['{kn}'] = {invoke}")
 
         else:
             # No default or no override.
