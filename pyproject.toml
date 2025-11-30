@@ -11,7 +11,7 @@ test = [
     "pytest>=8.4.1",
     "pytest-benchmark>=5.1.0",
     "immutables>=0.21",
-    "coverage>=7.9.2",
+    "coverage==7.12.1b1",
     "pytest-xdist>=3.8.0",
 ]
 docs = [
