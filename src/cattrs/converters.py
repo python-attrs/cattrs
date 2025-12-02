@@ -631,7 +631,7 @@ class BaseConverter:
         return tuple(res)
 
     def _unstructure_enum(self, obj: Enum) -> Any:
-        """Convert an enum to its value."""
+        """Convert an enum to its unstructured value."""
         return self._unstructure_func.dispatch(obj.value.__class__)(obj.value)
 
     def _unstructure_seq(self, seq: Sequence[T]) -> Sequence[T]:
@@ -714,6 +714,10 @@ class BaseConverter:
         return val
 
     def _structure_enum(self, val: Any, cl: type[Enum]) -> Enum:
+        """Structure ``val`` if possible and return the enum it corresponds to.
+
+        Uses type hints for the "_value_" attribute if they exist to structure
+        the enum values before returning the result."""
         hints = get_type_hints(cl)
         if "_value_" in hints:
             val = self.structure(val, hints["_value_"])

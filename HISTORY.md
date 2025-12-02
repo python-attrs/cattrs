@@ -19,6 +19,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#698](https://github.com/python-attrs/cattrs/pull/698))
 - Apply the attrs converter to the default value before checking if it is equal to the attribute's value, when `omit_if_default` is true and an attrs converter is specified.
   ([#696](https://github.com/python-attrs/cattrs/pull/696))
+- Unstructure enum values and structure enum values if they have a type hinted `_value_` attribute.
+  ([##699](https://github.com/python-attrs/cattrs/issues/699))
 
 ## 25.3.0 (2025-10-07)
 
