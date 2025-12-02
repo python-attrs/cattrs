@@ -1,5 +1,7 @@
 """Tests for enums."""
 
+from enum import Enum
+
 from hypothesis import given
 from hypothesis.strategies import data, sampled_from
 from pytest import raises
@@ -29,3 +31,31 @@ def test_enum_failure(enum):
         converter.structure("", type)
 
     assert exc_info.value.args[0] == f" not in literal {type!r}"
+
+
+class SimpleEnum(Enum):
+    _value_: int
+    A = 0
+    B = 1
+    C = 2
+
+
+class ComplexEnum(Enum):
+    _value_: tuple[SimpleEnum, int]
+    A0 = (SimpleEnum.A, 0)
+    A1 = (SimpleEnum.A, 1)
+    B1 = (SimpleEnum.B, 1)
+    B2 = (SimpleEnum.B, 2)
+    C1 = (SimpleEnum.C, 1)
+
+
+def test_unstructure_complex_enum() -> None:
+    converter = BaseConverter()
+    assert converter.unstructure(SimpleEnum.A) == 0
+    assert converter.unstructure(ComplexEnum.A1) == (0, 1)
+
+
+def test_structure_complex_enum() -> None:
+    converter = BaseConverter()
+    assert converter.structure(0, SimpleEnum) == SimpleEnum.A
+    assert converter.structure((0, 1), ComplexEnum) == ComplexEnum.A1
