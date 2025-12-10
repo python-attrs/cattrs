@@ -632,7 +632,9 @@ class BaseConverter:
 
     def _unstructure_enum(self, obj: Enum) -> Any:
         """Convert an enum to its unstructured value."""
-        return self._unstructure_func.dispatch(obj.value.__class__)(obj.value)
+        if "_value_" in obj.__class__.__annotations__:
+            return self._unstructure_func.dispatch(obj.value.__class__)(obj.value)
+        return obj.value
 
     def _unstructure_seq(self, seq: Sequence[T]) -> Sequence[T]:
         """Convert a sequence to primitive equivalents."""
@@ -718,9 +720,8 @@ class BaseConverter:
 
         Uses type hints for the "_value_" attribute if they exist to structure
         the enum values before returning the result."""
-        hints = get_type_hints(cl)
-        if "_value_" in hints:
-            val = self.structure(val, hints["_value_"])
+        if "_value_" in cl.__annotations__:
+            val = self.structure(val, cl.__annotations__["_value_"])
         return cl(val)
 
     @staticmethod

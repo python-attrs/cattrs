@@ -34,28 +34,35 @@ def test_enum_failure(enum):
 
 
 class SimpleEnum(Enum):
-    _value_: int
     A = 0
     B = 1
     C = 2
 
+class SimpleEnumWithTypeHint(Enum):
+    _value_: str
+    D = "D"
+    E = "E"
+    F = "F"
+
 
 class ComplexEnum(Enum):
-    _value_: tuple[SimpleEnum, int]
-    A0 = (SimpleEnum.A, 0)
-    A1 = (SimpleEnum.A, 1)
-    B1 = (SimpleEnum.B, 1)
-    B2 = (SimpleEnum.B, 2)
-    C1 = (SimpleEnum.C, 1)
+    _value_: tuple[SimpleEnum, SimpleEnumWithTypeHint]
+    AD = (SimpleEnum.A, SimpleEnumWithTypeHint.D)
+    AE = (SimpleEnum.A, SimpleEnumWithTypeHint.E)
+    BE = (SimpleEnum.B, SimpleEnumWithTypeHint.E)
+    BF = (SimpleEnum.B, SimpleEnumWithTypeHint.F)
+    CE = (SimpleEnum.C, SimpleEnumWithTypeHint.E)
 
 
 def test_unstructure_complex_enum() -> None:
     converter = BaseConverter()
     assert converter.unstructure(SimpleEnum.A) == 0
-    assert converter.unstructure(ComplexEnum.A1) == (0, 1)
+    assert converter.unstructure(SimpleEnumWithTypeHint.F) == "F"
+    assert converter.unstructure(ComplexEnum.AE) == (0, "E")
 
 
 def test_structure_complex_enum() -> None:
     converter = BaseConverter()
     assert converter.structure(0, SimpleEnum) == SimpleEnum.A
-    assert converter.structure((0, 1), ComplexEnum) == ComplexEnum.A1
+    assert converter.structure("E", SimpleEnumWithTypeHint) == SimpleEnumWithTypeHint.E
+    assert converter.structure((0, "D"), ComplexEnum) == ComplexEnum.AD
