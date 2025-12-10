@@ -69,7 +69,7 @@ Enums are structured by their values, and unstructured to their values.
 'siamese'
 ```
 
-Enum structuring and unstructuring even works for complex values, like tuples, but if you have anything but simple literal types in those tuples (`str`, `bool`, `int`, `float`) you should consider defining the Enum value's type via the `_value_` attribute's type hint so that cattrs can properly structure it.
+Enum structuring and unstructuring even works for complex values, like tuples, but if you have anything but simple literal types in those tuples (`str`, `bool`, `int`, `float`) you should consider defining the Enum value's type via the `_value_` attribute's type hint so that cattrs can properly structure it. See [the Python typing documentation](https://typing.python.org/en/latest/spec/enums.html#member-values) for more information on this type hint.
 
 ```{doctest}
 
