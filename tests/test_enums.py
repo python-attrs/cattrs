@@ -1,5 +1,7 @@
 """Tests for enums."""
 
+from enum import Enum
+
 from hypothesis import given
 from hypothesis.strategies import data, sampled_from
 from pytest import raises
@@ -29,3 +31,39 @@ def test_enum_failure(enum):
         converter.structure("", type)
 
     assert exc_info.value.args[0] == f" not in literal {type!r}"
+
+
+class SimpleEnum(Enum):
+    A = 0
+    B = 1
+    C = 2
+
+
+class SimpleEnumWithTypeHint(Enum):
+    _value_: str
+    D = "D"
+    E = "E"
+    F = "F"
+
+
+class ComplexEnum(Enum):
+    _value_: tuple[SimpleEnum, SimpleEnumWithTypeHint]
+    AD = (SimpleEnum.A, SimpleEnumWithTypeHint.D)
+    AE = (SimpleEnum.A, SimpleEnumWithTypeHint.E)
+    BE = (SimpleEnum.B, SimpleEnumWithTypeHint.E)
+    BF = (SimpleEnum.B, SimpleEnumWithTypeHint.F)
+    CE = (SimpleEnum.C, SimpleEnumWithTypeHint.E)
+
+
+def test_unstructure_complex_enum() -> None:
+    converter = BaseConverter()
+    assert converter.unstructure(SimpleEnum.A) == 0
+    assert converter.unstructure(SimpleEnumWithTypeHint.F) == "F"
+    assert converter.unstructure(ComplexEnum.AE) == (0, "E")
+
+
+def test_structure_complex_enum() -> None:
+    converter = BaseConverter()
+    assert converter.structure(0, SimpleEnum) == SimpleEnum.A
+    assert converter.structure("E", SimpleEnumWithTypeHint) == SimpleEnumWithTypeHint.E
+    assert converter.structure((0, "D"), ComplexEnum) == ComplexEnum.AD

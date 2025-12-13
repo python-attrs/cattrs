@@ -308,7 +308,7 @@ class BaseConverter:
                 (bytes, self._structure_call),
                 (int, self._structure_call),
                 (float, self._structure_call),
-                (Enum, self._structure_call),
+                (Enum, self._structure_enum),
                 (Path, self._structure_call),
             ]
         )
@@ -631,7 +631,9 @@ class BaseConverter:
         return tuple(res)
 
     def _unstructure_enum(self, obj: Enum) -> Any:
-        """Convert an enum to its value."""
+        """Convert an enum to its unstructured value."""
+        if "_value_" in obj.__class__.__annotations__:
+            return self._unstructure_func.dispatch(obj.value.__class__)(obj.value)
         return obj.value
 
     def _unstructure_seq(self, seq: Sequence[T]) -> Sequence[T]:
@@ -712,6 +714,15 @@ class BaseConverter:
         if val not in type.__args__:
             raise Exception(f"{val} not in literal {type}")
         return val
+
+    def _structure_enum(self, val: Any, cl: type[Enum]) -> Enum:
+        """Structure ``val`` if possible and return the enum it corresponds to.
+
+        Uses type hints for the "_value_" attribute if they exist to structure
+        the enum values before returning the result."""
+        if "_value_" in cl.__annotations__:
+            val = self.structure(val, cl.__annotations__["_value_"])
+        return cl(val)
 
     @staticmethod
     def _structure_enum_literal(val, type):
