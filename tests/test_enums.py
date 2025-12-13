@@ -38,6 +38,7 @@ class SimpleEnum(Enum):
     B = 1
     C = 2
 
+
 class SimpleEnumWithTypeHint(Enum):
     _value_: str
     D = "D"
