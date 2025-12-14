@@ -39,6 +39,4 @@ jobs:
         uses: CodSpeedHQ/action@346a2d8a8d9d38909abd0bc3d23f773110f076ad  # v4.4.1
         with:
           mode: simulation
-          run: |
-            uv pip install pytest pytest-codspeed
-            uv run pytest --codspeed bench/
+          run: uv run --with pytest-codspeed --with pytest-benchmark pytest --codspeed bench/
