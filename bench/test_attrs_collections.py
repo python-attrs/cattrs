@@ -1,10 +1,10 @@
 from enum import IntEnum
-from typing import Dict, List, Mapping, MutableMapping
+from typing import Mapping, MutableMapping
 
 import pytest
 from attrs import define, frozen
 
-from cattr import BaseConverter, Converter, UnstructureStrategy
+from cattrs import BaseConverter, Converter, UnstructureStrategy
 
 
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
@@ -23,36 +23,36 @@ def test_unstructure_attrs_lists(benchmark, converter_cls, unstructure_strat):
 
     @define
     class C:
-        a: List[int]
-        b: List[float]
-        c: List[str]
-        d: List[bytes]
-        e: List[E]
-        f: List[int]
-        g: List[float]
-        h: List[str]
-        i: List[bytes]
-        j: List[E]
-        k: List[int]
-        l: List[float]  # noqa: E741
-        m: List[str]
-        n: List[bytes]
-        o: List[E]
-        p: List[int]
-        q: List[float]
-        r: List[str]
-        s: List[bytes]
-        t: List[E]
-        u: List[int]
-        v: List[float]
-        w: List[str]
-        x: List[bytes]
-        y: List[E]
-        z: List[int]
-        aa: List[float]
-        ab: List[str]
-        ac: List[bytes]
-        ad: List[E]
+        a: list[int]
+        b: list[float]
+        c: list[str]
+        d: list[bytes]
+        e: list[E]
+        f: list[int]
+        g: list[float]
+        h: list[str]
+        i: list[bytes]
+        j: list[E]
+        k: list[int]
+        l: list[float]  # noqa: E741
+        m: list[str]
+        n: list[bytes]
+        o: list[E]
+        p: list[int]
+        q: list[float]
+        r: list[str]
+        s: list[bytes]
+        t: list[E]
+        u: list[int]
+        v: list[float]
+        w: list[str]
+        x: list[bytes]
+        y: list[E]
+        z: list[int]
+        aa: list[float]
+        ab: list[str]
+        ac: list[bytes]
+        ad: list[E]
 
     c = converter_cls(unstruct_strat=unstructure_strat)
 
@@ -109,7 +109,7 @@ def test_unstructure_attrs_mappings(benchmark, converter_cls, unstructure_strat)
     @define
     class C:
         a: Mapping[int, str]
-        b: Dict[float, bytes]
+        b: dict[float, bytes]
         c: MutableMapping[int, FrozenCls]
 
     c = converter_cls(unstruct_strat=unstructure_strat)
@@ -137,7 +137,7 @@ def test_structure_attrs_mappings(benchmark, converter_cls):
     @define
     class C:
         a: Mapping[int, str]
-        b: Dict[float, bytes]
+        b: dict[float, bytes]
         c: MutableMapping[int, FrozenCls]
 
     c = converter_cls()
