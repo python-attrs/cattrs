@@ -1,8 +1,8 @@
 from enum import IntEnum
 from typing import Dict, List, Mapping, MutableMapping
 
-import attr
 import pytest
+from attrs import define, frozen
 
 from cattr import BaseConverter, Converter, UnstructureStrategy
 
@@ -21,7 +21,7 @@ def test_unstructure_attrs_lists(benchmark, converter_cls, unstructure_strat):
         ONE = 1
         TWO = 2
 
-    @attr.define
+    @define
     class C:
         a: List[int]
         b: List[float]
@@ -102,11 +102,11 @@ def test_unstructure_attrs_mappings(benchmark, converter_cls, unstructure_strat)
     Benchmark an attrs class containing mappings.
     """
 
-    @attr.frozen
+    @frozen
     class FrozenCls:
         a: int
 
-    @attr.define
+    @define
     class C:
         a: Mapping[int, str]
         b: Dict[float, bytes]
@@ -130,11 +130,11 @@ def test_structure_attrs_mappings(benchmark, converter_cls):
     Benchmark an attrs class containing mappings.
     """
 
-    @attr.frozen
+    @frozen
     class FrozenCls:
         a: int
 
-    @attr.define
+    @define
     class C:
         a: Mapping[int, str]
         b: Dict[float, bytes]

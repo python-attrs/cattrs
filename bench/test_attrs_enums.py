@@ -1,7 +1,7 @@
 from enum import Enum, IntEnum
 
-import attr
 import pytest
+from attrs import define
 
 from cattr import BaseConverter, Converter
 
@@ -18,7 +18,7 @@ class SimpleIntEnum(IntEnum):
     THREE = 3
 
 
-@attr.define
+@define
 class EnumContainer:
     simple_enum: SimpleEnum
     simple_int_enum: SimpleIntEnum
