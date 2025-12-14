@@ -21,6 +21,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#696](https://github.com/python-attrs/cattrs/pull/696))
 - Use the optional `_value_` type hint to structure and unstructure enums if present.
   ([##699](https://github.com/python-attrs/cattrs/issues/699))
+- _cattrs_ now tracks performance using [codspeed](https://codspeed.io/python-attrs/cattrs).
+  ([#703](https://github.com/python-attrs/cattrs/pull/703))
 
 ## 25.3.0 (2025-10-07)
 

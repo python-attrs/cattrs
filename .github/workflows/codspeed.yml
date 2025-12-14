@@ -1,0 +1,42 @@
+name: CodSpeed Benchmarks
+
+on:
+  push:
+    branches: [main]
+    tags: ["*"]
+    paths:
+      - src/**.py
+      - bench/**
+      - .github/workflows/codspeed.yml
+  pull_request:
+    paths:
+      - src/**.py
+      - bench/**
+      - .github/workflows/codspeed.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read # required for actions/checkout
+  id-token: write # required for OIDC authentication with CodSpeed
+  
+jobs:
+  codspeed:
+    name: Run CodSpeed benchmarks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6.0.0
+        with:
+           persist-credentials: false
+
+      - uses: actions/setup-python@v6.1.0
+        with:
+          python-version: "3.14"
+
+      - uses: hynek/setup-cached-uv@757bedc3f972eb7227a1aa657651f15a8527c817  # v2.3.0
+
+      - name: Run CodSpeed benchmarks
+        uses: CodSpeedHQ/action@346a2d8a8d9d38909abd0bc3d23f773110f076ad  # v4.4.1
+        with:
+          mode: simulation
+          run: uv run --with pytest-codspeed --with pytest-benchmark pytest --codspeed bench/
