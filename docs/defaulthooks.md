@@ -53,7 +53,6 @@ When unstructuring, these types are passed through unchanged.
 ### Enums
 
 Enums are structured by their values, and unstructured to their values.
-This works even for complex values, like tuples.
 
 ```{doctest}
 
@@ -68,6 +67,30 @@ This works even for complex values, like tuples.
 
 >>> cattrs.unstructure(CatBreed.SIAMESE)
 'siamese'
+```
+
+Enum structuring and unstructuring even works for complex values, like tuples, but if you have anything but simple literal types in those tuples (`str`, `bool`, `int`, `float`) you should consider defining the Enum value's type via the `_value_` attribute's type hint so that cattrs can properly structure it. See [the Python typing documentation](https://typing.python.org/en/latest/spec/enums.html#member-values) for more information on this type hint.
+
+```{doctest}
+
+>>> @unique
+... class VideoStandard(Enum):
+...    NTSC = "ntsc"
+...    PAL = "pal"
+
+>>> @unique
+... class Resolution(Enum):
+...     _value_: tuple[VideoStandard, int]
+...     NTSC_0 = (VideoStandard.NTSC, 0)
+...     PAL_0 = (VideoStandard.PAL, 0)
+...     NTSC_1 = (VideoStandard.NTSC, 1)
+...     PAL_1 = (VideoStandard.PAL, 1)
+
+>>> cattrs.structure(("ntsc", 1), Resolution)
+<Resolution.NTSC_1: (<VideoStandard.NTSC: 'ntsc'>, 1)>
+
+>>> cattrs.unstructure(Resolution.PAL_0)
+['pal', 0]
 ```
 
 Again, in case of errors, the expected exceptions are raised.
