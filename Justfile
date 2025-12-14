@@ -38,10 +38,10 @@ covall:
     @rm .coverage*
 
 bench-cmp:
-	uv run pytest bench --benchmark-compare
+	uv run --group test pytest bench --benchmark-compare
 
 bench:
-	uv run pytest bench --benchmark-save base
+	uv run --group test pytest bench --benchmark-save base
 
 docs output_dir="_build": ## generate Sphinx HTML documentation, including API docs
 	make -C docs -e BUILDDIR={{output_dir}} clean
