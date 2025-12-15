@@ -8,10 +8,14 @@ from typing import Any, TypeVar, Union
 
 from .._compat import Counter
 from ..converters import BaseConverter, Converter
-from ..fns import identity
 from ..literals import is_literal_containing_enums
 from ..strategies import configure_union_passthrough
-from . import is_primitive_enum, literals_with_enums_unstructure_factory, wrap
+from . import (
+    is_primitive_enum,
+    literals_with_enums_unstructure_factory,
+    primitive_enum_unstructure_factory,
+    wrap,
+)
 
 __all__ = ["JsonConverter", "configure_converter", "make_converter"]
 
@@ -52,7 +56,9 @@ def configure_converter(converter: BaseConverter) -> None:
     converter.register_unstructure_hook_factory(
         is_literal_containing_enums, literals_with_enums_unstructure_factory
     )
-    converter.register_unstructure_hook_func(is_primitive_enum, identity)
+    converter.register_unstructure_hook_factory(
+        is_primitive_enum, primitive_enum_unstructure_factory
+    )
     configure_union_passthrough(Union[str, bool, int, float, None], converter)
 
 

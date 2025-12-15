@@ -1,6 +1,7 @@
+from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, ParamSpec, TypeVar, get_args
+from typing import Any, ParamSpec, TypeVar, get_args
 
 from .._compat import is_subclass
 from ..converters import Converter, UnstructureHook
@@ -32,6 +33,17 @@ def is_primitive_enum(type: Any, include_bare_enums: bool = False) -> bool:
         is_subclass(type, (str, int))
         or (include_bare_enums and type.mro()[1:] == Enum.mro())
     )
+
+
+def make_primitive_enum_unstructure_factory(
+    include_bare_enums: bool,
+) -> Callable[[Any], UnstructureHook]:
+    def primitive_enum_unstructure_factory(type: Any) -> UnstructureHook:
+        return (
+            identity if is_primitive_enum(type, include_bare_enums) else NotImplemented
+        )
+
+    return primitive_enum_unstructure_factory
 
 
 def literals_with_enums_unstructure_factory(

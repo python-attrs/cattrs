@@ -46,7 +46,7 @@ def configure_converter(converter: BaseConverter) -> None:
     converter.register_structure_hook(
         date, lambda v, _: datetime.fromtimestamp(v, timezone.utc).date()
     )
-    converter.register_unstructure_hook_func(is_primitive_enum, identity)
+    converter.register_unstructure_hook_factory(is_primitive_enum, identity)
     converter.register_unstructure_hook_factory(
         is_literal_containing_enums, literals_with_enums_unstructure_factory
     )

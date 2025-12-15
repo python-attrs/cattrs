@@ -47,6 +47,7 @@ from ._compat import (
     is_mutable_set,
     is_optional,
     is_protocol,
+    is_subclass,
     is_tuple,
     is_typeddict,
     is_union_type,
@@ -76,6 +77,7 @@ from .dispatch import (
     UnstructuredValue,
     UnstructureHook,
 )
+from .enums import enum_structure_factory, enum_unstructure_factory
 from .errors import (
     IterableValidationError,
     IterableValidationNote,
@@ -251,7 +253,7 @@ class BaseConverter:
                 (is_sequence, self._unstructure_seq),
                 (is_mutable_set, self._unstructure_seq),
                 (is_frozenset, self._unstructure_seq),
-                (lambda t: issubclass(t, Enum), self._unstructure_enum),
+                (is_literal_containing_enums, self.unstructure),
                 (has, self._unstructure_attrs),
                 (is_union_type, self._unstructure_union),
                 (lambda t: t in ANIES, self.unstructure),
@@ -308,9 +310,15 @@ class BaseConverter:
                 (bytes, self._structure_call),
                 (int, self._structure_call),
                 (float, self._structure_call),
-                (Enum, self._structure_enum),
                 (Path, self._structure_call),
             ]
+        )
+
+        self.register_unstructure_hook_factory(
+            lambda t: is_subclass(t, Enum), enum_unstructure_factory
+        )
+        self.register_structure_hook_factory(
+            lambda t: is_subclass(t, Enum), enum_structure_factory
         )
 
         self._dict_factory = dict_factory
@@ -630,12 +638,6 @@ class BaseConverter:
             res.append(dispatch(a.type or v.__class__)(v))
         return tuple(res)
 
-    def _unstructure_enum(self, obj: Enum) -> Any:
-        """Convert an enum to its unstructured value."""
-        if "_value_" in obj.__class__.__annotations__:
-            return self._unstructure_func.dispatch(obj.value.__class__)(obj.value)
-        return obj.value
-
     def _unstructure_seq(self, seq: Sequence[T]) -> Sequence[T]:
         """Convert a sequence to primitive equivalents."""
         # We can reuse the sequence class, so tuples stay tuples.
@@ -714,15 +716,6 @@ class BaseConverter:
         if val not in type.__args__:
             raise Exception(f"{val} not in literal {type}")
         return val
-
-    def _structure_enum(self, val: Any, cl: type[Enum]) -> Enum:
-        """Structure ``val`` if possible and return the enum it corresponds to.
-
-        Uses type hints for the "_value_" attribute if they exist to structure
-        the enum values before returning the result."""
-        if "_value_" in cl.__annotations__:
-            val = self.structure(val, cl.__annotations__["_value_"])
-        return cl(val)
 
     @staticmethod
     def _structure_enum_literal(val, type):
