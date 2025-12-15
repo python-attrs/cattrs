@@ -3,7 +3,7 @@
 import pytest
 from attrs import define
 
-from cattr import BaseConverter, Converter, UnstructureStrategy
+from cattrs import BaseConverter, Converter, UnstructureStrategy
 
 
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])

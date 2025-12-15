@@ -1,9 +1,9 @@
 from enum import IntEnum
 
-import attr
 import pytest
+from attrs import define
 
-from cattr import BaseConverter, Converter, UnstructureStrategy
+from cattrs import BaseConverter, Converter, UnstructureStrategy
 
 
 class E(IntEnum):
@@ -11,7 +11,7 @@ class E(IntEnum):
     TWO = 2
 
 
-@attr.define
+@define
 class C:
     a: int
     b: float

@@ -1,6 +1,6 @@
 import pytest
 
-from cattr import BaseConverter, Converter
+from cattrs import BaseConverter, Converter
 
 
 @pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
