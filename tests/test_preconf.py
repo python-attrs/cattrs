@@ -772,6 +772,18 @@ def test_tomlkit_unions(union_and_val: tuple, detailed_validation: bool):
     assert converter.structure(val, type) == val
 
 
+def test_tomlkit_date_strings():
+    """Dates represented as strings in toml work."""
+    converter = tomlkit_make_converter()
+
+    @define
+    class A:
+        a_date: date
+
+    data = 'a_date = "2023-01-01"'
+    assert converter.loads(data, A) == A(date(2023, 1, 1))
+
+
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
 def test_cbor2(everything: Everything):
     from cbor2 import dumps as cbor2_dumps
