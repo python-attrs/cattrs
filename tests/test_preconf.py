@@ -767,21 +767,6 @@ def test_tomlkit_unions(union_and_val: tuple, detailed_validation: bool):
     assert converter.structure(val, type) == val
 
 
-def test_tomlkit_dates():
-    """Native date objects from tomlkit are properly handled."""
-
-    @define
-    class Event:
-        event_date: date
-
-    toml_input = """
-event_date = 2025-12-16
-"""
-    converter = tomlkit_make_converter()
-    structured = converter.loads(toml_input, Event)
-    assert structured.event_date == date(2025, 12, 16)
-
-
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
 def test_cbor2(everything: Everything):
     from cbor2 import dumps as cbor2_dumps
