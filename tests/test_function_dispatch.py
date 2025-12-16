@@ -31,3 +31,16 @@ def test_function_clears_cache_after_function_added():
     assert dispatch.dispatch(Bar) == "foo"
     dispatch.register(lambda cls: issubclass(cls, Bar), "bar")
     assert dispatch.dispatch(Bar) == "bar"
+
+
+def test_function_dispatch_exception():
+    """Function dispatch gracefully handles exceptions in predicates."""
+    dispatch = FunctionDispatch(BaseConverter())
+
+    def raising_predicate(cls):
+        raise ValueError("This predicate raises an error")
+
+    dispatch.register(lambda cls: issubclass(cls, float), "float")
+    dispatch.register(raising_predicate, "error")
+
+    assert dispatch.dispatch(float) == "float"
