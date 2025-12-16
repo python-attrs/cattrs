@@ -88,7 +88,7 @@ def configure_converter(converter: Converter) -> None:
         ]
     )
     converter.register_unstructure_hook_factory(
-        partial(is_primitive_enum, include_bare_enums=True), identity
+        partial(is_primitive_enum, include_bare_enums=True), lambda t: identity
     )
     converter.register_unstructure_hook_factory(
         is_literal_containing_enums, literals_with_enums_unstructure_factory
