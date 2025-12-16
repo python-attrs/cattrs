@@ -52,7 +52,7 @@ def configure_converter(converter: BaseConverter) -> None:
     converter.register_unstructure_hook_factory(
         is_literal_containing_enums, literals_with_enums_unstructure_factory
     )
-    converter.register_unstructure_hook_factory(is_primitive_enum, lambda t: identity)
+    converter.register_unstructure_hook_factory(is_primitive_enum, lambda _: identity)
     configure_union_passthrough(Union[str, bool, int, float, None], converter)
 
 

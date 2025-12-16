@@ -35,17 +35,6 @@ def is_primitive_enum(type: Any, include_bare_enums: bool = False) -> bool:
     )
 
 
-def make_primitive_enum_unstructure_factory(
-    include_bare_enums: bool,
-) -> Callable[[Any], UnstructureHook]:
-    def primitive_enum_unstructure_factory(type: Any) -> UnstructureHook:
-        return (
-            identity if is_primitive_enum(type, include_bare_enums) else NotImplemented
-        )
-
-    return primitive_enum_unstructure_factory
-
-
 def literals_with_enums_unstructure_factory(
     typ: Any, converter: Converter
 ) -> UnstructureHook:
