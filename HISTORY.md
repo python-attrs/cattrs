@@ -23,6 +23,9 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([##699](https://github.com/python-attrs/cattrs/issues/699))
 - _cattrs_ now tracks performance using [codspeed](https://codspeed.io/python-attrs/cattrs).
   ([#703](https://github.com/python-attrs/cattrs/pull/703))
+- The {mod}`tomlkit <cattrs.preconf.tomlkit>` preconf converter now properly handles `date` and `datetime` objects when structuring.
+  ([#707](https://github.com/python-attrs/cattrs/issues/707))
+
 
 ## 25.3.0 (2025-10-07)
 

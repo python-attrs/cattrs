@@ -202,4 +202,6 @@ Found at {mod}`cattrs.preconf.tomlkit`.
 
 Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets.
 Tuples are serialized as lists, and deserialized back into tuples.
-_tomlkit_ only supports mappings with string keys so mappings will have their keys stringified before serialization, and destringified during deserialization. `date` s are serialized as ISO 8601 strings.
+_tomlkit_ only supports mappings with string keys so mappings will have their keys stringified before serialization, and destringified during deserialization.
+`date` s are serialized as ISO 8601 strings. `datetime` s are passed through to be unstructured by _tomlkit_ itself.
+

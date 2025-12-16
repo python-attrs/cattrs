@@ -68,9 +68,13 @@ def configure_converter(converter: BaseConverter):
     # datetime inherits from date, so identity unstructure hook used
     # here to prevent the date unstructure hook running.
     converter.register_unstructure_hook(datetime, lambda v: v)
-    converter.register_structure_hook(datetime, validate_datetime)
+    converter.register_structure_hook(
+        datetime, lambda v, _: v if isinstance(v, datetime) else validate_datetime(v, _)
+    )
     converter.register_unstructure_hook(date, lambda v: v.isoformat())
-    converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
+    converter.register_structure_hook(
+        date, lambda v, _: v if isinstance(v, date) else date.fromisoformat(v)
+    )
     configure_union_passthrough(
         Union[str, String, bool, int, Integer, float, Float], converter
     )
