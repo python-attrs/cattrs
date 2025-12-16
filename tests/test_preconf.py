@@ -719,7 +719,12 @@ def test_tomlkit(everything: Everything, detailed_validation: bool):
     converter = tomlkit_make_converter(detailed_validation=detailed_validation)
     unstructured = converter.unstructure(everything)
     raw = tomlkit_dumps(unstructured)
-    assert converter.structure(tomlkit_loads(raw), Everything) == everything
+
+    loaded = tomlkit_loads(raw)
+    # Check if we're unstructuring dates to native toml dates
+    assert isinstance(loaded["a_date"], date)
+
+    assert converter.structure(loaded, Everything) == everything
 
 
 @given(
