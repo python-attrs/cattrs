@@ -15,12 +15,7 @@ from ..converters import Converter
 from ..fns import identity
 from ..literals import is_literal_containing_enums
 from ..strategies import configure_union_passthrough
-from . import (
-    is_primitive_enum,
-    literals_with_enums_unstructure_factory,
-    primitive_enum_unstructure_factory,
-    wrap,
-)
+from . import is_primitive_enum, literals_with_enums_unstructure_factory, wrap
 
 __all__ = ["OrjsonConverter", "configure_converter", "make_converter"]
 
@@ -93,8 +88,7 @@ def configure_converter(converter: Converter) -> None:
         ]
     )
     converter.register_unstructure_hook_factory(
-        partial(is_primitive_enum, include_bare_enums=True),
-        primitive_enum_unstructure_factory,
+        partial(is_primitive_enum, include_bare_enums=True), identity
     )
     converter.register_unstructure_hook_factory(
         is_literal_containing_enums, literals_with_enums_unstructure_factory
