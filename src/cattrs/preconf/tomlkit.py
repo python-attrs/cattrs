@@ -12,6 +12,7 @@ from tomlkit.items import Float, Integer, String
 
 from .._compat import is_mapping, is_subclass
 from ..converters import BaseConverter, Converter
+from ..fns import identity
 from ..strategies import configure_union_passthrough
 from . import validate_datetime, wrap
 
@@ -37,6 +38,9 @@ def configure_converter(converter: BaseConverter):
     * sets are serialized as lists
     * tuples are serializas as lists
     * mapping keys are coerced into strings when unstructuring
+
+    .. versionchanged:: NEXT
+        date objects are now passed through to tomlkit without unstructuring.
     """
     converter.register_structure_hook(bytes, lambda v, _: b85decode(v))
     converter.register_unstructure_hook(
@@ -67,11 +71,9 @@ def configure_converter(converter: BaseConverter):
 
     # datetime inherits from date, so identity unstructure hook used
     # here to prevent the date unstructure hook running.
-    converter.register_unstructure_hook(datetime, lambda v: v)
-    converter.register_structure_hook(
-        datetime, lambda v, _: v if isinstance(v, datetime) else validate_datetime(v, _)
-    )
-    converter.register_unstructure_hook(date, lambda v: v.isoformat())
+    converter.register_unstructure_hook(datetime, identity)
+    converter.register_structure_hook(datetime, validate_datetime)
+    converter.register_unstructure_hook(date, identity)
     converter.register_structure_hook(
         date, lambda v, _: v if isinstance(v, date) else date.fromisoformat(v)
     )
