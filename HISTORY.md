@@ -20,11 +20,11 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - Apply the attrs converter to the default value before checking if it is equal to the attribute's value, when `omit_if_default` is true and an attrs converter is specified.
   ([#696](https://github.com/python-attrs/cattrs/pull/696))
 - Use the optional `_value_` type hint to structure and unstructure enums if present.
-  ([##699](https://github.com/python-attrs/cattrs/issues/699))
+  ([#699](https://github.com/python-attrs/cattrs/issues/699))
 - _cattrs_ now tracks performance using [codspeed](https://codspeed.io/python-attrs/cattrs).
   ([#703](https://github.com/python-attrs/cattrs/pull/703))
 - The {mod}`tomlkit <cattrs.preconf.tomlkit>` preconf converter now properly handles `date` and `datetime` objects when structuring.
-  ([#707](https://github.com/python-attrs/cattrs/issues/707))
+  ([#707](https://github.com/python-attrs/cattrs/issues/707) [#708](https://github.com/python-attrs/cattrs/pull/708))
 
 
 ## 25.3.0 (2025-10-07)
