@@ -55,6 +55,9 @@ Optional install targets should match the name of the {mod}`cattrs.preconf` modu
 # Using pip
 $ pip install cattrs[ujson]
 
+# Usinv uv
+$ uv add cattrs[msgspec]
+
 # Using pdm
 $ pdm add cattrs[orjson]
 
@@ -202,4 +205,6 @@ Found at {mod}`cattrs.preconf.tomlkit`.
 
 Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets.
 Tuples are serialized as lists, and deserialized back into tuples.
-_tomlkit_ only supports mappings with string keys so mappings will have their keys stringified before serialization, and destringified during deserialization. `date` s are serialized as ISO 8601 strings.
+_tomlkit_ only supports mappings with string keys so mappings will have their keys stringified before serialization, and destringified during deserialization.
+[`date`](https://docs.python.org/3/library/datetime.html#datetime.date) and [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) objects are passed through to be unstructured by _tomlkit_ itself.
+

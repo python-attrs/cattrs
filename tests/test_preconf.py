@@ -719,7 +719,12 @@ def test_tomlkit(everything: Everything, detailed_validation: bool):
     converter = tomlkit_make_converter(detailed_validation=detailed_validation)
     unstructured = converter.unstructure(everything)
     raw = tomlkit_dumps(unstructured)
-    assert converter.structure(tomlkit_loads(raw), Everything) == everything
+
+    loaded = tomlkit_loads(raw)
+    # Check if we're unstructuring dates to native toml dates
+    assert isinstance(loaded["a_date"], date)
+
+    assert converter.structure(loaded, Everything) == everything
 
 
 @given(
@@ -765,6 +770,18 @@ def test_tomlkit_unions(union_and_val: tuple, detailed_validation: bool):
     type, val = union_and_val
 
     assert converter.structure(val, type) == val
+
+
+def test_tomlkit_date_strings():
+    """Dates represented as strings in toml work."""
+    converter = tomlkit_make_converter()
+
+    @define
+    class A:
+        a_date: date
+
+    data = 'a_date = "2023-01-01"'
+    assert converter.loads(data, A) == A(date(2023, 1, 1))
 
 
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
