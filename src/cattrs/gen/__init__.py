@@ -4,7 +4,7 @@ import re
 from collections.abc import Callable, Iterable, Mapping
 from typing import TYPE_CHECKING, Any, Final, Literal, TypeVar
 
-from attrs import NOTHING, Attribute, Converter, Factory
+from attrs import NOTHING, Attribute, Converter, Factory, evolve
 from typing_extensions import NoDefault
 
 from .._compat import (
@@ -124,6 +124,8 @@ def make_dict_unstructure_fn_from_attrs(
             continue
         if override.rename is None:
             kn = attr_name if not _cattrs_use_alias else a.alias
+            if kn != attr_name:
+                kwargs[attr_name] = evolve(override, rename=kn)
         else:
             kn = override.rename
         d = a.default
@@ -435,6 +437,8 @@ def make_dict_structure_fn_from_attrs(
             ian = a.alias
             if override.rename is None:
                 kn = an if not _cattrs_use_alias else a.alias
+                if kn != an:
+                    kwargs[an] = evolve(override, rename=kn)
             else:
                 kn = override.rename
 
@@ -562,6 +566,8 @@ def make_dict_structure_fn_from_attrs(
 
             if override.rename is None:
                 kn = an if not _cattrs_use_alias else a.alias
+                if kn != an:
+                    kwargs[an] = evolve(override, rename=kn)
             else:
                 kn = override.rename
             allowed_fields.add(kn)
@@ -631,6 +637,8 @@ def make_dict_structure_fn_from_attrs(
 
                 if override.rename is None:
                     kn = an if not _cattrs_use_alias else a.alias
+                    if kn != an:
+                        kwargs[an] = evolve(override, rename=kn)
                 else:
                     kn = override.rename
                 allowed_fields.add(kn)

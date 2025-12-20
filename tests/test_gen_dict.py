@@ -419,6 +419,30 @@ def test_alias_keys(converter: BaseConverter) -> None:
     )
 
 
+def test_alias_implicit_rename(converter: BaseConverter) -> None:
+    """Attributes with aliases generate rename metadata."""
+
+    @define
+    class A:
+        a: int = field(alias="b")
+        c: int = field(alias="d", default=1)
+
+    u_fn = make_dict_unstructure_fn(A, converter, _cattrs_use_alias=True)
+    s_fn = make_dict_structure_fn(A, converter, _cattrs_use_alias=True)
+
+    assert u_fn.overrides["a"].rename == "b"
+    assert s_fn.overrides["a"].rename == "b"
+    assert u_fn.overrides["c"].rename == "d"
+    assert s_fn.overrides["c"].rename == "d"
+
+    converter.register_unstructure_hook(A, u_fn)
+    converter.register_structure_hook(A, s_fn)
+
+    assert converter.unstructure(A(1)) == {"b": 1, "d": 1}
+    assert converter.structure({"b": 1}, A) == A(1)
+    assert converter.structure({"b": 1, "d": 2}, A) == A(1, 2)
+
+
 def test_init_false(converter: BaseConverter) -> None:
     """By default init=False keys are ignored."""
 

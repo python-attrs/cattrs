@@ -21,6 +21,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#696](https://github.com/python-attrs/cattrs/pull/696))
 - Use the optional `_value_` type hint to structure and unstructure enums if present.
   ([#699](https://github.com/python-attrs/cattrs/issues/699))
+- Aliases (when in use) now properly generate rename metadata in generated hooks.
+  ([#706](https://github.com/python-attrs/cattrs/issues/706) [#710](https://github.com/python-attrs/cattrs/pull/710))
 - _cattrs_ now tracks performance using [codspeed](https://codspeed.io/python-attrs/cattrs).
   ([#703](https://github.com/python-attrs/cattrs/pull/703))
 - The {mod}`tomlkit <cattrs.preconf.tomlkit>` preconf converter now properly handles native `date` objects when structuring.
