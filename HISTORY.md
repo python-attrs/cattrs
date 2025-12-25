@@ -30,6 +30,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - The {mod}`tomlkit <cattrs.preconf.tomlkit>` preconf converter now passes date objects directly to _tomlkit_ for unstructuring.
   ([#707](https://github.com/python-attrs/cattrs/issues/707) [#708](https://github.com/python-attrs/cattrs/pull/708))
 - Enum handling has been optimized by switching to hook factories, improving performance especially for plain enums.
+  ([#705](https://github.com/python-attrs/cattrs/pull/705))
 
 ## 25.3.0 (2025-10-07)
 
