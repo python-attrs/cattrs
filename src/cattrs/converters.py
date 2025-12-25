@@ -248,12 +248,12 @@ class BaseConverter:
                     lambda t: self.get_unstructure_hook(get_type_alias_base(t)),
                     True,
                 ),
-                (is_literal_containing_enums, self.unstructure),
                 (is_mapping, self._unstructure_mapping),
                 (is_sequence, self._unstructure_seq),
                 (is_mutable_set, self._unstructure_seq),
                 (is_frozenset, self._unstructure_seq),
                 (is_literal_containing_enums, self.unstructure),
+                (lambda t: is_subclass(t, Enum), enum_unstructure_factory, "extended"),
                 (has, self._unstructure_attrs),
                 (is_union_type, self._unstructure_union),
                 (lambda t: t in ANIES, self.unstructure),
@@ -300,6 +300,7 @@ class BaseConverter:
                     self._union_struct_registry.__getitem__,
                     True,
                 ),
+                (lambda t: is_subclass(t, Enum), enum_structure_factory, "extended"),
                 (has, self._structure_attrs),
             ]
         )
@@ -312,13 +313,6 @@ class BaseConverter:
                 (float, self._structure_call),
                 (Path, self._structure_call),
             ]
-        )
-
-        self.register_unstructure_hook_factory(
-            lambda t: is_subclass(t, Enum), enum_unstructure_factory
-        )
-        self.register_structure_hook_factory(
-            lambda t: is_subclass(t, Enum), enum_structure_factory
         )
 
         self._dict_factory = dict_factory
