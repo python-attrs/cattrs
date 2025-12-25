@@ -1,6 +1,7 @@
+from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, ParamSpec, TypeVar, get_args
+from typing import Any, ParamSpec, TypeVar, get_args
 
 from .._compat import is_subclass
 from ..converters import Converter, UnstructureHook

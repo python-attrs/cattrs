@@ -3,18 +3,27 @@
 from __future__ import annotations
 
 from base64 import b64decode
+from collections.abc import Callable
 from dataclasses import is_dataclass
 from datetime import date, datetime
 from enum import Enum
 from functools import partial
-from typing import Any, Callable, TypeVar, Union, get_type_hints
+from typing import Any, TypeVar, Union, get_type_hints
 
 from attrs import has as attrs_has
 from attrs import resolve_types
 from msgspec import Struct, convert, to_builtins
 from msgspec.json import Encoder, decode
 
-from .._compat import fields, get_args, get_origin, is_bare, is_mapping, is_sequence
+from .._compat import (
+    fields,
+    get_args,
+    get_origin,
+    is_bare,
+    is_mapping,
+    is_sequence,
+    is_subclass,
+)
 from ..cols import is_namedtuple
 from ..converters import BaseConverter, Converter
 from ..dispatch import UnstructureHook
@@ -74,7 +83,9 @@ def configure_converter(converter: Converter) -> None:
     configure_passthroughs(converter)
 
     converter.register_unstructure_hook(Struct, to_builtins)
-    converter.register_unstructure_hook(Enum, identity)
+    converter.register_unstructure_hook_factory(
+        lambda t: is_subclass(t, Enum), lambda t, c: identity
+    )
 
     converter.register_structure_hook(Struct, convert)
     converter.register_structure_hook(bytes, lambda v, _: b64decode(v))

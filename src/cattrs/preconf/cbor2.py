@@ -37,7 +37,7 @@ def configure_converter(converter: BaseConverter):
     )
     converter.register_unstructure_hook(date, lambda v: v.isoformat())
     converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
-    converter.register_unstructure_hook_func(is_primitive_enum, identity)
+    converter.register_unstructure_hook_factory(is_primitive_enum, lambda t: identity)
     converter.register_unstructure_hook_factory(
         is_literal_containing_enums, literals_with_enums_unstructure_factory
     )
