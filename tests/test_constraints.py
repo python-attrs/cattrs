@@ -171,3 +171,24 @@ def test_mapping_item_constraints():
             {0: 0}, Mapping[int, int], lambda d: [Constraint.items(d, sum_is_positive)]
         )
     assert "constraint violated: sum too small" in str(transform_error(exc_info.value))
+
+
+def test_iter_constraints() -> None:
+    """Test using iteration on validation dummy to generate constraints."""
+
+    def is_positive(val: int) -> str | None:
+        return "too small" if val < 1 else None
+
+    # Test list iteration
+    with pytest.raises(IterableValidationError) as exc_info:
+        structure(
+            [1, 0], list[int], lambda lst: [Constraint(is_positive, e) for e in lst]
+        )
+    assert "constraint violated: too small" in str(transform_error(exc_info.value))
+
+    # Test dict iteration (keys)
+    with pytest.raises(IterableValidationError) as exc_info:
+        structure(
+            {0: 1}, dict[int, int], lambda d: [Constraint(is_positive, k) for k in d]
+        )
+    assert "constraint violated: too small" in str(transform_error(exc_info.value))

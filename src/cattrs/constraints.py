@@ -52,7 +52,8 @@ def nonempty_check(val: S) -> str | None:
 class Constraint(Generic[T]):
     """Used to create constraint hooks, which can later be called by cattrs.
 
-    Do not instantiate this class directly; use the provided classmethods instead.
+    See the `for_`, `each`, `values` and `items` classmethods for handling composite
+    types.
     """
 
     _hook: ConstraintHook[T]
@@ -72,7 +73,16 @@ class Constraint(Generic[T]):
     def each(
         cls, iterable: Iterable[A], hook: ConstraintHook[A]
     ) -> "Constraint[Iterable[A]]":
-        """Ensure the hook passes for each element of an iterable."""
+        """Ensure the hook passes for each element of an iterable.
+
+        Using iteration directly should usually be preferred:
+
+            [Constraint(hook, e) for e in my_object]
+
+        which is equivalent to:
+
+            Constraint.each(my_object, hook)
+        """
         return Constraint(hook, iterable, ConstraintPathSentinel.EACH)
 
     @classmethod
