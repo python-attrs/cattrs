@@ -192,3 +192,19 @@ def test_iter_constraints() -> None:
             {0: 1}, dict[int, int], lambda d: [Constraint(is_positive, k) for k in d]
         )
     assert "constraint violated: too small" in str(transform_error(exc_info.value))
+
+
+def test_int_constraint() -> None:
+    """A simple integer constraint works."""
+
+    def is_positive(val: int) -> str | None:
+        return "too small" if val < 1 else None
+
+    # Success
+    assert structure(1, int, lambda v: [Constraint(is_positive, v)]) == 1
+
+    # Failure
+    with pytest.raises(ConstraintGroupError) as exc_info:
+        structure(0, int, lambda v: [Constraint(is_positive, v)])
+
+    assert exc_info.value.exceptions[0].args[0] == "too small"
