@@ -52,8 +52,8 @@ def test_direct_attrs_constraints() -> None:
             {"a": -1, "b": []},
             A,
             lambda cl: [
-                Constraint.for_(cl, lambda a: too_small if a.a < 0 else None),
-                Constraint.for_(cl, lambda a: too_short if len(a.b) < 1 else None),
+                Constraint(cl, lambda a: too_small if a.a < 0 else None),
+                Constraint(cl, lambda a: too_short if len(a.b) < 1 else None),
             ],
         )
 
@@ -74,8 +74,8 @@ def test_attr_field_constraints() -> None:
             {"a": -1, "b": []},
             A,
             lambda cl: [
-                Constraint.for_(cl.a, lambda a: too_small if a < 0 else None),
-                Constraint.for_(cl.b, lambda b: too_short if len(b) < 1 else None),
+                Constraint(cl.a, lambda a: too_small if a < 0 else None),
+                Constraint(cl.b, lambda b: too_short if len(b) < 1 else None),
             ],
         )
 
@@ -182,14 +182,14 @@ def test_iter_constraints() -> None:
     # Test list iteration
     with pytest.raises(IterableValidationError) as exc_info:
         structure(
-            [1, 0], list[int], lambda lst: [Constraint(is_positive, e) for e in lst]
+            [1, 0], list[int], lambda lst: [Constraint(e, is_positive) for e in lst]
         )
     assert "constraint violated: too small" in str(transform_error(exc_info.value))
 
     # Test dict iteration (keys)
     with pytest.raises(IterableValidationError) as exc_info:
         structure(
-            {0: 1}, dict[int, int], lambda d: [Constraint(is_positive, k) for k in d]
+            {0: 1}, dict[int, int], lambda d: [Constraint(k, is_positive) for k in d]
         )
     assert "constraint violated: too small" in str(transform_error(exc_info.value))
 
@@ -201,10 +201,10 @@ def test_int_constraint() -> None:
         return "too small" if val < 1 else None
 
     # Success
-    assert structure(1, int, lambda v: [Constraint(is_positive, v)]) == 1
+    assert structure(1, int, lambda v: [Constraint(v, is_positive)]) == 1
 
     # Failure
     with pytest.raises(ConstraintGroupError) as exc_info:
-        structure(0, int, lambda v: [Constraint(is_positive, v)])
+        structure(0, int, lambda v: [Constraint(v, is_positive)])
 
     assert exc_info.value.exceptions[0].args[0] == "too small"
