@@ -1,3 +1,5 @@
+from collections.abc import Mapping, MutableMapping
+
 import pytest
 from attrs import define
 from pg import structure
@@ -81,3 +83,91 @@ def test_attr_field_constraints() -> None:
         f"constraint violated: {too_small} @ $.a",
         f"constraint violated: {too_short} @ $.b",
     ]
+
+
+def test_dict_value_constraints() -> None:
+    """Dictionary values constraints work."""
+
+    def is_positive(val: int) -> str | None:
+        return "too small" if val < 1 else None
+
+    # Values check
+    with pytest.raises(IterableValidationError) as exc_info:
+        structure(
+            {1: 0, 2: 1}, dict[int, int], lambda d: [Constraint.values(d, is_positive)]
+        )
+
+    assert "constraint violated: too small" in str(transform_error(exc_info.value))
+
+
+def test_dict_item_constraints() -> None:
+    """Dict item constraints work."""
+
+    def sum_is_positive(item: tuple[int, int]) -> str | None:
+        return "sum too small" if item[0] + item[1] < 1 else None
+
+    with pytest.raises(IterableValidationError) as exc_info:
+        structure(
+            {0: 0, 1: 1},  # 0+0=0 fails
+            dict[int, int],
+            lambda d: [Constraint.items(d, sum_is_positive)],
+        )
+
+    assert "constraint violated: sum too small" in str(transform_error(exc_info.value))
+
+
+def test_dict_keys_constraints() -> None:
+    """Dict keys constraints work."""
+
+    def is_positive(val: int) -> str | None:
+        return "too small" if val < 1 else None
+
+    with pytest.raises(IterableValidationError) as exc_info:
+        structure(
+            {0: 1, 1: 1},  # 0 key fails
+            dict[int, int],
+            lambda d: [Constraint.each(d, is_positive)],
+        )
+
+    assert "constraint violated: too small" in str(transform_error(exc_info.value))
+
+
+def test_mapping_constraints():
+    """Mapping values constraints work."""
+
+    def is_positive(val: int) -> str | None:
+        return "too small" if val < 1 else None
+
+    with pytest.raises(IterableValidationError) as exc_info:
+        structure(
+            {1: 0}, Mapping[int, int], lambda d: [Constraint.values(d, is_positive)]
+        )
+    assert "constraint violated: too small" in str(transform_error(exc_info.value))
+
+
+def test_mutable_mapping_constraints():
+    """MutableMapping values constraints work."""
+
+    def is_positive(val: int) -> str | None:
+        return "too small" if val < 1 else None
+
+    with pytest.raises(IterableValidationError) as exc_info:
+        structure(
+            {1: 0},
+            MutableMapping[int, int],
+            lambda d: [Constraint.values(d, is_positive)],
+        )
+    assert "constraint violated: too small" in str(transform_error(exc_info.value))
+
+
+def test_mapping_item_constraints():
+    """Mapping item constraints work."""
+
+    def sum_is_positive(item: tuple[int, int]) -> str | None:
+        return "sum too small" if item[0] + item[1] < 1 else None
+
+    with pytest.raises(IterableValidationError) as exc_info:
+        structure(
+            {0: 0}, Mapping[int, int], lambda d: [Constraint.items(d, sum_is_positive)]
+        )
+    assert "constraint violated: sum too small" in str(transform_error(exc_info.value))

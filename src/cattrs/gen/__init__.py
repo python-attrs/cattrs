@@ -18,6 +18,8 @@ from .._compat import (
     is_generic,
 )
 from .._generics import deep_copy_with
+from ..annotated import add_to_annotated, get_from_annotated
+from ..constraints import ConstraintAnnotated, ConstraintPathSentinel
 from ..dispatch import UnstructureHook
 from ..errors import (
     AttributeValidationNote,
@@ -991,9 +993,36 @@ def mapping_structure_factory(
     lines = []
     internal_arg_parts = {}
 
+    base = get_args(cl)[0] if is_annotated(cl) else cl
+    constraints = get_from_annotated(cl, ConstraintAnnotated)
+    key_constraints = tuple(
+        [
+            (path[1:], checks)
+            for constraint in constraints
+            for path, checks in constraint.hooks
+            if len(path) >= 1 and path[0] is ConstraintPathSentinel.EACH
+        ]
+    )
+    value_constraints = tuple(
+        [
+            (path[1:], checks)
+            for constraint in constraints
+            for path, checks in constraint.hooks
+            if len(path) >= 1 and path[0] is ConstraintPathSentinel.VALUES
+        ]
+    )
+    item_constraints = tuple(
+        [
+            (path[1:], checks)
+            for constraint in constraints
+            for path, checks in constraint.hooks
+            if len(path) >= 1 and path[0] is ConstraintPathSentinel.ITEMS
+        ]
+    )
+
     # Let's try fishing out the type args.
-    if not is_bare(cl):
-        args = get_args(cl)
+    if not is_bare(base):
+        args = get_args(base)
         if len(args) == 2:
             key_arg_cand, val_arg_cand = args
             if key_type is NOTHING:
@@ -1010,33 +1039,46 @@ def mapping_structure_factory(
                 (key_type,) = args
                 val_type = Any
 
-        is_bare_dict = val_type in ANIES and key_type in ANIES
-        if not is_bare_dict:
-            # We can do the dispatch here and now.
-            key_handler = converter.get_structure_hook(key_type, cache_result=False)
-            if key_handler == converter._structure_call:
-                key_handler = key_type
+    if key_type is NOTHING:
+        key_type = Any
+    if val_type is NOTHING:
+        val_type = Any
 
-            val_handler = converter.get_structure_hook(val_type, cache_result=False)
-            if val_handler == converter._structure_call:
-                val_handler = val_type
+    if key_constraints:
+        key_type = add_to_annotated(key_type, ConstraintAnnotated(key_constraints))
+    if value_constraints:
+        val_type = add_to_annotated(val_type, ConstraintAnnotated(value_constraints))
 
-            globs["__cattr_k_t"] = key_type
-            globs["__cattr_v_t"] = val_type
-            globs["__cattr_k_s"] = key_handler
-            globs["__cattr_v_s"] = val_handler
-            k_s = (
-                "__cattr_k_s(k, __cattr_k_t)"
-                if key_handler != key_type
-                else "__cattr_k_s(k)"
-            )
-            v_s = (
-                "__cattr_v_s(v, __cattr_v_t)"
-                if val_handler != val_type
-                else "__cattr_v_s(v)"
-            )
-    else:
-        is_bare_dict = True
+    is_bare_dict = val_type in ANIES and key_type in ANIES and not item_constraints
+
+    if not is_bare_dict:
+        # We can do the dispatch here and now.
+        key_handler = converter.get_structure_hook(key_type, cache_result=False)
+        if key_handler == converter._structure_call:
+            key_handler = key_type
+
+        val_handler = converter.get_structure_hook(val_type, cache_result=False)
+        if val_handler == converter._structure_call:
+            val_handler = val_type
+
+        globs["__cattr_k_t"] = key_type
+        globs["__cattr_v_t"] = val_type
+        globs["__cattr_k_s"] = key_handler
+        globs["__cattr_v_s"] = val_handler
+        k_s = (
+            "__cattr_k_s(k, __cattr_k_t)"
+            if key_handler != key_type
+            else "__cattr_k_s(k)"
+        )
+        v_s = (
+            "__cattr_v_s(v, __cattr_v_t)"
+            if val_handler != val_type
+            else "__cattr_v_s(v)"
+        )
+        if item_constraints:
+            globs["__cattr_item_constraints"] = item_constraints
+            globs["ConstraintError"] = ConstraintError
+            globs["ConstraintGroupError"] = ConstraintGroupError
 
     if is_bare_dict:
         # No args, it's a bare dict.
@@ -1065,6 +1107,12 @@ def mapping_structure_factory(
             lines.append("      continue")
             lines.append("    try:")
             lines.append(f"      key = {k_s}")
+            if item_constraints:
+                lines.append("      for path, checks in __cattr_item_constraints:")
+                lines.append("        if not path:")
+                lines.append("          for check in checks:")
+                lines.append("            if error := check((key, value)):")
+                lines.append("              raise ConstraintError(error)")
             lines.append("      res[key] = value")
             lines.append("    except Exception as e:")
             lines.append(
@@ -1076,7 +1124,19 @@ def mapping_structure_factory(
                 f"    raise IterableValidationError('While structuring ' + {repr(cl)!r}, errors, __cattr_mapping_cl)"
             )
         else:
-            lines.append(f"  res = {{{k_s}: {v_s} for k, v in mapping.items()}}")
+            if item_constraints:
+                lines.append("  res = {}")
+                lines.append("  for k, v in mapping.items():")
+                lines.append(f"    key = {k_s}")
+                lines.append(f"    val = {v_s}")
+                lines.append("    for path, checks in __cattr_item_constraints:")
+                lines.append("      if not path:")
+                lines.append("        for check in checks:")
+                lines.append("          if error := check((key, val)):")
+                lines.append("            raise ConstraintError(error)")
+                lines.append("    res[key] = val")
+            else:
+                lines.append(f"  res = {{{k_s}: {v_s} for k, v in mapping.items()}}")
     if structure_to is not dict:
         lines.append("  res = __cattr_mapping_cl(res)")
 

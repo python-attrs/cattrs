@@ -389,7 +389,12 @@ def is_bare(type):
 
 
 def is_mapping(type: Any) -> bool:
-    """A predicate function for mappings."""
+    """A predicate function for mappings.
+
+    .. versionchanged:: NEXT
+       Also matches mapping types in `Annotated` types.
+    """
+    type = type.__args__[0] if is_annotated(type) else type
     return (
         type in (dict, Dict, TypingMapping, TypingMutableMapping, AbcMutableMapping)
         or (

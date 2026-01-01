@@ -6,11 +6,7 @@ from attrs import NOTHING, Attribute, Factory
 
 from .._compat import is_bare_final
 from ..annotated import get_from_annotated
-from ..constraints import (
-    ConstraintAnnotated,
-    ConstraintHook,
-    frozenlist,
-)
+from ..constraints import ConstraintAnnotated, ConstraintHook, frozenlist
 from ..dispatch import StructureHook
 from ..errors import StructureHandlerNotFoundError
 from ..fns import raise_error

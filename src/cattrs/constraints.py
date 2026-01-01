@@ -1,6 +1,6 @@
 """The cattrs constraint system."""
 
-from collections.abc import Callable, Iterable, Sized
+from collections.abc import Callable, Iterable, Mapping, Sized
 from enum import Enum
 from typing import Any, Generic, TypeAlias, TypeVar
 
@@ -19,6 +19,10 @@ class ConstraintPathSentinel(Enum):
 
     EACH = "each"
     """Apply a constraint to each element of an iterable."""
+    VALUES = "values"
+    """Apply a constraint to each value of a mapping."""
+    ITEMS = "items"
+    """Apply a constraint to each item (key, value) of a mapping."""
 
 
 ConstraintPath: TypeAlias = tuple[()] | tuple[str | ConstraintPathSentinel, ...]
@@ -30,7 +34,7 @@ A path for a constraint check.
 
 """
 
-type frozenlist[T] = tuple[T, ...]
+frozenlist: TypeAlias = tuple[T, ...]
 
 
 @frozen
@@ -70,3 +74,17 @@ class Constraint(Generic[T]):
     ) -> "Constraint[Iterable[A]]":
         """Ensure the hook passes for each element of an iterable."""
         return Constraint(hook, iterable, ConstraintPathSentinel.EACH)
+
+    @classmethod
+    def values(
+        cls, mapping: Mapping[Any, A], hook: ConstraintHook[A]
+    ) -> "Constraint[Mapping[Any, A]]":
+        """Ensure the hook passes for each value of a mapping."""
+        return Constraint(hook, mapping, ConstraintPathSentinel.VALUES)
+
+    @classmethod
+    def items(
+        cls, mapping: Mapping[A, T], hook: ConstraintHook[tuple[A, T]]
+    ) -> "Constraint[Mapping[A, T]]":
+        """Ensure the hook passes for each item (key, value) of a mapping."""
+        return Constraint(hook, mapping, ConstraintPathSentinel.ITEMS)
