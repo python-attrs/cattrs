@@ -16,5 +16,8 @@ class _ValDummy:
     def __getattr__(self, name: str) -> Any:
         return _ValDummy(path=(*self.__dict__[".path"], name))
 
+    def __getitem__(self, name: str) -> Any:
+        return _ValDummy(path=(*self.__dict__[".path"], name))
+
     def __iter__(self):
         yield _ValDummy(path=(*self.__dict__[".path"], ConstraintPathSentinel.EACH))

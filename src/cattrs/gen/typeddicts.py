@@ -3,8 +3,9 @@ from __future__ import annotations
 import re
 import sys
 from collections.abc import Mapping
+from functools import wraps
 from inspect import get_annotations
-from typing import TYPE_CHECKING, Any, Callable, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Literal, TypeVar, get_args
 
 from attrs import NOTHING, Attribute
 from typing_extensions import _TypedDictMeta
@@ -21,6 +22,8 @@ from .._generics import deep_copy_with
 from ..errors import (
     AttributeValidationNote,
     ClassValidationError,
+    ConstraintError,
+    ConstraintGroupError,
     ForbiddenExtraKeysError,
     StructureHandlerNotFoundError,
 )
@@ -29,7 +32,7 @@ from . import AttributeOverride
 from ._consts import already_generating, neutral
 from ._generics import generate_mapping
 from ._lc import generate_unique_filename
-from ._shared import find_structure_handler
+from ._shared import find_structure_handler, make_constraints_dict
 
 if TYPE_CHECKING:
     from ..converters import BaseConverter
@@ -58,7 +61,12 @@ def make_dict_unstructure_fn(
         customization.
     :param _cattrs_detailed_validation: Whether to store the generated code in the
         _linecache_, for easier debugging and better stack traces.
+
+    .. versionchanged:: NEXT
+       Annotated types are supported.
     """
+    if is_annotated(cl):
+        cl = get_args(cl)[0]
     origin = get_origin(cl)
     attrs = _adapted_fields(origin or cl)  # type: ignore
     req_keys = _required_keys(origin or cl)
@@ -242,10 +250,16 @@ def make_dict_structure_fn(
     :param _cattrs_detailed_validation: Whether to store the generated code in the
         _linecache_, for easier debugging and better stack traces.
 
-    ..  versionchanged:: 23.2.0
-        The `_cattrs_forbid_extra_keys` and `_cattrs_detailed_validation` parameters
-        take their values from the given converter by default.
+    .. versionchanged:: 23.2.0
+       The `_cattrs_forbid_extra_keys` and `_cattrs_detailed_validation` parameters
+       take their values from the given converter by default.
+    .. versionchanged:: NEXT
+       Annotated types and constraints are supported.
     """
+    attr_constraints = make_constraints_dict(cl)
+
+    if is_annotated(cl):
+        cl = get_args(cl)[0]
 
     mapping = {}
     if is_generic(cl):
@@ -345,6 +359,27 @@ def make_dict_structure_fn(
             else:
                 handler = find_structure_handler(a, t, converter)
 
+            if an in attr_constraints:
+                constraint_hooks = attr_constraints[an]
+
+                @wraps(handler)
+                def check_constraints(
+                    val, type, _handler=handler, _constraints=constraint_hooks, _t=t
+                ):
+                    res = _handler(val, type)
+                    errors = []
+                    for con in _constraints:
+                        try:
+                            if (error := con(res)) is not None:
+                                errors.append(ConstraintError(error))
+                        except Exception as exc:
+                            errors.append(exc)
+                    if errors:
+                        raise ConstraintGroupError("Constraint violations", errors, _t)
+                    return res
+
+                handler = check_constraints
+
             struct_handler_name = f"__c_structure_{ix}"
             internal_arg_parts[struct_handler_name] = handler
 
@@ -418,6 +453,21 @@ def make_dict_structure_fn(
                 # regenerated.
                 handler = converter.get_structure_hook(t)
 
+            if an in attr_constraints:
+                constraint_hooks = attr_constraints[an]
+
+                @wraps(handler)
+                def check_constraints(
+                    val, type, _handler=handler, _constraints=constraint_hooks
+                ):
+                    res = _handler(val, type)
+                    for con in _constraints:
+                        if (error := con(res)) is not None:
+                            raise ConstraintError(error)
+                    return res
+
+                handler = check_constraints
+
             kn = an if override.rename is None else override.rename
             allowed_fields.add(kn)
 
@@ -460,6 +510,21 @@ def make_dict_structure_fn(
                     # If a type is manually overwritten, this function should be
                     # regenerated.
                     handler = converter.get_structure_hook(t)
+
+                if an in attr_constraints:
+                    constraint_hooks = attr_constraints[an]
+
+                    @wraps(handler)
+                    def check_constraints(
+                        val, type, _handler=handler, _constraints=constraint_hooks
+                    ):
+                        res = _handler(val, type)
+                        for con in _constraints:
+                            if (error := con(res)) is not None:
+                                raise ConstraintError(error)
+                        return res
+
+                    handler = check_constraints
 
                 struct_handler_name = f"__c_structure_{ix}"
                 internal_arg_parts[struct_handler_name] = handler

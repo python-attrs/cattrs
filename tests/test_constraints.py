@@ -1,10 +1,12 @@
 from collections.abc import Mapping, MutableMapping
+from typing import Annotated, TypedDict
 
 import pytest
 from attrs import define
 from pg import structure
 
-from cattrs.constraints import Constraint
+from cattrs import Converter
+from cattrs.constraints import Constraint, ConstraintAnnotated
 from cattrs.errors import (
     ClassValidationError,
     ConstraintError,
@@ -208,3 +210,42 @@ def test_int_constraint() -> None:
         structure(0, int, lambda v: [Constraint(v, is_positive)])
 
     assert exc_info.value.exceptions[0].args[0] == "too small"
+
+
+class TD(TypedDict):
+    a: int
+    b: int
+
+
+def test_typed_dict_constraints() -> None:
+    """TypedDict fields can be constrained."""
+    too_small = "too small"
+
+    with pytest.raises(ClassValidationError) as exc_info:
+        structure(
+            {"a": -1, "b": 1},
+            TD,
+            lambda td: [Constraint(td["a"], lambda a: too_small if a < 0 else None)],
+        )
+
+    assert transform_error(exc_info.value) == [
+        f"constraint violated: {too_small} @ $.a"
+    ]
+
+
+def test_typed_dict_constraints_no_detailed_validation() -> None:
+    """TypedDict fields can be constrained without detailed validation."""
+    too_small = "too small"
+    converter = Converter(detailed_validation=False)
+
+    def is_too_small(a: int) -> str | None:
+        return too_small if a < 0 else None
+
+    hooks = ((("a",), (is_too_small,)),)
+    structure_as = Annotated[TD, ConstraintAnnotated(hooks)]
+
+    # Should raise ConstraintError directly, not wrapped
+    with pytest.raises(ConstraintError) as exc_info:
+        converter.structure({"a": -1, "b": 1}, structure_as)
+
+    assert exc_info.value.args[0] == too_small
