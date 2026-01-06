@@ -509,3 +509,30 @@ def test_dataclasses_slots(genconverter: Converter):
     include_subclasses(ParentDC, genconverter)
 
     assert genconverter.structure({"a": 1, "b": "a"}, ParentDC) == ChildDC1(1, "a")
+
+
+def test_diamond_inheritance(genconverter: Converter):
+    """Diamond inheritance is handled correctly (issue #685)."""
+
+    @define
+    class Base:
+        pass
+
+    @define
+    class Mid1(Base):
+        pass
+
+    @define
+    class Mid2(Base):
+        pass
+
+    @define
+    class Sub(Mid1, Mid2):
+        pass
+
+    # This should not raise an error
+    include_subclasses(Base, genconverter, union_strategy=configure_tagged_union)
+
+    assert genconverter.structure({"_type": "Sub"}, Base) == Sub()
+    assert genconverter.structure({"_type": "Mid1"}, Base) == Mid1()
+    assert genconverter.structure({"_type": "Mid2"}, Base) == Mid2()

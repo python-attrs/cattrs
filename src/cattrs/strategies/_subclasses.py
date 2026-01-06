@@ -15,9 +15,13 @@ from ..subclasses import subclasses
 def _make_subclasses_tree(cl: type) -> list[type]:
     # get class origin for accessing subclasses (see #648 for more info)
     cls_origin = typing.get_origin(cl) or cl
-    return [cl] + [
-        sscl for scl in subclasses(cls_origin) for sscl in _make_subclasses_tree(scl)
-    ]
+
+    # Use a dict to deduplicate and keep insertion order.
+    seen = {cl: None}
+    for scl in subclasses(cls_origin):
+        for sscl in _make_subclasses_tree(scl):
+            seen[sscl] = None
+    return list(seen)
 
 
 def _has_subclasses(cl: type, given_subclasses: tuple[type, ...]) -> bool:
