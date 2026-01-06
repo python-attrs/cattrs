@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache, singledispatch
+from itertools import chain
 from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, TypeVar
 
 from attrs import Factory, define
@@ -41,12 +42,18 @@ class FunctionDispatch:
     ..  versionchanged:: 24.1.0
         Support for factories that require converters, hence this requires a
         converter when creating.
+    .. versionchanged:: NEXT
+        Implement a priority track for handlers that need to be checked before
+        regular handlers.
     """
 
     _converter: BaseConverter
     _handler_pairs: list[tuple[Predicate, Callable[[Any, Any], Any], bool, bool]] = (
         Factory(list)
     )
+    _priority_handler_pairs: list[
+        tuple[Predicate, Callable[[Any, Any], Any], bool, bool]
+    ] = Factory(list)
 
     def register(
         self,
@@ -57,11 +64,25 @@ class FunctionDispatch:
     ) -> None:
         self._handler_pairs.insert(0, (predicate, func, is_generator, takes_converter))
 
+    def register_priority(
+        self,
+        predicate: Predicate,
+        func: Callable[..., Any],
+        is_generator: bool = False,
+        takes_converter: bool = False,
+    ) -> None:
+        """Register a handler in the priority track."""
+        self._priority_handler_pairs.insert(
+            0, (predicate, func, is_generator, takes_converter)
+        )
+
     def dispatch(self, typ: Any) -> Callable[..., Any] | None:
         """
         Return the appropriate handler for the object passed.
         """
-        for can_handle, handler, is_generator, takes_converter in self._handler_pairs:
+        for can_handle, handler, is_generator, takes_converter in chain(
+            self._priority_handler_pairs, self._handler_pairs
+        ):
             # can handle could raise an exception here
             # such as issubclass being called on an instance.
             # it's easier to just ignore that case.
@@ -150,27 +171,33 @@ class MultiStrategyDispatch(Generic[Hook]):
             | tuple[Predicate, Any, bool]
             | tuple[Predicate, Callable[[Any, BaseConverter], Any], Literal["extended"]]
         ],
+        priority: bool = False,
     ):
         """
         Register a predicate function to determine if the handler
         should be used for the type.
 
-        :param pred_and_handler: The list of predicates and their associated
-            handlers. If a handler is registered in `extended` mode, it's a
-            factory that requires a converter.
+        Args:
+            pred_and_handler: The list of predicates and their associated
+                handlers. If a handler is registered in `extended` mode, it's a
+                factory that requires a converter.
+            priority: Whether to register on the priority track.
         """
+        register = (
+            self._function_dispatch.register_priority
+            if priority
+            else self._function_dispatch.register
+        )
         for tup in pred_and_handler:
             if len(tup) == 2:
                 func, handler = tup
-                self._function_dispatch.register(func, handler)
+                register(func, handler)
             else:
                 func, handler, is_gen = tup
                 if is_gen == "extended":
-                    self._function_dispatch.register(
-                        func, handler, is_generator=is_gen, takes_converter=True
-                    )
+                    register(func, handler, is_generator=is_gen, takes_converter=True)
                 else:
-                    self._function_dispatch.register(func, handler, is_generator=is_gen)
+                    register(func, handler, is_generator=is_gen)
         self.clear_direct()
         self.dispatch.cache_clear()
 

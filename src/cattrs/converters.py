@@ -50,7 +50,8 @@ from ._compat import (
     is_union_type,
     signature,
 )
-from .annotated import is_annotated
+from ._constraints import direct_constraint_factory
+from .annotated import get_from_annotated, is_annotated
 from .cols import (
     defaultdict_structure_factory,
     homogenous_tuple_structure_factory,
@@ -65,6 +66,7 @@ from .cols import (
     namedtuple_structure_factory,
     namedtuple_unstructure_factory,
 )
+from .constraints import ConstraintAnnotated
 from .disambiguators import create_default_dis_func, is_supported_union
 from .dispatch import (
     HookFactory,
@@ -1196,6 +1198,20 @@ class Converter(BaseConverter):
         self.register_structure_hook_factory(is_typeddict, self.gen_structure_typeddict)
         self.register_structure_hook_factory(
             lambda t: get_newtype_base(t) is not None, self.get_structure_newtype
+        )
+        self._structure_func.register_func_list(
+            [
+                (
+                    lambda t: any(
+                        hook[0] == ()
+                        for annotated in get_from_annotated(t, ConstraintAnnotated)
+                        for hook in annotated.hooks
+                    ),
+                    direct_constraint_factory,
+                    "extended",
+                )
+            ],
+            priority=True,
         )
 
         # We keep these so we can more correctly copy the hooks.
