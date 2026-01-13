@@ -14,7 +14,7 @@ except ImportError:
 
 try:
     from tomli_w import dumps
-except ImportError:
+except ImportError:  # pragma: nocover
     dumps = None
 
 from .._compat import is_mapping, is_subclass

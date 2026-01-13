@@ -807,7 +807,6 @@ def test_tomllib_converter(everything: Everything, detailed_validation: bool):
 
 @given(
     everythings(
-        min_key_length=1,
         allow_null_bytes_in_keys=False,
         key_blacklist_characters=['"', "\\"],
         allow_control_characters_in_values=False,
@@ -822,7 +821,6 @@ def test_tomllib_converter_dumps(everything: Everything, detailed_validation: bo
 
 @given(
     everythings(
-        min_key_length=1,
         allow_null_bytes_in_keys=False,
         key_blacklist_characters=['"', "\\"],
         allow_control_characters_in_values=False,
