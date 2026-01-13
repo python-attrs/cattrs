@@ -73,6 +73,14 @@ cattrs.preconf.tomlkit module
    :undoc-members:
    :show-inheritance:
 
+cattrs.preconf.tomllib module
+-----------------------------
+
+.. automodule:: cattrs.preconf.tomllib
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 cattrs.preconf.ujson module
 ---------------------------
 

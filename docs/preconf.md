@@ -132,6 +132,24 @@ _msgspec_ doesn't support PyPy.
 
 ```
 
+
+## _tomllib_
+
+Found at {mod}`cattrs.preconf.tomllib`.
+
+Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets.
+Tuples are serialized as lists, and deserialized back into tuples.
+_tomllib_ only supports mappings with string keys so mappings will have their keys stringified before serialization, and destringified during deserialization.
+
+Writing is supported via the [_tomli-w_](https://pypi.org/project/tomli-w/) library; this needs to be installed separately (or depend on the `cattrs[tomllib]` extra).
+
+On Python 3.10, the [_tomli_](https://pypi.org/project/tomli/) library is required.
+
+```{versionadded} NEXT
+
+```
+
+
 ## _ujson_
 
 Found at {mod}`cattrs.preconf.ujson`.
@@ -207,4 +225,5 @@ Bytes are serialized as base 85 strings. Sets are serialized as lists, and deser
 Tuples are serialized as lists, and deserialized back into tuples.
 _tomlkit_ only supports mappings with string keys so mappings will have their keys stringified before serialization, and destringified during deserialization.
 [`date`](https://docs.python.org/3/library/datetime.html#datetime.date) and [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) objects are passed through to be unstructured by _tomlkit_ itself.
+
 
