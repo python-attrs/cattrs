@@ -126,6 +126,10 @@ pyyaml = [
 tomlkit = [
     { name = "tomlkit" },
 ]
+tomllib = [
+    { name = "tomli", marker = "python_full_version < '3.11'" },
+    { name = "tomli-w" },
+]
 ujson = [
     { name = "ujson" },
 ]
@@ -166,11 +170,13 @@ requires-dist = [
     { name = "orjson", marker = "implementation_name == 'cpython' and extra == 'orjson'", specifier = ">=3.11.3" },
     { name = "pymongo", marker = "extra == 'bson'", specifier = ">=4.4.0" },
     { name = "pyyaml", marker = "extra == 'pyyaml'", specifier = ">=6.0" },
+    { name = "tomli", marker = "python_full_version < '3.11' and extra == 'tomllib'", specifier = ">=1.1.0" },
+    { name = "tomli-w", marker = "extra == 'tomllib'", specifier = ">=1.1.0" },
     { name = "tomlkit", marker = "extra == 'tomlkit'", specifier = ">=0.11.8" },
     { name = "typing-extensions", specifier = ">=4.14.0" },
     { name = "ujson", marker = "extra == 'ujson'", specifier = ">=5.10.0" },
 ]
-provides-extras = ["bson", "cbor2", "msgpack", "msgspec", "orjson", "pyyaml", "tomlkit", "ujson"]
+provides-extras = ["bson", "cbor2", "msgpack", "msgspec", "orjson", "pyyaml", "tomlkit", "tomllib", "ujson"]
 
 [package.metadata.requires-dev]
 bench = [{ name = "pyperf", specifier = ">=2.6.1" }]
@@ -431,7 +437,7 @@ name = "exceptiongroup"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/0b/9f/a65090624ecf468cdca03533906e7c69ed7588582240cfe7cc9e770b50eb/exceptiongroup-1.3.0.tar.gz", hash = "sha256:b241f5885f560bc56a59ee63ca4c6a8bfa46ae4ad651af316d4e81817bb9fd88", size = 29749, upload-time = "2025-05-10T17:42:51.123Z" }
 wheels = [
@@ -1444,6 +1450,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/5b/b9/1ed31d167be802da0fc95020d04cd27b7d7065cc6fbefdd2f9186f60d7bd/tomli-2.2.1-cp313-cp313-win32.whl", hash = "sha256:d3f5614314d758649ab2ab3a62d4f2004c825922f9e370b29416484086b264ec", size = 98724, upload-time = "2024-11-27T22:38:32.837Z" },
     { url = "https://files.pythonhosted.org/packages/c7/32/b0963458706accd9afcfeb867c0f9175a741bf7b19cd424230714d722198/tomli-2.2.1-cp313-cp313-win_amd64.whl", hash = "sha256:a38aa0308e754b0e3c67e344754dff64999ff9b513e691d0e786265c93583c69", size = 109383, upload-time = "2024-11-27T22:38:34.455Z" },
     { url = "https://files.pythonhosted.org/packages/6e/c2/61d3e0f47e2b74ef40a68b9e6ad5984f6241a942f7cd3bbfbdbd03861ea9/tomli-2.2.1-py3-none-any.whl", hash = "sha256:cb55c73c5f4408779d0cf3eef9f762b9c9f147a77de7b258bef0a5628adc85cc", size = 14257, upload-time = "2024-11-27T22:38:35.385Z" },
+]
+
+[[package]]
+name = "tomli-w"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/19/75/241269d1da26b624c0d5e110e8149093c759b7a286138f4efd61a60e75fe/tomli_w-1.2.0.tar.gz", hash = "sha256:2dd14fac5a47c27be9cd4c976af5a12d87fb1f0b4512f81d69cce3b35ae25021", size = 7184, upload-time = "2025-01-15T12:07:24.262Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c7/18/c86eb8e0202e32dd3df50d43d7ff9854f8e0603945ff398974c1d91ac1ef/tomli_w-1.2.0-py3-none-any.whl", hash = "sha256:188306098d013b691fcadc011abd66727d3c414c571bb01b1a174ba8c983cf90", size = 6675, upload-time = "2025-01-15T12:07:22.074Z" },
 ]
 
 [[package]]

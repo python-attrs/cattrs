@@ -50,6 +50,7 @@ from cattrs.preconf.json import make_converter as json_make_converter
 from cattrs.preconf.msgpack import make_converter as msgpack_make_converter
 from cattrs.preconf.pyyaml import make_converter as pyyaml_make_converter
 from cattrs.preconf.tomlkit import make_converter as tomlkit_make_converter
+from cattrs.preconf.tomllib import make_converter as tomllib_make_converter
 from cattrs.preconf.ujson import make_converter as ujson_make_converter
 
 NO_MSGSPEC: Final = python_implementation() == "PyPy"
@@ -127,6 +128,10 @@ def everythings(
     allow_datetime_microseconds=True,
     key_blacklist_characters=[],
 ):
+    """
+    Args:
+        min_key_length: The minimum key length for keys in dicts.
+    """
     key_text = text(
         characters(
             blacklist_categories=("Cs",) if allow_null_bytes_in_keys else ("Cs", "Cc"),
@@ -784,6 +789,51 @@ def test_tomlkit_date_strings():
     assert converter.loads(data, A) == A(date(2023, 1, 1))
 
 
+@given(
+    everythings(
+        allow_null_bytes_in_keys=False,
+        key_blacklist_characters=['"', "\\"],
+        allow_control_characters_in_values=False,
+    ),
+    booleans(),
+)
+def test_tomllib_converter(everything: Everything, detailed_validation: bool):
+
+    converter = tomllib_make_converter(detailed_validation=detailed_validation)
+    raw = converter.dumps(everything)
+
+    assert converter.loads(raw, Everything) == everything
+
+
+@given(
+    everythings(
+        allow_null_bytes_in_keys=False,
+        key_blacklist_characters=['"', "\\"],
+        allow_control_characters_in_values=False,
+    ),
+    booleans(),
+)
+def test_tomllib_converter_dumps(everything: Everything, detailed_validation: bool):
+    converter = tomllib_make_converter(detailed_validation=detailed_validation)
+    raw = converter.dumps(everything)
+    assert converter.loads(raw, Everything) == everything
+
+
+@given(
+    everythings(
+        allow_null_bytes_in_keys=False,
+        key_blacklist_characters=['"', "\\"],
+        allow_control_characters_in_values=False,
+    )
+)
+def test_tomllib_converter_unstruct_collection_overrides(everything: Everything):
+    converter = tomllib_make_converter(unstruct_collection_overrides={Set: sorted})
+    raw = converter.unstructure(everything)
+    assert raw["a_set"] == sorted(raw["a_set"])
+    assert raw["a_mutable_set"] == sorted(raw["a_mutable_set"])
+    assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
+
+
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
 def test_cbor2(everything: Everything):
     from cbor2 import dumps as cbor2_dumps
@@ -951,3 +1001,8 @@ def test_literal_dicts_msgspec():
     from cattrs.preconf.msgspec import make_converter as msgspec_make_converter
 
     test_literal_dicts(msgspec_make_converter)
+
+
+def test_literal_dicts_tomllib():
+    """Dicts with keys that aren't subclasses of `type` work."""
+    test_literal_dicts(tomllib_make_converter)

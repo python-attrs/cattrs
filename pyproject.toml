@@ -95,6 +95,10 @@ bson = [
 msgspec = [
     "msgspec>=0.19.0; implementation_name == \"cpython\"",
 ]
+tomllib = [
+    "tomli>=1.1.0; python_version < '3.11'",
+    "tomli-w>=1.1.0",
+]
 
 [tool.pytest.ini_options]
 addopts = "-l --benchmark-sort=fullname --benchmark-warmup=true --benchmark-warmup-iterations=5  --benchmark-group-by=fullname"
