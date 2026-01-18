@@ -18,12 +18,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: hynek/build-and-inspect-python-package@v2
+      - uses: hynek/build-and-inspect-python-package@efb823f52190ad02594531168b7a2d5790e66516  # v2.14.0
 
   # Upload to Test PyPI on every commit on main.
   release-test-pypi:
@@ -37,13 +37,13 @@ jobs:
 
     steps:
       - name: Download packages built by build-and-inspect-python-package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         with:
           name: Packages
           path: dist
 
       - name: Upload package to Test PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e  # v1.13.0
         with:
           repository-url: https://test.pypi.org/legacy/
 
@@ -59,10 +59,10 @@ jobs:
 
     steps:
       - name: Download packages built by build-and-inspect-python-package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         with:
           name: Packages
           path: dist
 
       - name: Upload package to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e  # v1.13.0

@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: "actions/checkout@v4"
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           persist-credentials: false
 
@@ -34,7 +34,7 @@ jobs:
           just python=${{ startsWith(matrix.python-version, 'pypy') && matrix.python-version || format('python{0}', matrix.python-version) }} covcleanup="false" cov
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: coverage-data-${{ matrix.python-version }}
           path: .coverage.*
@@ -47,12 +47,12 @@ jobs:
     runs-on: "ubuntu-latest"
 
     steps:
-      - uses: "actions/checkout@v4"
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           persist-credentials: false
 
       - name: Download coverage data
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         with:
           pattern: coverage-data-*
           merge-multiple: true
@@ -75,7 +75,7 @@ jobs:
           uv run --group test coverage report --fail-under=100
 
       - name: "Upload HTML report."
-        uses: "actions/upload-artifact@v4"
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: "html-report"
           path: "htmlcov"
@@ -85,7 +85,7 @@ jobs:
     name: "Run linters"
     runs-on: "ubuntu-latest"
     steps:
-      - uses: "actions/checkout@v4"
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           persist-credentials: false
 
@@ -101,7 +101,7 @@ jobs:
     runs-on: "ubuntu-latest"
 
     steps:
-      - uses: "actions/checkout@v4"
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
           persist-credentials: false
 
