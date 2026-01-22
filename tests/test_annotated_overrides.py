@@ -132,3 +132,49 @@ def test_annotated_override_omit_if_default(genconverter: Converter):
     # a matches default, should be omitted. b matches default but no override, should stay (default behavior is to keep)
     assert genconverter.unstructure(A()) == {"b": 1}
     assert genconverter.unstructure(A(a=1)) == {"a": 1, "b": 1}
+
+
+def test_overrides_attribute_populated(genconverter: Converter):
+    """The .overrides attribute is correctly populated."""
+
+    @dataclass
+    class A:
+        a: Annotated[int, override(rename="b")]
+        c: Annotated[int, override(omit=True)] = 1
+
+    # Test dataclasses (make_dict_unstructure_fn)
+    unstruct_hook = make_dict_unstructure_fn(A, genconverter)
+    assert hasattr(unstruct_hook, "overrides")
+    assert "a" in unstruct_hook.overrides
+    assert unstruct_hook.overrides["a"].rename == "b"
+    assert "c" in unstruct_hook.overrides
+    assert unstruct_hook.overrides["c"].omit is True
+
+    struct_hook = make_dict_structure_fn(A, genconverter)
+    assert hasattr(struct_hook, "overrides")
+    assert "a" in struct_hook.overrides
+    assert struct_hook.overrides["a"].rename == "b"
+    assert "c" in struct_hook.overrides
+    assert struct_hook.overrides["c"].omit is True
+
+    # Test TypedDicts
+    class TD(TypedDict):
+        a: Annotated[int, override(rename="b")]
+
+    td_unstruct_hook = make_td_unstructure_fn(TD, genconverter)
+    assert hasattr(td_unstruct_hook, "overrides")
+    assert "a" in td_unstruct_hook.overrides
+    assert td_unstruct_hook.overrides["a"].rename == "b"
+
+    td_struct_hook = make_td_structure_fn(TD, genconverter)
+    assert hasattr(td_struct_hook, "overrides")
+    assert "a" in td_struct_hook.overrides
+    assert td_struct_hook.overrides["a"].rename == "b"
+
+    # Test Precedence (explicit should win and be in overrides)
+    @dataclass
+    class B:
+        a: Annotated[int, override(rename="b")]
+
+    hook_explicit = make_dict_unstructure_fn(B, genconverter, a=override(rename="c"))
+    assert hook_explicit.overrides["a"].rename == "c"

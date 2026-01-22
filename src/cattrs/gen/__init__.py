@@ -117,9 +117,13 @@ def make_dict_unstructure_fn_from_attrs(
 
     for a in attrs:
         attr_name = a.name
-        override = kwargs.get(
-            attr_name, _annotated_override_or_default(a.type, neutral)
-        )
+        if attr_name in kwargs:
+            override = kwargs[attr_name]
+        else:
+            override = _annotated_override_or_default(a.type, neutral)
+            if override != neutral:
+                kwargs[attr_name] = override
+
         if override.omit:
             continue
         if override.omit is None and not a.init and not _cattrs_include_init_false:
@@ -410,7 +414,13 @@ def make_dict_structure_fn_from_attrs(
         internal_arg_parts["__c_avn"] = AttributeValidationNote
         for a in attrs:
             an = a.name
-            override = kwargs.get(an, _annotated_override_or_default(a.type, neutral))
+            if an in kwargs:
+                override = kwargs[an]
+            else:
+                override = _annotated_override_or_default(a.type, neutral)
+                if override != neutral:
+                    kwargs[an] = override
+
             if override.omit:
                 continue
             if override.omit is None and not a.init and not _cattrs_include_init_false:
@@ -541,7 +551,13 @@ def make_dict_structure_fn_from_attrs(
         # The first loop deals with required args.
         for a in attrs:
             an = a.name
-            override = kwargs.get(an, _annotated_override_or_default(a.type, neutral))
+            if an in kwargs:
+                override = kwargs[an]
+            else:
+                override = _annotated_override_or_default(a.type, neutral)
+                if override != neutral:
+                    kwargs[an] = override
+
             if override.omit:
                 continue
             if override.omit is None and not a.init and not _cattrs_include_init_false:
@@ -616,9 +632,12 @@ def make_dict_structure_fn_from_attrs(
 
             for a in non_required:
                 an = a.name
-                override = kwargs.get(
-                    an, _annotated_override_or_default(a.type, neutral)
-                )
+                if an in kwargs:
+                    override = kwargs[an]
+                else:
+                    override = _annotated_override_or_default(a.type, neutral)
+                    if override != neutral:
+                        kwargs[an] = override
                 t = a.type
                 if isinstance(t, TypeVar):
                     t = typevar_map.get(t.__name__, t)

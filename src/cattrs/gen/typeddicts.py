@@ -102,9 +102,12 @@ def make_dict_unstructure_fn(
         # * all attributes resolve to `converter._unstructure_identity`
         for a in attrs:
             attr_name = a.name
-            override = kwargs.get(
-                attr_name, _annotated_override_or_default(a.type, neutral)
-            )
+            if attr_name in kwargs:
+                override = kwargs[attr_name]
+            else:
+                override = _annotated_override_or_default(a.type, neutral)
+                if override != neutral:
+                    kwargs[attr_name] = override
             if override != neutral:
                 break
             handler = None
@@ -137,9 +140,12 @@ def make_dict_unstructure_fn(
 
         for ix, a in enumerate(attrs):
             attr_name = a.name
-            override = kwargs.get(
-                attr_name, _annotated_override_or_default(a.type, neutral)
-            )
+            if attr_name in kwargs:
+                override = kwargs[attr_name]
+            else:
+                override = _annotated_override_or_default(a.type, neutral)
+                if override != neutral:
+                    kwargs[attr_name] = override
             if override.omit:
                 lines.append(f"  res.pop('{attr_name}', None)")
                 continue
@@ -217,12 +223,15 @@ def make_dict_unstructure_fn(
         )
 
         eval(compile(script, fname, "exec"), globs)
+
+        res = globs[fn_name]
+        res.overrides = kwargs
     finally:
         working_set.remove(cl)
         if not working_set:
             del already_generating.working_set
 
-    return globs[fn_name]
+    return res
 
 
 def make_dict_structure_fn(
@@ -323,7 +332,12 @@ def make_dict_structure_fn(
         for ix, a in enumerate(attrs):
             an = a.name
             attr_required = an in req_keys
-            override = kwargs.get(an, _annotated_override_or_default(a.type, neutral))
+            if an in kwargs:
+                override = kwargs[an]
+            else:
+                override = _annotated_override_or_default(a.type, neutral)
+                if override != neutral:
+                    kwargs[an] = override
             if override.omit:
                 continue
             t = a.type
@@ -396,7 +410,12 @@ def make_dict_structure_fn(
         for ix, a in enumerate(attrs):
             an = a.name
             attr_required = an in req_keys
-            override = kwargs.get(an, _annotated_override_or_default(a.type, neutral))
+            if an in kwargs:
+                override = kwargs[an]
+            else:
+                override = _annotated_override_or_default(a.type, neutral)
+                if override != neutral:
+                    kwargs[an] = override
             if override.omit:
                 continue
             if not attr_required:
@@ -445,9 +464,12 @@ def make_dict_structure_fn(
         if non_required:
             for ix, a in non_required:
                 an = a.name
-                override = kwargs.get(
-                    an, _annotated_override_or_default(a.type, neutral)
-                )
+                if an in kwargs:
+                    override = kwargs[an]
+                else:
+                    override = _annotated_override_or_default(a.type, neutral)
+                    if override != neutral:
+                        kwargs[an] = override
                 t = a.type
 
                 nrb = get_notrequired_base(t)
@@ -513,7 +535,9 @@ def make_dict_structure_fn(
     )
 
     eval(compile(script, fname, "exec"), globs)
-    return globs[fn_name]
+    res = globs[fn_name]
+    res.overrides = kwargs
+    return res
 
 
 def _adapted_fields(cls: Any) -> list[Attribute]:
