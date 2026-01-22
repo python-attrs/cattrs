@@ -1,9 +1,10 @@
 from dataclasses import dataclass
-from typing import Annotated, NamedTuple, NotRequired, TypedDict
+from typing import Annotated, NamedTuple, TypedDict
 
 from attrs import define
 
 from cattrs import Converter
+from cattrs._compat import NotRequired
 from cattrs.cols import (
     is_namedtuple,
     namedtuple_dict_structure_factory,
