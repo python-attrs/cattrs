@@ -29,7 +29,7 @@ from . import AttributeOverride
 from ._consts import already_generating, neutral
 from ._generics import generate_mapping
 from ._lc import generate_unique_filename
-from ._shared import find_structure_handler
+from ._shared import _annotated_override_or_default, find_structure_handler
 
 if TYPE_CHECKING:
     from ..converters import BaseConverter
@@ -102,7 +102,9 @@ def make_dict_unstructure_fn(
         # * all attributes resolve to `converter._unstructure_identity`
         for a in attrs:
             attr_name = a.name
-            override = kwargs.get(attr_name, neutral)
+            override = kwargs.get(
+                attr_name, _annotated_override_or_default(a.type, neutral)
+            )
             if override != neutral:
                 break
             handler = None
@@ -135,7 +137,9 @@ def make_dict_unstructure_fn(
 
         for ix, a in enumerate(attrs):
             attr_name = a.name
-            override = kwargs.get(attr_name, neutral)
+            override = kwargs.get(
+                attr_name, _annotated_override_or_default(a.type, neutral)
+            )
             if override.omit:
                 lines.append(f"  res.pop('{attr_name}', None)")
                 continue
@@ -319,7 +323,7 @@ def make_dict_structure_fn(
         for ix, a in enumerate(attrs):
             an = a.name
             attr_required = an in req_keys
-            override = kwargs.get(an, neutral)
+            override = kwargs.get(an, _annotated_override_or_default(a.type, neutral))
             if override.omit:
                 continue
             t = a.type
@@ -392,7 +396,7 @@ def make_dict_structure_fn(
         for ix, a in enumerate(attrs):
             an = a.name
             attr_required = an in req_keys
-            override = kwargs.get(an, neutral)
+            override = kwargs.get(an, _annotated_override_or_default(a.type, neutral))
             if override.omit:
                 continue
             if not attr_required:
@@ -441,7 +445,9 @@ def make_dict_structure_fn(
         if non_required:
             for ix, a in non_required:
                 an = a.name
-                override = kwargs.get(an, neutral)
+                override = kwargs.get(
+                    an, _annotated_override_or_default(a.type, neutral)
+                )
                 t = a.type
 
                 nrb = get_notrequired_base(t)

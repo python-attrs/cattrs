@@ -33,7 +33,7 @@ from ..types import SimpleStructureHook
 from ._consts import AttributeOverride, already_generating, neutral
 from ._generics import generate_mapping
 from ._lc import generate_unique_filename
-from ._shared import find_structure_handler
+from ._shared import _annotated_override_or_default, find_structure_handler
 
 if TYPE_CHECKING:
     from ..converters import BaseConverter
@@ -117,7 +117,9 @@ def make_dict_unstructure_fn_from_attrs(
 
     for a in attrs:
         attr_name = a.name
-        override = kwargs.get(attr_name, neutral)
+        override = kwargs.get(
+            attr_name, _annotated_override_or_default(a.type, neutral)
+        )
         if override.omit:
             continue
         if override.omit is None and not a.init and not _cattrs_include_init_false:
@@ -408,7 +410,7 @@ def make_dict_structure_fn_from_attrs(
         internal_arg_parts["__c_avn"] = AttributeValidationNote
         for a in attrs:
             an = a.name
-            override = kwargs.get(an, neutral)
+            override = kwargs.get(an, _annotated_override_or_default(a.type, neutral))
             if override.omit:
                 continue
             if override.omit is None and not a.init and not _cattrs_include_init_false:
@@ -539,7 +541,7 @@ def make_dict_structure_fn_from_attrs(
         # The first loop deals with required args.
         for a in attrs:
             an = a.name
-            override = kwargs.get(an, neutral)
+            override = kwargs.get(an, _annotated_override_or_default(a.type, neutral))
             if override.omit:
                 continue
             if override.omit is None and not a.init and not _cattrs_include_init_false:
@@ -614,7 +616,9 @@ def make_dict_structure_fn_from_attrs(
 
             for a in non_required:
                 an = a.name
-                override = kwargs.get(an, neutral)
+                override = kwargs.get(
+                    an, _annotated_override_or_default(a.type, neutral)
+                )
                 t = a.type
                 if isinstance(t, TypeVar):
                     t = typevar_map.get(t.__name__, t)

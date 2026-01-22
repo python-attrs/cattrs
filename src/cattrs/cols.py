@@ -5,15 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 from functools import partial
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    DefaultDict,
-    Literal,
-    NamedTuple,
-    TypeVar,
-    get_type_hints,
-)
+from typing import TYPE_CHECKING, Any, DefaultDict, Literal, NamedTuple, TypeVar
 
 from attrs import NOTHING, Attribute, NothingType
 
@@ -21,6 +13,7 @@ from ._compat import (
     ANIES,
     AbcSet,
     get_args,
+    get_full_type_hints,
     get_origin,
     is_bare,
     is_frozenset,
@@ -246,7 +239,7 @@ def _namedtuple_to_attrs(cl: type[tuple]) -> list[Attribute]:
             type=a,
             alias=name,
         )
-        for name, a in get_type_hints(cl).items()
+        for name, a in get_full_type_hints(cl).items()
     ]
 
 
