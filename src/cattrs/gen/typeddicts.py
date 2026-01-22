@@ -102,16 +102,20 @@ def make_dict_unstructure_fn(
         # * all attributes resolve to `converter._unstructure_identity`
         for a in attrs:
             attr_name = a.name
+            t = a.type
+            nrb = get_notrequired_base(t)
+            if nrb is not NOTHING:
+                t = nrb
+
             if attr_name in kwargs:
                 override = kwargs[attr_name]
             else:
-                override = _annotated_override_or_default(a.type, neutral)
+                override = _annotated_override_or_default(t, neutral)
                 if override != neutral:
                     kwargs[attr_name] = override
             if override != neutral:
                 break
             handler = None
-            t = a.type
 
             if isinstance(t, TypeVar):
                 if t.__name__ in mapping:
@@ -123,9 +127,6 @@ def make_dict_unstructure_fn(
                 t = deep_copy_with(t, mapping, cl)
 
             if handler is None:
-                nrb = get_notrequired_base(t)
-                if nrb is not NOTHING:
-                    t = nrb
                 try:
                     handler = converter.get_unstructure_hook(t)
                 except RecursionError:
@@ -140,15 +141,22 @@ def make_dict_unstructure_fn(
 
         for ix, a in enumerate(attrs):
             attr_name = a.name
+            t = a.type
+            nrb = get_notrequired_base(t)
+            if nrb is not NOTHING:
+                t = nrb
+
             if attr_name in kwargs:
                 override = kwargs[attr_name]
             else:
-                override = _annotated_override_or_default(a.type, neutral)
+                override = _annotated_override_or_default(t, neutral)
                 if override != neutral:
                     kwargs[attr_name] = override
+
             if override.omit:
                 lines.append(f"  res.pop('{attr_name}', None)")
                 continue
+
             if override.rename is not None:
                 # We also need to pop when renaming, since we're copying
                 # the original.
@@ -163,8 +171,6 @@ def make_dict_unstructure_fn(
             if override.unstruct_hook is not None:
                 handler = override.unstruct_hook
             else:
-                t = a.type
-
                 if isinstance(t, TypeVar):
                     if t.__name__ in mapping:
                         t = mapping[t.__name__]
@@ -174,9 +180,6 @@ def make_dict_unstructure_fn(
                     t = deep_copy_with(t, mapping, cl)
 
                 if handler is None:
-                    nrb = get_notrequired_base(t)
-                    if nrb is not NOTHING:
-                        t = nrb
                     try:
                         handler = converter.get_unstructure_hook(t)
                     except RecursionError:
@@ -332,24 +335,24 @@ def make_dict_structure_fn(
         for ix, a in enumerate(attrs):
             an = a.name
             attr_required = an in req_keys
+            t = a.type
+            nrb = get_notrequired_base(t)
+            if nrb is not NOTHING:
+                t = nrb
+
             if an in kwargs:
                 override = kwargs[an]
             else:
-                override = _annotated_override_or_default(a.type, neutral)
+                override = _annotated_override_or_default(t, neutral)
                 if override != neutral:
                     kwargs[an] = override
             if override.omit:
                 continue
-            t = a.type
 
             if isinstance(t, TypeVar):
                 t = mapping.get(t.__name__, t)
             elif is_generic(t) and not is_bare(t) and not is_annotated(t):
                 t = deep_copy_with(t, mapping, cl)
-
-            nrb = get_notrequired_base(t)
-            if nrb is not NOTHING:
-                t = nrb
 
             if is_generic(t) and not is_bare(t) and not is_annotated(t):
                 t = deep_copy_with(t, mapping, cl)
@@ -464,17 +467,17 @@ def make_dict_structure_fn(
         if non_required:
             for ix, a in non_required:
                 an = a.name
-                if an in kwargs:
-                    override = kwargs[an]
-                else:
-                    override = _annotated_override_or_default(a.type, neutral)
-                    if override != neutral:
-                        kwargs[an] = override
                 t = a.type
-
                 nrb = get_notrequired_base(t)
                 if nrb is not NOTHING:
                     t = nrb
+
+                if an in kwargs:
+                    override = kwargs[an]
+                else:
+                    override = _annotated_override_or_default(t, neutral)
+                    if override != neutral:
+                        kwargs[an] = override
 
                 if isinstance(t, TypeVar):
                     t = mapping.get(t.__name__, t)

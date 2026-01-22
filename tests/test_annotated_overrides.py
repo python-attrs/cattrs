@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Annotated, NamedTuple, TypedDict
+from typing import Annotated, NamedTuple, NotRequired, TypedDict
 
 from attrs import define
 
@@ -144,32 +144,32 @@ def test_overrides_attribute_populated(genconverter: Converter):
 
     # Test dataclasses (make_dict_unstructure_fn)
     unstruct_hook = make_dict_unstructure_fn(A, genconverter)
-    assert hasattr(unstruct_hook, "overrides")
-    assert "a" in unstruct_hook.overrides
-    assert unstruct_hook.overrides["a"].rename == "b"
-    assert "c" in unstruct_hook.overrides
-    assert unstruct_hook.overrides["c"].omit is True
+    assert unstruct_hook.overrides == {
+        "a": override(rename="b"),
+        "c": override(omit=True),
+    }
 
     struct_hook = make_dict_structure_fn(A, genconverter)
-    assert hasattr(struct_hook, "overrides")
-    assert "a" in struct_hook.overrides
-    assert struct_hook.overrides["a"].rename == "b"
-    assert "c" in struct_hook.overrides
-    assert struct_hook.overrides["c"].omit is True
+    assert struct_hook.overrides == {
+        "a": override(rename="b"),
+        "c": override(omit=True),
+    }
 
-    # Test TypedDicts
     class TD(TypedDict):
         a: Annotated[int, override(rename="b")]
+        c: NotRequired[Annotated[int, override(rename="d")]]
 
     td_unstruct_hook = make_td_unstructure_fn(TD, genconverter)
-    assert hasattr(td_unstruct_hook, "overrides")
-    assert "a" in td_unstruct_hook.overrides
-    assert td_unstruct_hook.overrides["a"].rename == "b"
+    assert td_unstruct_hook.overrides == {
+        "a": override(rename="b"),
+        "c": override(rename="d"),
+    }
 
     td_struct_hook = make_td_structure_fn(TD, genconverter)
-    assert hasattr(td_struct_hook, "overrides")
-    assert "a" in td_struct_hook.overrides
-    assert td_struct_hook.overrides["a"].rename == "b"
+    assert td_struct_hook.overrides == {
+        "a": override(rename="b"),
+        "c": override(rename="d"),
+    }
 
     # Test Precedence (explicit should win and be in overrides)
     @dataclass
