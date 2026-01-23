@@ -552,11 +552,6 @@ def make_dict_structure_fn_from_attrs(
         for a in attrs:
             an = a.name
 
-            if a.default is not NOTHING:
-                non_required.append(a)
-                # The next loop will handle it.
-                continue
-
             if an in kwargs:
                 override = kwargs[an]
             else:
@@ -567,6 +562,11 @@ def make_dict_structure_fn_from_attrs(
             if override.omit:
                 continue
             if override.omit is None and not a.init and not _cattrs_include_init_false:
+                continue
+
+            if a.default is not NOTHING:
+                non_required.append(a)
+                # The next loop will handle it.
                 continue
 
             t = a.type
@@ -636,12 +636,7 @@ def make_dict_structure_fn_from_attrs(
 
             for a in non_required:
                 an = a.name
-                if an in kwargs:
-                    override = kwargs[an]
-                else:
-                    override = _annotated_override_or_default(a.type, neutral)
-                    if override != neutral:
-                        kwargs[an] = override
+                override = kwargs.get(an, neutral)
                 t = a.type
                 if isinstance(t, TypeVar):
                     t = typevar_map.get(t.__name__, t)
