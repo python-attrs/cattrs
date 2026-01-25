@@ -95,10 +95,13 @@ def make_dict_unstructure_fn_from_attrs(
     :param _cattrs_include_init_false: If true, _attrs_ fields marked as `init=False`
         will be included.
 
-    ..  versionadded:: 24.1.0
-    ..  versionchanged:: 25.2.0
+    .. versionadded:: 24.1.0
+    .. versionchanged:: 25.2.0
         The `_cattrs_use_alias` parameter takes its value from the given converter
         by default.
+    .. versionchanged:: NEXT
+        `typing.Annotated[T, override()]` is now recognized and can be used to customize
+        unstructuring.
     .. versionchanged:: NEXT
         When `_cattrs_omit_if_default` is true and the attribute has an attrs converter
         specified, the converter is applied to the default value before checking if it
@@ -270,11 +273,14 @@ def make_dict_unstructure_fn(
     :param _cattrs_include_init_false: If true, _attrs_ fields marked as `init=False`
         will be included.
 
-    ..  versionadded:: 23.2.0 *_cattrs_use_alias*
-    ..  versionadded:: 23.2.0 *_cattrs_include_init_false*
-    ..  versionchanged:: 25.2.0
+    .. versionadded:: 23.2.0 *_cattrs_use_alias*
+    .. versionadded:: 23.2.0 *_cattrs_include_init_false*
+    .. versionchanged:: 25.2.0
         The `_cattrs_use_alias` parameter takes its value from the given converter
         by default.
+    .. versionchanged:: NEXT
+        `typing.Annotated[T, override()]` is now recognized and can be used to customize
+        unstructuring.
     """
     origin = get_origin(cl)
     attrs = adapted_fields(origin or cl)  # type: ignore
@@ -355,10 +361,13 @@ def make_dict_structure_fn_from_attrs(
     :param _cattrs_include_init_false: If true, _attrs_ fields marked as `init=False`
         will be included.
 
-    ..  versionadded:: 24.1.0
-    ..  versionchanged:: 25.2.0
+    .. versionadded:: 24.1.0
+    .. versionchanged:: 25.2.0
         The `_cattrs_use_alias` parameter takes its value from the given converter
         by default.
+    .. versionchanged:: NEXT
+        `typing.Annotated[T, override()]` is now recognized and can be used to customize
+        unstructuring.
     """
 
     cl_name = cl.__name__
@@ -775,17 +784,20 @@ def make_dict_structure_fn(
     :param _cattrs_include_init_false: If true, _attrs_ fields marked as `init=False`
         will be included.
 
-    ..  versionadded:: 23.2.0 *_cattrs_use_alias*
-    ..  versionadded:: 23.2.0 *_cattrs_include_init_false*
-    ..  versionchanged:: 23.2.0
+    .. versionadded:: 23.2.0 *_cattrs_use_alias*
+    .. versionadded:: 23.2.0 *_cattrs_include_init_false*
+    .. versionchanged:: 23.2.0
         The `_cattrs_forbid_extra_keys` and `_cattrs_detailed_validation` parameters
         take their values from the given converter by default.
-    ..  versionchanged:: 24.1.0
+    .. versionchanged:: 24.1.0
         The `_cattrs_prefer_attrib_converters` parameter takes its value from the given
         converter by default.
-    ..  versionchanged:: 25.2.0
+    .. versionchanged:: 25.2.0
         The `_cattrs_use_alias` parameter takes its value from the given converter
         by default.
+    .. versionchanged:: NEXT
+        `typing.Annotated[T, override()]` is now recognized and can be used to customize
+        unstructuring.
     """
 
     mapping = {}
