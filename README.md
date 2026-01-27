@@ -99,7 +99,7 @@ _cattrs_ is based on a few fundamental design decisions:
 - Resist the temptation to guess.
   If there are two ways of solving a problem, _cattrs_ should refuse to guess and let the user configure it themselves.
 
-A foolish consistency is the hobgoblin of little minds, so these decisions can and are sometimes broken, but they have proven to be a good foundation.
+These decisions can and are sometimes broken, but they have proven to be a good foundation.
 
 
 <!-- end-why -->
