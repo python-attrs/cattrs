@@ -452,11 +452,11 @@ Tuples can be structured into classes using {meth}`structure_attrs_fromtuple() <
 A(a='string', b=2)
 ```
 
-Loading from tuples can be made the default by creating a new {class}`Converter <cattrs.Converter>` with `unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE`.
+Loading from tuples can be made the default by creating a new {class}`Converter <cattrs.Converter>` with `unstruct_strat=cattrs.UnstructureStrategy.AS_TUPLE`.
 
 ```{doctest}
 
->>> converter = cattrs.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
+>>> converter = cattrs.Converter(unstruct_strat=cattrs.UnstructureStrategy.AS_TUPLE)
 >>> @define
 ... class A:
 ...     a: str
@@ -619,6 +619,12 @@ The {mod}`cattrs.cols` module contains hook factories for un/structuring named t
 ### `typing.Annotated`
 
 [PEP 593](https://www.python.org/dev/peps/pep-0593/) annotations (`typing.Annotated[type, ...]`) are supported and are handled using the first type present in the annotated type.
+
+Additionally, `typing.Annotated` types containing `cattrs.override()` are recognized and used by the _attrs_, dataclass, TypedDict and dict NamedTuple hook factories.
+
+```{versionchanged} NEXT
+`Annotated[T, override()]` is now used by the _attrs_, dataclass, TypedDict and dict NamedTuple hook factories.
+```
 
 ```{versionadded} 1.4.0
 

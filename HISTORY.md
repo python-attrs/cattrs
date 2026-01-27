@@ -11,11 +11,14 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
-## 25.4.0 (UNRELEASED)
+## NEXT (UNRELEASED)
 
 - Add the {mod}`tomllib <cattrs.preconf.tomllib>` preconf converter.
   See [here](https://catt.rs/en/latest/preconf.html#tomllib) for details.
   ([#716](https://github.com/python-attrs/cattrs/pull/716))
+- Customizing un/structuring of _attrs_ classes, dataclasses, TypedDicts and dict NamedTuples is now possible by using `Annotated[T, override()]` on fields.
+  See [here](https://catt.rs/en/stable/customizing.html#using-typing-annotated-t-override) for more details.
+  ([#717](https://github.com/python-attrs/cattrs/pull/717))
 - Fix structuring of nested generic classes with stringified annotations.
   ([#688](https://github.com/python-attrs/cattrs/pull/688))
 - Python 3.9 is no longer supported, as it is end-of-life. Use previous versions on this Python version.

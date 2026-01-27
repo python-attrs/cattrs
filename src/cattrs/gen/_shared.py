@@ -4,13 +4,29 @@ from typing import TYPE_CHECKING, Any
 
 from attrs import NOTHING, Attribute, Factory
 
-from .._compat import is_bare_final
+from .._compat import get_args, is_annotated, is_bare_final
 from ..dispatch import StructureHook
 from ..errors import StructureHandlerNotFoundError
 from ..fns import raise_error
+from ._consts import AttributeOverride
 
 if TYPE_CHECKING:
     from ..converters import BaseConverter
+
+
+def _annotated_override_or_default(
+    type: Any, default: AttributeOverride
+) -> AttributeOverride:
+    """
+    If the type is Annotated containing an AttributeOverride, return it.
+    Otherwise, return the default.
+    """
+    if is_annotated(type):
+        for arg in get_args(type):
+            if isinstance(arg, AttributeOverride):
+                return arg
+
+    return default
 
 
 def find_structure_handler(

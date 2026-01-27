@@ -410,6 +410,42 @@ ClassWithInitFalse(number=2)
 
 ```
 
+## Using `typing.Annotated[T, override(...)]`
+
+The un/structuring process for _attrs_ classes, dataclasses, TypedDicts and dict NamedTuples can be customized by annotating the fields using `typing.Annotated[T, override()]`.
+
+```{doctest}
+>>> from typing import Annotated
+
+>>> @define
+... class ExampleClass:
+...     klass: Annotated[int, cattrs.override(rename="class")]
+
+>>> cattrs.unstructure(ExampleClass(1))
+{'class': 1}
+>>> cattrs.structure({'class': 1}, ExampleClass)
+ExampleClass(klass=1)
+```
+
+These customizations are automatically recognized by every {class}`Converter <cattrs.Converter>`.
+They can still be overriden explicitly, see [](#custom-un-structuring-hooks).
+
+```{attention}
+One of the fundamental [design decisions](why.md#design-decisions) of _cattrs_ is that serialization rules should be separate from the models themselves;
+by using this feature you're going against the spirit of this design decision.
+
+However, software is written in many different context and with different constraints; and practicality _sometimes_ beats purity.
+_Sometimes_, it's not worth introducing a mapping layer to rename one field.
+_Sometimes_, you're busy prototyping and will clean up your code later.
+
+The danger is not any single compromise, but their accumulation.
+One of the most important skills as a software engineer is knowing when the cost of a trade-off has crossed the line and it's time to do things properly.
+```
+
+```{versionadded} NEXT
+
+```
+
 ## Customizing Collections
 
 ```{currentmodule} cattrs.cols
