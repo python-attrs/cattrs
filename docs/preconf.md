@@ -145,7 +145,7 @@ Writing is supported via the [_tomli-w_](https://pypi.org/project/tomli-w/) libr
 
 On Python 3.10, the [_tomli_](https://pypi.org/project/tomli/) library is required.
 
-```{versionadded} NEXT
+```{versionadded} 26.1.0
 
 ```
 

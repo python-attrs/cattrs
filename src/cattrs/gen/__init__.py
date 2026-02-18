@@ -99,10 +99,10 @@ def make_dict_unstructure_fn_from_attrs(
     .. versionchanged:: 25.2.0
         The `_cattrs_use_alias` parameter takes its value from the given converter
         by default.
-    .. versionchanged:: NEXT
+    .. versionchanged:: 26.1.0
         `typing.Annotated[T, override()]` is now recognized and can be used to customize
         unstructuring.
-    .. versionchanged:: NEXT
+    .. versionchanged:: 26.1.0
         When `_cattrs_omit_if_default` is true and the attribute has an attrs converter
         specified, the converter is applied to the default value before checking if it
         is equal to the attribute's value.
@@ -278,7 +278,7 @@ def make_dict_unstructure_fn(
     .. versionchanged:: 25.2.0
         The `_cattrs_use_alias` parameter takes its value from the given converter
         by default.
-    .. versionchanged:: NEXT
+    .. versionchanged:: 26.1.0
         `typing.Annotated[T, override()]` is now recognized and can be used to customize
         unstructuring.
     """
@@ -365,7 +365,7 @@ def make_dict_structure_fn_from_attrs(
     .. versionchanged:: 25.2.0
         The `_cattrs_use_alias` parameter takes its value from the given converter
         by default.
-    .. versionchanged:: NEXT
+    .. versionchanged:: 26.1.0
         `typing.Annotated[T, override()]` is now recognized and can be used to customize
         unstructuring.
     """
@@ -795,7 +795,7 @@ def make_dict_structure_fn(
     .. versionchanged:: 25.2.0
         The `_cattrs_use_alias` parameter takes its value from the given converter
         by default.
-    .. versionchanged:: NEXT
+    .. versionchanged:: 26.1.0
         `typing.Annotated[T, override()]` is now recognized and can be used to customize
         unstructuring.
     """

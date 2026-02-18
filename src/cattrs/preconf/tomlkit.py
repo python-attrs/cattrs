@@ -39,7 +39,7 @@ def configure_converter(converter: BaseConverter):
     * tuples are serializas as lists
     * mapping keys are coerced into strings when unstructuring
 
-    .. versionchanged:: NEXT
+    .. versionchanged:: 26.1.0
         date objects are now passed through to tomlkit without unstructuring.
     """
     converter.register_structure_hook(bytes, lambda v, _: b85decode(v))

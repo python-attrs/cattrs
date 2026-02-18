@@ -442,7 +442,7 @@ The danger is not any single compromise, but their accumulation.
 One of the most important skills as a software engineer is knowing when the cost of a trade-off has crossed the line and it's time to do things properly.
 ```
 
-```{versionadded} NEXT
+```{versionadded} 26.1.0
 
 ```
 

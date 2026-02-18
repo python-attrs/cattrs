@@ -11,7 +11,7 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
-## NEXT (UNRELEASED)
+## 26.1.0 (2026-02-18)
 
 - Add the {mod}`tomllib <cattrs.preconf.tomllib>` preconf converter.
   See [here](https://catt.rs/en/latest/preconf.html#tomllib) for details.

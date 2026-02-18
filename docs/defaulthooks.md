@@ -622,7 +622,7 @@ The {mod}`cattrs.cols` module contains hook factories for un/structuring named t
 
 Additionally, `typing.Annotated` types containing `cattrs.override()` are recognized and used by the _attrs_, dataclass, TypedDict and dict NamedTuple hook factories.
 
-```{versionchanged} NEXT
+```{versionchanged} 26.1.0
 `Annotated[T, override()]` is now used by the _attrs_, dataclass, TypedDict and dict NamedTuple hook factories.
 ```
 
