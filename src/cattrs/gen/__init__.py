@@ -53,7 +53,9 @@ __all__ = [
 def override(
     omit_if_default: bool | None = None,
     rename: str | None = None,
+    location: str | tuple[str] | None = None,
     omit: bool | None = None,
+    omit_if: Callable[[Any, Any, Any], bool] | bool | None = None,
     struct_hook: Callable[[Any, Any], Any] | None = None,
     unstruct_hook: Callable[[Any], Any] | None = None,
 ) -> AttributeOverride:
@@ -61,7 +63,9 @@ def override(
 
     :param omit: Whether to skip the field or not. `None` means apply default handling.
     """
-    return AttributeOverride(omit_if_default, rename, omit, struct_hook, unstruct_hook)
+    return AttributeOverride(
+        omit_if_default, rename, location, omit, omit_if, struct_hook, unstruct_hook
+    )
 
 
 T = TypeVar("T")
@@ -73,6 +77,7 @@ def make_dict_unstructure_fn_from_attrs(
     converter: BaseConverter,
     typevar_map: dict[str, Any] = {},
     _cattrs_omit_if_default: bool = False,
+    _cattrs_omit_if: Callable[[Any, Any, Any], bool] | None = None,
     _cattrs_use_linecache: bool = True,
     _cattrs_use_alias: bool | Literal["from_converter"] = "from_converter",
     _cattrs_include_init_false: bool = False,
@@ -88,8 +93,10 @@ def make_dict_unstructure_fn_from_attrs(
 
     :param cl: The class for which the function is generated; used mostly for its name,
         module name and qualname.
-    :param _cattrs_omit_if_default: if true, attributes equal to their default values
+    :param _cattrs_omit_if_default: If true, attributes equal to their default values
         will be omitted in the result dictionary.
+    :param _cattrs_omit: Omits the attribute (at runtime) if the passed-in value
+        evaluates to true.
     :param _cattrs_use_alias: If true, the attribute alias will be used as the
         dictionary key by default.
     :param _cattrs_include_init_false: If true, _attrs_ fields marked as `init=False`
@@ -138,6 +145,7 @@ def make_dict_unstructure_fn_from_attrs(
         else:
             kn = override.rename
         d = a.default
+        omit_if = _cattrs_omit_if if override.omit_if is None else override.omit_if
 
         # For each attribute, we try resolving the type here and now.
         # If a type is manually overwritten, this function should be
@@ -219,6 +227,20 @@ def make_dict_unstructure_fn_from_attrs(
             lines.append(f"  if instance.{attr_name} != {def_str}:")
             lines.append(f"    res['{kn}'] = {invoke}")
 
+        elif omit_if:  # callable
+            omit_callable = f"__c_omit_{attr_name}"
+            attr_attr = f"__c_attr_{attr_name}"
+
+            lines.append(
+                f"  if not {omit_callable}(instance, {attr_attr}, instance.{attr_name}):"
+            )
+            lines.append(f"    res['{kn}'] = {invoke}")
+
+            globs[omit_callable] = (
+                omit_if  # _cattrs_omit_if if override.omit_if is None else override.omit_if
+            )
+            globs[attr_attr] = a
+
         else:
             # No default or no override.
             invocation_lines.append(f"'{kn}': {invoke},")
@@ -254,6 +276,7 @@ def make_dict_unstructure_fn(
     cl: type[T],
     converter: BaseConverter,
     _cattrs_omit_if_default: bool = False,
+    _cattrs_omit_if: Callable[[Any, Any, Any], bool] | bool | None = None,
     _cattrs_use_linecache: bool = True,
     _cattrs_use_alias: bool | Literal["from_converter"] = "from_converter",
     _cattrs_include_init_false: bool = False,
@@ -314,6 +337,7 @@ def make_dict_unstructure_fn(
             converter,
             mapping,
             _cattrs_omit_if_default=_cattrs_omit_if_default,
+            _cattrs_omit_if=_cattrs_omit_if,
             _cattrs_use_linecache=_cattrs_use_linecache,
             _cattrs_use_alias=_cattrs_use_alias,
             _cattrs_include_init_false=_cattrs_include_init_false,
