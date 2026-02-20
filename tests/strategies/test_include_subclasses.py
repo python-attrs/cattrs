@@ -6,11 +6,11 @@ from functools import partial
 from typing import Any
 
 import pytest
-from attrs import define, has, frozen
+from attrs import define, frozen, has
 
 from cattrs import Converter, override
-from cattrs.gen import make_dict_structure_fn
 from cattrs.errors import ClassValidationError, StructureHandlerNotFoundError
+from cattrs.gen import make_dict_structure_fn
 from cattrs.strategies import configure_tagged_union, include_subclasses
 
 from .._compat import is_py311_plus
@@ -540,6 +540,11 @@ def test_diamond_inheritance(genconverter: Converter):
 
 
 def test_subclasses_in_struct_factory():
+    """
+    Check the structuring does not fail with an attribute error when include_subclasses
+    is called within a structure_hook_factory on a complex class tree involving
+    subclasses several levels deep (#721)
+    """
 
     @frozen
     class SubA:
