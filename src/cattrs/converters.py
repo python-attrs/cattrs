@@ -435,6 +435,7 @@ class BaseConverter:
                     self._unstructure_func.register_func_list(
                         [(predicate, factory, True)]
                     )
+                return factory
 
             return decorator
 
@@ -573,6 +574,7 @@ class BaseConverter:
                     self._structure_func.register_func_list(
                         [(predicate, factory, True)]
                     )
+                return factory
 
             return decorator
         self._structure_func.register_func_list(
