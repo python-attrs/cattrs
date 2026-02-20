@@ -15,6 +15,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 - Fix an `AttributeError` in `cattrs` internals that could be triggered by using the `include_subclasses` strategy in a `structure_hook_factory`
   ([#721](https://github.com/python-attrs/cattrs/issues/721), [#722](https://github.com/python-attrs/cattrs/pull/722))
+- Fix the `detailed_validation` parameter being passed under the wrong name in {func}`namedtuple_dict_structure_factory <cattrs.cols.namedtuple_dict_structure_factory>`, causing it to be silently ignored.
+  ([#723](https://github.com/python-attrs/cattrs/pull/723))
 
 ## 26.1.0 (2026-02-18)
 

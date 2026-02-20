@@ -141,3 +141,31 @@ def test_dict_nametuples_forbid_extra_keys(genconverter: Converter):
 
     assert isinstance(exc, ForbiddenExtraKeysError)
     assert exc.extra_fields == {"b"}
+
+
+def test_dict_namedtuples_detailed_validation():
+    """Passing detailed_validation to namedtuple_dict_structure_factory works.
+
+    Regression test for the parameter being passed under the wrong name.
+    """
+
+    class Test(NamedTuple):
+        a: int
+
+    # Create a converter that does NOT use detailed validation by default.
+    c = Converter(detailed_validation=False)
+
+    # But explicitly enable it in the factory.
+    c.register_structure_hook_factory(
+        lambda t: t is Test,
+        lambda t, conv: namedtuple_dict_structure_factory(
+            t, conv, detailed_validation=True
+        ),
+    )
+
+    # With detailed validation, structuring errors should be wrapped
+    # in a ClassValidationError instead of being raised directly.
+    from cattrs.errors import ClassValidationError
+
+    with raises(ClassValidationError):
+        c.structure({"a": "not_an_int"}, Test)
