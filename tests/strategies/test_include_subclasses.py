@@ -540,13 +540,29 @@ def test_diamond_inheritance(genconverter: Converter):
 
 
 def test_subclasses_in_struct_factory():
+
+    @frozen
+    class SubA:
+        id: int
+        sub_a: str
+
+    @frozen
+    class SubA1(SubA):
+        pass
+
     @frozen
     class A:
         """Base class"""
 
+        s: SubA
+
     @frozen
     class A1(A):
         a1: int
+
+    @frozen
+    class A2(A):
+        a2: int
 
     @frozen
     class B:
@@ -586,11 +602,21 @@ def test_subclasses_in_struct_factory():
 
     unstructured = {
         "id": 0,
-        "c": {"id": 1, "a": {"type": "A1", "a1": 42}, "b": {"id": 2, "b": "hello"}},
+        "c": {
+            "id": 1,
+            "a": {
+                "type": "A1",
+                "s": {"type": "SubA1", "id": 2, "sub_a": "a"},
+                "a1": 42,
+            },
+            "b": {"id": 3, "b": "hello"},
+        },
         "foo": "world",
     }
     res = converter.structure(unstructured, Container2)
 
     assert res == Container2(
-        id=0, c=Container1(id=1, a=A1(a1=42), b=B(id=2, b="Hello"), foo="world")
+        id=0,
+        c=Container1(id=1, a=A1(s=SubA1(id=2, sub_a="a"), a1=42), b=B(id=3, b="hello")),
+        foo="world",
     )
