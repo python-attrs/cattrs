@@ -11,6 +11,11 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
+## NEXT
+
+- Fix the `detailed_validation` parameter being passed under the wrong name in {func}`namedtuple_dict_structure_factory <cattrs.cols.namedtuple_dict_structure_factory>`, causing it to be silently ignored.
+  ([#723](https://github.com/python-attrs/cattrs/pull/723))
+
 ## 26.1.0 (2026-02-18)
 
 - Add the {mod}`tomllib <cattrs.preconf.tomllib>` preconf converter.
