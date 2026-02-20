@@ -6,10 +6,11 @@ from functools import partial
 from typing import Any
 
 import pytest
-from attrs import define
+from attrs import define, frozen, has
 
 from cattrs import Converter, override
 from cattrs.errors import ClassValidationError, StructureHandlerNotFoundError
+from cattrs.gen import make_dict_structure_fn
 from cattrs.strategies import configure_tagged_union, include_subclasses
 
 from .._compat import is_py311_plus
@@ -536,3 +537,91 @@ def test_diamond_inheritance(genconverter: Converter):
     assert genconverter.structure({"_type": "Sub"}, Base) == Sub()
     assert genconverter.structure({"_type": "Mid1"}, Base) == Mid1()
     assert genconverter.structure({"_type": "Mid2"}, Base) == Mid2()
+
+
+def test_subclasses_in_struct_factory():
+    """
+    Check the structuring does not fail with an attribute error when include_subclasses
+    is called within a structure_hook_factory on a complex class tree involving
+    subclasses several levels deep (#721)
+    """
+
+    @frozen
+    class SubA:
+        id: int
+        sub_a: str
+
+    @frozen
+    class SubA1(SubA):
+        pass
+
+    @frozen
+    class A:
+        """Base class"""
+
+        s: SubA
+
+    @frozen
+    class A1(A):
+        a1: int
+
+    @frozen
+    class A2(A):
+        a2: int
+
+    @frozen
+    class B:
+        id: int
+        b: str
+
+    @frozen
+    class Container1:
+        id: int
+        a: A
+        b: B
+
+    @frozen
+    class Container2:
+        id: int
+        c: Container1
+        foo: str
+
+    def struct_hook_factory(cl, converter: Converter):
+        struct_hook = make_dict_structure_fn(cl, converter)
+        if not cl.__subclasses__():
+            converter.register_structure_hook(cl, struct_hook)
+
+        else:
+
+            def cls_is_cl(cls, _cl=cl):
+                return cls is _cl
+
+            converter.register_structure_hook_func(cls_is_cl, struct_hook)
+            union_strategy = partial(configure_tagged_union, tag_name="type")
+            include_subclasses(cl, converter, union_strategy=union_strategy)
+
+        return converter.get_structure_hook(cl)
+
+    converter = Converter()
+    converter.register_structure_hook_factory(has, struct_hook_factory)
+
+    unstructured = {
+        "id": 0,
+        "c": {
+            "id": 1,
+            "a": {
+                "type": "A1",
+                "s": {"type": "SubA1", "id": 2, "sub_a": "a"},
+                "a1": 42,
+            },
+            "b": {"id": 3, "b": "hello"},
+        },
+        "foo": "world",
+    }
+    res = converter.structure(unstructured, Container2)
+
+    assert res == Container2(
+        id=0,
+        c=Container1(id=1, a=A1(s=SubA1(id=2, sub_a="a"), a1=42), b=B(id=3, b="hello")),
+        foo="world",
+    )
