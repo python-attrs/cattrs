@@ -277,7 +277,7 @@ def namedtuple_dict_structure_factory(
             cl,
             converter,
             _cattrs_forbid_extra_keys=forbid_extra_keys,
-            _cattrs_use_detailed_validation=detailed_validation,
+            _cattrs_detailed_validation=detailed_validation,
             _cattrs_use_linecache=use_linecache,
             **kwargs,
         )
