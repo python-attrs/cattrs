@@ -11,6 +11,11 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
+## NEXT (UNRELEASED)
+
+- Fix an `AttributeError` in `cattrs` internals that could be triggered by using the `include_subclasses` strategy in a `structure_hook_factory`
+  ([#721](https://github.com/python-attrs/cattrs/issues/721), [#722](https://github.com/python-attrs/cattrs/pull/722))
+
 ## 26.1.0 (2026-02-18)
 
 - Add the {mod}`tomllib <cattrs.preconf.tomllib>` preconf converter.
