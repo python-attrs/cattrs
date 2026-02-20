@@ -104,6 +104,7 @@ tomllib = [
 addopts = "-l --benchmark-sort=fullname --benchmark-warmup=true --benchmark-warmup-iterations=5  --benchmark-group-by=fullname"
 
 [tool.coverage.run]
+branch = true
 parallel = true
 source_pkgs = ["cattrs", "tests"]
 core = "sysmon"
