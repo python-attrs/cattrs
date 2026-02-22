@@ -191,6 +191,14 @@ def _include_subclasses_with_union_strategy(
 
     original_unstruct_hooks = {}
     original_struct_hooks = {}
+
+    # Save the existing working_set so we can restore it after the loop.
+    # include_subclasses may be called while make_dict_structure_fn is
+    # already generating hooks for outer classes (via a hook factory),
+    # so we must not clobber the outer working_set.
+    _had_working_set = hasattr(already_generating, "working_set")
+    _prev_working_set = getattr(already_generating, "working_set", None)
+
     for cl in union_classes:
         # In the first pass, every class gets its own unstructure function according to
         # the overrides.
@@ -208,6 +216,12 @@ def _include_subclasses_with_union_strategy(
             already_generating.working_set = set()
         original_unstruct_hooks[cl] = unstruct_hook
         original_struct_hooks[cl] = struct_hook
+
+    # Restore the previous working_set state.
+    if _had_working_set:
+        already_generating.working_set = _prev_working_set
+    elif hasattr(already_generating, "working_set"):
+        del already_generating.working_set
 
     # Now that's done, we can register all the hooks and generate the
     # union handler. The union handler needs them.
