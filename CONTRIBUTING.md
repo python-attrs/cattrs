@@ -3,6 +3,9 @@
 Contributions are welcome, and they are greatly appreciated!
 Every little bit helps, and credit will always be given.
 
+> [!IMPORTANT]
+> If you use LLM / "AI" tools for your contributions, please read and follow our [_Generative AI / LLM Policy_][llm].
+
 You can contribute in many ways:
 
 ## Types of Contributions
@@ -99,14 +102,16 @@ $ git push origin name-of-your-bugfix-or-feature
 
 Before you submit a pull request, check that it meets these guidelines:
 
-1. The pull request should include tests.
-2. If the pull request adds functionality, the docs should be updated. Put
+1. **Only contribute code that you fully understand.**
+   See also our [AI policy][llm].
+2. The pull request should include tests.
+3. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
-3. The pull request should work for all supported Python versions. Check
+4. The pull request should work for all supported Python versions. Check
    [https://github.com/python-attrs/cattrs/actions](https://github.com/python-attrs/cattrs/actions)
    and make sure that the tests pass for all supported Python versions.
-4. Don't forget to add a line to HISTORY.md.
+5. Don't forget to add a line to HISTORY.md.
 
 ## Tips
 
@@ -115,3 +120,5 @@ To run a subset of tests:
 ```shell
 $ just test tests/test_unstructure.py
 ```
+
+[llm]: AI_POLICY.md
