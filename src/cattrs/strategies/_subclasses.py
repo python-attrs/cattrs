@@ -191,6 +191,11 @@ def _include_subclasses_with_union_strategy(
 
     original_unstruct_hooks = {}
     original_struct_hooks = {}
+
+    original_working_set = None
+    if hasattr(already_generating, "working_set"):
+        original_working_set = already_generating.working_set.copy()
+
     for cl in union_classes:
         # In the first pass, every class gets its own unstructure function according to
         # the overrides.
@@ -208,6 +213,9 @@ def _include_subclasses_with_union_strategy(
             already_generating.working_set = set()
         original_unstruct_hooks[cl] = unstruct_hook
         original_struct_hooks[cl] = struct_hook
+
+    if original_working_set is not None:
+        already_generating.working_set = original_working_set
 
     # Now that's done, we can register all the hooks and generate the
     # union handler. The union handler needs them.
