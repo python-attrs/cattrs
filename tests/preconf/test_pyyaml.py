@@ -8,7 +8,7 @@ from pytest import raises
 from yaml import safe_dump, safe_load
 
 from cattrs._compat import FrozenSetSubscriptable
-from cattrs.errors import ClassValidationError
+from cattrs.errors import CattrsError, ClassValidationError
 from cattrs.preconf.pyyaml import make_converter
 
 from ..test_preconf import Everything, everythings, native_unions
@@ -70,13 +70,15 @@ def test_pyyaml_dates(detailed_validation: bool):
     date: 1
     """
 
-    with raises(ClassValidationError if detailed_validation else Exception) as exc_info:
+    with raises(
+        ClassValidationError if detailed_validation else CattrsError
+    ) as exc_info:
         converter.loads(bad_data, A)
 
     if detailed_validation:
         assert (
             repr(exc_info.value.exceptions[0])
-            == "Exception('Expected datetime, got 1')"
+            == "CattrsError('Expected datetime, got 1')"
         )
         assert (
             repr(exc_info.value.exceptions[1]) == "ValueError('Expected date, got 1')"
