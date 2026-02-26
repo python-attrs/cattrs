@@ -15,6 +15,9 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 - Fix an `AttributeError` in `cattrs` internals that could be triggered by using the `include_subclasses` strategy in a `structure_hook_factory`
   ([#721](https://github.com/python-attrs/cattrs/issues/721), [#722](https://github.com/python-attrs/cattrs/pull/722))
+- Add `CattrsError` exception type: all exceptions raised by `cattrs` inherit from this
+  ([#728](https://github.com/python-attrs/cattrs/pull/728))
+  - Literal and date-time validation raise this directly, instead of `Exception`
 
 ## 26.1.0 (2026-02-18)
 
