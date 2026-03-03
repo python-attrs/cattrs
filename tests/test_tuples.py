@@ -11,7 +11,7 @@ from cattrs.cols import (
     namedtuple_dict_unstructure_factory,
 )
 from cattrs.converters import Converter
-from cattrs.errors import ForbiddenExtraKeysError
+from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
 
 
 def test_simple_hetero_tuples(genconverter: Converter):
@@ -158,14 +158,11 @@ def test_dict_namedtuples_detailed_validation():
     # But explicitly enable it in the factory.
     c.register_structure_hook_factory(
         lambda t: t is Test,
-        lambda t, conv: namedtuple_dict_structure_factory(
-            t, conv, detailed_validation=True
-        ),
+        lambda t, conv: namedtuple_dict_structure_factory(t, conv, True),
     )
 
     # With detailed validation, structuring errors should be wrapped
     # in a ClassValidationError instead of being raised directly.
-    from cattrs.errors import ClassValidationError
 
     with raises(ClassValidationError):
         c.structure({"a": "not_an_int"}, Test)
