@@ -7,7 +7,7 @@ sync version="":
 
 lint:
 	uv run -p python3.14 --group lint ruff check src/ tests bench
-	uv run -p python3.14 --group lint black --check src tests docs/conf.py
+	uv run -p python3.14 --group lint ruff format --check src tests docs/conf.py
 
 test *args="-x --ff -n auto tests":
     uv run {{ if python != '' { '-p ' + python } else { '' } }} --all-extras --group test --group lint pytest {{args}}

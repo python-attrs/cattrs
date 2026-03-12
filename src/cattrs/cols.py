@@ -178,7 +178,6 @@ def homogenous_tuple_structure_factory(
         handler = converter.structure
 
     if converter.detailed_validation:
-
         # We have to structure into a list first anyway.
         list_structure = list_structure_factory(type, converter)
 

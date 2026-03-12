@@ -798,7 +798,6 @@ def test_tomlkit_date_strings():
     booleans(),
 )
 def test_tomllib_converter(everything: Everything, detailed_validation: bool):
-
     converter = tomllib_make_converter(detailed_validation=detailed_validation)
     raw = converter.dumps(everything)
 

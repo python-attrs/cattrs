@@ -67,4 +67,3 @@ settings.json
 .editorconfig
 .mypy_cache
 .pytest_cache
-.pdm-python

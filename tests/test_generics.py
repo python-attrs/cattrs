@@ -320,7 +320,6 @@ def test_roundtrip_generic_with_union() -> None:
 
 @pytest.mark.skipif(not is_py311_plus, reason="3.11+ only")
 def test_generate_typeddict_mapping() -> None:
-
     T = TypeVar("T")
     U = TypeVar("U")
 
