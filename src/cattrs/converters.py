@@ -79,6 +79,7 @@ from .dispatch import (
 )
 from .enums import enum_structure_factory, enum_unstructure_factory
 from .errors import (
+    CattrsError,
     IterableValidationError,
     IterableValidationNote,
     StructureHandlerNotFoundError,
@@ -708,7 +709,7 @@ class BaseConverter:
     @staticmethod
     def _structure_simple_literal(val, type):
         if val not in type.__args__:
-            raise Exception(f"{val} not in literal {type}")
+            raise CattrsError(f"{val} not in literal {type}")
         return val
 
     @staticmethod
@@ -717,7 +718,7 @@ class BaseConverter:
         try:
             return vals[val]
         except KeyError:
-            raise Exception(f"{val} not in literal {type}") from None
+            raise CattrsError(f"{val} not in literal {type}") from None
 
     def _structure_newtype(self, val: UnstructuredValue, type) -> StructuredValue:
         base = get_newtype_base(type)

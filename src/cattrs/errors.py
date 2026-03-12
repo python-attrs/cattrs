@@ -6,7 +6,11 @@ from typing_extensions import Self
 from cattrs._compat import ExceptionGroup
 
 
-class StructureHandlerNotFoundError(Exception):
+class CattrsError(Exception):
+    """Base ``cattrs`` exception."""
+
+
+class StructureHandlerNotFoundError(CattrsError):
     """
     Error raised when structuring cannot find a handler for converting inputs into
     :attr:`type_`.
@@ -21,7 +25,7 @@ class StructureHandlerNotFoundError(Exception):
         return self.message
 
 
-class BaseValidationError(ExceptionGroup):
+class BaseValidationError(ExceptionGroup, CattrsError):
     cl: type
 
     def __new__(cls, message: str, excs: Sequence[Exception], cl: type) -> Self:
@@ -111,7 +115,7 @@ class ClassValidationError(BaseValidationError):
         return excs_with_notes, other_excs
 
 
-class ForbiddenExtraKeysError(Exception):
+class ForbiddenExtraKeysError(CattrsError):
     """
     Raised when `forbid_extra_keys` is activated and such extra keys are detected
     during structuring.

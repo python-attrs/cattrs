@@ -5,12 +5,13 @@ from typing import Any, ParamSpec, TypeVar, get_args
 
 from .._compat import is_subclass
 from ..converters import Converter, UnstructureHook
+from ..errors import CattrsError
 from ..fns import identity
 
 
 def validate_datetime(v, _):
     if not isinstance(v, datetime):
-        raise Exception(f"Expected datetime, got {v}")
+        raise CattrsError(f"Expected datetime, got {v}")
     return v
 
 

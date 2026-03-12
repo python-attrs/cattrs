@@ -8,6 +8,7 @@ from pytest import raises
 
 from cattrs import BaseConverter
 from cattrs._compat import Literal
+from cattrs.errors import CattrsError
 
 from .untyped import enums_of_primitives
 
@@ -27,7 +28,7 @@ def test_enum_failure(enum):
     converter = BaseConverter()
     type = Literal[next(iter(enum))]
 
-    with raises(Exception) as exc_info:
+    with raises(CattrsError) as exc_info:
         converter.structure("", type)
 
     assert exc_info.value.args[0] == f" not in literal {type!r}"
