@@ -144,7 +144,7 @@ select = [
     "I",   # isort
 ]
 ignore = [
-    "E501",   # line length is handled by black
+    "E501",   # line length is handled by the formatter
     "RUF001", # leave my smart characters alone
     "S101",   # assert
     "S307",   # hands off my eval
@@ -157,7 +157,6 @@ ignore = [
     "UP006",  # We support old typing constructs at runtime
     "UP007",  # We support old typing constructs at runtime
     "UP035",  # We support old typing constructs at runtime
-    "UP038",  # Dubious rule
     "UP045",  # We support old typing constructs at runtime
 ]
 

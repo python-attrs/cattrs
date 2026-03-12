@@ -21,6 +21,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 - Fix the `detailed_validation` parameter being passed under the wrong name in {func}`namedtuple_dict_structure_factory <cattrs.cols.namedtuple_dict_structure_factory>`, causing it to be silently ignored.
   ([#723](https://github.com/python-attrs/cattrs/pull/723))
 - _cattrs_ is now autoformatted using Ruff.
+  ([#732](https://github.com/python-attrs/cattrs/pull/732))
 
 ## 26.1.0 (2026-02-18)
 
