@@ -16,7 +16,6 @@ from ..test_preconf import Everything, everythings, native_unions
 
 @given(everythings())
 def test_pyyaml(everything: Everything):
-
     converter = make_converter()
     unstructured = converter.unstructure(everything)
     raw = safe_dump(unstructured)

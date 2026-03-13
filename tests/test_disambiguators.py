@@ -162,7 +162,7 @@ def test_fallback(cl_and_vals):
 def test_disambiguation(cl_and_vals_a, cl_and_vals_b):
     """Disambiguation should work when there are unique required fields."""
     cl_a, vals_a, kwargs_a = cl_and_vals_a
-    cl_b, vals_b, kwargs_b = cl_and_vals_b
+    cl_b, _, _ = cl_and_vals_b
     c = Converter()
 
     req_a = {a.name for a in fields(cl_a)}

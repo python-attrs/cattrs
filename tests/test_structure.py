@@ -211,7 +211,7 @@ def test_structuring_dicts_opts(dict_and_type, data):
 @given(dicts_of_primitives)
 def test_stringifying_dicts(dict_and_type):
     converter = BaseConverter()
-    d, t = dict_and_type
+    d, _ = dict_and_type
 
     converted = converter.structure(d, Dict[str, str])
 
@@ -267,7 +267,7 @@ def test_structuring_lists_of_opt(list_and_type, detailed_validation: bool) -> N
 def test_stringifying_lists_of_opt(list_and_type):
     """Test structuring Optional primitive types into strings."""
     converter = BaseConverter()
-    lst, t = list_and_type
+    lst, _ = list_and_type
 
     lst.append(None)
 

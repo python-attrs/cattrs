@@ -86,7 +86,7 @@ def test_structure_union(cl_and_vals_a, cl_and_vals_b):
     """Structuring of automatically-disambiguable unions works."""
     converter = BaseConverter()
     cl_a, vals_a, kwargs_a = cl_and_vals_a
-    cl_b, vals_b, kwargs_b = cl_and_vals_b
+    cl_b, _, _ = cl_and_vals_b
     a_field_names = {a.name for a in fields(cl_a)}
     b_field_names = {a.name for a in fields(cl_b)}
     assume(a_field_names)
@@ -126,7 +126,7 @@ def test_structure_union_explicit(cl_and_vals_a, cl_and_vals_b):
     """Structuring of manually-disambiguable unions works."""
     converter = BaseConverter()
     cl_a, vals_a, kwargs_a = cl_and_vals_a
-    cl_b, vals_b, kwargs_b = cl_and_vals_b
+    cl_b, _, _ = cl_and_vals_b
 
     def dis(obj, _):
         return converter.structure(obj, cl_a)

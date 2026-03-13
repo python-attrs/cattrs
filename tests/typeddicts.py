@@ -237,7 +237,7 @@ def generic_typeddicts(draw: DrawFn, total: bool = True) -> tuple[TypedDictType,
     actual_types = []
     for ix, (attr_name, attr_type) in enumerate(list(attrs_dict.items())):
         if ix in generic_attrs:
-            typevar = TypeVar(f"T{ix+1}")
+            typevar = TypeVar(f"T{ix + 1}")
             generics.append(typevar)
             if total and draw(booleans()):
                 # We might decide to make these NotRequired

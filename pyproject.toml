@@ -1,9 +1,5 @@
-[tool.black]
-skip-magic-trailing-comma = true
-
 [dependency-groups]
 lint = [
-    "black>=25.1.0",
     "ruff>=0.12.2",
 ]
 test = [
@@ -148,7 +144,7 @@ select = [
     "I",   # isort
 ]
 ignore = [
-    "E501",   # line length is handled by black
+    "E501",   # line length is handled by the formatter
     "RUF001", # leave my smart characters alone
     "S101",   # assert
     "S307",   # hands off my eval
@@ -161,13 +157,18 @@ ignore = [
     "UP006",  # We support old typing constructs at runtime
     "UP007",  # We support old typing constructs at runtime
     "UP035",  # We support old typing constructs at runtime
-    "UP038",  # Dubious rule
     "UP045",  # We support old typing constructs at runtime
 ]
 
 [tool.ruff.lint.pyupgrade]
 # Preserve types, even if a file imports `from __future__ import annotations`.
 keep-runtime-typing = true
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
+
+[tool.ruff.format]
+skip-magic-trailing-comma = true
 
 [tool.hatch.version]
 source = "vcs"
