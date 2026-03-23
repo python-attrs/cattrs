@@ -2,8 +2,15 @@
 
 from typing import Generic, Mapping, NewType, Tuple, TypeVar
 
+from pytest import raises
+
 from cattrs import Converter
-from cattrs.gen import make_hetero_tuple_unstructure_fn, make_mapping_structure_fn
+from cattrs.errors import IterableValidationError
+from cattrs.gen import (
+    make_hetero_tuple_structure_fn,
+    make_hetero_tuple_unstructure_fn,
+    make_mapping_structure_fn,
+)
 
 
 def test_structuring_mappings(genconverter: Converter):
@@ -30,3 +37,23 @@ def test_unstructure_hetero_tuple_to_tuple(genconverter: Converter):
     fn = make_hetero_tuple_unstructure_fn(Tuple[int, str, int], genconverter, tuple)
 
     assert fn((1, "1", 2)) == (1, "1", 2)
+
+
+def test_structure_hetero_tuple(genconverter: Converter):
+    """`make_hetero_tuple_structure_fn` structures heterogeneous tuples."""
+    fn = make_hetero_tuple_structure_fn(tuple[int, str], genconverter)
+
+    assert fn(["1", 2], tuple[int, str]) == (1, "2")
+
+
+def test_structure_hetero_tuple_validation():
+    """`make_hetero_tuple_structure_fn` preserves detailed validation."""
+    conv = Converter()
+    fn = make_hetero_tuple_structure_fn(Tuple[int, int], conv)
+
+    with raises(IterableValidationError) as exc:
+        fn(["1", "a"], Tuple[int, int])
+
+    assert exc.value.exceptions[0].__notes__ == [
+        "Structuring typing.Tuple[int, int] @ index 1"
+    ]

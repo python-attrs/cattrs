@@ -92,11 +92,13 @@ from .errors import (
 from .fns import Predicate, identity, raise_error
 from .gen import (
     AttributeOverride,
+    HeteroTupleStructureFn,
     HeteroTupleUnstructureFn,
     IterableUnstructureFn,
     MappingUnstructureFn,
     make_dict_structure_fn,
     make_dict_unstructure_fn,
+    make_hetero_tuple_structure_fn,
     make_hetero_tuple_unstructure_fn,
 )
 from .gen.typeddicts import make_dict_structure_fn as make_typeddict_dict_struct_fn
@@ -909,6 +911,12 @@ class BaseConverter:
         # We can't actually have a Union of a Union, so this is safe.
         return self._structure_func.dispatch(other)(obj, other)
 
+    def gen_structure_hetero_tuple(self, cl: Any) -> HeteroTupleStructureFn:
+        """Generate a heterogeneous tuple structure function."""
+        return make_hetero_tuple_structure_fn(
+            cl, self, detailed_validation=self.detailed_validation
+        )
+
     def _structure_tuple(self, obj: Iterable, tup: type[T]) -> T:
         """Deal with structuring into a tuple."""
         tup_params = None if tup in (Tuple, tuple) else tup.__args__
@@ -1195,6 +1203,9 @@ class Converter(BaseConverter):
         )
 
         self.register_structure_hook_factory(is_annotated, self.gen_structure_annotated)
+        self.register_structure_hook_factory(
+            is_hetero_tuple, self.gen_structure_hetero_tuple
+        )
         self.register_structure_hook_factory(is_mapping, self.gen_structure_mapping)
         self.register_structure_hook_factory(is_counter, self.gen_structure_counter)
         self.register_structure_hook_factory(
