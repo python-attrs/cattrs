@@ -43,6 +43,7 @@ __all__ = [
     "make_dict_structure_fn_from_attrs",
     "make_dict_unstructure_fn",
     "make_dict_unstructure_fn_from_attrs",
+    "make_hetero_tuple_structure_fn",
     "make_hetero_tuple_unstructure_fn",
     "make_iterable_unstructure_fn",
     "make_mapping_structure_fn",
@@ -852,6 +853,107 @@ IterableUnstructureFn = Callable[[Iterable[Any]], Any]
 
 #: A type alias for heterogeneous tuple unstructure hooks.
 HeteroTupleUnstructureFn: TypeAlias = Callable[[tuple[Any, ...]], Any]
+HeteroTupleStructureFn: TypeAlias = Callable[[Iterable[Any], Any], tuple[Any, ...]]
+
+
+def make_hetero_tuple_structure_fn(
+    cl: Any,
+    converter: BaseConverter,
+    detailed_validation: bool | Literal["from_converter"] = "from_converter",
+    use_linecache: bool = True,
+) -> HeteroTupleStructureFn:
+    """Generate a specialized structuring function for a heterogenous tuple.
+
+    ..  versionadded:: NEXT
+    """
+    fn_name = "structure_tuple"
+
+    if detailed_validation == "from_converter":
+        detailed_validation = converter.detailed_validation
+
+    type_args = get_args(cl)
+    globs = {}
+    lines = []
+    internal_arg_parts = {"__cl": cl}
+
+    if detailed_validation:
+        internal_arg_parts["__c_ive"] = IterableValidationError
+        internal_arg_parts["__c_ivn"] = IterableValidationNote
+        lines.extend(["  errors = []", "  res = []"])
+
+        for ix, t in enumerate(type_args):
+            handler = converter.get_structure_hook(t)
+            struct_handler_name = f"__c_structure_{ix}"
+            type_name = f"__c_type_{ix}"
+            internal_arg_parts[struct_handler_name] = handler
+            internal_arg_parts[type_name] = t
+            if handler == converter._structure_call:
+                internal_arg_parts[struct_handler_name] = t
+                invocation = f"{struct_handler_name}(o[{ix}])"
+            else:
+                invocation = f"{struct_handler_name}(o[{ix}], {type_name})"
+            lines.extend(
+                [
+                    f"  if len(o) > {ix}:",
+                    "    try:",
+                    f"      res.append({invocation})",
+                    "    except Exception as e:",
+                    (
+                        f"      e.__notes__ = [*getattr(e, '__notes__', []), "
+                        f"__c_ivn('Structuring {cl} @ index {ix}', {ix}, {type_name})]"
+                    ),
+                    "      errors.append(e)",
+                ]
+            )
+
+        lines.extend(
+            [
+                f"  if len(o) != {len(type_args)}:",
+                (
+                    "    problem = 'Not enough' if len(o) < "
+                    f"{len(type_args)} else 'Too many'"
+                ),
+                '    exc = ValueError(f"{problem} values in {o!r} to structure as {__cl!r}")',
+                "    exc.__notes__ = [f'Structuring {__cl}']",
+                "    errors.append(exc)",
+                "  if errors:",
+                "    raise __c_ive(f'While structuring {__cl!r}', errors, __cl)",
+                "  return tuple(res)",
+            ]
+        )
+    else:
+        for ix, t in enumerate(type_args):
+            handler = converter.get_structure_hook(t)
+            struct_handler_name = f"__c_structure_{ix}"
+            type_name = f"__c_type_{ix}"
+            internal_arg_parts[struct_handler_name] = handler
+            internal_arg_parts[type_name] = t
+            if handler == converter._structure_call:
+                internal_arg_parts[struct_handler_name] = t
+                invocation = f"{struct_handler_name}(o[{ix}])"
+            else:
+                invocation = f"{struct_handler_name}(o[{ix}], {type_name})"
+            lines.append(f"    {invocation},")
+
+        total_len = len(type_args)
+        lines = [
+            f"  if len(o) != {total_len}:",
+            (f"    problem = 'Not enough' if len(o) < {total_len} else 'Too many'"),
+            '    raise ValueError(f"{problem} values in {o!r} to structure as {__cl!r}")',
+            "  return (",
+            *lines,
+            "  )",
+        ]
+
+    internal_arg_line = ", ".join([f"{i}={i}" for i in internal_arg_parts])
+    globs.update(internal_arg_parts)
+    script = "\n".join([f"def {fn_name}(o, _=__cl, {internal_arg_line}):", *lines])
+
+    fname = generate_unique_filename(
+        cl, "structure", lines=script.splitlines() if use_linecache else []
+    )
+    eval(compile(script, fname, "exec"), globs)
+    return globs[fn_name]
 
 
 def make_hetero_tuple_unstructure_fn(
