@@ -294,6 +294,10 @@ Structuring heterogenous tuples are not supported by the BaseConverter.
 Sequences are now structured into tuples.
 ```
 
+```{versionchanged} NEXT
+The default {class}`Converter <cattrs.Converter>` now generates and caches specialized structuring hooks for heterogeneous tuples, improving repeated structuring performance.
+```
+
 ### Deques
 
 Deques can be structured from any iterable object.
