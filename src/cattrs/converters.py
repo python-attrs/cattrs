@@ -15,6 +15,11 @@ from attrs import Attribute, resolve_types
 from attrs import has as attrs_has
 from typing_extensions import Self
 
+try:
+    from annotationlib import ForwardRef as AnnotationForwardRef
+except ImportError:
+    AnnotationForwardRef = None
+
 from ._compat import (
     ANIES,
     FrozenSetSubscriptable,
@@ -897,6 +902,8 @@ class BaseConverter:
     def _structure_optional(self, obj, union):
         if obj is None:
             return None
+        if AnnotationForwardRef is not None and isinstance(union, AnnotationForwardRef):
+            union = union.evaluate()
         union_params = union.__args__
         other = union_params[0] if union_params[1] is NoneType else union_params[1]
         # We can't actually have a Union of a Union, so this is safe.
@@ -1171,6 +1178,11 @@ class Converter(BaseConverter):
             is_frozenset,
             lambda cl: self.gen_unstructure_iterable(cl, unstructure_to=frozenset),
         )
+        if AnnotationForwardRef is not None:
+            self.register_unstructure_hook_factory(
+                lambda t: isinstance(t, AnnotationForwardRef),
+                lambda t: self.get_unstructure_hook(t.evaluate()),
+            )
         self.register_unstructure_hook_factory(
             is_optional, self.gen_unstructure_optional
         )
@@ -1189,6 +1201,11 @@ class Converter(BaseConverter):
             is_defaultdict, defaultdict_structure_factory
         )
         self.register_structure_hook_factory(is_typeddict, self.gen_structure_typeddict)
+        if AnnotationForwardRef is not None:
+            self.register_structure_hook_factory(
+                lambda t: isinstance(t, AnnotationForwardRef),
+                lambda t: self.get_structure_hook(t.evaluate()),
+            )
         self.register_structure_hook_factory(
             lambda t: get_newtype_base(t) is not None, self.get_structure_newtype
         )
