@@ -13,6 +13,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT (UNRELEASED)
 
+- Support more recursive types on 3.14+ with specialized factories for [`annotationlib.ForwardRef`](https://docs.python.org/3/library/annotationlib.html#annotationlib.ForwardRef).
+  ([#740](https://github.com/python-attrs/cattrs/issues/740) [#741](https://github.com/python-attrs/cattrs/pull/741))
 - Fix an `AttributeError` in `cattrs` internals that could be triggered by using the `include_subclasses` strategy in a `structure_hook_factory`
   ([#721](https://github.com/python-attrs/cattrs/issues/721), [#722](https://github.com/python-attrs/cattrs/pull/722))
 - Add `CattrsError` exception type: all exceptions raised by `cattrs` inherit from this. 
