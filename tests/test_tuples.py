@@ -5,13 +5,31 @@ from typing import List, NamedTuple, Tuple
 from attrs import Factory, define
 from pytest import raises
 
+from cattrs import Converter
 from cattrs.cols import (
     is_namedtuple,
     namedtuple_dict_structure_factory,
     namedtuple_dict_unstructure_factory,
 )
-from cattrs.converters import Converter
-from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
+from cattrs.converters import BaseConverter
+from cattrs.errors import (
+    ClassValidationError,
+    ForbiddenExtraKeysError,
+    IterableValidationError,
+)
+
+
+def test_structuring_invalid_tuples(converter: BaseConverter):
+    """Structuring (hetero) tuples raises properly."""
+
+    if converter.detailed_validation:
+        with raises(IterableValidationError) as exc_info:
+            converter.structure(["1", 2, "c"], tuple[int, int, int])
+        assert isinstance(exc_info.value.exceptions[0], ValueError)
+    else:
+        # `int("c")` raises a ValueError
+        with raises(ValueError):
+            converter.structure(["1", 2, "c"], tuple[int, int, int])
 
 
 def test_simple_hetero_tuples(genconverter: Converter):
