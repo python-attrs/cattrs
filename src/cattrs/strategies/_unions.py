@@ -1,5 +1,6 @@
-from collections import defaultdict
-from typing import Any, Callable, Union
+import collections.abc
+from collections import defaultdict, deque
+from typing import Any, Callable, Union, get_origin
 
 from attrs import NOTHING, NothingType
 
@@ -282,3 +283,74 @@ def configure_union_passthrough(
     converter.register_structure_hook_factory(
         contains_native_union, make_structure_native_union
     )
+
+
+# Design choice: it was easy to extend the logic to deque and set types
+# but are they worth adding?
+_COLLECTION_TYPES = frozenset([
+    collections.abc.MutableSequence,
+    collections.abc.MutableSet,
+    collections.abc.Sequence,
+    collections.abc.Set,
+    deque,
+    frozenset,
+    list,
+    set,
+    tuple,
+])
+
+def configure_union_single_collection_dispatch(converter: BaseConverter):
+    def is_union_single_collection(exact_type: Any) -> bool:
+        # TODO: Handle TypeAliasType (see #742)
+
+        if not is_union_type(exact_type):
+            return False
+
+        type_args = set(exact_type.__args__)
+        if len(type_args) == 2 and type(None) in type_args:
+            # As in union_passthrough, we do not want to handle optionals
+            return False
+
+        # Design choice: only support the case where one of _COLLECTION_TYPES
+        # appears in the Union
+        collection_type_args = [
+            t
+            for t in type_args
+            if t in _COLLECTION_TYPES or get_origin(t) in _COLLECTION_TYPES
+        ]
+        return len(collection_type_args) == 1
+
+    def make_structure_union_single_collection(
+        exact_type: Any, /
+    ) -> Callable[[Any, Any], Any]:
+        # TODO: Handle TypeAliasType (see #742)
+
+        type_args = set(exact_type.__args__)
+        collection_type_arg = next(
+            t
+            for t in type_args
+            if t in _COLLECTION_TYPES or get_origin(t) in _COLLECTION_TYPES
+        )
+
+        other_type_args = [t for t in type_args if t != collection_type_arg]
+        spillover_type: Any = (
+            Union[tuple(other_type_args)]
+            if len(other_type_args) > 1
+            else other_type_args[0]
+        )
+
+        def structure_union_single_collection(
+            val: Any,
+            _: Any,
+            collection_type=collection_type_arg,
+            spillover=spillover_type,
+        ) -> Any:
+            # Design choice: only detect known concrete types as valid source types
+            # That avoids having to blacklist e.g. str or bytes
+            if isinstance(val, (deque, frozenset, list, set, tuple)):
+                return converter.structure(val, collection_type)
+            return converter.structure(val, spillover)
+
+        return structure_union_single_collection
+
+    converter.register_structure_hook_factory(is_union_single_collection, make_structure_union_single_collection)
