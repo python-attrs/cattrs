@@ -57,7 +57,7 @@ NO_ORJSON: Final = python_implementation() == "PyPy"
 
 try:
     __import__("cbor2")
-except ImportError:
+except ImportError:  # pragma: no cover
     NO_CBOR2 = True
 else:
     NO_CBOR2 = False
