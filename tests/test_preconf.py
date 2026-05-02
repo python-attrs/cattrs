@@ -45,7 +45,6 @@ from cattrs._compat import (
 )
 from cattrs.fns import identity
 from cattrs.preconf.bson import make_converter as bson_make_converter
-from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
 from cattrs.preconf.json import make_converter as json_make_converter
 from cattrs.preconf.msgpack import make_converter as msgpack_make_converter
 from cattrs.preconf.pyyaml import make_converter as pyyaml_make_converter
@@ -838,6 +837,8 @@ def test_cbor2(everything: Everything):
     from cbor2 import dumps as cbor2_dumps
     from cbor2 import loads as cbor2_loads
 
+    from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
+
     converter = cbor2_make_converter()
     raw = cbor2_dumps(converter.unstructure(everything))
     assert converter.structure(cbor2_loads(raw), Everything) == everything
@@ -845,6 +846,8 @@ def test_cbor2(everything: Everything):
 
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
 def test_cbor2_converter(everything: Everything):
+    from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
+
     converter = cbor2_make_converter()
     raw = converter.dumps(everything)
     assert converter.loads(raw, Everything) == everything
@@ -852,6 +855,8 @@ def test_cbor2_converter(everything: Everything):
 
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
 def test_cbor2_converter_unstruct_collection_overrides(everything: Everything):
+    from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
+
     converter = cbor2_make_converter(unstruct_collection_overrides={Set: sorted})
     raw = converter.unstructure(everything)
     assert raw["a_set"] == sorted(raw["a_set"])
@@ -862,6 +867,8 @@ def test_cbor2_converter_unstruct_collection_overrides(everything: Everything):
 @given(union_and_val=native_unions(include_datetimes=False), detailed_validation=...)
 def test_cbor2_unions(union_and_val: tuple, detailed_validation: bool):
     """Native union passthrough works."""
+    from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
+
     converter = cbor2_make_converter(detailed_validation=detailed_validation)
     type, val = union_and_val
 
@@ -870,6 +877,8 @@ def test_cbor2_unions(union_and_val: tuple, detailed_validation: bool):
 
 def test_cbor2_native_enums():
     """Bare, string and int enums are handled correctly."""
+
+    from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
 
     converter = cbor2_make_converter()
 
@@ -886,6 +895,8 @@ def test_cbor2_native_enums():
 
 def test_cbor2_efficient_enum():
     """`str` and `int` enums are handled efficiently."""
+    from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
+
     converter = cbor2_make_converter()
 
     assert converter.get_unstructure_hook(Everything.AnIntEnum) == identity
@@ -970,7 +981,6 @@ def test_msgspec_efficient_enum():
     "converter_factory",
     [
         bson_make_converter,
-        cbor2_make_converter,
         json_make_converter,
         msgpack_make_converter,
         tomlkit_make_converter,
@@ -984,6 +994,13 @@ def test_literal_dicts(converter_factory: Callable[[], Converter]):
 
     assert converter.structure({"a": 1}, Dict[Literal["a"], int]) == {"a": 1}
     assert converter.unstructure({"a": 1}, Dict[Literal["a"], int]) == {"a": 1}
+
+
+def test_literal_dicts_cbor2():
+    """Dicts with keys that aren't subclasses of `type` work."""
+    from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
+
+    test_literal_dicts(cbor2_make_converter)
 
 
 @pytest.mark.skipif(NO_ORJSON, reason="orjson not available")
