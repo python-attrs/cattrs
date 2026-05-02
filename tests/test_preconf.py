@@ -55,6 +55,13 @@ from cattrs.preconf.ujson import make_converter as ujson_make_converter
 NO_MSGSPEC: Final = python_implementation() == "PyPy"
 NO_ORJSON: Final = python_implementation() == "PyPy"
 
+try:
+    __import__("cbor2")
+except ImportError:
+    NO_CBOR2 = True
+else:
+    NO_CBOR2 = False
+
 
 @define
 class A:
@@ -832,6 +839,7 @@ def test_tomllib_converter_unstruct_collection_overrides(everything: Everything)
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
 
 
+@pytest.mark.skipif(NO_CBOR2, reason="cbor2 not available")
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
 def test_cbor2(everything: Everything):
     from cbor2 import dumps as cbor2_dumps
@@ -844,6 +852,7 @@ def test_cbor2(everything: Everything):
     assert converter.structure(cbor2_loads(raw), Everything) == everything
 
 
+@pytest.mark.skipif(NO_CBOR2, reason="cbor2 not available")
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
 def test_cbor2_converter(everything: Everything):
     from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
@@ -853,6 +862,7 @@ def test_cbor2_converter(everything: Everything):
     assert converter.loads(raw, Everything) == everything
 
 
+@pytest.mark.skipif(NO_CBOR2, reason="cbor2 not available")
 @given(everythings(min_int=-9223372036854775808, max_int=18446744073709551615))
 def test_cbor2_converter_unstruct_collection_overrides(everything: Everything):
     from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
@@ -864,6 +874,7 @@ def test_cbor2_converter_unstruct_collection_overrides(everything: Everything):
     assert raw["a_frozenset"] == sorted(raw["a_frozenset"])
 
 
+@pytest.mark.skipif(NO_CBOR2, reason="cbor2 not available")
 @given(union_and_val=native_unions(include_datetimes=False), detailed_validation=...)
 def test_cbor2_unions(union_and_val: tuple, detailed_validation: bool):
     """Native union passthrough works."""
@@ -875,6 +886,7 @@ def test_cbor2_unions(union_and_val: tuple, detailed_validation: bool):
     assert converter.structure(val, type) == val
 
 
+@pytest.mark.skipif(NO_CBOR2, reason="cbor2 not available")
 def test_cbor2_native_enums():
     """Bare, string and int enums are handled correctly."""
 
@@ -893,6 +905,7 @@ def test_cbor2_native_enums():
     )
 
 
+@pytest.mark.skipif(NO_CBOR2, reason="cbor2 not available")
 def test_cbor2_efficient_enum():
     """`str` and `int` enums are handled efficiently."""
     from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
@@ -996,6 +1009,7 @@ def test_literal_dicts(converter_factory: Callable[[], Converter]):
     assert converter.unstructure({"a": 1}, Dict[Literal["a"], int]) == {"a": 1}
 
 
+@pytest.mark.skipif(NO_CBOR2, reason="cbor2 not available")
 def test_literal_dicts_cbor2():
     """Dicts with keys that aren't subclasses of `type` work."""
     from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
