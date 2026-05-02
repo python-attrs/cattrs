@@ -24,6 +24,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#723](https://github.com/python-attrs/cattrs/pull/723))
 - _cattrs_ is now autoformatted using Ruff.
   ([#732](https://github.com/python-attrs/cattrs/pull/732))
+- Support running the test suite without `cbor2` installed.
+  ([#748](https://github.com/python-attrs/cattrs/pull/748))
 
 ## 26.1.0 (2026-02-18)
 
