@@ -26,6 +26,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#732](https://github.com/python-attrs/cattrs/pull/732))
 - Support running the test suite without `cbor2` installed.
   ([#748](https://github.com/python-attrs/cattrs/pull/748))
+- The [union passthrough strategy](https://catt.rs/en/stable/strategies.html#union-passthrough) now supports PEP 695 type aliases as union members.
+  ([#753](https://github.com/python-attrs/cattrs/pull/753))
 
 ## 26.1.0 (2026-02-18)
 
