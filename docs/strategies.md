@@ -367,6 +367,10 @@ The strategy also supports [NewTypes](https://mypy.readthedocs.io/en/stable/more
 12
 ```
 
+```{versionchanged} 26.2.0
+PEP 695 type aliases of supported types are supported when used as union members.
+```
+
 Unions containing unsupported types can be handled if at least one union type is supported by the strategy; the supported union types will be checked before the rest (referred to as the _spillover_) is handed over to the converter again.
 
 For example, if `A` and `B` are arbitrary _attrs_ classes, the union `Literal[10] | A | B` cannot be handled directly by a JSON converter.

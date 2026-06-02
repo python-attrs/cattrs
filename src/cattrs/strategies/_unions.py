@@ -173,6 +173,8 @@ def configure_union_passthrough(
     .. versionadded:: 23.2.0
     .. versionchanged:: 25.2.0
         Introduced the `accept_ints_as_floats` parameter.
+    .. versionchanged:: 26.2.0
+        PEP 695 type aliases are now supported as union members.
     """
 
     def get_passthrough_base(type: Any) -> Any:

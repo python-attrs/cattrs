@@ -640,6 +640,10 @@ Their hooks can also be overriden using [](customizing.md#predicate-hooks).
 Type aliases using [`typing.TypeAlias`](https://docs.python.org/3/library/typing.html#typing.TypeAlias) aren't supported since there is no way at runtime to distinguish them from their underlying types.
 ```
 
+```{versionchanged} 26.2.0
+The [union passthrough strategy](strategies.md#union-passthrough) also recognizes type aliases used as union members.
+```
+
 ```python
 >>> from datetime import datetime, UTC
 
