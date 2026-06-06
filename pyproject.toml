@@ -5,6 +5,8 @@ lint = [
 test = [
     "hypothesis>=6.135.26",
     "pytest>=8.4.1",
+    "pytest-typing",
+    "mypy",
     "pytest-benchmark>=5.1.0",
     "immutables>=0.21",
     "coverage>=7.9.2",
@@ -28,6 +30,16 @@ build-backend = "hatchling.build"
 
 [tool.mypy]
 strict = true
+
+[tool.pytest]
+addopts = [
+    "-l",
+    "--benchmark-sort=fullname",
+    "--benchmark-warmup=true",
+    "--benchmark-warmup-iterations=5",
+    "--benchmark-group-by=fullname",
+]
+typing_checkers = ["mypy"]
 
 [project]
 name = "cattrs"
@@ -95,9 +107,6 @@ tomllib = [
     "tomli>=1.1.0; python_version < '3.11'",
     "tomli-w>=1.1.0",
 ]
-
-[tool.pytest.ini_options]
-addopts = "-l --benchmark-sort=fullname --benchmark-warmup=true --benchmark-warmup-iterations=5  --benchmark-group-by=fullname"
 
 [tool.coverage.run]
 parallel = true
