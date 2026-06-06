@@ -3,7 +3,8 @@ revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.15'",
-    "python_full_version >= '3.11' and python_full_version < '3.15'",
+    "python_full_version == '3.14.*' and implementation_name == 'cpython'",
+    "(python_full_version >= '3.11' and python_full_version < '3.15' and implementation_name != 'cpython') or (python_full_version >= '3.11' and python_full_version < '3.14' and implementation_name == 'cpython')",
     "python_full_version < '3.11'",
 ]
 
@@ -161,10 +162,10 @@ test = [
     { name = "coverage" },
     { name = "hypothesis" },
     { name = "immutables" },
-    { name = "mypy" },
+    { name = "mypy", marker = "python_full_version == '3.14.*' and implementation_name == 'cpython'" },
     { name = "pytest" },
     { name = "pytest-benchmark" },
-    { name = "pytest-typing" },
+    { name = "pytest-typing", marker = "python_full_version == '3.14.*' and implementation_name == 'cpython'" },
     { name = "pytest-xdist" },
 ]
 
@@ -201,10 +202,10 @@ test = [
     { name = "coverage", specifier = ">=7.9.2" },
     { name = "hypothesis", specifier = ">=6.135.26" },
     { name = "immutables", specifier = ">=0.21" },
-    { name = "mypy" },
+    { name = "mypy", marker = "python_full_version == '3.14.*' and implementation_name == 'cpython'" },
     { name = "pytest", specifier = ">=8.4.1" },
     { name = "pytest-benchmark", specifier = ">=5.1.0" },
-    { name = "pytest-typing" },
+    { name = "pytest-typing", marker = "python_full_version == '3.14.*' and implementation_name == 'cpython'" },
     { name = "pytest-xdist", specifier = ">=3.8.0" },
 ]
 
@@ -850,12 +851,11 @@ name = "mypy"
 version = "2.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ast-serialize" },
-    { name = "librt", marker = "platform_python_implementation != 'PyPy'" },
-    { name = "mypy-extensions" },
-    { name = "pathspec" },
-    { name = "tomli", marker = "python_full_version < '3.11'" },
-    { name = "typing-extensions" },
+    { name = "ast-serialize", marker = "python_full_version == '3.14.*' and implementation_name == 'cpython'" },
+    { name = "librt", marker = "python_full_version == '3.14.*' and implementation_name == 'cpython' and platform_python_implementation != 'PyPy'" },
+    { name = "mypy-extensions", marker = "python_full_version == '3.14.*' and implementation_name == 'cpython'" },
+    { name = "pathspec", marker = "python_full_version == '3.14.*' and implementation_name == 'cpython'" },
+    { name = "typing-extensions", marker = "python_full_version == '3.14.*' and implementation_name == 'cpython'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/82/15/cca9d88503549ed6fedeaa1d448cdddd542ee8a490232d732e278036fbf2/mypy-2.1.0.tar.gz", hash = "sha256:81e76ad12c2d804512e9b13240d1588316531bfba07558286078bfbce9613633", size = 3898359, upload-time = "2026-05-11T18:37:36.237Z" }
 wheels = [
@@ -1231,7 +1231,7 @@ name = "pytest-typing"
 version = "26.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pytest" },
+    { name = "pytest", marker = "python_full_version == '3.14.*' and implementation_name == 'cpython'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3a/3f/982c57ce061a6fd667e85b1256eb3ad5d67dc56ba53d430b3bd9aca26716/pytest_typing-26.3.0.tar.gz", hash = "sha256:c0e155612088bd30351bd6a38fea2bf039a280b5303423e8c3eebe568c180b20", size = 65028, upload-time = "2026-03-24T21:31:32.923Z" }
 wheels = [
@@ -1438,7 +1438,8 @@ version = "8.2.3"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15'",
-    "python_full_version >= '3.11' and python_full_version < '3.15'",
+    "python_full_version == '3.14.*' and implementation_name == 'cpython'",
+    "(python_full_version >= '3.11' and python_full_version < '3.15' and implementation_name != 'cpython') or (python_full_version >= '3.11' and python_full_version < '3.14' and implementation_name == 'cpython')",
 ]
 dependencies = [
     { name = "alabaster", marker = "python_full_version >= '3.11'" },
