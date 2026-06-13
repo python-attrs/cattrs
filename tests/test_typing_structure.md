@@ -102,3 +102,33 @@ converter = Converter()
 value: int = converter.structure("1", int)
 bad: str = converter.structure("1", int)  # mypy-error: [assignment]
 ```
+
+## Hook factory decorators preserve factory types
+
+```python
+from collections.abc import Callable
+from typing import Any
+
+from cattrs import Converter
+
+
+converter = Converter()
+
+
+def accepts_int(cl: Any) -> bool:
+    return cl is int
+
+
+@converter.register_unstructure_hook_factory(accepts_int)
+def unstructure_factory(cl: type[int]) -> Callable[[int], str]:
+    return str
+
+
+@converter.register_structure_hook_factory(accepts_int)
+def structure_factory(cl: type[int]) -> Callable[[str, type[int]], int]:
+    return lambda value, _: int(value)
+
+
+reveal_type(unstructure_factory)  # revealed: def (cl: type[int]) -> def (int) -> str
+reveal_type(structure_factory)  # revealed: def (cl: type[int]) -> def (str, type[int]) -> int
+```
