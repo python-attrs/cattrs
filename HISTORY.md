@@ -32,6 +32,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   ([#753](https://github.com/python-attrs/cattrs/pull/753))
 - {meth}`BaseConverter.register_structure_hook_factory` and {meth}`BaseConverter.register_unstructure_hook_factory` now properly return the factory when used as decorators.
   ([#724](https://github.com/python-attrs/cattrs/pull/724))
+- The {mod}`msgspec <cattrs.preconf.msgspec>` preconf converter now properly handles recursive classes on Python 3.14+.
+  ([#757](https://github.com/python-attrs/cattrs/pull/757))
 
 ## 26.1.0 (2026-02-18)
 
