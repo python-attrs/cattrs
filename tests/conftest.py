@@ -33,6 +33,7 @@ settings.load_profile("fast" if environ.get("FAST") == "1" else "tests")
 collect_ignore_glob = []
 if sys.version_info < (3, 14):
     collect_ignore_glob.append("test_gen_dict_649.py")
+    collect_ignore_glob.append("**/test_msgspec_314_cpython.py")
 if sys.version_info < (3, 12):
     collect_ignore_glob.append("*_695.py")
 if platform.python_implementation() == "PyPy":

@@ -8,6 +8,7 @@ from dataclasses import is_dataclass
 from datetime import date, datetime
 from enum import Enum
 from functools import partial
+from threading import local
 from typing import Any, TypeVar, Union, get_type_hints
 
 from attrs import has as attrs_has
@@ -33,9 +34,11 @@ from ..literals import is_literal_containing_enums
 from ..strategies import configure_union_passthrough
 from . import literals_with_enums_unstructure_factory, wrap
 
-T = TypeVar("T")
-
 __all__ = ["MsgspecJsonConverter", "configure_converter", "make_converter"]
+
+T = TypeVar("T")
+_already_probing = local()
+"""Used to detect and handle recursive data structures."""
 
 
 class MsgspecJsonConverter(Converter):
@@ -141,7 +144,7 @@ def seq_unstructure_factory(type, converter: Converter) -> UnstructureHook:
     return converter.gen_unstructure_iterable(type)
 
 
-def mapping_unstructure_factory(type, converter: BaseConverter) -> UnstructureHook:
+def mapping_unstructure_factory(type, converter: Converter) -> UnstructureHook:
     """The msgspec unstructure hook factory for mappings."""
     if is_bare(type):
         key_arg = Any
@@ -176,20 +179,36 @@ def msgspec_attrs_unstructure_factory(
             private attributes, making us do the work.
     """
     origin = get_origin(type)
-    attribs = fields(origin or type)
+    base = origin or type
+    attribs = fields(base)
     if attrs_has(type) and any(isinstance(a.type, str) for a in attribs):
         resolve_types(type)
-        attribs = fields(origin or type)
+        attribs = fields(base)
 
-    if msgspec_skips_private and any(
-        attr.name.startswith("_")
-        or (
+    if msgspec_skips_private and any(attr.name.startswith("_") for attr in attribs):
+        # Private attributes we have to do ourselves.
+        return converter.gen_unstructure_attrs_fromdict(type)
+
+    try:
+        working_set = _already_probing.working_set
+        if base in working_set:
+            return to_builtins
+    except AttributeError:
+        working_set = set()
+        _already_probing.working_set = working_set
+
+    try:
+        working_set.add(base)
+        if any(
             converter.get_unstructure_hook(attr.type, cache_result=False)
             not in (identity, to_builtins)
-        )
-        for attr in attribs
-    ):
-        return converter.gen_unstructure_attrs_fromdict(type)
+            for attr in attribs
+        ):
+            return converter.gen_unstructure_attrs_fromdict(type)
+    finally:
+        working_set.remove(base)
+        if not working_set:
+            del _already_probing.working_set
 
     return to_builtins
 
