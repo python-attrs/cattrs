@@ -12,12 +12,10 @@ def enum_unstructure_factory(
     """A factory for generating enum unstructure hooks.
 
     If the enum is a typed enum (has `_value_`), we use the underlying value's hook.
-    Otherwise, we use the value directly.
+    Otherwise, we unstructure the value through the converter so that enum members
+    whose values are themselves enums (or other complex types) are handled correctly.
     """
-    if "_value_" in type.__annotations__:
-        return lambda e: converter.unstructure(e.value)
-
-    return lambda e: e.value
+    return lambda e: converter.unstructure(e.value)
 
 
 def enum_structure_factory(
