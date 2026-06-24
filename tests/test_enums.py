@@ -68,3 +68,20 @@ def test_structure_complex_enum() -> None:
     assert converter.structure(0, SimpleEnum) == SimpleEnum.A
     assert converter.structure("E", SimpleEnumWithTypeHint) == SimpleEnumWithTypeHint.E
     assert converter.structure((0, "D"), ComplexEnum) == ComplexEnum.AD
+
+
+class EnumValuedEnum(Enum):
+    """Enum whose members have other Enum instances as values (no type annotation)."""
+
+    X = SimpleEnum.A
+    Y = SimpleEnum.B
+
+
+def test_unstructure_enum_with_enum_values() -> None:
+    """Enum members whose values are themselves Enums are unstructured recursively.
+
+    Regression test for https://github.com/python-attrs/cattrs/issues/679.
+    """
+    converter = BaseConverter()
+    assert converter.unstructure(EnumValuedEnum.X) == 0
+    assert converter.unstructure(EnumValuedEnum.Y) == 1
