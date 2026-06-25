@@ -2,6 +2,7 @@
 
 from enum import Enum
 
+from attrs import define
 from hypothesis import given
 from hypothesis.strategies import data, sampled_from
 from pytest import raises
@@ -77,6 +78,31 @@ class EnumValuedEnum(Enum):
     Y = SimpleEnum.B
 
 
+class TupleValuedEnum(Enum):
+    """Enum whose members have tuples with Enum instances (no type annotation)."""
+
+    X = (SimpleEnum.A, 1)
+
+
+@define
+class AnAttrsClass:
+    a: int
+
+
+class AttrsValuedEnum(Enum):
+    """Enum whose members have attrs instances as values (no type annotation)."""
+
+    X = AnAttrsClass(1)
+
+
+def test_unstructure_simple_enum_uses_value_directly() -> None:
+    """Simple enum values do not recurse through the converter."""
+    converter = BaseConverter()
+    converter.register_unstructure_hook(int, lambda _: "overridden")
+
+    assert converter.unstructure(SimpleEnum.A) == 0
+
+
 def test_unstructure_enum_with_enum_values() -> None:
     """Enum members whose values are themselves Enums are unstructured recursively.
 
@@ -85,3 +111,15 @@ def test_unstructure_enum_with_enum_values() -> None:
     converter = BaseConverter()
     assert converter.unstructure(EnumValuedEnum.X) == 0
     assert converter.unstructure(EnumValuedEnum.Y) == 1
+
+
+def test_unstructure_enum_with_tuple_values() -> None:
+    """Enum member tuples containing Enums are unstructured recursively."""
+    converter = BaseConverter()
+    assert converter.unstructure(TupleValuedEnum.X) == (0, 1)
+
+
+def test_unstructure_enum_with_attrs_values() -> None:
+    """Enum members whose values are attrs classes are unstructured recursively."""
+    converter = BaseConverter()
+    assert converter.unstructure(AttrsValuedEnum.X) == {"a": 1}
