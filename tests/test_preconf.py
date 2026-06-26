@@ -1036,3 +1036,61 @@ def test_literal_dicts_msgspec():
 def test_literal_dicts_tomllib():
     """Dicts with keys that aren't subclasses of `type` work."""
     test_literal_dicts(tomllib_make_converter)
+
+
+@pytest.mark.parametrize(
+    "converter_factory",
+    [
+        json_make_converter,
+        pyyaml_make_converter,
+    ],
+)
+def test_decimal_round_trip(converter_factory: Callable[[], Converter]):
+    """decimal.Decimal fields are serialized as strings and round-trip correctly."""
+    from decimal import Decimal
+
+    @define
+    class Order:
+        amount: Decimal
+
+    converter = converter_factory()
+    order = Order(amount=Decimal("19.99"))
+
+    unstructured = converter.unstructure(order)
+    assert unstructured["amount"] == "19.99"
+    assert isinstance(unstructured["amount"], str)
+
+    restored = converter.structure(unstructured, Order)
+    assert restored == order
+    assert isinstance(restored.amount, Decimal)
+
+
+def test_decimal_precision_preserved_json():
+    """Decimal precision is preserved (not lost to float) in the json converter."""
+    from decimal import Decimal
+
+    @define
+    class Foo:
+        value: Decimal
+
+    converter = json_make_converter()
+    # This value cannot be represented exactly as a float
+    original = Foo(value=Decimal("0.1") + Decimal("0.2"))
+    restored = converter.structure(converter.unstructure(original), Foo)
+    assert restored.value == original.value
+
+
+def test_decimal_json_dumps_loads():
+    """decimal.Decimal works end-to-end with JsonConverter.dumps()/loads()."""
+    from decimal import Decimal
+
+    @define
+    class Invoice:
+        total: Decimal
+        tax: Decimal
+
+    converter = json_make_converter()
+    invoice = Invoice(total=Decimal("99.99"), tax=Decimal("8.50"))
+    s = converter.dumps(invoice)
+    restored = converter.loads(s, Invoice)
+    assert restored == invoice
