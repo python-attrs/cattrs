@@ -121,4 +121,4 @@ To run a subset of tests:
 $ just test tests/test_unstructure.py
 ```
 
-[llm]: AI_POLICY.md
+[llm]: https://github.com/python-attrs/cattrs/blob/main/.github/AI_POLICY.md
