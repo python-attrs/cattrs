@@ -13,6 +13,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT (UNRELEASED)
 
+- Fix `create_default_dis_func <cattrs.disambiguators.create_default_dis_func>` (aka `create_uniq_field_dis_func`) failing to disambiguate valid unions depending on the order of the member classes; unique fields are now resolved iteratively to a fixpoint.
+  ([#230](https://github.com/python-attrs/cattrs/issues/230) [#765](https://github.com/python-attrs/cattrs/pull/765))
 - Support more recursive types on 3.14+ with specialized factories for [`annotationlib.ForwardRef`](https://docs.python.org/3/library/annotationlib.html#annotationlib.ForwardRef).
   ([#740](https://github.com/python-attrs/cattrs/issues/740) [#741](https://github.com/python-attrs/cattrs/pull/741))
 - `Converter <cattrs.Converter>` now uses specialized hook factories to generate hooks for tuples, increasing speed.

@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from functools import partial
+from itertools import permutations
 from typing import Literal, Union
 
 import pytest
@@ -111,6 +112,39 @@ def test_edge_errors():
     with pytest.raises(ValueError):
         # The input should be a mapping
         fn([])
+
+
+def test_disambiguation_is_order_independent():
+    """A valid union disambiguates regardless of the order of its members.
+
+    Regression test for #230: a class whose fields were all shared with another,
+    not-yet-pinned class was forced into the single fallback slot, so some
+    member orderings raised ``TypeError`` even though a valid assignment exists.
+    Here A is identified by ``a``, B by ``ab`` (once A is pinned), and C by
+    ``bc`` (once B is pinned); a single fixed-order pass misses those later
+    picks for half of the orderings.
+    """
+    c = Converter()
+
+    @define
+    class A:
+        ab: int
+        a: str
+
+    @define
+    class B:
+        ab: int
+        bc: int
+
+    @define
+    class C:
+        bc: int
+
+    for ordering in permutations((A, B, C)):
+        fn = create_default_dis_func(c, *ordering)
+        assert fn(asdict(A(1, "x"))) is A
+        assert fn(asdict(B(1, 2))) is B
+        assert fn(asdict(C(1))) is C
 
 
 def test_input_not_mapping():
