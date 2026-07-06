@@ -131,33 +131,47 @@ def create_default_dis_func(
 
     # We start from classes with the largest number of unique fields
     # so we can do easy picks first, making later picks easier.
-    cls_and_attrs.sort(key=lambda c_a: len(c_a[1]), reverse=True)
+    remaining = sorted(cls_and_attrs, key=lambda c_a: len(c_a[1]), reverse=True)
 
-    fallback = None  # If none match, try this.
+    # Iterate to a fixpoint. On each pass, pin every class that has a
+    # non-default field unique among the classes not yet pinned. Pinning a
+    # class removes its fields from consideration, which can make a previously
+    # ambiguous class uniquely identifiable, so we repeat until a pass pins
+    # nothing. A single pass in a fixed order would miss those later picks and
+    # fail to disambiguate valid unions depending on the class order.
+    made_progress = True
+    while made_progress:
+        made_progress = False
+        still_remaining = []
+        for entry in remaining:
+            cl, cl_reqs, back_map = entry
+            other_reqs = reduce(
+                or_, (c_a[1] for c_a in remaining if c_a[0] is not cl), set()
+            )
+            uniq = cl_reqs - other_reqs
 
-    for cl, cl_reqs, back_map in cls_and_attrs:
-        # We do not have to consider classes we've already processed, since
-        # they will have been eliminated by the match dictionary already.
-        other_classes = [
-            c_and_a
-            for c_and_a in cls_and_attrs
-            if c_and_a[0] is not cl and c_and_a[0] not in uniq_attrs_dict.values()
-        ]
-        other_reqs = reduce(or_, (c_a[1] for c_a in other_classes), set())
-        uniq = cl_reqs - other_reqs
+            # We want a unique attribute with no default.
+            cl_fields = fields_dict(get_origin(cl) or cl)
+            for maybe_renamed_attr_name in uniq:
+                orig_name = back_map[maybe_renamed_attr_name]
+                if cl_fields[orig_name].default in (NOTHING, MISSING):
+                    uniq_attrs_dict[maybe_renamed_attr_name] = cl
+                    made_progress = True
+                    break
+            else:
+                still_remaining.append(entry)
+        remaining = still_remaining
 
-        # We want a unique attribute with no default.
-        cl_fields = fields_dict(get_origin(cl) or cl)
-        for maybe_renamed_attr_name in uniq:
-            orig_name = back_map[maybe_renamed_attr_name]
-            if cl_fields[orig_name].default in (NOTHING, MISSING):
-                break
-        else:
-            if fallback is None:
-                fallback = cl
-                continue
-            raise TypeError(f"{cl} has no usable non-default attributes")
-        uniq_attrs_dict[maybe_renamed_attr_name] = cl
+    # A class we could not pin to a unique non-default field can only be the
+    # single fallback (tried when no unique key matches). More than one such
+    # class is a genuine ambiguity.
+    if len(remaining) > 1:
+        raise TypeError(
+            "Could not disambiguate between "
+            + ", ".join(repr(c_a[0]) for c_a in remaining)
+            + ": no unique non-default attributes"
+        )
+    fallback = remaining[0][0] if remaining else None
 
     if fallback is None:
 
