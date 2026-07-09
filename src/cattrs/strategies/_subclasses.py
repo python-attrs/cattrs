@@ -56,7 +56,7 @@ def include_subclasses(
     :param cl: A base `attrs` or `dataclass` class.
     :param converter: The `Converter` on which this strategy is applied. Do note that
         the strategy does not work for a :class:`cattrs.BaseConverter`.
-    :param subclasses: A tuple of sublcasses whose ancestor is `cl`. If left as `None`,
+    :param subclasses: A tuple of subclasses whose ancestor is `cl`. If left as `None`,
         subclasses are detected using recursively the `__subclasses__` method of `cl`
         and its descendents.
     :param union_strategy: A callable of two arguments passed by position
