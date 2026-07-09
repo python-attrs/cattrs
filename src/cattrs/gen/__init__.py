@@ -862,7 +862,7 @@ def make_hetero_tuple_structure_fn(
     detailed_validation: bool | Literal["from_converter"] = "from_converter",
     use_linecache: bool = True,
 ) -> HeteroTupleStructureFn:
-    """Generate a specialized structuring function for a heterogenous tuple.
+    """Generate a specialized structuring function for a heterogeneous tuple.
 
     ..  versionadded:: NEXT
     """
@@ -962,7 +962,7 @@ def make_hetero_tuple_unstructure_fn(
     unstructure_to: Any = None,
     type_args: tuple | None = None,
 ) -> HeteroTupleUnstructureFn:
-    """Generate a specialized unstructure function for a heterogenous tuple.
+    """Generate a specialized unstructure function for a heterogeneous tuple.
 
     :param type_args: If provided, override the type arguments.
     """

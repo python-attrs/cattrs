@@ -927,7 +927,7 @@ class BaseConverter:
             # Just a Tuple. (No generic information.)
             return tuple(obj)
         if has_ellipsis:
-            # We're dealing with a homogenous tuple, tuple[int, ...]
+            # We're dealing with a homogeneous tuple, tuple[int, ...]
             tup_type = tup_params[0]
             conv = self._structure_func.dispatch(tup_type)
             if self.detailed_validation:
@@ -952,7 +952,7 @@ class BaseConverter:
                 return tuple(res)
             return tuple(conv(e, tup_type) for e in obj)
 
-        # We're dealing with a heterogenous tuple.
+        # We're dealing with a heterogeneous tuple.
         exp_len = len(tup_params)
         if self.detailed_validation:
             errors = []
@@ -1128,7 +1128,7 @@ class Converter(BaseConverter):
             if FrozenSetSubscriptable not in co:
                 co[FrozenSetSubscriptable] = co[OriginAbstractSet]
 
-        # abc.MutableSet overrrides, if defined, apply to sets
+        # abc.MutableSet overrides, if defined, apply to sets
         if OriginMutableSet in co and set not in co:
             co[set] = co[OriginMutableSet]
 

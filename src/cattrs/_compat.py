@@ -320,7 +320,7 @@ def is_mutable_sequence(type: Any) -> bool:
 def is_sequence(type: Any) -> bool:
     """A predicate function for sequences.
 
-    Matches lists, sequences, mutable sequences, deques and homogenous
+    Matches lists, sequences, mutable sequences, deques and homogeneous
     tuples.
     """
     origin = getattr(type, "__origin__", None)
