@@ -1,6 +1,7 @@
 """Preconfigured converters for pyyaml."""
 
 from datetime import date, datetime
+from decimal import Decimal
 from functools import partial
 from typing import Any, TypeVar, Union
 
@@ -38,6 +39,7 @@ def configure_converter(converter: BaseConverter) -> None:
     * frozensets are serialized as lists
     * string enums are converted into strings explicitly
     * datetimes and dates are validated
+    * decimals are serialized as strings to preserve precision
     * typed namedtuples are serialized as lists
 
     .. versionchanged:: 24.1.0
@@ -46,6 +48,8 @@ def configure_converter(converter: BaseConverter) -> None:
     converter.register_unstructure_hook(
         str, lambda v: v if v.__class__ is str else v.value
     )
+    converter.register_unstructure_hook(Decimal, str)
+    converter.register_structure_hook(Decimal, lambda v, _: Decimal(str(v)))
 
     # datetime inherits from date, so identity unstructure hook used
     # here to prevent the date unstructure hook running.
