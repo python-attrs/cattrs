@@ -106,6 +106,19 @@ def test_simple_roundtrip(cls_and_instance) -> None:
     assert restructured == instance
 
 
+@pytest.mark.parametrize("detailed_validation", [True, False])
+def test_key_with_single_quote_roundtrip(detailed_validation: bool) -> None:
+    """TypedDict keys containing single quotes can be round-tripped."""
+    cls = TypedDict("SingleQuoteKey", {"that's": datetime})
+    instance = {"that's": datetime.now(tz=timezone.utc)}
+    c = mk_converter(detailed_validation)
+
+    unstructured = c.unstructure(instance, unstructure_as=cls)
+    restructured = c.structure(unstructured, cls)
+
+    assert restructured == instance
+
+
 @given(simple_typeddicts(total=False), booleans())
 def test_simple_nontotal(cls_and_instance, detailed_validation: bool) -> None:
     """Non-total dicts work."""
