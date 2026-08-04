@@ -1029,7 +1029,7 @@ def mapping_unstructure_factory(
             key_arg, val_arg = args
         else:
             # Probably a Counter
-            key_arg, val_arg = args, Any
+            key_arg, val_arg = args[0], Any
         # We can do the dispatch here and now.
         kh = key_handler or converter.get_unstructure_hook(key_arg, cache_result=False)
         if kh == identity:

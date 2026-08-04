@@ -148,3 +148,23 @@ def test_collection_unstructure_override_mapping():
     assert c.unstructure({1: 2}) == Map({1: 2})
     assert c.unstructure({1: 2}, unstructure_as=MutableMapping[int, int]) == Map({1: 2})
     assert c.unstructure({1: 2}, unstructure_as=Mapping[int, int]) == Map({1: 2})
+
+
+def test_counter_unstructure_applies_key_hook():
+    """Counter keys must be unstructured with the key type's own hook.
+
+    Regression: the single-type-arg ("Probably a Counter") branch assigned the
+    whole ``args`` tuple to ``key_arg``, so the key hook was resolved for
+    ``(KeyType,)`` (falling back to identity) instead of ``KeyType``, leaving
+    keys un-unstructured.
+    """
+
+    @define(frozen=True)
+    class Key:
+        v: int
+
+    c = Converter()
+    c.register_unstructure_hook(Key, lambda k: k.v)
+
+    result = c.unstructure(Counter({Key(1): 5, Key(2): 3}), unstructure_as=Counter[Key])
+    assert result == {1: 5, 2: 3}
