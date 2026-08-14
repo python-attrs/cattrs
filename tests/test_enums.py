@@ -2,6 +2,7 @@
 
 from enum import Enum
 
+import attrs
 from hypothesis import given
 from hypothesis.strategies import data, sampled_from
 from pytest import raises
@@ -68,3 +69,56 @@ def test_structure_complex_enum() -> None:
     assert converter.structure(0, SimpleEnum) == SimpleEnum.A
     assert converter.structure("E", SimpleEnumWithTypeHint) == SimpleEnumWithTypeHint.E
     assert converter.structure((0, "D"), ComplexEnum) == ComplexEnum.AD
+
+
+def test_unstructure_enum_misuse_raises_clear_error() -> None:
+    """Regression test for #601.
+
+    Unstructuring a value that isn't actually an instance of the expected
+    enum (e.g. because the enum's raw value was assigned directly to an
+    attribute typed as the enum, bypassing any validation) must raise a
+    clear, actionable ``TypeError`` instead of an opaque ``AttributeError``
+    like ``'str' object has no attribute 'value'``.
+    """
+    converter = BaseConverter()
+
+    with raises(TypeError) as exc_info:
+        converter.unstructure("A", unstructure_as=SimpleEnum)
+
+    msg = str(exc_info.value)
+    assert "SimpleEnum" in msg
+    assert "'A'" in msg
+
+
+def test_unstructure_typed_enum_misuse_raises_clear_error() -> None:
+    """Regression test for #601, typed-enum branch (has `_value_`)."""
+    converter = BaseConverter()
+
+    with raises(TypeError) as exc_info:
+        converter.unstructure("D", unstructure_as=SimpleEnumWithTypeHint)
+
+    msg = str(exc_info.value)
+    assert "SimpleEnumWithTypeHint" in msg
+    assert "'D'" in msg
+
+
+def test_unstructure_attrs_class_with_misused_enum_field() -> None:
+    """End-to-end regression test for #601, matching the original report.
+
+    Assigning a plain string default (instead of an actual enum member) to
+    an attrs attribute typed as an ``Enum`` used to blow up with an
+    unhelpful ``AttributeError`` deep inside generated code.
+    """
+
+    @attrs.define
+    class Site:
+        flavor: SimpleEnumWithTypeHint = "D"  # intentionally not an enum member
+
+    converter = BaseConverter()
+
+    with raises(TypeError) as exc_info:
+        converter.unstructure(Site())
+
+    msg = str(exc_info.value)
+    assert "SimpleEnumWithTypeHint" in msg
+    assert "'D'" in msg
