@@ -13,6 +13,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT (UNRELEASED)
 
+- Fix unstructuring an enum-typed value that isn't actually an instance of that enum (for example, a raw value assigned directly to an attrs attribute) raising an opaque `AttributeError` instead of a clear, actionable `TypeError`.
+  ([#601](https://github.com/python-attrs/cattrs/issues/601))
 - Fix `Counter` keys not being unstructured with the key type's own hook; the single-type-arg branch passed the whole type-args tuple to the key hook lookup instead of the key type.
   ([#768](https://github.com/python-attrs/cattrs/pull/768))
 - Fix `create_default_dis_func <cattrs.disambiguators.create_default_dis_func>` (aka `create_uniq_field_dis_func`) failing to disambiguate valid unions depending on the order of the member classes; unique fields are now resolved iteratively to a fixpoint.
