@@ -13,6 +13,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT (UNRELEASED)
 
+- Fix `override(rename=...)` targets containing a quote (or other characters not safe in a bare string literal) crashing code generation with `SyntaxError`; the rename key is now embedded with `repr`.
+  ([#771](https://github.com/python-attrs/cattrs/pull/771))
 - Fix `Counter` keys not being unstructured with the key type's own hook; the single-type-arg branch passed the whole type-args tuple to the key hook lookup instead of the key type.
   ([#768](https://github.com/python-attrs/cattrs/pull/768))
 - Fix `create_default_dis_func <cattrs.disambiguators.create_default_dis_func>` (aka `create_uniq_field_dis_func`) failing to disambiguate valid unions depending on the order of the member classes; unique fields are now resolved iteratively to a fixpoint.
