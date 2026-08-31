@@ -218,11 +218,11 @@ def make_dict_unstructure_fn_from_attrs(
                     internal_arg_parts[def_name] = c(d)
 
             lines.append(f"  if instance.{attr_name} != {def_str}:")
-            lines.append(f"    res['{kn}'] = {invoke}")
+            lines.append(f"    res[{kn!r}] = {invoke}")
 
         else:
             # No default or no override.
-            invocation_lines.append(f"'{kn}': {invoke},")
+            invocation_lines.append(f"{kn!r}: {invoke},")
 
     internal_arg_line = ", ".join([f"{i}={i}" for i in internal_arg_parts])
     if internal_arg_line:
@@ -469,7 +469,7 @@ def make_dict_structure_fn_from_attrs(
 
             if not a.init:
                 if a.default is not NOTHING:
-                    pi_lines.append(f"{i}if '{kn}' in o:")
+                    pi_lines.append(f"{i}if {kn!r} in o:")
                     i = f"{i}  "
                 pi_lines.append(f"{i}try:")
                 i = f"{i}  "
@@ -479,16 +479,16 @@ def make_dict_structure_fn_from_attrs(
                     if handler == converter._structure_call:
                         internal_arg_parts[struct_handler_name] = t
                         pi_lines.append(
-                            f"{i}instance.{an} = {struct_handler_name}(o['{kn}'])"
+                            f"{i}instance.{an} = {struct_handler_name}(o[{kn!r}])"
                         )
                     else:
                         tn = f"__c_type_{an}"
                         internal_arg_parts[tn] = t
                         pi_lines.append(
-                            f"{i}instance.{an} = {struct_handler_name}(o['{kn}'], {tn})"
+                            f"{i}instance.{an} = {struct_handler_name}(o[{kn!r}], {tn})"
                         )
                 else:
-                    pi_lines.append(f"{i}instance.{an} = o['{kn}']")
+                    pi_lines.append(f"{i}instance.{an} = o[{kn!r}]")
                 i = i[:-2]
                 pi_lines.append(f"{i}except Exception as e:")
                 i = f"{i}  "
@@ -499,7 +499,7 @@ def make_dict_structure_fn_from_attrs(
 
             else:
                 if a.default is not NOTHING:
-                    lines.append(f"{i}if '{kn}' in o:")
+                    lines.append(f"{i}if {kn!r} in o:")
                     i = f"{i}  "
                 lines.append(f"{i}try:")
                 i = f"{i}  "
@@ -509,14 +509,14 @@ def make_dict_structure_fn_from_attrs(
                     if handler == converter._structure_call:
                         internal_arg_parts[struct_handler_name] = t
                         lines.append(
-                            f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'])"
+                            f"{i}res['{ian}'] = {struct_handler_name}(o[{kn!r}])"
                         )
                     else:
                         lines.append(
-                            f"{i}res['{ian}'] = {struct_handler_name}(o['{kn}'], {type_name})"
+                            f"{i}res['{ian}'] = {struct_handler_name}(o[{kn!r}], {type_name})"
                         )
                 else:
-                    lines.append(f"{i}res['{ian}'] = o['{kn}']")
+                    lines.append(f"{i}res['{ian}'] = o[{kn!r}]")
                 i = i[:-2]
                 lines.append(f"{i}except Exception as e:")
                 i = f"{i}  "
@@ -610,15 +610,15 @@ def make_dict_structure_fn_from_attrs(
                     internal_arg_parts[struct_handler_name] = handler
                     if handler == converter._structure_call:
                         internal_arg_parts[struct_handler_name] = t
-                        pi_line = f"  instance.{an} = {struct_handler_name}(o['{kn}'])"
+                        pi_line = f"  instance.{an} = {struct_handler_name}(o[{kn!r}])"
                     else:
                         tn = f"__c_type_{an}"
                         internal_arg_parts[tn] = t
                         pi_line = (
-                            f"  instance.{an} = {struct_handler_name}(o['{kn}'], {tn})"
+                            f"  instance.{an} = {struct_handler_name}(o[{kn!r}], {tn})"
                         )
                 else:
-                    pi_line = f"  instance.{an} = o['{kn}']"
+                    pi_line = f"  instance.{an} = o[{kn!r}]"
 
                 pi_lines.append(pi_line)
             else:
@@ -627,13 +627,13 @@ def make_dict_structure_fn_from_attrs(
                     internal_arg_parts[struct_handler_name] = handler
                     if handler == converter._structure_call:
                         internal_arg_parts[struct_handler_name] = t
-                        invocation_line = f"{struct_handler_name}(o['{kn}']),"
+                        invocation_line = f"{struct_handler_name}(o[{kn!r}]),"
                     else:
                         tn = f"__c_type_{an}"
                         internal_arg_parts[tn] = t
-                        invocation_line = f"{struct_handler_name}(o['{kn}'], {tn}),"
+                        invocation_line = f"{struct_handler_name}(o[{kn!r}], {tn}),"
                 else:
-                    invocation_line = f"o['{kn}'],"
+                    invocation_line = f"o[{kn!r}],"
 
                 if a.kw_only:
                     invocation_line = f"{a.alias}={invocation_line}"
@@ -675,37 +675,37 @@ def make_dict_structure_fn_from_attrs(
                     kn = override.rename
                 allowed_fields.add(kn)
                 if not a.init:
-                    pi_lines.append(f"  if '{kn}' in o:")
+                    pi_lines.append(f"  if {kn!r} in o:")
                     if handler:
                         if handler == converter._structure_call:
                             internal_arg_parts[struct_handler_name] = t
                             pi_lines.append(
-                                f"    instance.{an} = {struct_handler_name}(o['{kn}'])"
+                                f"    instance.{an} = {struct_handler_name}(o[{kn!r}])"
                             )
                         else:
                             tn = f"__c_type_{an}"
                             internal_arg_parts[tn] = t
                             pi_lines.append(
-                                f"    instance.{an} = {struct_handler_name}(o['{kn}'], {tn})"
+                                f"    instance.{an} = {struct_handler_name}(o[{kn!r}], {tn})"
                             )
                     else:
-                        pi_lines.append(f"    instance.{an} = o['{kn}']")
+                        pi_lines.append(f"    instance.{an} = o[{kn!r}]")
                 else:
-                    post_lines.append(f"  if '{kn}' in o:")
+                    post_lines.append(f"  if {kn!r} in o:")
                     if handler:
                         if handler == converter._structure_call:
                             internal_arg_parts[struct_handler_name] = t
                             post_lines.append(
-                                f"    res['{a.alias}'] = {struct_handler_name}(o['{kn}'])"
+                                f"    res['{a.alias}'] = {struct_handler_name}(o[{kn!r}])"
                             )
                         else:
                             tn = f"__c_type_{an}"
                             internal_arg_parts[tn] = t
                             post_lines.append(
-                                f"    res['{a.alias}'] = {struct_handler_name}(o['{kn}'], {tn})"
+                                f"    res['{a.alias}'] = {struct_handler_name}(o[{kn!r}], {tn})"
                             )
                     else:
-                        post_lines.append(f"    res['{a.alias}'] = o['{kn}']")
+                        post_lines.append(f"    res['{a.alias}'] = o[{kn!r}]")
         if not pi_lines:
             instantiation_lines = (
                 ["  return __cl("]
