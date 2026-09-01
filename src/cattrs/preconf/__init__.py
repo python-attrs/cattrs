@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, ParamSpec, TypeVar, get_args
 
@@ -13,6 +13,20 @@ def validate_datetime(v, _):
     if not isinstance(v, datetime):
         raise CattrsError(f"Expected datetime, got {v}")
     return v
+
+
+def unstructure_datetime_as_timestamp(v: datetime) -> float:
+    """Unstructure a datetime into a UNIX timestamp.
+
+    `datetime.timestamp` interprets naive datetimes as local time, which would
+    make the result depend on the timezone of the machine unstructuring them.
+    The matching structure hooks read timestamps back as UTC, so naive
+    datetimes are treated as UTC here too, keeping both ends of the round-trip
+    in agreement.
+    """
+    if v.tzinfo is None:
+        v = v.replace(tzinfo=timezone.utc)
+    return v.timestamp()
 
 
 T = TypeVar("T")

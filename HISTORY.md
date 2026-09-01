@@ -13,6 +13,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT (UNRELEASED)
 
+- Fix the `msgpack` and `cbor2` converters unstructuring naive datetimes as local time, which made the serialized value depend on the timezone of the machine doing the unstructuring; naive datetimes are now assumed to be UTC, matching what the structure hooks already read back.
+  ([#774](https://github.com/python-attrs/cattrs/issues/774))
 - Fix `override(rename=...)` targets containing a quote (or other characters not safe in a bare string literal) crashing code generation with `SyntaxError`; the rename key is now embedded with `repr`.
   ([#771](https://github.com/python-attrs/cattrs/pull/771))
 - Fix `Counter` keys not being unstructured with the key type's own hook; the single-type-arg branch passed the whole type-args tuple to the key hook lookup instead of the key type.

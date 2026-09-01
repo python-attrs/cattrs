@@ -1,4 +1,6 @@
 # ruff: noqa: PLC0415
+import os
+import time
 from collections.abc import Callable, Set
 from datetime import date, datetime, timezone
 from enum import Enum, IntEnum, unique
@@ -1036,3 +1038,48 @@ def test_literal_dicts_msgspec():
 def test_literal_dicts_tomllib():
     """Dicts with keys that aren't subclasses of `type` work."""
     test_literal_dicts(tomllib_make_converter)
+
+
+def _unstructure_under_tz(
+    converter_factory: Callable[[], Converter], value: datetime, tz: str
+) -> float:
+    """Unstructure `value` with the process timezone temporarily set to `tz`."""
+    old = os.environ.get("TZ")
+    os.environ["TZ"] = tz
+    time.tzset()
+    try:
+        return converter_factory().unstructure(value)
+    finally:
+        if old is None:
+            del os.environ["TZ"]
+        else:
+            os.environ["TZ"] = old
+        time.tzset()
+
+
+@pytest.mark.skipif(not hasattr(time, "tzset"), reason="tzset not available")
+@pytest.mark.parametrize("converter_factory", [msgpack_make_converter])
+def test_naive_datetimes_are_unstructured_as_utc(
+    converter_factory: Callable[[], Converter],
+):
+    """Naive datetimes are unstructured as UTC, not as local time.
+
+    `datetime.timestamp` reads a naive datetime as local time, so without an
+    explicit assumption the value on the wire would depend on the timezone of
+    the machine doing the unstructuring. The structure hook reads timestamps
+    back as UTC, so UTC is what the unstructure hook has to assume.
+    """
+    naive = datetime(2026, 8, 25, 12, 30)
+    expected = naive.replace(tzinfo=timezone.utc).timestamp()
+
+    for tz in ["UTC", "Asia/Tokyo", "America/Toronto"]:
+        assert _unstructure_under_tz(converter_factory, naive, tz) == expected
+
+
+@pytest.mark.skipif(NO_CBOR2, reason="cbor2 not available")
+@pytest.mark.skipif(not hasattr(time, "tzset"), reason="tzset not available")
+def test_naive_datetimes_are_unstructured_as_utc_cbor2():
+    """Naive datetimes are unstructured as UTC, not as local time."""
+    from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
+
+    test_naive_datetimes_are_unstructured_as_utc(cbor2_make_converter)
