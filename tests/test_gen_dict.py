@@ -253,7 +253,8 @@ def test_renaming_forbid_extra_keys():
     assert cve.value.exceptions[1].extra_fields == {"c"}
 
 
-def test_renaming_to_key_with_special_characters():
+@pytest.mark.parametrize("key", ["it's", 'a"b', "a'] or 1 or ['b"])
+def test_renaming_to_key_with_special_characters(key):
     """A rename target is a dict key, so it may legitimately contain quotes.
 
     It used to be interpolated into the generated code inside single quotes, so
@@ -264,17 +265,16 @@ def test_renaming_to_key_with_special_characters():
     class A:
         b: int
 
-    for key in ("it's", 'a"b', "a'] or 1 or ['b"):
-        converter = Converter()
-        converter.register_unstructure_hook(
-            A, make_dict_unstructure_fn(A, converter, b=override(rename=key))
-        )
-        converter.register_structure_hook(
-            A, make_dict_structure_fn(A, converter, b=override(rename=key))
-        )
+    converter = Converter()
+    converter.register_unstructure_hook(
+        A, make_dict_unstructure_fn(A, converter, b=override(rename=key))
+    )
+    converter.register_structure_hook(
+        A, make_dict_structure_fn(A, converter, b=override(rename=key))
+    )
 
-        assert converter.unstructure(A(1)) == {key: 1}
-        assert converter.structure({key: 1}, A) == A(1)
+    assert converter.unstructure(A(1)) == {key: 1}
+    assert converter.structure({key: 1}, A) == A(1)
 
 
 def test_omitting(converter: BaseConverter):
