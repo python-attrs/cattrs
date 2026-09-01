@@ -6,6 +6,24 @@
 _cattrs_ sometimes changes in backwards-incompatible ways.
 This page contains guidance for changes and workarounds for restoring legacy behavior.
 
+## NEXT
+
+### Naive datetimes unstructuring as UTC in the _msgpack_ and _cbor2_ converters
+
+The _msgpack_ and _cbor2_ converters unstructure `datetime` s into UNIX timestamps using `datetime.timestamp`, which reads a naive `datetime` as local time.
+The serialized value therefore depended on the timezone of the machine doing the unstructuring, while the structure hooks read timestamps back as UTC.
+From this version on, naive `datetime` s are assumed to be UTC when unstructuring, so both ends of the round-trip agree and the payload no longer depends on the host.
+
+Aware `datetime` s are unaffected.
+
+The old behavior can be restored by registering `datetime.timestamp` directly on a converter.
+
+```python
+>>> from datetime import datetime
+
+>>> converter.register_unstructure_hook(datetime, datetime.timestamp)
+```
+
 ## 25.3.0
 
 ### Abstract sets structuring into frozensets

@@ -1,7 +1,6 @@
 # ruff: noqa: PLC0415
-import os
 import time
-from collections.abc import Callable, Set
+from collections.abc import Callable, Iterator, Set
 from datetime import date, datetime, timezone
 from enum import Enum, IntEnum, unique
 from json import dumps as json_dumps
@@ -1040,27 +1039,23 @@ def test_literal_dicts_tomllib():
     test_literal_dicts(tomllib_make_converter)
 
 
-def _unstructure_under_tz(
-    converter_factory: Callable[[], Converter], value: datetime, tz: str
-) -> float:
-    """Unstructure `value` with the process timezone temporarily set to `tz`."""
-    old = os.environ.get("TZ")
-    os.environ["TZ"] = tz
-    time.tzset()
-    try:
-        return converter_factory().unstructure(value)
-    finally:
-        if old is None:
-            del os.environ["TZ"]
-        else:
-            os.environ["TZ"] = old
+@pytest.fixture
+def set_timezone(monkeypatch: pytest.MonkeyPatch) -> Iterator[Callable[[str], None]]:
+    """Set the process timezone for the duration of a test."""
+
+    def setter(tz: str) -> None:
+        monkeypatch.setenv("TZ", tz)
         time.tzset()
+
+    yield setter
+    monkeypatch.undo()
+    time.tzset()
 
 
 @pytest.mark.skipif(not hasattr(time, "tzset"), reason="tzset not available")
 @pytest.mark.parametrize("converter_factory", [msgpack_make_converter])
 def test_naive_datetimes_are_unstructured_as_utc(
-    converter_factory: Callable[[], Converter],
+    converter_factory: Callable[[], Converter], set_timezone: Callable[[str], None]
 ):
     """Naive datetimes are unstructured as UTC, not as local time.
 
@@ -1073,13 +1068,16 @@ def test_naive_datetimes_are_unstructured_as_utc(
     expected = naive.replace(tzinfo=timezone.utc).timestamp()
 
     for tz in ["UTC", "Asia/Tokyo", "America/Toronto"]:
-        assert _unstructure_under_tz(converter_factory, naive, tz) == expected
+        set_timezone(tz)
+        assert converter_factory().unstructure(naive) == expected
 
 
 @pytest.mark.skipif(NO_CBOR2, reason="cbor2 not available")
 @pytest.mark.skipif(not hasattr(time, "tzset"), reason="tzset not available")
-def test_naive_datetimes_are_unstructured_as_utc_cbor2():
+def test_naive_datetimes_are_unstructured_as_utc_cbor2(
+    set_timezone: Callable[[str], None],
+):
     """Naive datetimes are unstructured as UTC, not as local time."""
     from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
 
-    test_naive_datetimes_are_unstructured_as_utc(cbor2_make_converter)
+    test_naive_datetimes_are_unstructured_as_utc(cbor2_make_converter, set_timezone)
