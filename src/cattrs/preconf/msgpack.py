@@ -10,7 +10,12 @@ from ..converters import BaseConverter, Converter
 from ..fns import identity
 from ..literals import is_literal_containing_enums
 from ..strategies import configure_union_passthrough
-from . import is_primitive_enum, literals_with_enums_unstructure_factory, wrap
+from . import (
+    is_primitive_enum,
+    literals_with_enums_unstructure_factory,
+    unstructure_datetime_as_timestamp,
+    wrap,
+)
 
 __all__ = ["MsgpackConverter", "configure_converter", "make_converter"]
 
@@ -36,7 +41,7 @@ def configure_converter(converter: BaseConverter) -> None:
     .. versionchanged:: 24.2.0
         Enums are left to the library to unstructure, speeding them up.
     """
-    converter.register_unstructure_hook(datetime, lambda v: v.timestamp())
+    converter.register_unstructure_hook(datetime, unstructure_datetime_as_timestamp)
     converter.register_structure_hook(
         datetime, lambda v, _: datetime.fromtimestamp(v, timezone.utc)
     )

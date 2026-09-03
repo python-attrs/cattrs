@@ -164,6 +164,12 @@ _ujson_ doesn't support integers less than -9223372036854775808, and greater tha
 Found at {mod}`cattrs.preconf.msgpack`.
 
 Sets are serialized as lists, and deserialized back into sets. `datetime` s are serialized as UNIX timestamp float values. `date` s are serialized as midnight-aligned UNIX timestamp float values.
+Naive `datetime` s are assumed to be UTC, which is also how timestamps are interpreted when structuring.
+
+```{versionchanged} NEXT
+Naive `datetime` s are assumed to be UTC when unstructuring.
+They were previously interpreted as local time, making the serialized value depend on the timezone of the machine doing the unstructuring.
+```
 
 _msgpack_ doesn't support integers less than -9223372036854775808, and greater than 18446744073709551615.
 
@@ -182,6 +188,12 @@ Tuples are serialized as lists.
 `datetime` s are serialized as a text string by default (CBOR Tag 0).
 Use keyword argument `datetime_as_timestamp=True` to encode as UNIX timestamp integer/float (CBOR Tag 1)
 **note:** this replaces timezone information as UTC.
+Naive `datetime` s are assumed to be UTC, which is also how timestamps are interpreted when structuring.
+
+```{versionchanged} NEXT
+Naive `datetime` s are assumed to be UTC when unstructuring.
+They were previously interpreted as local time, making the serialized value depend on the timezone of the machine doing the unstructuring.
+```
 
 `date` s are serialized as ISO 8601 strings.
 
