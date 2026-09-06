@@ -11,7 +11,7 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
-## NEXT (UNRELEASED)
+## 26.2.0 (2026-09-08)
 
 - Fix the `msgpack` and `cbor2` converters unstructuring naive datetimes as local time, which made the serialized value depend on the timezone of the machine doing the unstructuring; naive datetimes are now assumed to be UTC, matching what the structure hooks already read back.
   ([#774](https://github.com/python-attrs/cattrs/issues/774) [#775](https://github.com/python-attrs/cattrs/pull/775))

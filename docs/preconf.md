@@ -166,7 +166,7 @@ Found at {mod}`cattrs.preconf.msgpack`.
 Sets are serialized as lists, and deserialized back into sets. `datetime` s are serialized as UNIX timestamp float values. `date` s are serialized as midnight-aligned UNIX timestamp float values.
 Naive `datetime` s are assumed to be UTC, which is also how timestamps are interpreted when structuring.
 
-```{versionchanged} NEXT
+```{versionchanged} 26.2.0
 Naive `datetime` s are assumed to be UTC when unstructuring.
 They were previously interpreted as local time, making the serialized value depend on the timezone of the machine doing the unstructuring.
 ```
@@ -190,7 +190,7 @@ Use keyword argument `datetime_as_timestamp=True` to encode as UNIX timestamp in
 **note:** this replaces timezone information as UTC.
 Naive `datetime` s are assumed to be UTC, which is also how timestamps are interpreted when structuring.
 
-```{versionchanged} NEXT
+```{versionchanged} 26.2.0
 Naive `datetime` s are assumed to be UTC when unstructuring.
 They were previously interpreted as local time, making the serialized value depend on the timezone of the machine doing the unstructuring.
 ```
@@ -237,5 +237,3 @@ Bytes are serialized as base 85 strings. Sets are serialized as lists, and deser
 Tuples are serialized as lists, and deserialized back into tuples.
 _tomlkit_ only supports mappings with string keys so mappings will have their keys stringified before serialization, and destringified during deserialization.
 [`date`](https://docs.python.org/3/library/datetime.html#datetime.date) and [`datetime`](https://docs.python.org/3/library/datetime.html#datetime.datetime) objects are passed through to be unstructured by _tomlkit_ itself.
-
-

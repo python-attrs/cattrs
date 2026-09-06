@@ -6,7 +6,7 @@
 _cattrs_ sometimes changes in backwards-incompatible ways.
 This page contains guidance for changes and workarounds for restoring legacy behavior.
 
-## NEXT
+## 26.2.0
 
 ### Naive datetimes unstructuring as UTC in the _msgpack_ and _cbor2_ converters
 

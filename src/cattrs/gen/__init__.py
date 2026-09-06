@@ -864,7 +864,7 @@ def make_hetero_tuple_structure_fn(
 ) -> HeteroTupleStructureFn:
     """Generate a specialized structuring function for a heterogeneous tuple.
 
-    ..  versionadded:: NEXT
+    ..  versionadded:: 26.2.0
     """
     fn_name = "structure_tuple"
 
