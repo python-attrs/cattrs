@@ -106,6 +106,27 @@ def test_class_errors(c: Converter) -> None:
         ]
 
 
+def test_extra_keys_are_sorted(c: Converter) -> None:
+    """Extra keys are reported in a stable order.
+
+    `ForbiddenExtraKeysError.extra_fields` is a set, so the message used to
+    depend on the iteration order of that set, which differs between processes.
+    """
+
+    @define
+    class C:
+        a: int
+
+    c.register_structure_hook(
+        C, make_dict_structure_fn(C, c, _cattrs_forbid_extra_keys=True)
+    )
+
+    with raises(Exception) as exc_info:
+        c.structure({"a": 1, "e": 2, "c": 3, "b": 4, "d": 5}, C)
+
+    assert transform_error(exc_info.value) == ["extra fields found (b, c, d, e) @ $"]
+
+
 def test_untyped_class_errors(c: Converter) -> None:
     """Errors on untyped attrs classes transform correctly."""
 
