@@ -11,6 +11,11 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
+## NEXT (UNRELEASED)
+
+- Fix {func}`transform_error <cattrs.transform_error>` listing the extra keys of a `ForbiddenExtraKeysError` in set iteration order, which made the message differ between runs; the keys are now sorted, like the error's own `__str__` already sorts them.
+  ([#776](https://github.com/python-attrs/cattrs/pull/776))
+
 ## 26.2.0 (2026-09-08)
 
 - Fix the `msgpack` and `cbor2` converters unstructuring naive datetimes as local time, which made the serialized value depend on the timezone of the machine doing the unstructuring; naive datetimes are now assumed to be UTC, matching what the structure hooks already read back.
