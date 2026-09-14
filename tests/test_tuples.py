@@ -1,6 +1,6 @@
 """Tests for tuples of all kinds."""
 
-from typing import List, NamedTuple, Tuple
+from typing import Annotated, List, Literal, NamedTuple, Tuple
 
 from attrs import Factory, define
 from pytest import raises
@@ -30,6 +30,33 @@ def test_structuring_invalid_tuples(converter: BaseConverter):
         # `int("c")` raises a ValueError
         with raises(ValueError):
             converter.structure(["1", 2, "c"], tuple[int, int, int])
+
+
+def test_type_names_with_quotes():
+    """Types with quote characters in their reprs should work.
+
+    The index note is baked into the generated source, and it used to be
+    interpolated inside single quotes, so `Literal["a"]` produced invalid
+    source and raised `SyntaxError` before anything was structured.
+    """
+
+    class NT(NamedTuple):
+        a: Literal["a"]
+        b: int
+
+    c = Converter()
+
+    assert c.structure(["a", 1], Tuple[Literal["a"], int]) == ("a", 1)
+    assert c.structure([["a"], 1], Tuple[List[Literal["a"]], int]) == (["a"], 1)
+    assert c.structure([1, 2], Tuple[Annotated[int, "it's"], int]) == (1, 2)
+    assert c.structure(["a", 1], NT) == NT("a", 1)
+
+    with raises(IterableValidationError) as exc_info:
+        c.structure(["b", 1], Tuple[Literal["a"], int])
+
+    assert exc_info.value.exceptions[0].__notes__ == [
+        f"Structuring {Tuple[Literal['a'], int]} @ index 0"
+    ]
 
 
 def test_simple_hetero_tuples(genconverter: Converter):

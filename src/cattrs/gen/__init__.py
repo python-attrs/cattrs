@@ -892,6 +892,7 @@ def make_hetero_tuple_structure_fn(
                 invocation = f"{struct_handler_name}(o[{ix}])"
             else:
                 invocation = f"{struct_handler_name}(o[{ix}], {type_name})"
+            note = f"Structuring {cl} @ index {ix}"
             lines.extend(
                 [
                     f"  if len(o) > {ix}:",
@@ -900,7 +901,7 @@ def make_hetero_tuple_structure_fn(
                     "    except Exception as e:",
                     (
                         f"      e.__notes__ = [*getattr(e, '__notes__', []), "
-                        f"__c_ivn('Structuring {cl} @ index {ix}', {ix}, {type_name})]"
+                        f"__c_ivn({note!r}, {ix}, {type_name})]"
                     ),
                     "      errors.append(e)",
                 ]
