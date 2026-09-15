@@ -53,6 +53,8 @@ def create_default_dis_func(
 
     .. versionchanged:: 24.1.0
         Dataclasses are now supported.
+    .. versionchanged:: NEXT
+        Renaming overrides also apply to literal discriminator fields.
     """
     if len(classes) < 2:
         raise ValueError("At least two classes required.")
@@ -71,17 +73,17 @@ def create_default_dis_func(
         #  - it must always be enumerated
         cls_candidates = [
             {
-                at.name
+                _overriden_name(at, override.get(at.name)): at
                 for at in adapted_fields(get_origin(cl) or cl)
                 if is_literal(at.type)
             }
-            for cl in classes
+            for cl, override in zip(classes, overrides)
         ]
 
         # literal field names common to all members
-        discriminators: set[str] = cls_candidates[0]
+        discriminators: set[str] = set(cls_candidates[0])
         for possible_discriminators in cls_candidates:
-            discriminators &= possible_discriminators
+            discriminators.intersection_update(possible_discriminators)
 
         best_result = None
         best_discriminator = None
@@ -89,10 +91,8 @@ def create_default_dis_func(
             # maps Literal values (strings, ints...) to classes
             mapping = defaultdict(list)
 
-            for cl in classes:
-                for key in get_args(
-                    fields_dict(get_origin(cl) or cl)[discriminator].type
-                ):
+            for cl, candidates in zip(classes, cls_candidates):
+                for key in get_args(candidates[discriminator].type):
                     mapping[key].append(cl)
 
             if best_result is None or max(len(v) for v in mapping.values()) <= max(
@@ -103,7 +103,7 @@ def create_default_dis_func(
 
         if (
             best_result
-            and best_discriminator
+            and best_discriminator is not None
             and max(len(v) for v in best_result.values()) != len(classes)
         ):
             final_mapping = {

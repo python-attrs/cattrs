@@ -12,7 +12,7 @@ from hypothesis import HealthCheck, assume, given, settings
 from cattrs import Converter
 from cattrs.disambiguators import create_default_dis_func, is_supported_union
 from cattrs.errors import StructureHandlerNotFoundError
-from cattrs.gen import make_dict_structure_fn, override
+from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
 from .untyped import simple_classes
 
@@ -375,6 +375,96 @@ def test_field_renaming(converter: Converter):
 
     assert converter.structure({"a": 1}, Union[A, B]) == A(1)
     assert converter.structure({"b": 1}, Union[A, B]) == B(1)
+
+
+@pytest.mark.parametrize("decorator", [define, dataclass])
+@pytest.mark.parametrize("rename", ["type", ""])
+def test_literal_field_renaming(converter, decorator, rename):
+    """Renamed literal discriminators work when round-tripping unions."""
+
+    @decorator
+    class A:
+        kind: Literal["a"]
+
+    @decorator
+    class B:
+        kind: Literal["b"]
+
+    for cl in (A, B):
+        overrides = {"kind": override(rename=rename)}
+        converter.register_structure_hook(
+            cl, make_dict_structure_fn(cl, converter, **overrides)
+        )
+        converter.register_unstructure_hook(
+            cl, make_dict_unstructure_fn(cl, converter, **overrides)
+        )
+
+    for instance in (A("a"), B("b")):
+        payload = converter.unstructure(instance)
+        assert payload == {rename: instance.kind}
+        assert converter.structure(payload, Union[A, B]) == instance
+
+
+def test_literal_field_renaming_different_attributes(converter):
+    """Different attribute names can share a serialized discriminator key."""
+
+    @define
+    class A:
+        a: Literal["a"]
+
+    @define
+    class B:
+        b: Literal["b"]
+
+    converter.register_structure_hook(
+        A, make_dict_structure_fn(A, converter, a=override(rename="type"))
+    )
+    converter.register_structure_hook(
+        B, make_dict_structure_fn(B, converter, b=override(rename="type"))
+    )
+
+    assert converter.structure({"type": "a"}, Union[A, B]) == A("a")
+    assert converter.structure({"type": "b"}, Union[A, B]) == B("b")
+
+
+def test_literal_field_renaming_different_keys(converter):
+    """Literal fields with different serialized names use key disambiguation."""
+
+    @define
+    class A:
+        kind: Literal["a"]
+
+    @define
+    class B:
+        kind: Literal["b"]
+
+    converter.register_structure_hook(
+        A, make_dict_structure_fn(A, converter, kind=override(rename="a"))
+    )
+    converter.register_structure_hook(
+        B, make_dict_structure_fn(B, converter, kind=override(rename="b"))
+    )
+
+    assert converter.structure({"a": "a"}, Union[A, B]) == A("a")
+    assert converter.structure({"b": "b"}, Union[A, B]) == B("b")
+
+
+def test_literal_field_explicit_overrides():
+    """Explicit discriminator overrides apply to literal fields too."""
+
+    @define
+    class A:
+        kind: Literal["a"]
+
+    @define
+    class B:
+        kind: Literal["b"]
+
+    fn = create_default_dis_func(
+        Converter(), A, B, overrides={"kind": override(rename="type")}
+    )
+    assert fn({"type": "a"}) is A
+    assert fn({"type": "b"}) is B
 
 
 def test_dataclasses(converter):
