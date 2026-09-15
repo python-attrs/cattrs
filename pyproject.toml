@@ -109,6 +109,7 @@ tomllib = [
 ]
 
 [tool.coverage.run]
+branch = true
 parallel = true
 source_pkgs = ["cattrs", "tests"]
 core = "sysmon"
