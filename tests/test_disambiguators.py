@@ -405,3 +405,25 @@ def test_dataclasses_literals(converter):
 
     assert converter.structure({"a": "a"}, Union[A, B]) == A()
     assert converter.structure({"b": "b"}, Union[A, B]) == B("b")
+
+
+def test_renamed_literal_discriminator(converter: Converter):
+    """A renamed Literal discriminator field properly disambiguates."""
+
+    @define
+    class A:
+        kind: Literal["a"]
+        a_val: int
+
+    @define
+    class B:
+        kind: Literal["b"]
+        b_val: int
+
+    for cl in (A, B):
+        converter.register_structure_hook(
+            cl, make_dict_structure_fn(cl, converter, kind=override(rename="type"))
+        )
+
+    assert converter.structure({"type": "a", "a_val": 1}, Union[A, B]) == A("a", 1)
+    assert converter.structure({"type": "b", "b_val": 2}, Union[A, B]) == B("b", 2)

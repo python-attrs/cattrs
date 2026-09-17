@@ -69,14 +69,20 @@ def create_default_dis_func(
         # requirements for a discriminator field:
         # (... TODO: a single fallback is OK)
         #  - it must always be enumerated
-        cls_candidates = [
-            {
-                at.name
-                for at in adapted_fields(get_origin(cl) or cl)
-                if is_literal(at.type)
-            }
-            for cl in classes
-        ]
+        # Names here are the ones used in the payload, so renames are applied;
+        # `back_maps` recovers the original field name for each class.
+        cls_candidates = []
+        back_maps = []
+        for cl, override in zip(classes, overrides):
+            candidates = set()
+            back_map = {}
+            for at in adapted_fields(get_origin(cl) or cl):
+                name = _overriden_name(at, override.get(at.name))
+                back_map[name] = at.name
+                if is_literal(at.type):
+                    candidates.add(name)
+            cls_candidates.append(candidates)
+            back_maps.append(back_map)
 
         # literal field names common to all members
         discriminators: set[str] = cls_candidates[0]
@@ -89,9 +95,9 @@ def create_default_dis_func(
             # maps Literal values (strings, ints...) to classes
             mapping = defaultdict(list)
 
-            for cl in classes:
+            for cl, back_map in zip(classes, back_maps):
                 for key in get_args(
-                    fields_dict(get_origin(cl) or cl)[discriminator].type
+                    fields_dict(get_origin(cl) or cl)[back_map[discriminator]].type
                 ):
                     mapping[key].append(cl)
 
