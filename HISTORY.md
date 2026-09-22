@@ -21,6 +21,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   [PEP 747](https://peps.python.org/pep-0747/) [`TypeForm`](https://typing.python.org/en/latest/spec/type-forms.html#type-forms) annotations,
   allowing type checkers to infer result types for unions, literals, type aliases and other non-trivial types.
   ([#786](https://github.com/python-attrs/cattrs/pull/786))
+- Fix {func}`make_dict_unstructure_fn <cattrs.gen.make_dict_unstructure_fn>` ignoring hooks registered on the converter (like the methods picked up by the {func}`use_class_methods <cattrs.strategies.use_class_methods>` strategy) when no customizations are requested; hook factories built on top of it now compose with those hooks instead of silently dropping them.
+  ([#566](https://github.com/python-attrs/cattrs/issues/566))
 
 ## 26.2.1 (2026-09-26)
 

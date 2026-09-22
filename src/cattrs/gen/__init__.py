@@ -19,7 +19,7 @@ from .._compat import (
     is_generic,
 )
 from .._generics import deep_copy_with
-from ..dispatch import UnstructureHook
+from ..dispatch import UnstructureHook, _DispatchNotFound, _is_factory_in_progress
 from ..errors import (
     AttributeValidationNote,
     ClassValidationError,
@@ -251,6 +251,75 @@ def make_dict_unstructure_fn_from_attrs(
     return res
 
 
+def _converter_unstructure_hook(
+    converter: BaseConverter, cl: type[T]
+) -> Callable[[T], Any] | None:
+    """Get the converter's own unstructure hook for `cl`, if it has a custom one.
+
+    "Custom" here means anything except the converter's default attrs
+    unstructuring. Hook factories which are already being evaluated for `cl`
+    (directly causing this call, for example a hook factory delegating to
+    `make_dict_unstructure_fn`) are skipped, giving lower-precedence factories
+    a chance; factories raising `RecursionError` are skipped as well.
+
+    Used by `make_dict_unstructure_fn` so it composes with hooks registered on
+    the converter (for example methods picked up by
+    `cattrs.strategies.use_class_methods`, or hooks registered directly for
+    `cl`) instead of silently ignoring them.
+    """
+    unstructure_func = converter._unstructure_func
+
+    def is_default_attrs_hook(hook: Any) -> bool:
+        # `BaseConverter._unstructure_attrs` is the default attrs unstructuring;
+        # bound methods compare by `__self__` and `__func__`.
+        return hook == converter._unstructure_attrs
+
+    # Hooks registered for (super)classes take precedence, mirroring dispatch.
+    try:
+        hook = unstructure_func._single_dispatch.dispatch(cl)
+    except Exception:  # noqa: S110
+        pass
+    else:
+        if hook is not _DispatchNotFound and not is_default_attrs_hook(hook):
+            return hook
+
+    hook = unstructure_func._direct_dispatch.get(cl)
+    if hook is not None and not is_default_attrs_hook(hook):
+        return hook
+
+    for (
+        predicate,
+        handler,
+        is_generator,
+        takes_converter,
+    ) in unstructure_func._function_dispatch._handler_pairs:
+        try:
+            matches = predicate(cl)
+        except Exception:  # noqa: S112
+            continue
+        if not matches:
+            continue
+        if not is_generator:
+            if not is_default_attrs_hook(handler):
+                return handler
+        elif _is_factory_in_progress(handler, cl):
+            # The factory is already being evaluated for `cl` further up the
+            # stack; calling it again would just hit its own recursion guard
+            # (or recurse), so give lower-precedence factories a chance.
+            continue
+        else:
+            try:
+                hook = handler(cl, converter) if takes_converter else handler(cl)
+            except RecursionError:
+                # The factory recurses back into `make_dict_unstructure_fn`;
+                # skip it so factories with a lower precedence get a chance.
+                continue
+            if not is_default_attrs_hook(hook):
+                return hook
+
+    return None
+
+
 def make_dict_unstructure_fn(
     cl: type[T],
     converter: BaseConverter,
@@ -287,7 +356,8 @@ def make_dict_unstructure_fn(
     attrs = adapted_fields(origin or cl)  # type: ignore
 
     mapping = {}
-    if _cattrs_use_alias == "from_converter":
+    use_alias_from_converter = _cattrs_use_alias == "from_converter"
+    if use_alias_from_converter:
         # BaseConverter doesn't have it so we're careful.
         _cattrs_use_alias = getattr(converter, "use_alias", False)
     if is_generic(cl):
@@ -309,6 +379,21 @@ def make_dict_unstructure_fn(
     working_set.add(cl)
 
     try:
+        if (
+            not kwargs
+            and not _cattrs_omit_if_default
+            and not _cattrs_include_init_false
+            and use_alias_from_converter
+        ):
+            # No customizations were requested, so the converter may have a
+            # better hook for `cl` than the one we would generate (for example
+            # a method picked up by `cattrs.strategies.use_class_methods`, or a
+            # hook registered directly for `cl`); prefer it so hook factories
+            # built on top of this function compose with those customizations
+            # instead of silently ignoring them.
+            custom_hook = _converter_unstructure_hook(converter, cl)
+            if custom_hook is not None:
+                return custom_hook
         return make_dict_unstructure_fn_from_attrs(
             attrs,
             cl,
