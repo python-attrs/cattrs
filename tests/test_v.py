@@ -127,6 +127,26 @@ def test_extra_keys_are_sorted(c: Converter) -> None:
     assert transform_error(exc_info.value) == ["extra fields found (b, c, d, e) @ $"]
 
 
+def test_extra_keys_not_strings(c: Converter) -> None:
+    """Extra keys that aren't strings, like ints from YAML, are formatted."""
+
+    @define
+    class C:
+        a: int
+
+    c.register_structure_hook(
+        C, make_dict_structure_fn(C, c, _cattrs_forbid_extra_keys=True)
+    )
+
+    with raises(Exception) as exc_info:
+        c.structure({"a": 1, 2: 2, "b": 3}, C)
+
+    assert transform_error(exc_info.value) == ["extra fields found (2, b) @ $"]
+    assert (
+        str(exc_info.value.exceptions[0]) == "Extra fields in constructor for C: 2, b"
+    )
+
+
 def test_untyped_class_errors(c: Converter) -> None:
     """Errors on untyped attrs classes transform correctly."""
 
