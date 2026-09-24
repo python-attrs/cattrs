@@ -21,6 +21,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   [PEP 747](https://peps.python.org/pep-0747/) [`TypeForm`](https://typing.python.org/en/latest/spec/type-forms.html#type-forms) annotations,
   allowing type checkers to infer result types for unions, literals, type aliases and other non-trivial types.
   ([#786](https://github.com/python-attrs/cattrs/pull/786))
+- Fix {meth}`structure_attrs_fromtuple <cattrs.BaseConverter.structure_attrs_fromtuple>` and {meth}`structure_attrs_fromdict <cattrs.BaseConverter.structure_attrs_fromdict>` failing with `StructureHandlerNotFoundError` on classes using `from __future__ import annotations`; the attribute types are now resolved like the rest of the structuring machinery already does.
+  ([#293](https://github.com/python-attrs/cattrs/issues/293))
 
 ## 26.2.1 (2026-09-26)
 
