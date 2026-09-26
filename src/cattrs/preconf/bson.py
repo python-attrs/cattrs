@@ -6,6 +6,7 @@ from datetime import date, datetime
 from typing import Any, TypeVar, Union
 
 from bson import DEFAULT_CODEC_OPTIONS, CodecOptions, Int64, ObjectId, decode, encode
+from typing_extensions import TypeForm
 
 from .._compat import is_mapping, is_subclass
 from ..cols import mapping_structure_factory
@@ -45,9 +46,15 @@ class BsonConverter(Converter):
     def loads(
         self,
         data: bytes,
-        cl: type[T],
+        cl: TypeForm[T],
         codec_options: CodecOptions = DEFAULT_CODEC_OPTIONS,
     ) -> T:
+        """Deserialize and structure the provided data as ``cl``.
+
+        .. versionchanged:: NEXT
+            The target type is now annotated with ``TypeForm`` to support
+            stronger typing.
+        """
         return self.structure(decode(data, codec_options=codec_options), cl)
 
 

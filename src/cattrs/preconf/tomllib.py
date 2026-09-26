@@ -7,6 +7,8 @@ from enum import Enum
 from operator import attrgetter
 from typing import Any, TypeVar, Union
 
+from typing_extensions import TypeForm
+
 try:
     from tomllib import loads
 except ImportError:
@@ -37,7 +39,13 @@ class TomllibConverter(Converter):
         def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> str:
             return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
-    def loads(self, data: str, cl: type[T], **kwargs: Any) -> T:
+    def loads(self, data: str, cl: TypeForm[T], **kwargs: Any) -> T:
+        """Deserialize and structure the provided data as ``cl``.
+
+        .. versionchanged:: NEXT
+            The target type is now annotated with ``TypeForm`` to support
+            stronger typing.
+        """
         return self.structure(loads(data, **kwargs), cl)
 
 
