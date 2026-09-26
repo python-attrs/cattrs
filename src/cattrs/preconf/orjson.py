@@ -8,6 +8,7 @@ from functools import partial
 from typing import Any, TypeVar, Union
 
 from orjson import dumps, loads
+from typing_extensions import TypeForm
 
 from .._compat import is_subclass
 from ..cols import is_mapping, is_namedtuple, namedtuple_unstructure_factory
@@ -26,7 +27,15 @@ class OrjsonConverter(Converter):
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> bytes:
         return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
-    def loads(self, data: Union[bytes, bytearray, memoryview, str], cl: type[T]) -> T:
+    def loads(
+        self, data: Union[bytes, bytearray, memoryview, str], cl: TypeForm[T]
+    ) -> T:
+        """Deserialize and structure the provided data as ``cl``.
+
+        .. versionchanged:: NEXT
+            The target type is now annotated with ``TypeForm`` to support
+            stronger typing.
+        """
         return self.structure(loads(data), cl)
 
 

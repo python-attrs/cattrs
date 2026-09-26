@@ -343,7 +343,7 @@ def defaultdict_structure_factory(
 ) -> StructureHook:
     """A structure hook factory for defaultdicts.
 
-    The value type parameter will be used as the _default factory_.
+    The value type parameter will be used as the *default factory*.
     """
     if default_factory is NOTHING:
         default_factory = get_args(type)[1]

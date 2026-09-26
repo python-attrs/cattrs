@@ -9,6 +9,7 @@ from typing import Any, TypeVar, Union
 
 from tomlkit import dumps, loads
 from tomlkit.items import Float, Integer, String
+from typing_extensions import TypeForm
 
 from .._compat import is_mapping, is_subclass
 from ..converters import BaseConverter, Converter
@@ -26,7 +27,13 @@ class TomlkitConverter(Converter):
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> str:
         return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
-    def loads(self, data: str, cl: type[T]) -> T:
+    def loads(self, data: str, cl: TypeForm[T]) -> T:
+        """Deserialize and structure the provided data as ``cl``.
+
+        .. versionchanged:: NEXT
+            The target type is now annotated with ``TypeForm`` to support
+            stronger typing.
+        """
         return self.structure(loads(data), cl)
 
 

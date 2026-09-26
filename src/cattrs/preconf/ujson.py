@@ -5,6 +5,7 @@ from collections.abc import Set
 from datetime import date, datetime
 from typing import Any, AnyStr, TypeVar, Union
 
+from typing_extensions import TypeForm
 from ujson import dumps, loads
 
 from ..converters import BaseConverter, Converter
@@ -22,7 +23,13 @@ class UjsonConverter(Converter):
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> str:
         return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
-    def loads(self, data: AnyStr, cl: type[T], **kwargs: Any) -> T:
+    def loads(self, data: AnyStr, cl: TypeForm[T], **kwargs: Any) -> T:
+        """Deserialize and structure the provided data as ``cl``.
+
+        .. versionchanged:: NEXT
+            The target type is now annotated with ``TypeForm`` to support
+            stronger typing.
+        """
         return self.structure(loads(data, **kwargs), cl)
 
 
