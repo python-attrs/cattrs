@@ -33,6 +33,7 @@ from ._compat import (
     Set,
     TypeAlias,
     fields,
+    frozendict,
     get_final_base,
     get_newtype_base,
     get_origin,
@@ -297,6 +298,16 @@ class BaseConverter:
                 (is_tuple, self._structure_tuple),
                 (is_namedtuple, namedtuple_structure_factory, "extended"),
                 (is_mapping, self._structure_dict),
+                *(
+                    [
+                        (
+                            lambda t: (get_origin(t) or t) is frozendict,
+                            lambda obj, cl: cl(self._structure_dict(obj, cl)),
+                        )
+                    ]
+                    if frozendict is not None
+                    else []
+                ),
                 *(
                     [(is_supported_union, self._gen_attrs_union_structure, True)]
                     if unstruct_strat is UnstructureStrategy.AS_DICT
@@ -1147,9 +1158,12 @@ class Converter(BaseConverter):
             if deque not in co:
                 co[deque] = co[MutableSequence]
 
-        # abc.Mapping overrides, if defined, can apply to MutableMappings
-        if Mapping in co and MutableMapping not in co:
-            co[MutableMapping] = co[Mapping]
+        # abc.Mapping overrides apply to mutable and frozen mappings.
+        if Mapping in co:
+            if MutableMapping not in co:
+                co[MutableMapping] = co[Mapping]
+            if frozendict is not None and frozendict not in co:
+                co[frozendict] = co[Mapping]
 
         # abc.MutableMapping overrides, if defined, can apply to dicts
         if MutableMapping in co and dict not in co:

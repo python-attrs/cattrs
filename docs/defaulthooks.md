@@ -210,6 +210,16 @@ Both keys and values are converted.
 {'1': None, '2': 2}
 ```
 
+### frozendicts
+
+On Python 3.15+, `frozendict` and `frozendict[K, V]` are supported.
+Structuring produces a `frozendict`, converting keys and values according to the
+type arguments when provided.
+{class}`Converter <cattrs.Converter>` unstructures frozen dictionaries into plain
+dictionaries, while {class}`BaseConverter <cattrs.BaseConverter>` preserves the
+`frozendict` type.
+`Mapping` unstructure collection overrides also apply to `frozendict`.
+
 ### defaultdicts
 
 [`defaultdicts`](https://docs.python.org/3/library/collections.html#collections.defaultdict)
