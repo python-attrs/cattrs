@@ -2,6 +2,7 @@
 
 import keyword
 import string
+import sys
 from collections.abc import Iterable
 from enum import Enum
 from typing import (
@@ -112,7 +113,12 @@ h_tuples_of_primitives = primitive_strategies.flatmap(
     )
 ).map(lambda e: (tuple(e[0]), e[1]))
 
-dict_types = st.sampled_from([Dict, MutableMapping, Mapping])
+mapping_classes = [Dict, MutableMapping, Mapping]
+if sys.version_info >= (3, 15):
+    from builtins import frozendict
+
+    mapping_classes.append(frozendict)
+dict_types = st.sampled_from(mapping_classes)
 
 seqs_of_primitives = st.one_of(lists_of_primitives(), h_tuples_of_primitives)
 deque_seqs_of_primitives = st.one_of(deques_of_primitives(), h_tuples_of_primitives)
@@ -133,10 +139,10 @@ def create_dict_and_type(tuple_of_strats):
     """Map two primitive strategies into a strategy for dict and type."""
     (prim_strat_1, type_1), (prim_strat_2, type_2) = tuple_of_strats
 
-    return st.tuples(
-        st.dictionaries(prim_strat_1, prim_strat_2),
-        create_generic_dict_type(type_1, type_2),
-    )
+    values = st.dictionaries(prim_strat_1, prim_strat_2)
+    if sys.version_info >= (3, 15):
+        values = values | values.map(frozendict)
+    return st.tuples(values, create_generic_dict_type(type_1, type_2))
 
 
 dicts_of_primitives = st.tuples(primitive_strategies, primitive_strategies).flatmap(

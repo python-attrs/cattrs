@@ -18,6 +18,7 @@ from msgspec.json import Encoder, decode
 
 from .._compat import (
     fields,
+    frozendict,
     get_args,
     get_origin,
     is_bare,
@@ -146,6 +147,9 @@ def seq_unstructure_factory(type, converter: Converter) -> UnstructureHook:
 
 def mapping_unstructure_factory(type, converter: Converter) -> UnstructureHook:
     """The msgspec unstructure hook factory for mappings."""
+    if frozendict is not None and is_subclass(get_origin(type) or type, frozendict):
+        # msgspec cannot serialize frozen dictionaries directly.
+        return converter.gen_unstructure_mapping(type)
     if is_bare(type):
         key_arg = Any
         val_arg = Any

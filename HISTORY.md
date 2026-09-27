@@ -13,6 +13,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT (UNRELEASED)
 
+- Support the [`frozendict`](https://docs.python.org/3.15/builtins/stdtypes.html#frozendict) built-in on Python 3.15+.
+  ([#787](https://github.com/python-attrs/cattrs/pull/787))
 - Python 3.15 is now supported and part of the test matrix.
   ([#787](https://github.com/python-attrs/cattrs/pull/787))
 

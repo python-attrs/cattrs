@@ -1,5 +1,6 @@
 """Strategies for attributes with types and classes using them."""
 
+import sys
 from collections.abc import MutableSequence as AbcMutableSequence
 from collections.abc import MutableSet as AbcMutableSet
 from collections.abc import Sequence as AbcSequence
@@ -55,6 +56,9 @@ PosArg = Any
 PosArgs = tuple[PosArg]
 KwArgs = dict[str, Any]
 T = TypeVar("T")
+
+if sys.version_info >= (3, 15):
+    from builtins import frozendict
 
 
 def simple_typed_classes(
@@ -167,6 +171,8 @@ def simple_typed_attrs(
         | homo_tuple_typed_attrs(defaults, kw_only=kw_only)
         | path_typed_attrs(defaults, kw_only=kw_only)
     )
+    if sys.version_info >= (3, 15):
+        res = res | frozendict_typed_attrs(defaults, kw_only=kw_only)
     if newtypes:
         res = (
             res
@@ -491,6 +497,29 @@ def new_dict_typed_attrs(
     return (
         field(
             type=dict[str, int],
+            default=default,
+            kw_only=(
+                draw(booleans()) if kw_only == "sometimes" else (kw_only == "always")
+            ),
+        ),
+        val_strat,
+    )
+
+
+@composite
+def frozendict_typed_attrs(
+    draw: DrawFn,
+    defaults: FeatureFlag = "sometimes",
+    kw_only: FeatureFlag = "sometimes",
+):
+    """Generate hashable frozen mappings, including bare and generic annotations."""
+    val_strat = dictionaries(keys=text(), values=integers()).map(frozendict)
+    default = NOTHING
+    if defaults == "always" or (defaults == "sometimes" and draw(booleans())):
+        default = draw(val_strat)
+    return (
+        field(
+            type=draw(sampled_from([frozendict, frozendict[str, int]])),
             default=default,
             kw_only=(
                 draw(booleans()) if kw_only == "sometimes" else (kw_only == "always")
