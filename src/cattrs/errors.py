@@ -138,5 +138,5 @@ class ForbiddenExtraKeysError(CattrsError):
         return (
             self.message
             or f"Extra fields in constructor for {self.cl.__name__}: "
-            f"{', '.join(sorted(self.extra_fields))}"
+            f"{', '.join(sorted(map(str, self.extra_fields)))}"
         )
