@@ -15,9 +15,11 @@ from attrs import has as attrs_has
 from attrs import resolve_types
 from msgspec import Struct, convert, to_builtins
 from msgspec.json import Encoder, decode
+from typing_extensions import TypeForm
 
 from .._compat import (
     fields,
+    frozendict,
     get_args,
     get_origin,
     is_bare,
@@ -62,12 +64,22 @@ class MsgspecJsonConverter(Converter):
             return self.encoder.encode
         return self.dumps
 
-    def loads(self, data: bytes, cl: type[T], **kwargs: Any) -> T:
-        """Decode and structure `cl` from the provided JSON bytes."""
+    def loads(self, data: bytes, cl: TypeForm[T], **kwargs: Any) -> T:
+        """Decode and structure `cl` from the provided JSON bytes.
+
+        .. versionchanged:: NEXT
+            The target type is now annotated with ``TypeForm`` to support
+            stronger typing.
+        """
         return self.structure(decode(data, **kwargs), cl)
 
-    def get_loads_hook(self, cl: type[T]) -> Callable[[bytes], T]:
-        """Produce a `loads` hook for the given type."""
+    def get_loads_hook(self, cl: TypeForm[T]) -> Callable[[bytes], T]:
+        """Produce a `loads` hook for the given type.
+
+        .. versionchanged:: NEXT
+            The target type is now annotated with ``TypeForm`` to support
+            stronger typing.
+        """
         return partial(self.loads, cl=cl)
 
 
@@ -146,6 +158,9 @@ def seq_unstructure_factory(type, converter: Converter) -> UnstructureHook:
 
 def mapping_unstructure_factory(type, converter: Converter) -> UnstructureHook:
     """The msgspec unstructure hook factory for mappings."""
+    if frozendict is not None and is_subclass(get_origin(type) or type, frozendict):
+        # msgspec cannot serialize frozen dictionaries directly.
+        return converter.gen_unstructure_mapping(type)
     if is_bare(type):
         key_arg = Any
         val_arg = Any

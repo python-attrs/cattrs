@@ -13,7 +13,7 @@ from typing import Any, Optional, Tuple, TypeVar, overload
 
 from attrs import Attribute, resolve_types
 from attrs import has as attrs_has
-from typing_extensions import Self
+from typing_extensions import Self, TypeForm
 
 try:
     from annotationlib import ForwardRef as AnnotationForwardRef
@@ -33,6 +33,7 @@ from ._compat import (
     Set,
     TypeAlias,
     fields,
+    frozendict,
     get_final_base,
     get_newtype_base,
     get_origin,
@@ -297,6 +298,16 @@ class BaseConverter:
                 (is_tuple, self._structure_tuple),
                 (is_namedtuple, namedtuple_structure_factory, "extended"),
                 (is_mapping, self._structure_dict),
+                *(
+                    [
+                        (
+                            lambda t: (get_origin(t) or t) is frozendict,
+                            lambda obj, cl: cl(self._structure_dict(obj, cl)),
+                        )
+                    ]
+                    if frozendict is not None
+                    else []
+                ),
                 *(
                     [(is_supported_union, self._gen_attrs_union_structure, True)]
                     if unstruct_strat is UnstructureStrategy.AS_DICT
@@ -596,11 +607,18 @@ class BaseConverter:
         )
         return factory
 
-    def structure(self, obj: UnstructuredValue, cl: type[T]) -> T:
-        """Convert unstructured Python data structures to structured data."""
+    def structure(self, obj: UnstructuredValue, cl: TypeForm[T]) -> T:
+        """Convert unstructured Python data structures to structured data.
+
+        .. versionchanged:: NEXT
+            The target type is now annotated with ``TypeForm`` to support
+            stronger type hints.
+        """
         return self._structure_func.dispatch(cl)(obj, cl)
 
-    def get_structure_hook(self, type: Any, cache_result: bool = True) -> StructureHook:
+    def get_structure_hook(
+        self, type: TypeForm[T], cache_result: bool = True
+    ) -> Callable[[Any, TypeForm[T]], T]:
         """Get the structure hook for the given type.
 
         This hook can be manually called, or composed with other functions
@@ -612,6 +630,10 @@ class BaseConverter:
         :param cache: Whether to cache the returned hook.
 
         .. versionadded:: 24.1.0
+
+        .. versionchanged:: NEXT
+            The target type is now annotated with ``TypeForm``, and the
+            returned hook preserves the inferred result type.
         """
         return (
             self._structure_func.dispatch(type)
@@ -1147,9 +1169,12 @@ class Converter(BaseConverter):
             if deque not in co:
                 co[deque] = co[MutableSequence]
 
-        # abc.Mapping overrides, if defined, can apply to MutableMappings
-        if Mapping in co and MutableMapping not in co:
-            co[MutableMapping] = co[Mapping]
+        # abc.Mapping overrides apply to mutable and frozen mappings.
+        if Mapping in co:
+            if MutableMapping not in co:
+                co[MutableMapping] = co[Mapping]
+            if frozendict is not None and frozendict not in co:
+                co[frozendict] = co[Mapping]
 
         # abc.MutableMapping overrides, if defined, can apply to dicts
         if MutableMapping in co and dict not in co:
@@ -1265,7 +1290,12 @@ class Converter(BaseConverter):
         # This dummy wrapper is required due to how `@overload` works.
         return super().register_structure_hook_factory(predicate, factory)
 
-    def get_structure_newtype(self, type: type[T]) -> Callable[[Any, Any], T]:
+    def get_structure_newtype(self, type: TypeForm[T]) -> Callable[[Any, Any], T]:
+        """Generate a structuring hook for a NewType.
+
+        .. versionchanged:: NEXT
+            The target type now uses ``TypeForm``.
+        """
         base = get_newtype_base(type)
         handler = self.get_structure_hook(base)
         return lambda v, _: handler(v, base)
@@ -1305,8 +1335,12 @@ class Converter(BaseConverter):
             cl, self, _cattrs_omit_if_default=self.omit_if_default, **attrib_overrides
         )
 
-    def gen_unstructure_optional(self, cl: type[T]) -> Callable[[T], Any]:
-        """Generate an unstructuring hook for optional types."""
+    def gen_unstructure_optional(self, cl: TypeForm[T]) -> Callable[[T], Any]:
+        """Generate an unstructuring hook for optional types.
+
+        .. versionchanged:: NEXT
+            The target type now uses ``TypeForm``.
+        """
         union_params = cl.__args__
         other = union_params[0] if union_params[1] is NoneType else union_params[1]
 

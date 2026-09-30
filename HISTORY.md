@@ -11,7 +11,18 @@ The third number is for emergencies when we need to start branches for older rel
 
 Our backwards-compatibility policy can be found [here](https://github.com/python-attrs/cattrs/blob/main/.github/SECURITY.md).
 
-## NEXT (UNRELEASED)
+## NEXT
+
+- Support the [`frozendict`](https://docs.python.org/3.15/builtins/stdtypes.html#frozendict) built-in on Python 3.15+.
+  ([#787](https://github.com/python-attrs/cattrs/pull/787))
+- Python 3.15 is now supported and part of the test matrix.
+  ([#787](https://github.com/python-attrs/cattrs/pull/787))
+- {meth}`BaseConverter.structure`, {meth}`BaseConverter.get_structure_hook` and the preconfigured converters' `loads` methods now use
+  [PEP 747](https://peps.python.org/pep-0747/) [`TypeForm`](https://typing.python.org/en/latest/spec/type-forms.html#type-forms) annotations,
+  allowing type checkers to infer result types for unions, literals, type aliases and other non-trivial types.
+  ([#786](https://github.com/python-attrs/cattrs/pull/786))
+
+## 26.2.1 (2026-09-26)
 
 - Honor field renaming overrides when selecting literal discriminators for unions, so renamed union members can be structured from their serialized keys.
   ([#778](https://github.com/python-attrs/cattrs/pull/778))

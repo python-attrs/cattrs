@@ -97,6 +97,11 @@ except ImportError:  # pragma: no cover
 
 NoneType = type(None)
 
+if sys.version_info >= (3, 15):
+    from builtins import frozendict
+else:
+    frozendict = None
+
 
 def is_optional(typ: Any) -> bool:
     return is_union_type(typ) and NoneType in typ.__args__ and len(typ.__args__) == 2

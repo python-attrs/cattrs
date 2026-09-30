@@ -121,4 +121,13 @@ To run a subset of tests:
 $ just test tests/test_unstructure.py
 ```
 
+Static typing tests live in `tests/test_typing_structure.md` and run through `pytest-typing` with Mypy on CPython 3.14.
+To run them on their own:
+
+```shell
+$ just --set python python3.14 test tests/test_typing_structure.md
+```
+
+The test dependencies include a Mypy version with `TypeForm` support enabled by default.
+
 [llm]: https://github.com/python-attrs/cattrs/blob/main/.github/AI_POLICY.md

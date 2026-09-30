@@ -5,6 +5,7 @@ from datetime import date, datetime, time, timezone
 from typing import Any, TypeVar, Union
 
 from msgpack import dumps, loads
+from typing_extensions import TypeForm
 
 from ..converters import BaseConverter, Converter
 from ..fns import identity
@@ -26,7 +27,13 @@ class MsgpackConverter(Converter):
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> bytes:
         return dumps(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
-    def loads(self, data: bytes, cl: type[T], **kwargs: Any) -> T:
+    def loads(self, data: bytes, cl: TypeForm[T], **kwargs: Any) -> T:
+        """Deserialize and structure the provided data as ``cl``.
+
+        .. versionchanged:: NEXT
+            The target type is now annotated with ``TypeForm`` to support
+            stronger typing.
+        """
         return self.structure(loads(data, **kwargs), cl)
 
 

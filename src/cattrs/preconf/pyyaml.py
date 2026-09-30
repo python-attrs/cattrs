@@ -4,6 +4,7 @@ from datetime import date, datetime
 from functools import partial
 from typing import Any, TypeVar, Union
 
+from typing_extensions import TypeForm
 from yaml import safe_dump, safe_load
 
 from .._compat import FrozenSetSubscriptable
@@ -27,7 +28,13 @@ class PyyamlConverter(Converter):
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> str:
         return safe_dump(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
 
-    def loads(self, data: str, cl: type[T]) -> T:
+    def loads(self, data: str, cl: TypeForm[T]) -> T:
+        """Deserialize and structure the provided data as ``cl``.
+
+        .. versionchanged:: NEXT
+            The target type is now annotated with ``TypeForm`` to support
+            stronger typing.
+        """
         return self.structure(safe_load(data), cl)
 
 
