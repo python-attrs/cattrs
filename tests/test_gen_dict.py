@@ -1,5 +1,6 @@
 """Tests for generated dict functions."""
 
+from dataclasses import dataclass
 from math import ceil
 from typing import Annotated, Dict, Literal, Type, Union
 
@@ -11,7 +12,12 @@ from hypothesis.strategies import data, just, one_of, sampled_from
 from cattrs import BaseConverter, Converter
 from cattrs._compat import adapted_fields, fields
 from cattrs.errors import ClassValidationError, ForbiddenExtraKeysError
-from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
+from cattrs.gen import (
+    make_dict_structure_fn,
+    make_dict_unstructure_fn,
+    make_dict_unstructure_fn_from_attrs,
+    override,
+)
 
 from .helpers import assert_only_unstructured
 from .typed import nested_typed_classes, simple_typed_classes, simple_typed_dataclasses
@@ -105,6 +111,76 @@ def test_nodefs_generated_unstructuring_cl(
                         assert attr.name not in res
                     else:
                         assert attr.name in res
+
+
+@pytest.mark.parametrize("decorate", [define, dataclass])
+@pytest.mark.parametrize("from_attrs", [False, True])
+@pytest.mark.parametrize("converter_setting", [None, False, True, "base"])
+@pytest.mark.parametrize("explicit", [None, False, True])
+def test_omit_if_default_from_converter(
+    decorate, from_attrs, converter_setting, explicit
+):
+    """Generated hooks inherit omission settings unless explicitly overridden."""
+
+    @decorate
+    class A:
+        a: int = 1
+        b: int = 2
+
+    if converter_setting == "base":
+        converter = BaseConverter()
+    elif converter_setting is None:
+        converter = Converter()
+    else:
+        converter = Converter(omit_if_default=converter_setting)
+
+    options = {} if explicit is None else {"_cattrs_omit_if_default": explicit}
+    if from_attrs:
+        hook = make_dict_unstructure_fn_from_attrs(
+            adapted_fields(A), A, converter, b=override(rename="renamed"), **options
+        )
+    else:
+        hook = make_dict_unstructure_fn(
+            A, converter, b=override(rename="renamed"), **options
+        )
+    converter.register_unstructure_hook(A, hook)
+
+    omit = converter_setting is True if explicit is None else explicit
+    assert converter.unstructure(A()) == ({} if omit else {"a": 1, "renamed": 2})
+    assert converter.unstructure(A(b=3)) == (
+        {"renamed": 3} if omit else {"a": 1, "renamed": 3}
+    )
+
+
+@pytest.mark.parametrize("omit_if_default", [False, True])
+@pytest.mark.parametrize("from_attrs", [False, True])
+def test_omit_if_default_from_converter_attribute_overrides(
+    omit_if_default, from_attrs
+):
+    """Attribute overrides take precedence over the inherited converter setting."""
+
+    @define
+    class A:
+        a: int = 1
+        b: int = 2
+        c: int = 3
+
+    converter = Converter(omit_if_default=omit_if_default)
+    overrides = {
+        "a": override(omit_if_default=False),
+        "b": override(omit_if_default=True),
+    }
+    if from_attrs:
+        hook = make_dict_unstructure_fn_from_attrs(
+            adapted_fields(A), A, converter, **overrides
+        )
+    else:
+        hook = make_dict_unstructure_fn(A, converter, **overrides)
+    converter.register_unstructure_hook(A, hook)
+
+    assert converter.unstructure(A()) == (
+        {"a": 1} if omit_if_default else {"a": 1, "c": 3}
+    )
 
 
 @given(

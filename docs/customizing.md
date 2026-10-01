@@ -196,6 +196,14 @@ and support `omit_if_default`, `forbid_extra_keys`, `rename` and `omit`.
 
 This override can be applied on a per-class or per-attribute basis.
 The generated unstructuring hook will skip unstructuring values that are equal to their default or factory values.
+By default, {func}`make_dict_unstructure_fn` and {func}`make_dict_unstructure_fn_from_attrs`
+inherit the converter's `omit_if_default` setting (`False` for a {class}`cattrs.BaseConverter`).
+Pass `_cattrs_omit_if_default=True` or `_cattrs_omit_if_default=False` to override this setting
+for a particular hook; per-attribute overrides take precedence over either value.
+
+If a default-valued field is needed to select a class during structuring, such as a `Literal` discriminator, preserve it with `override(omit_if_default=False)`.
+This also applies when using {func}`cattrs.strategies.include_subclasses` with `overrides`, since those generated hooks now inherit the converter setting.
+For example, pass `overrides={"kind": override(omit_if_default=False)}` to keep a `kind` discriminator while omitting other default-valued fields.
 
 ```{doctest}
 
