@@ -337,6 +337,40 @@ def test_overrides(with_union_strategy: bool, struct_unstruct: str):
     assert c.structure(unstructured, structured.__class__) == structured
 
 
+@pytest.mark.parametrize("union_strategy", [None, configure_tagged_union])
+def test_omit_if_default_with_discriminator_override(union_strategy):
+    """Preserve the discriminator while inheriting omission for other fields."""
+
+    @define
+    class Parent:
+        kind: typing.Literal["parent"] = "parent"
+        count: int = 0
+
+    @define
+    class Child(Parent):
+        kind: typing.Literal["child"] = "child"
+
+    converter = Converter(omit_if_default=True)
+    include_subclasses(
+        Parent,
+        converter,
+        overrides={
+            "kind": override(omit_if_default=False),
+            "count": override(rename="renamed"),
+        },
+        union_strategy=union_strategy,
+    )
+
+    for instance in (Parent(), Child(), Parent(count=3), Child(count=3)):
+        expected = {"kind": instance.kind}
+        if instance.count != 0:
+            expected["renamed"] = instance.count
+        if union_strategy is not None:
+            expected["_type"] = type(instance).__name__
+        assert converter.unstructure(instance) == expected
+        assert converter.structure(expected, Parent) == instance
+
+
 def test_no_parent_classes(genconverter: Converter):
     """Test an edge condition when a union strategy is used.
 

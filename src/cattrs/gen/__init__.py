@@ -73,7 +73,7 @@ def make_dict_unstructure_fn_from_attrs(
     cl: type[T],
     converter: BaseConverter,
     typevar_map: dict[str, Any] = {},
-    _cattrs_omit_if_default: bool = False,
+    _cattrs_omit_if_default: bool | Literal["from_converter"] = "from_converter",
     _cattrs_use_linecache: bool = True,
     _cattrs_use_alias: bool | Literal["from_converter"] = "from_converter",
     _cattrs_include_init_false: bool = False,
@@ -90,7 +90,8 @@ def make_dict_unstructure_fn_from_attrs(
     :param cl: The class for which the function is generated; used mostly for its name,
         module name and qualname.
     :param _cattrs_omit_if_default: if true, attributes equal to their default values
-        will be omitted in the result dictionary.
+        will be omitted in the result dictionary. By default, the value is taken
+        from the converter, or is false for a `BaseConverter`.
     :param _cattrs_use_alias: If true, the attribute alias will be used as the
         dictionary key by default.
     :param _cattrs_include_init_false: If true, _attrs_ fields marked as `init=False`
@@ -114,6 +115,10 @@ def make_dict_unstructure_fn_from_attrs(
     lines = []
     invocation_lines = []
     internal_arg_parts = {}
+
+    if _cattrs_omit_if_default == "from_converter":
+        # BaseConverter doesn't have it so we're careful.
+        _cattrs_omit_if_default = getattr(converter, "omit_if_default", False)
 
     if _cattrs_use_alias == "from_converter":
         # BaseConverter doesn't have it so we're careful.
@@ -254,7 +259,7 @@ def make_dict_unstructure_fn_from_attrs(
 def make_dict_unstructure_fn(
     cl: type[T],
     converter: BaseConverter,
-    _cattrs_omit_if_default: bool = False,
+    _cattrs_omit_if_default: bool | Literal["from_converter"] = "from_converter",
     _cattrs_use_linecache: bool = True,
     _cattrs_use_alias: bool | Literal["from_converter"] = "from_converter",
     _cattrs_include_init_false: bool = False,
@@ -268,7 +273,8 @@ def make_dict_unstructure_fn(
     `overrides` attribute.
 
     :param _cattrs_omit_if_default: if true, attributes equal to their default values
-        will be omitted in the result dictionary.
+        will be omitted in the result dictionary. By default, the value is taken
+        from the converter, or is false for a `BaseConverter`.
     :param _cattrs_use_alias: If true, the attribute alias will be used as the
         dictionary key by default.
     :param _cattrs_include_init_false: If true, _attrs_ fields marked as `init=False`
