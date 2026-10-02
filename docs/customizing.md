@@ -375,10 +375,13 @@ AliasClass(number=2)
 
 ```
 
+(customizing-include-init-false)=
 ### `include_init_false`
 
 By default, _attrs_ fields defined as `init=False` are skipped when un/structuring.
 By generating your un/structure function with `_cattrs_include_init_false=True`, all `init=False` fields will be included for un/structuring.
+
+To include these fields across multiple _attrs_ classes on one converter, see the {ref}`hook factory migration recipe <include-init-false-fields>`.
 
 ```{doctest}
 

@@ -74,3 +74,61 @@ The old behavior can be restored by explicitly passing in the old hook fallback 
 The internal `cattrs.gen.MappingStructureFn` and `cattrs.gen.DictStructureFn` types were replaced by a more general type, `cattrs.SimpleStructureHook[In, T]`.
 If you were using `MappingStructureFn`, use `SimpleStructureHook[Mapping[Any, Any], T]` instead.
 If you were using `DictStructureFn`, use `SimpleStructureHook[Mapping[str, Any], T]` instead.
+
+## 23.2.0
+
+(include-init-false-fields)=
+### Including `init=False` fields on a converter
+
+From this version on, _attrs_ fields declared with `init=False` are skipped by default when structuring and unstructuring.
+To include these fields for multiple classes, register hook factories on a converter before generating other hooks or converting values, since generated hooks resolve nested hooks early.
+The factories below generate dict hooks for each _attrs_ class encountered, including nested classes, with `_cattrs_include_init_false=True`.
+
+```{doctest}
+>>> from attrs import define, field, has
+>>> from cattrs import Converter
+>>> from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn
+>>>
+>>> @define
+... class Record:
+...     number: int
+...     cached: int = field(init=False, default=0)
+>>>
+>>> @define
+... class Batch:
+...     record: Record
+...     label: str = field(init=False, default="")
+>>>
+>>> batch = Batch(Record(1))
+>>> batch.record.cached = 7
+>>> batch.label = "ready"
+>>> default_converter = Converter()
+>>> default_converter.unstructure(batch)
+{'record': {'number': 1}}
+>>>
+>>> converter = Converter()
+>>> _ = converter.register_unstructure_hook_factory(
+...     has,
+...     lambda cls: make_dict_unstructure_fn(
+...         cls, converter, _cattrs_include_init_false=True
+...     ),
+... )
+>>> _ = converter.register_structure_hook_factory(
+...     has,
+...     lambda cls: make_dict_structure_fn(
+...         cls, converter, _cattrs_include_init_false=True
+...     ),
+... )
+>>> data = converter.unstructure(batch)
+>>> data
+{'record': {'number': 1, 'cached': 7}, 'label': 'ready'}
+>>> converter.structure(data, Batch)
+Batch(record=Record(number=1, cached=7), label='ready')
+>>> default_converter.unstructure(batch)
+{'record': {'number': 1}}
+```
+
+Register both factories to include the fields in both directions; registering only the unstructuring factory changes only the generated output.
+These registrations affect this converter, not other converters or the module-level conversion functions.
+The example uses mutable classes: structuring assigns `init=False` fields after constructing the instance.
+Use the {ref}`per-class or per-field customization <customizing-include-init-false>` when only selected classes or fields should be included.
