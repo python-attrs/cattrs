@@ -13,6 +13,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT
 
+- Document a converter-level hook factory recipe for including `init=False` fields in _attrs_ classes.
+  ([#482](https://github.com/python-attrs/cattrs/issues/482))
 - Support the [`frozendict`](https://docs.python.org/3.15/builtins/stdtypes.html#frozendict) built-in on Python 3.15+.
   ([#787](https://github.com/python-attrs/cattrs/pull/787))
 - Python 3.15 is now supported and part of the test matrix.
@@ -301,7 +303,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 ## 23.2.0 (2023-11-17)
 
 - **Potentially breaking**: skip _attrs_ fields marked as `init=False` by default. This change is potentially breaking for unstructuring.
-  See [here](https://catt.rs/en/latest/customizing.html#include_init_false) for instructions on how to restore the old behavior.
+  See the {ref}`migration recipe <include-init-false-fields>` for including these fields across classes, or {ref}`customizing individual classes <customizing-include-init-false>`.
   ([#40](https://github.com/python-attrs/cattrs/issues/40) [#395](https://github.com/python-attrs/cattrs/pull/395))
 - **Potentially breaking**: {py:func}`cattrs.gen.make_dict_structure_fn` and {py:func}`cattrs.gen.typeddicts.make_dict_structure_fn` will use the values for the `detailed_validation` and `forbid_extra_keys` parameters from the given converter by default now.
   If you're using these functions directly, the old behavior can be restored by passing in the desired values directly.
