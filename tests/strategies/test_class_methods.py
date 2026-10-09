@@ -2,11 +2,12 @@ import itertools
 from typing import Union
 
 import pytest
-from attrs import define
+from attrs import define, has
 from hypothesis import given
 from hypothesis.strategies import integers
 
 from cattrs import BaseConverter
+from cattrs.gen import make_dict_unstructure_fn
 from cattrs.strategies import use_class_methods
 
 
@@ -120,3 +121,41 @@ def test_edge_cases():
         converter.structure({"a": 1}, Bad)
     with pytest.raises(TypeError):
         converter.unstructure(Bad(1))
+
+
+def test_make_dict_unstructure_fn_honors_class_methods(converter: BaseConverter):
+    """`make_dict_unstructure_fn` should honor the converter's own hooks.
+
+    A hook factory delegating to `make_dict_unstructure_fn` should compose with
+    the methods picked up by `use_class_methods` instead of ignoring them.
+
+    See https://github.com/python-attrs/cattrs/issues/566.
+    """
+
+    @define
+    class A:
+        a: int
+
+        def _unstructure(self):
+            return {"a": str(self.a)}
+
+    use_class_methods(converter, None, "_unstructure")
+
+    # The metamethod is picked up directly.
+    assert make_dict_unstructure_fn(A, converter)(A(1)) == {"a": "1"}
+
+    def tag_attrs_hook_factory(cl):
+        base_hook = make_dict_unstructure_fn(cl, converter)
+
+        def hook(inst):
+            unstructured = base_hook(inst)
+            unstructured["_type"] = type(inst).__name__
+            return unstructured
+
+        return hook
+
+    # The tag factory takes precedence (registered last), but the metamethod
+    # should still be honored through `make_dict_unstructure_fn`.
+    converter.register_unstructure_hook_factory(has, tag_attrs_hook_factory)
+
+    assert converter.unstructure(A(1)) == {"a": "1", "_type": "A"}
