@@ -32,6 +32,7 @@ from ._compat import (
     Sequence,
     Set,
     TypeAlias,
+    adapted_fields,
     fields,
     frozendict,
     get_final_base,
@@ -765,7 +766,8 @@ class BaseConverter:
     def structure_attrs_fromtuple(self, obj: tuple[Any, ...], cl: type[T]) -> T:
         """Load an attrs class from a sequence (tuple)."""
         conv_obj = []  # A list of converter parameters.
-        for a, value in zip(fields(cl), obj):
+        # `adapted_fields` resolves PEP 563 (stringified) annotations, if present.
+        for a, value in zip(adapted_fields(cl), obj):
             # We detect the type by the metadata.
             converted = self._structure_attribute(a, value)
             conv_obj.append(converted)
@@ -799,7 +801,8 @@ class BaseConverter:
         # For public use.
 
         conv_obj = {}  # Start with a fresh dict, to ignore extra keys.
-        for a in fields(cl):
+        # `adapted_fields` resolves PEP 563 (stringified) annotations, if present.
+        for a in adapted_fields(cl):
             try:
                 val = obj[a.name]
             except KeyError:
