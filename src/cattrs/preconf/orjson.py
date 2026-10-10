@@ -80,7 +80,9 @@ def configure_converter(converter: Converter) -> None:
 
                 kh = converter.get_unstructure_hook(args[0])
                 if kh != identity:
-                    key_handler = kh
+
+                    def key_handler(v):
+                        return str(kh(v))
 
         return converter.gen_unstructure_mapping(
             cl, unstructure_to=unstructure_to, key_handler=key_handler
