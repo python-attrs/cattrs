@@ -13,6 +13,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT
 
+- Fix union disambiguation treating a dataclass field that sets only `default_factory` as a required field, so a payload omitting it failed to structure as that class. Such fields are now recognized as having a default, matching attrs `factory` fields.
+  ([#796](https://github.com/python-attrs/cattrs/issues/796))
 - Dict unstructuring hook factories now inherit the converter's `omit_if_default` setting when `_cattrs_omit_if_default` is omitted. Explicit `True` or `False` values and per-attribute overrides retain their precedence.
   ([#238](https://github.com/python-attrs/cattrs/issues/238))
 - Support the [`frozendict`](https://docs.python.org/3.15/builtins/stdtypes.html#frozendict) built-in on Python 3.15+.

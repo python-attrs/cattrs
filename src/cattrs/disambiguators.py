@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Mapping
-from dataclasses import MISSING
 from functools import reduce
 from operator import or_
 from typing import TYPE_CHECKING, Any, Callable, Literal, Union, get_origin
@@ -14,7 +13,6 @@ from attrs import NOTHING, Attribute, AttrsInstance
 from ._compat import (
     NoneType,
     adapted_fields,
-    fields_dict,
     get_args,
     has,
     is_literal,
@@ -150,11 +148,15 @@ def create_default_dis_func(
             )
             uniq = cl_reqs - other_reqs
 
-            # We want a unique attribute with no default.
-            cl_fields = fields_dict(get_origin(cl) or cl)
+            # We want a unique attribute with no default. Use `adapted_fields`
+            # so dataclass `default_factory` fields are seen as having a
+            # default (their raw `Field.default` is `MISSING`), matching attrs.
+            cl_defaults = {
+                at.name: at.default for at in adapted_fields(get_origin(cl) or cl)
+            }
             for maybe_renamed_attr_name in uniq:
                 orig_name = back_map[maybe_renamed_attr_name]
-                if cl_fields[orig_name].default in (NOTHING, MISSING):
+                if cl_defaults[orig_name] is NOTHING:
                     uniq_attrs_dict[maybe_renamed_attr_name] = cl
                     made_progress = True
                     break
