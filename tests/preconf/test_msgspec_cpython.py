@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from enum import Enum
 from typing import (
     Any,
@@ -20,7 +21,7 @@ from typing import (
 from attrs import define
 from hypothesis import given
 from msgspec import Struct, to_builtins
-from pytest import fixture
+from pytest import fixture, raises
 
 from cattrs.fns import identity
 from cattrs.preconf.json import make_converter as make_json_converter
@@ -47,6 +48,33 @@ class C:
     """This class should not be passed through due to a private attribute."""
 
     _a: int
+
+
+@define
+class RecursiveEvent:
+    at: datetime
+    children: list[RecursiveEvent]
+
+
+@define
+class RecursiveA:
+    bs: list[RecursiveB]
+
+
+@define
+class RecursiveB:
+    _secret: int
+    as_: list[RecursiveA]
+
+
+@define
+class RecursivePlain:
+    children: list[RecursivePlain]
+
+
+@define
+class ProbeFailureAttrs:
+    value: datetime
 
 
 @dataclass
@@ -170,6 +198,72 @@ def test_basic_structs(converter: Conv):
     assert converter.unstructure(B(1)) == {"b": 1}
 
     assert converter.structure({"b": 1}, B) == B(1)
+
+
+def test_unstructure_recursive_attrs_uses_custom_hooks(converter: Conv):
+    """Custom hooks are used at every depth of recursive attrs classes."""
+    converter.register_unstructure_hook(datetime, lambda value: int(value.timestamp()))
+    timestamp = datetime(2026, 1, 1, tzinfo=timezone.utc)
+
+    assert converter.unstructure(
+        RecursiveEvent(
+            timestamp, [RecursiveEvent(timestamp, [RecursiveEvent(timestamp, [])])]
+        )
+    ) == {
+        "at": 1767225600,
+        "children": [
+            {"at": 1767225600, "children": [{"at": 1767225600, "children": []}]}
+        ],
+    }
+
+
+def test_unstructure_mutually_recursive_attrs_preserves_private_fields(converter: Conv):
+    """Private fields are retained through mutually recursive attrs classes."""
+
+    value = RecursiveA([RecursiveB(1, [RecursiveA([RecursiveB(2, [])])])])
+
+    assert converter.unstructure(value) == {
+        "bs": [{"_secret": 1, "as_": [{"bs": [{"_secret": 2, "as_": []}]}]}]
+    }
+
+    reverse_root = RecursiveB(3, [RecursiveA([RecursiveB(4, [])])])
+    assert make_converter().unstructure(reverse_root) == {
+        "_secret": 3,
+        "as_": [{"bs": [{"_secret": 4, "as_": []}]}],
+    }
+
+
+def test_unstructure_plain_recursive_attrs_still_uses_msgspec(converter: Conv):
+    """Recursive attrs types without custom fields retain the passthrough path."""
+
+    value = RecursivePlain([RecursivePlain([])])
+
+    assert converter.get_unstructure_hook(RecursivePlain) is to_builtins
+    assert converter.unstructure(value) == {"children": [{"children": []}]}
+
+
+def test_unstructure_probe_state_is_cleared_after_hook_error(
+    converter: Conv, monkeypatch
+):
+    """A failed hook lookup doesn't poison later converter use."""
+
+    converter.register_unstructure_hook(datetime, lambda value: int(value.timestamp()))
+    get_hook = converter.get_unstructure_hook
+
+    def fail_for_datetime(type, *args, **kwargs):
+        if type is datetime:
+            raise RuntimeError("probe failed")
+        return get_hook(type, *args, **kwargs)
+
+    monkeypatch.setattr(converter, "get_unstructure_hook", fail_for_datetime)
+    with raises(RuntimeError, match="probe failed"):
+        converter.get_unstructure_hook(ProbeFailureAttrs)
+
+    monkeypatch.setattr(converter, "get_unstructure_hook", get_hook)
+    assert converter.get_unstructure_hook(ProbeFailureAttrs) is not to_builtins
+    assert converter.unstructure(
+        ProbeFailureAttrs(datetime(2026, 1, 1, tzinfo=timezone.utc))
+    ) == {"value": 1767225600}
 
 
 @given(simple_typed_classes(text_codec="ascii", allow_infinity=False, allow_nan=False))
