@@ -495,3 +495,20 @@ def test_dataclasses_literals(converter):
 
     assert converter.structure({"a": "a"}, Union[A, B]) == A()
     assert converter.structure({"b": "b"}, Union[A, B]) == B("b")
+
+
+def test_dataclass_default_factory_not_required():
+    """Dataclass default_factory fields count as defaults for disambiguation."""
+    import dataclasses
+
+    @dataclass
+    class D1:
+        x: int
+        tags: list = dataclasses.field(default_factory=list)
+
+    @dataclass
+    class D2:
+        x: int
+
+    with pytest.raises(TypeError, match="Could not disambiguate"):
+        create_default_dis_func(Converter(), D1, D2)

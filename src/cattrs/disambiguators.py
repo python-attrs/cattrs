@@ -14,7 +14,6 @@ from attrs import NOTHING, Attribute, AttrsInstance
 from ._compat import (
     NoneType,
     adapted_fields,
-    fields_dict,
     get_args,
     has,
     is_literal,
@@ -150,8 +149,12 @@ def create_default_dis_func(
             )
             uniq = cl_reqs - other_reqs
 
-            # We want a unique attribute with no default.
-            cl_fields = fields_dict(get_origin(cl) or cl)
+            # We want a unique attribute with no default. Use adapted_fields so
+            # dataclass default_factory is treated as a default (via Factory),
+            # matching attrs Factory and plain dataclass default.
+            cl_fields = {
+                a.name: a for a in adapted_fields(get_origin(cl) or cl)
+            }
             for maybe_renamed_attr_name in uniq:
                 orig_name = back_map[maybe_renamed_attr_name]
                 if cl_fields[orig_name].default in (NOTHING, MISSING):
