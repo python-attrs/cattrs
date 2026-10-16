@@ -5,7 +5,11 @@ from attrs import NOTHING, NothingType
 
 from .. import BaseConverter
 from .._compat import get_newtype_base, is_literal, is_subclass, is_union_type
-from ..typealiases import get_type_alias_base, is_type_alias
+from ..typealiases import (
+    get_type_alias_base,
+    is_type_alias,
+    type_alias_structure_factory,
+)
 
 __all__ = [
     "configure_tagged_union",
@@ -177,8 +181,27 @@ def configure_union_passthrough(
         PEP 695 type aliases are now supported as union members.
     """
 
+    def _alias_has_dedicated_structure_hook(alias: Any) -> bool:
+        """True when a structure hook was registered specifically for this alias.
+
+        The default type-alias factory only unwraps to the base type; a
+        dedicated hook (``register_structure_hook`` / ``_func``) must keep the
+        alias in spillover so it is structured through that hook.
+        """
+        for predicate, handler, _, _ in converter._structure_func._function_dispatch._handler_pairs:
+            try:
+                matched = predicate(alias)
+            except Exception:  # noqa: BLE001, S112
+                continue
+            if not matched:
+                continue
+            return handler is not type_alias_structure_factory
+        return False
+
     def get_passthrough_base(type: Any) -> Any:
-        return get_type_alias_base(type) if is_type_alias(type) else type
+        if is_type_alias(type) and not _alias_has_dedicated_structure_hook(type):
+            return get_type_alias_base(type)
+        return type
 
     args = {get_passthrough_base(type) for type in union.__args__}
 
