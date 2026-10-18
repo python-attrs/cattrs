@@ -1,6 +1,7 @@
 """Preconfigured converters for pyyaml."""
 
 from datetime import date, datetime
+from enum import Enum
 from functools import partial
 from typing import Any, TypeVar, Union
 
@@ -24,6 +25,15 @@ def validate_date(v: Any, _):
     return v
 
 
+def _unstructure_str(v: str) -> Any:
+    # `safe_dump` rejects str subclasses, so they have to become plain strings.
+    if v.__class__ is str:
+        return v
+    if isinstance(v, Enum):
+        return v.value
+    return str(v)
+
+
 class PyyamlConverter(Converter):
     def dumps(self, obj: Any, unstructure_as: Any = None, **kwargs: Any) -> str:
         return safe_dump(self.unstructure(obj, unstructure_as=unstructure_as), **kwargs)
@@ -43,16 +53,16 @@ def configure_converter(converter: BaseConverter) -> None:
     Configure the converter for use with the pyyaml library.
 
     * frozensets are serialized as lists
-    * string enums are converted into strings explicitly
+    * string enums and other str subclasses are converted into strings explicitly
     * datetimes and dates are validated
     * typed namedtuples are serialized as lists
 
     .. versionchanged:: 24.1.0
         Add support for typed namedtuples.
+    .. versionchanged:: NEXT
+        Non-enum str subclasses are unstructured into plain strings.
     """
-    converter.register_unstructure_hook(
-        str, lambda v: v if v.__class__ is str else v.value
-    )
+    converter.register_unstructure_hook(str, _unstructure_str)
 
     # datetime inherits from date, so identity unstructure hook used
     # here to prevent the date unstructure hook running.
