@@ -14,6 +14,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 ## NEXT
 
 - The PyYAML preconf converter no longer fails with an `AttributeError` when unstructuring `str` subclasses that aren't enums (such as `markupsafe.Markup`); they are now unstructured into plain strings.
+  ([#804](https://github.com/python-attrs/cattrs/pull/804))
 - Dict unstructuring hook factories now inherit the converter's `omit_if_default` setting when `_cattrs_omit_if_default` is omitted. Explicit `True` or `False` values and per-attribute overrides retain their precedence.
   ([#238](https://github.com/python-attrs/cattrs/issues/238))
 - Support the [`frozendict`](https://docs.python.org/3.15/builtins/stdtypes.html#frozendict) built-in on Python 3.15+.
