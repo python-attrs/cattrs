@@ -98,9 +98,10 @@ except ImportError:  # pragma: no cover
 NoneType = type(None)
 
 if sys.version_info >= (3, 15):
-    from builtins import frozendict
+    from builtins import frozendict, sentinel
 else:
     frozendict = None
+    sentinel = None
 
 
 def is_optional(typ: Any) -> bool:
