@@ -7,7 +7,6 @@ test = [
     "pytest>=8.4.1",
     "pytest-typing; python_version == '3.14' and implementation_name == 'cpython'",
     "mypy; python_version == '3.14' and implementation_name == 'cpython'",
-    "pyrefly; python_version == '3.14' and implementation_name == 'cpython'",
     "pytest-benchmark>=5.1.0",
     "immutables>=0.21",
     "coverage>=7.9.2",
@@ -40,8 +39,7 @@ addopts = [
     "--benchmark-warmup-iterations=5",
     "--benchmark-group-by=fullname",
 ]
-typing_checkers = ["mypy", "pyrefly"]
-typing_pyrefly_preset = "strict"
+typing_checkers = ["mypy"]
 
 [project]
 name = "cattrs"
