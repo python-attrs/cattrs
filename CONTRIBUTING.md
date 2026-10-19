@@ -121,13 +121,14 @@ To run a subset of tests:
 $ just test tests/test_unstructure.py
 ```
 
-Static typing tests live in `tests/test_typing_structure.md` and run through `pytest-typing` with Mypy on CPython 3.14.
+Static typing tests live in `tests/test_typing_structure.md` and run through `pytest-typing` with Mypy and Pyrefly on CPython 3.14.
 To run them on their own:
 
 ```shell
 $ just --set python python3.14 test tests/test_typing_structure.md
 ```
 
-The test dependencies include a Mypy version with `TypeForm` support enabled by default.
+The test dependencies pin both checkers in `uv.lock`, including a Mypy version with `TypeForm` support enabled by default.
+`pytest-typing` is configured to use Pyrefly's `strict` preset for the temporary test snippets.
 
 [llm]: https://github.com/python-attrs/cattrs/blob/main/.github/AI_POLICY.md
