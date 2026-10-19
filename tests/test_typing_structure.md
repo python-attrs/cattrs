@@ -6,6 +6,7 @@ These tests exercise the static return types for the structuring APIs.
 
 ```python
 from attrs import define
+from typing_extensions import assert_type
 
 from cattrs import structure
 
@@ -17,7 +18,7 @@ class User:
 
 
 user = structure({"id": 1, "name": "Ada"}, User)
-reveal_type(user)  # revealed: test_snippet.User
+assert_type(user, User)
 
 name: str = user.name
 ```
@@ -26,6 +27,8 @@ name: str = user.name
 
 ```python
 from dataclasses import dataclass
+
+from typing_extensions import assert_type
 
 from cattrs import Converter
 
@@ -38,7 +41,7 @@ class Point:
 
 converter = Converter()
 point = converter.structure({"x": 1, "y": 2}, Point)
-reveal_type(point)  # revealed: test_snippet.Point
+assert_type(point, Point)
 
 x: int = point.x
 ```
@@ -47,6 +50,8 @@ x: int = point.x
 
 ```python
 from typing import TypedDict
+
+from typing_extensions import assert_type
 
 from cattrs import Converter
 
@@ -58,7 +63,7 @@ class Movie(TypedDict):
 
 converter = Converter()
 movie = converter.structure({"title": "Alien", "year": 1979}, Movie)
-reveal_type(movie)  # revealed: TypedDict(test_snippet.Movie, {"title": str, "year": int})
+assert_type(movie, Movie)
 
 title: str = movie["title"]
 ```
@@ -66,12 +71,14 @@ title: str = movie["title"]
 ## Converter structure returns homogeneous tuples
 
 ```python
+from typing_extensions import assert_type
+
 from cattrs import Converter
 
 
 converter = Converter()
 numbers = converter.structure([1, 2, 3], tuple[int, ...])
-reveal_type(numbers)  # revealed: tuple[int, ...]
+assert_type(numbers, tuple[int, ...])
 
 first: int = numbers[0]
 ```
@@ -79,12 +86,14 @@ first: int = numbers[0]
 ## Converter structure returns heterogeneous tuples
 
 ```python
+from typing_extensions import assert_type
+
 from cattrs import Converter
 
 
 converter = Converter()
 row = converter.structure(["Ada", 37, True], tuple[str, int, bool])
-reveal_type(row)  # revealed: tuple[str, int, bool]
+assert_type(row, tuple[str, int, bool])
 
 name: str = row[0]
 age: int = row[1]
@@ -100,7 +109,9 @@ from cattrs import Converter
 converter = Converter()
 
 value: int = converter.structure("1", int)
-bad: str = converter.structure("1", int)  # mypy-error: [assignment]
+# mypy-error: [assignment]
+# pyrefly-error: [bad-assignment]
+bad: str = converter.structure("1", int)
 ```
 
 ## Hook factory decorators preserve factory types
@@ -108,6 +119,8 @@ bad: str = converter.structure("1", int)  # mypy-error: [assignment]
 ```python
 from collections.abc import Callable
 from typing import Any
+
+from typing_extensions import assert_type
 
 from cattrs import Converter
 
@@ -129,8 +142,15 @@ def structure_factory(cl: type[int]) -> Callable[[str, type[int]], int]:
     return lambda value, _: int(value)
 
 
-reveal_type(unstructure_factory)  # revealed: def (cl: type[int]) -> def (int) -> str
-reveal_type(structure_factory)  # revealed: def (cl: type[int]) -> def (str, type[int]) -> int
+assert_type(unstructure_factory(cl=int), Callable[[int], str])
+assert_type(structure_factory(cl=int), Callable[[str, type[int]], int])
+
+# mypy-error: [arg-type]
+# pyrefly-error: [bad-argument-type]
+unstructure_factory(str)
+# mypy-error: [arg-type]
+# pyrefly-error: [bad-argument-type]
+structure_factory(str)
 ```
 
 ## Structure accepts type forms and preserves their result types
@@ -181,8 +201,12 @@ def convert(value: object, target: TypeForm[T]) -> T:
 
 assert_type(convert("1", int | None), int | None)
 
-bad: str = converter.structure("1", int | None)  # mypy-error: [assignment]
-converter.structure("1", 42)  # mypy-error: [arg-type]
+# mypy-error: [assignment]
+# pyrefly-error: [bad-assignment]
+bad: str = converter.structure("1", int | None)
+# mypy-error: [arg-type]
+# pyrefly-error: [bad-argument-type]
+converter.structure("1", 42)
 ```
 
 ## Structure hook lookup preserves type forms
