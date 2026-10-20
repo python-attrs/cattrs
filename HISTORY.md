@@ -23,6 +23,9 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   [PEP 747](https://peps.python.org/pep-0747/) [`TypeForm`](https://typing.python.org/en/latest/spec/type-forms.html#type-forms) annotations,
   allowing type checkers to infer result types for unions, literals, type aliases and other non-trivial types.
   ([#786](https://github.com/python-attrs/cattrs/pull/786))
+- Fix {meth}`BaseConverter.copy` and {meth}`Converter.copy` (and `copy.deepcopy`, which uses them) dropping the
+  `unstructure_fallback_factory` and `structure_fallback_factory` of the original converter, making copies of converters
+  configured with custom fallbacks behave differently from the originals. The factories can now also be overridden on the copy.
 
 ## 26.2.1 (2026-09-26)
 

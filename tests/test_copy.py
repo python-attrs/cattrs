@@ -18,6 +18,18 @@ class Simple:
     a: int
 
 
+class Unhandled:
+    """A type no hook is generated or registered for."""
+
+
+def unstructure_fallback(_):
+    return lambda v: "unstructured-by-fallback"
+
+
+def structure_fallback(_):
+    return lambda v, _type: "structured-by-fallback"
+
+
 @given(strat=unstructure_strats, detailed_validation=..., prefer_attrib=...)
 def test_deepcopy(
     converter_cls: type[BaseConverter],
@@ -181,6 +193,64 @@ def test_copy_func_hooks(
     assert c.detailed_validation == copy.detailed_validation
     assert c._prefer_attrib_converters == copy._prefer_attrib_converters
     assert c._dict_factory == copy._dict_factory
+
+
+@given(
+    strat=unstructure_strats,
+    detailed_validation=...,
+    prefer_attrib=...,
+    dict_factory=one_of(just(dict), just(OrderedDict)),
+)
+def test_copy_fallback_factories(
+    converter_cls: type[BaseConverter],
+    strat: UnstructureStrategy,
+    prefer_attrib: bool,
+    detailed_validation: bool,
+    dict_factory: Callable,
+):
+    """Fallback hook factories are copied over."""
+    c = converter_cls(
+        unstruct_strat=strat,
+        prefer_attrib_converters=prefer_attrib,
+        detailed_validation=detailed_validation,
+        dict_factory=dict_factory,
+        unstructure_fallback_factory=unstructure_fallback,
+        structure_fallback_factory=structure_fallback,
+    )
+
+    assert c.unstructure(Unhandled()) == "unstructured-by-fallback"
+    assert c.structure("x", Unhandled) == "structured-by-fallback"
+
+    for copy in (c.copy(), deepcopy(c)):
+        assert c is not copy
+
+        assert copy.unstructure(Unhandled()) == "unstructured-by-fallback"
+        assert copy.structure("x", Unhandled) == "structured-by-fallback"
+
+
+@given(strat=unstructure_strats, detailed_validation=...)
+def test_copy_fallback_factories_overrides(
+    strat: UnstructureStrategy, detailed_validation: bool
+):
+    """Fallback hook factories can be overridden on the copy."""
+    c = Converter(
+        unstruct_strat=strat,
+        detailed_validation=detailed_validation,
+        unstructure_fallback_factory=unstructure_fallback,
+        structure_fallback_factory=structure_fallback,
+    )
+
+    other = c.copy(
+        unstructure_fallback_factory=lambda _: lambda v: "other-unstructure",
+        structure_fallback_factory=lambda _: lambda v, _type: "other-structure",
+    )
+
+    assert other.unstructure(Unhandled()) == "other-unstructure"
+    assert other.structure("x", Unhandled) == "other-structure"
+
+    # The original is untouched.
+    assert c.unstructure(Unhandled()) == "unstructured-by-fallback"
+    assert c.structure("x", Unhandled) == "structured-by-fallback"
 
 
 @given(prefer_attrib=..., dict_factory=one_of(just(dict), just(OrderedDict)))
