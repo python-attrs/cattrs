@@ -1,6 +1,7 @@
 """Tests for auto-disambiguators."""
 
 from dataclasses import dataclass
+from dataclasses import field as dc_field
 from functools import partial
 from itertools import permutations
 from typing import Literal, Union
@@ -480,6 +481,32 @@ def test_dataclasses(converter):
 
     assert converter.structure({"a": 1}, Union[A, B]) == A(1)
     assert converter.structure({"b": 1}, Union[A, B]) == B(1)
+
+
+def test_dataclasses_default_factory(converter):
+    """A dataclass `default_factory` field is not a required field (#796).
+
+    A raw `dataclasses.Field.default` is `MISSING` when only `default_factory`
+    is set, so such a field used to be treated as required. It should instead
+    be treated like an attrs `factory` field: the class carries no required
+    field and so becomes the disambiguation fallback, rather than the factory
+    field being picked as a unique required key.
+    """
+
+    @dataclass
+    class A:
+        tags: list = dc_field(default_factory=list)
+
+    @define
+    class B:
+        b: int
+
+    # `A` has only a defaulted field, so it is the fallback: a payload without
+    # `b` structures as `A`, honoring the factory default, in either order.
+    for union in (Union[A, B], Union[B, A]):
+        assert converter.structure({}, union) == A()
+        assert converter.structure({"tags": [1]}, union) == A([1])
+        assert converter.structure({"b": 1}, union) == B(1)
 
 
 def test_dataclasses_literals(converter):
