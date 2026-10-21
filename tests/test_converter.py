@@ -1,6 +1,7 @@
 """Test both structuring and unstructuring."""
 
 from collections import deque
+from dataclasses import make_dataclass
 from typing import (
     Annotated,
     Any,
@@ -429,6 +430,31 @@ def test_type_overrides(cl_and_vals):
     for attr, val in zip(fields(cl), vals):
         if attr.type is int and attr.default is not None and attr.default == val:
             assert attr.name not in unstructured
+
+
+@pytest.mark.parametrize("annotation", [int, "int"])
+def test_type_overrides_dataclass_omit_default(annotation):
+    """Type overrides use resolved dataclass field types."""
+    cl = make_dataclass("Settings", [("retries", annotation, 3), ("label", str, "app")])
+    converter = Converter(type_overrides={int: override(omit_if_default=True)})
+
+    assert converter.unstructure(cl()) == {"label": "app"}
+    assert converter.unstructure(cl(5)) == {"retries": 5, "label": "app"}
+
+
+@pytest.mark.parametrize("annotation", [int, "int"])
+@pytest.mark.parametrize("detailed_validation", [True, False])
+def test_type_overrides_dataclass_rename(annotation, detailed_validation):
+    """Renamed dataclass fields work in both directions without prior unstructuring."""
+    cl = make_dataclass("Settings", [("retries", annotation), ("label", str)])
+    converter = Converter(
+        type_overrides={int: override(rename="attempts")},
+        detailed_validation=detailed_validation,
+    )
+
+    inst = converter.structure({"attempts": "5", "label": "app"}, cl)
+    assert inst == cl(5, "app")
+    assert converter.unstructure(inst) == {"attempts": 5, "label": "app"}
 
 
 def test_calling_back():
