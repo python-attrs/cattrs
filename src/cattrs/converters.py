@@ -765,12 +765,17 @@ class BaseConverter:
     def structure_attrs_fromtuple(self, obj: tuple[Any, ...], cl: type[T]) -> T:
         """Load an attrs class from a sequence (tuple)."""
         conv_obj = []  # A list of converter parameters.
+        conv_kwargs = {}  # Keyword-only constructor parameters.
         for a, value in zip(fields(cl), obj):
             # We detect the type by the metadata.
             converted = self._structure_attribute(a, value)
-            conv_obj.append(converted)
+            if a.kw_only:
+                # Dataclass fields do not have aliases.
+                conv_kwargs[getattr(a, "alias", a.name)] = converted
+            else:
+                conv_obj.append(converted)
 
-        return cl(*conv_obj)
+        return cl(*conv_obj, **conv_kwargs)
 
     def _structure_attribute(self, a: Attribute | Field, value: Any) -> Any:
         """Handle an individual attrs attribute."""
