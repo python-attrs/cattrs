@@ -32,6 +32,7 @@ from ._compat import (
     Sequence,
     Set,
     TypeAlias,
+    adapted_fields,
     fields,
     frozendict,
     get_final_base,
@@ -44,7 +45,6 @@ from ._compat import (
     is_counter,
     is_deque,
     is_frozenset,
-    is_generic,
     is_generic_attrs,
     is_hetero_tuple,
     is_literal,
@@ -1321,10 +1321,7 @@ class Converter(BaseConverter):
         self, cl: type[T]
     ) -> Callable[[T], dict[str, Any]]:
         origin = get_origin(cl)
-        attribs = fields(origin or cl)
-        if attrs_has(cl) and any(isinstance(a.type, str) for a in attribs):
-            # PEP 563 annotations - need to be resolved.
-            resolve_types(origin or cl)
+        attribs = adapted_fields(origin or cl)
         attrib_overrides = {
             a.name: self.type_overrides[a.type]
             for a in attribs
@@ -1367,10 +1364,7 @@ class Converter(BaseConverter):
         self, cl: type[T]
     ) -> Callable[[Mapping[str, Any], Any], T]:
         origin = get_origin(cl)
-        attribs = fields(origin or cl if is_generic(cl) else cl)
-        if attrs_has(cl) and any(isinstance(a.type, str) for a in attribs):
-            # PEP 563 annotations - need to be resolved.
-            resolve_types(origin or cl)
+        attribs = adapted_fields(origin or cl)
         attrib_overrides = {
             a.name: self.type_overrides[a.type]
             for a in attribs
