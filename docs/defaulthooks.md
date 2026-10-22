@@ -592,6 +592,38 @@ Previously, the unstructuring rules for `Any` were underspecified, leading to in
 `typing_extensions.Any` is now also supported.
 ```
 
+### Sentinels
+
+On Python 3.15+, built-in [`sentinel`](https://docs.python.org/3.15/builtins/functions.html#sentinel) values are unstructured to their names.
+Structuring a matching name into a sentinel annotation restores that exact sentinel instance; other values raise a `CattrsError`.
+
+```{doctest}
+:skipif: __import__("sys").version_info < (3, 15)
+
+>>> MISSING = sentinel("MISSING")
+
+>>> cattrs.unstructure(MISSING)
+'MISSING'
+>>> cattrs.structure("MISSING", MISSING) is MISSING
+True
+>>> cattrs.structure("MISSING", int | MISSING) is MISSING
+True
+>>> cattrs.structure("1", int | MISSING)
+1
+```
+
+In unions, sentinel names take precedence over the remaining members, including `str` and `Any`.
+Sentinels in the same union must have distinct names.
+The remaining members must form a type the converter supports.
+Sentinel defaults work with the existing `omit_if_default` option; they are serialized normally unless that option is enabled.
+
+Hooks can be registered for individual sentinel instances using `register_structure_hook` and `register_unstructure_hook`.
+If custom hooks change a sentinel's representation, register a hook for any containing union as well: the default union hook matches sentinel names.
+
+```{versionadded} NEXT
+
+```
+
 ### `typing.Literal`
 
 When structuring, [PEP 586](https://peps.python.org/pep-0586/) literals are validated to be in the allowed set of values.

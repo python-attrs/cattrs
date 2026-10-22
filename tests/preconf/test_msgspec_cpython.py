@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from enum import Enum
 from typing import (
     Any,
@@ -79,6 +80,28 @@ class NC(NamedTuple):
 
 class E(Enum):
     TEST = "test"
+
+
+@define
+class WithNC:
+    n: NC
+
+
+@define
+class Event:
+    at: datetime
+    children: list[Event]
+
+
+@define
+class MutualA:
+    bs: list[MutualB]
+
+
+@define
+class MutualB:
+    _secret: int
+    as_: list[MutualA]
 
 
 @fixture
@@ -185,3 +208,27 @@ def test_simple_classes(cls_and_vals):
     rebuilt_json = json.loads(json.dumps(inst), cl)
 
     assert rebuilt_msgspec == rebuilt_json
+
+
+def test_unstructure_recursive_hooks(converter: Conv):
+    """Nested instances of a recursive class use the same hook as the top level."""
+    converter.register_unstructure_hook(datetime, lambda d: int(d.timestamp()))
+    ts = datetime(2026, 1, 1, tzinfo=timezone.utc)
+
+    assert converter.unstructure(Event(ts, [Event(ts, [])])) == {
+        "at": 1767225600,
+        "children": [{"at": 1767225600, "children": []}],
+    }
+
+
+def test_unstructure_mutually_recursive_private(converter: Conv):
+    """Nested instances of mutually recursive classes keep private attributes."""
+    assert converter.unstructure(
+        MutualA([MutualB(1, [MutualA([MutualB(2, [])])])])
+    ) == {"bs": [{"_secret": 1, "as_": [{"bs": [{"_secret": 2, "as_": []}]}]}]}
+
+
+def test_unstructure_private_in_namedtuple(converter: Conv):
+    """A private class reached through a namedtuple during a probe gets a working hook."""
+    assert converter.unstructure(WithNC(NC(C(1)))) == {"n": ({"_a": 1},)}
+    assert converter.unstructure(C(2)) == {"_a": 2}

@@ -57,6 +57,7 @@ from ._compat import (
     is_tuple,
     is_typeddict,
     is_union_type,
+    sentinel,
     signature,
 )
 from .cols import (
@@ -105,6 +106,14 @@ from .gen import (
 from .gen.typeddicts import make_dict_structure_fn as make_typeddict_dict_struct_fn
 from .gen.typeddicts import make_dict_unstructure_fn as make_typeddict_dict_unstruct_fn
 from .literals import is_literal_containing_enums
+from .sentinels import (
+    is_sentinel,
+    is_sentinel_union,
+    sentinel_class_unstructure_factory,
+    sentinel_structure,
+    sentinel_union_structure_factory,
+    sentinel_unstructure,
+)
 from .typealiases import (
     get_type_alias_base,
     is_type_alias,
@@ -266,6 +275,12 @@ class BaseConverter:
                 (has, self._unstructure_attrs),
                 (is_union_type, self._unstructure_union),
                 (lambda t: t in ANIES, self.unstructure),
+                (is_sentinel, sentinel_unstructure),
+                (
+                    lambda t: sentinel is not None and t is sentinel,
+                    sentinel_class_unstructure_factory,
+                    "extended",
+                ),
             ]
         )
 
@@ -314,6 +329,8 @@ class BaseConverter:
                     else []
                 ),
                 (is_optional, self._structure_optional),
+                (is_sentinel, sentinel_structure),
+                (is_sentinel_union, sentinel_union_structure_factory, "extended"),
                 (
                     lambda t: is_union_type(t) and t in self._union_struct_registry,
                     self._union_struct_registry.__getitem__,
@@ -375,6 +392,8 @@ class BaseConverter:
             This method may now be used as a decorator.
         .. versionchanged:: 25.1.0
             Modern type aliases are now supported.
+        .. versionchanged:: NEXT
+            Individual Python 3.15+ sentinel instances are now supported.
         """
         if func is None:
             # Autodetecting decorator.
@@ -389,7 +408,7 @@ class BaseConverter:
             resolve_types(cls)
         if is_union_type(cls):
             self._unstructure_func.register_func_list([(lambda t: t == cls, func)])
-        elif is_type_alias(cls):
+        elif is_type_alias(cls) or is_sentinel(cls):
             self._unstructure_func.register_func_list([(lambda t: t is cls, func)])
         elif get_newtype_base(cls) is not None:
             # This is a newtype, so we handle it specially.
@@ -516,6 +535,8 @@ class BaseConverter:
             This method may now be used as a decorator.
         .. versionchanged:: 25.1.0
             Modern type aliases are now supported.
+        .. versionchanged:: NEXT
+            Individual Python 3.15+ sentinel instances are now supported.
         """
         if func is None:
             # The autodetecting decorator.
@@ -529,8 +550,8 @@ class BaseConverter:
         if is_union_type(cl):
             self._union_struct_registry[cl] = func
             self._structure_func.clear_cache()
-        elif is_type_alias(cl):
-            # Type aliases are special-cased.
+        elif is_type_alias(cl) or is_sentinel(cl):
+            # Type aliases and sentinel instances are special-cased.
             self._structure_func.register_func_list([(lambda t: t is cl, func)])
         elif get_newtype_base(cl) is not None:
             # This is a newtype, so we handle it specially.
