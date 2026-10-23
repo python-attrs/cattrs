@@ -1063,11 +1063,20 @@ class BaseConverter:
         unstruct_strat: UnstructureStrategy | None = None,
         prefer_attrib_converters: bool | None = None,
         detailed_validation: bool | None = None,
+        unstructure_fallback_factory: HookFactory[UnstructureHook] | None = None,
+        structure_fallback_factory: HookFactory[StructureHook] | None = None,
     ) -> Self:
         """Create a copy of the converter, keeping all existing custom hooks.
 
         :param detailed_validation: Whether to use a slightly slower mode for detailed
             validation errors.
+        :param unstructure_fallback_factory: A hook factory to be called when no
+            registered unstructuring hooks match.
+        :param structure_fallback_factory: A hook factory to be called when no
+            registered structuring hooks match.
+
+        .. versionchanged:: NEXT
+            The fallback factories are now carried over to the copy.
         """
         res = self.__class__(
             dict_factory if dict_factory is not None else self._dict_factory,
@@ -1089,6 +1098,16 @@ class BaseConverter:
                 detailed_validation
                 if detailed_validation is not None
                 else self.detailed_validation
+            ),
+            (
+                unstructure_fallback_factory
+                if unstructure_fallback_factory is not None
+                else self._unstructure_func._fallback_factory
+            ),
+            (
+                structure_fallback_factory
+                if structure_fallback_factory is not None
+                else self._structure_func._fallback_factory
             ),
         )
 
@@ -1483,11 +1502,20 @@ class Converter(BaseConverter):
         prefer_attrib_converters: bool | None = None,
         detailed_validation: bool | None = None,
         use_alias: bool | None = None,
+        unstructure_fallback_factory: HookFactory[UnstructureHook] | None = None,
+        structure_fallback_factory: HookFactory[StructureHook] | None = None,
     ) -> Self:
         """Create a copy of the converter, keeping all existing custom hooks.
 
         :param detailed_validation: Whether to use a slightly slower mode for detailed
             validation errors.
+        :param unstructure_fallback_factory: A hook factory to be called when no
+            registered unstructuring hooks match.
+        :param structure_fallback_factory: A hook factory to be called when no
+            registered structuring hooks match.
+
+        .. versionchanged:: NEXT
+            The fallback factories are now carried over to the copy.
         """
         res = self.__class__(
             dict_factory if dict_factory is not None else self._dict_factory,
@@ -1523,6 +1551,16 @@ class Converter(BaseConverter):
                 else self.detailed_validation
             ),
             use_alias=(use_alias if use_alias is not None else self.use_alias),
+            unstructure_fallback_factory=(
+                unstructure_fallback_factory
+                if unstructure_fallback_factory is not None
+                else self._unstructure_func._fallback_factory
+            ),
+            structure_fallback_factory=(
+                structure_fallback_factory
+                if structure_fallback_factory is not None
+                else self._structure_func._fallback_factory
+            ),
         )
 
         self._unstructure_func.copy_to(
