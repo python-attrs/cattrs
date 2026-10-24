@@ -6,7 +6,11 @@ from attrs import NOTHING, NothingType
 from .. import BaseConverter
 from .._compat import get_newtype_base, is_literal, is_subclass, is_union_type
 from ..sentinels import is_sentinel
-from ..typealiases import get_type_alias_base, is_type_alias
+from ..typealiases import (
+    get_type_alias_base,
+    is_type_alias,
+    type_alias_structure_factory,
+)
 
 __all__ = [
     "configure_tagged_union",
@@ -179,10 +183,36 @@ def configure_union_passthrough(
     .. versionchanged:: NEXT
         Unions containing Python 3.15+ sentinels defer to sentinel handling,
         matching sentinel names before passing through other values.
+    .. versionchanged:: NEXT
+        Type aliases with a dedicated structure hook stay in spillover instead
+        of being unwrapped to their base, so the hook still runs inside a
+        passthrough union.
     """
 
+    def _alias_has_dedicated_structure_hook(alias: Any) -> bool:
+        """True when a structure hook was registered specifically for this alias.
+
+        The default type-alias factory only unwraps to the base type; a
+        dedicated hook (``register_structure_hook`` / ``_func``) must keep the
+        alias in spillover so it is structured through that hook.
+        """
+        structure = converter._structure_func
+        if alias in structure._direct_dispatch:
+            return True
+        for predicate, handler, _, _ in structure._function_dispatch._handler_pairs:
+            try:
+                matched = predicate(alias)
+            except Exception:  # noqa: S112
+                continue
+            if not matched:
+                continue
+            return handler is not type_alias_structure_factory
+        return False
+
     def get_passthrough_base(type: Any) -> Any:
-        return get_type_alias_base(type) if is_type_alias(type) else type
+        if is_type_alias(type) and not _alias_has_dedicated_structure_hook(type):
+            return get_type_alias_base(type)
+        return type
 
     args = {get_passthrough_base(type) for type in union.__args__}
 
