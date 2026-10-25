@@ -13,10 +13,11 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT
 
-- Fix recursive attrs unstructuring in the msgspec converter so nested instances honor custom hooks and retain private attributes.
-  ([#795](https://github.com/python-attrs/cattrs/issues/795))
+- The msgspec converter now applies the same unstructuring hook to nested instances of recursive _attrs_ classes, so registered hooks and private attributes are no longer skipped below the top level.
+  ([#803](https://github.com/python-attrs/cattrs/pull/803))
 - Dict unstructuring hook factories now inherit the converter's `omit_if_default` setting when `_cattrs_omit_if_default` is omitted. Explicit `True` or `False` values and per-attribute overrides retain their precedence.
   ([#238](https://github.com/python-attrs/cattrs/issues/238))
+- Support Python 3.15+ ([PEP 661](https://peps.python.org/pep-0661/)) sentinels, un/structured by name, including sentinel annotations and unions.
 - Support the [`frozendict`](https://docs.python.org/3.15/builtins/stdtypes.html#frozendict) built-in on Python 3.15+.
   ([#787](https://github.com/python-attrs/cattrs/pull/787))
 - Python 3.15 is now supported and part of the test matrix.

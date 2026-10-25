@@ -200,48 +200,51 @@ def msgspec_attrs_unstructure_factory(
         resolve_types(type)
         attribs = fields(base)
 
+    if msgspec_skips_private and any(attr.name.startswith("_") for attr in attribs):
+        # Private attributes we have to do ourselves.
+        return _gen_attrs_hook(type, converter)
+
     try:
         working_set = _already_probing.working_set
+        if base in working_set:
+            return to_builtins
     except AttributeError:
-        working_set = None
-
-    if working_set is not None and base in working_set:
-        return to_builtins
-
-    if msgspec_skips_private and any(attr.name.startswith("_") for attr in attribs):
-        # Private attributes we have to do ourselves. Defer hook selection while
-        # another attrs type is being probed, since generating here could capture
-        # a temporary recursive fallback for one of its fields.
-        if working_set:
-            return converter.unstructure
-        return converter.gen_unstructure_attrs_fromdict(type)
-
-    if working_set is None:
         working_set = set()
         _already_probing.working_set = working_set
 
-    needs_cattrs_hook = False
     try:
         working_set.add(base)
-        if any(
+        needs_hook = any(
             converter.get_unstructure_hook(attr.type, cache_result=False)
             not in (identity, to_builtins)
             for attr in attribs
-        ):
-            needs_cattrs_hook = True
+        )
     finally:
         working_set.remove(base)
         if not working_set:
             del _already_probing.working_set
 
-    if needs_cattrs_hook:
-        # Generate only after the outermost probe finishes so field handlers
-        # cannot capture the temporary to_builtins recursion fallback.
-        if working_set:
-            return converter.unstructure
+    return _gen_attrs_hook(type, converter) if needs_hook else to_builtins
+
+
+def _gen_attrs_hook(type: Any, converter: Converter) -> UnstructureHook:
+    """Generate the hook, deferring generation to the first call during a probe.
+
+    Hooks generated during a probe would bake in the `to_builtins` answers
+    the probe gives for classes it is still visiting.
+    """
+    if not hasattr(_already_probing, "working_set"):
         return converter.gen_unstructure_attrs_fromdict(type)
 
-    return to_builtins
+    hook = None
+
+    def unstructure_lazily(obj):
+        nonlocal hook
+        if hook is None:
+            hook = converter.gen_unstructure_attrs_fromdict(type)
+        return hook(obj)
+
+    return unstructure_lazily
 
 
 def namedtuple_unstructure_factory(
