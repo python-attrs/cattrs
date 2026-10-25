@@ -952,6 +952,10 @@ def make_hetero_tuple_structure_fn(
             "  )",
         ]
 
+    # The generated code needs random access and a length check, but the public
+    # contract accepts any iterable. Keep the common list/tuple case zero-copy.
+    lines[:0] = ["  if not isinstance(o, (list, tuple)):", "    o = tuple(o)"]
+
     internal_arg_line = ", ".join([f"{i}={i}" for i in internal_arg_parts])
     globs.update(internal_arg_parts)
     script = "\n".join([f"def {fn_name}(o, _=__cl, {internal_arg_line}):", *lines])
