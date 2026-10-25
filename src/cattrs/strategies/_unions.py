@@ -4,7 +4,7 @@ from typing import Any, Callable, Union
 from attrs import NOTHING, NothingType
 
 from .. import BaseConverter
-from .._compat import get_newtype_base, is_literal, is_subclass, is_union_type
+from .._compat import NoneType, get_newtype_base, is_literal, is_subclass, is_union_type
 from ..sentinels import is_sentinel
 from ..typealiases import get_type_alias_base, is_type_alias
 
@@ -34,7 +34,7 @@ def configure_tagged_union(
 
     :param converter: The converter to apply the strategy to.
     :param tag_generator: A `tag_generator` function is used to map each
-        member of the union to a tag, which is then included in the
+        non-None member of the union to a tag, which is then included in the
         unstructured payload. The default tag generator returns the name of
         the class.
     :param tag_name: The key under which the tag will be set in the
@@ -49,20 +49,25 @@ def configure_tagged_union(
 
     ..  versionchanged:: 25.1
         Type aliases of unions are now also supported.
+    .. versionchanged:: NEXT
+        Unions containing None are now supported, passing None values through
+        unchanged.
     """
     if is_type_alias(union):
         union = union.__value__
     args = union.__args__
+    has_none = NoneType in args
+    if has_none:
+        args = tuple(cl for cl in args if cl is not NoneType)
 
     tag_to_hook = {}
     exact_cl_unstruct_hooks = {}
     cl_to_tag = {}
 
     if default is not NOTHING:
-        default_handler = converter.get_structure_hook(default)
 
-        def structure_default(val: dict, _cl=default, _h=default_handler):
-            return _h(val, _cl)
+        def structure_default(val: dict, _cl=default):
+            return default_handler(val, _cl)
 
         tag_to_hook = defaultdict(lambda: structure_default)
         cl_to_tag = defaultdict(lambda: default)
@@ -74,13 +79,12 @@ def configure_tagged_union(
                 _,
                 _tag_to_hook=tag_to_hook,
                 _tag_name=tag_name,
-                _dh=default_handler,
                 _default=default,
             ) -> union:
                 if _tag_name in val:
                     val = val.copy()
                     return _tag_to_hook[val.pop(_tag_name)](val)
-                return _dh(val, _default)
+                return default_handler(val, _default)
 
         else:
 
@@ -89,12 +93,11 @@ def configure_tagged_union(
                 _,
                 _tag_to_hook=tag_to_hook,
                 _tag_name=tag_name,
-                _dh=default_handler,
                 _default=default,
             ) -> union:
                 if _tag_name in val:
                     return _tag_to_hook[val[_tag_name]](val)
-                return _dh(val, _default)
+                return default_handler(val, _default)
 
     else:
         if getattr(converter, "forbid_extra_keys", False):
@@ -122,8 +125,27 @@ def configure_tagged_union(
         res[_tag_name] = _cl_to_tag[val.__class__]
         return res
 
-    converter.register_unstructure_hook(union, unstructure_tagged_union)
-    converter.register_structure_hook(union, structure_tagged_union)
+    if has_none:
+
+        def unstructure_nullable_tagged_union(
+            val: union, _h=unstructure_tagged_union
+        ) -> dict | None:
+            return None if val is None else _h(val)
+
+        def structure_nullable_tagged_union(
+            val: Any, cl: Any, _h=structure_tagged_union
+        ) -> union:
+            return None if val is None else _h(val, cl)
+
+        converter.register_unstructure_hook(union, unstructure_nullable_tagged_union)
+        converter.register_structure_hook(union, structure_nullable_tagged_union)
+    else:
+        converter.register_unstructure_hook(union, unstructure_tagged_union)
+        converter.register_structure_hook(union, structure_tagged_union)
+
+    # Recursive defaults must see the registered union hooks during generation.
+    if default is not NOTHING:
+        default_handler = converter.get_structure_hook(default)
 
     for cl in args:
         tag = tag_generator(cl)
