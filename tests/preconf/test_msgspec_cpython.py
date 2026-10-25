@@ -21,7 +21,7 @@ from typing import (
 from attrs import define
 from hypothesis import given
 from msgspec import Struct, to_builtins
-from pytest import fixture
+from pytest import fixture, raises
 
 from cattrs.fns import identity
 from cattrs.preconf.json import make_converter as make_json_converter
@@ -107,6 +107,47 @@ class MutualB:
 @fixture
 def converter() -> Conv:
     return make_converter()
+
+
+@define
+class RecursivePlain:
+    children: list[RecursivePlain]
+
+
+@define
+class ProbeFailureAttrs:
+    value: datetime
+
+
+def test_unstructure_plain_recursive_attrs_still_uses_msgspec(converter: Conv):
+    """Recursive attrs types without custom fields retain the passthrough path."""
+    value = RecursivePlain([RecursivePlain([])])
+
+    assert converter.get_unstructure_hook(RecursivePlain) is to_builtins
+    assert converter.unstructure(value) == {"children": [{"children": []}]}
+
+
+def test_unstructure_probe_state_is_cleared_after_hook_error(
+    converter: Conv, monkeypatch
+):
+    """A failed hook lookup doesn't poison later converter use."""
+    converter.register_unstructure_hook(datetime, lambda value: int(value.timestamp()))
+    get_hook = converter.get_unstructure_hook
+
+    def fail_for_datetime(type, *args, **kwargs):
+        if type is datetime:
+            raise RuntimeError("probe failed")
+        return get_hook(type, *args, **kwargs)
+
+    monkeypatch.setattr(converter, "get_unstructure_hook", fail_for_datetime)
+    with raises(RuntimeError, match="probe failed"):
+        converter.get_unstructure_hook(ProbeFailureAttrs)
+
+    monkeypatch.setattr(converter, "get_unstructure_hook", get_hook)
+    assert converter.get_unstructure_hook(ProbeFailureAttrs) is not to_builtins
+    assert converter.unstructure(
+        ProbeFailureAttrs(datetime(2026, 1, 1, tzinfo=timezone.utc))
+    ) == {"value": 1767225600}
 
 
 def is_passthrough(fn: Callable) -> bool:
