@@ -4,12 +4,20 @@ Note that a significant amount of test coverage for this is in the
 preconf tests.
 """
 
+from copy import deepcopy
+from datetime import datetime
 from typing import List, Literal, Optional, Union
 
 import pytest
 from attrs import define
 
-from cattrs import BaseConverter, ClassValidationError, Converter
+from cattrs import (
+    BaseConverter,
+    ClassValidationError,
+    Converter,
+    ForbiddenExtraKeysError,
+)
+from cattrs.preconf.json import make_converter
 from cattrs.strategies import configure_union_passthrough
 
 
@@ -77,6 +85,72 @@ def test_spillover(converter: BaseConverter) -> None:
 
     with pytest.raises(TypeError):
         converter.structure((), union)
+
+
+@pytest.mark.parametrize("copy_method", ["copy", "deepcopy"])
+def test_copy_spillover_hooks(converter: BaseConverter, copy_method: str) -> None:
+    """A copy uses its own spillover hooks, including after a union was cached."""
+
+    @define
+    class A:
+        value: str
+
+    configure_union_passthrough(Union[int, str, None], converter)
+    converter.register_structure_hook(A, lambda value, _: A(f"original:{value}"))
+    union = Union[int, A, None]
+
+    assert converter.structure("value", union) == A("original:value")
+    copied = converter.copy() if copy_method == "copy" else deepcopy(converter)
+    assert copied.structure("value", union) == A("original:value")
+
+    copied.register_structure_hook(A, lambda value, _: A(f"copy:{value}"))
+
+    assert copied.structure("value", union) == A("copy:value")
+    assert converter.structure("value", union) == A("original:value")
+    assert copied.structure(1, union) == 1
+    assert copied.structure(None, union) is None
+
+
+def test_copy_spillover_forbid_extra_keys(genconverter: Converter) -> None:
+    """Configuration overridden on a copy also applies to union spillover."""
+
+    @define
+    class A:
+        value: int
+
+    configure_union_passthrough(Union[int, str], genconverter)
+    union = Union[int, A]
+    payload = {"value": 1, "extra": 2}
+    assert genconverter.structure(payload, union) == A(1)
+
+    copied = genconverter.copy(forbid_extra_keys=True)
+    assert copied.structure({"value": 1}, union) == A(1)
+
+    with pytest.raises(
+        ClassValidationError if copied.detailed_validation else ForbiddenExtraKeysError
+    ):
+        copied.structure(payload, union)
+
+    assert genconverter.structure(payload, union) == A(1)
+    assert copied.structure(1, union) == 1
+
+
+def test_copy_json_spillover() -> None:
+    """A copied JSON converter uses its datetime hook when loading a union."""
+    converter = make_converter()
+    union = Union[int, datetime, None]
+    expected = datetime(2000, 1, 2)
+    assert converter.loads('"2000-01-02T00:00:00"', union) == expected
+
+    copied = converter.copy()
+    copied.register_structure_hook(
+        datetime, lambda value, _: datetime.fromisoformat(value.replace("/", "-"))
+    )
+
+    assert copied.loads('"2000/01/02"', union) == expected
+    assert converter.loads('"2000-01-02T00:00:00"', union) == expected
+    assert copied.loads("1", union) == 1
+    assert copied.loads("null", union) is None
 
 
 def test_multiple_spillover(converter: BaseConverter) -> None:

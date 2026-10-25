@@ -179,6 +179,7 @@ def configure_union_passthrough(
     .. versionchanged:: NEXT
         Unions containing Python 3.15+ sentinels defer to sentinel handling,
         matching sentinel names before passing through other values.
+        Copied converters use their own hooks and settings for spillover types.
     """
 
     def get_passthrough_base(type: Any) -> Any:
@@ -186,7 +187,10 @@ def configure_union_passthrough(
 
     args = {get_passthrough_base(type) for type in union.__args__}
 
-    def make_structure_native_union(exact_type: Any) -> Callable:
+    def make_structure_native_union(
+        exact_type: Any, converter: BaseConverter
+    ) -> Callable:
+        # Use the converter supplied by dispatch so copies handle their own spillover.
         # `exact_type` is likely to be a subset of the entire configured union (`args`).
         literal_values = {
             v for t in exact_type.__args__ if is_literal(t) for v in t.__args__

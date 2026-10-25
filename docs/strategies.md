@@ -376,6 +376,11 @@ Unions containing unsupported types can be handled if at least one union type is
 For example, if `A` and `B` are arbitrary _attrs_ classes, the union `Literal[10] | A | B` cannot be handled directly by a JSON converter.
 However, the strategy will check if the value being structured matches `Literal[10]` (because this type _is_ supported) and, if not, will pass it back to the converter to be structured as `A | B` (where a different strategy can handle it).
 
+```{versionchanged} NEXT
+Converters copied with `copy()` or `copy.deepcopy()` now use their own hooks and settings when structuring spillover types.
+Previously, spillover was structured by the converter on which the strategy was first configured.
+```
+
 The strategy is designed to run in _O(1)_ at structure time; it doesn't depend on the size of the union and the ordering of union members.
 
 This strategy has been preapplied to the following preconfigured converters:

@@ -13,6 +13,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT
 
+- Fix the union passthrough strategy using the original converter's hooks and settings to structure spillover types after copying a converter.
 - The msgspec converter now applies the same unstructuring hook to nested instances of recursive _attrs_ classes, so registered hooks and private attributes are no longer skipped below the top level.
   ([#803](https://github.com/python-attrs/cattrs/pull/803))
 - Dict unstructuring hook factories now inherit the converter's `omit_if_default` setting when `_cattrs_omit_if_default` is omitted. Explicit `True` or `False` values and per-attribute overrides retain their precedence.
