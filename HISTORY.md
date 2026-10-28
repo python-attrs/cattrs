@@ -13,9 +13,11 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT
 
-- Correct the README filename in the contributor guide.
+- The msgspec converter now applies the same unstructuring hook to nested instances of recursive _attrs_ classes, so registered hooks and private attributes are no longer skipped below the top level.
+  ([#803](https://github.com/python-attrs/cattrs/pull/803))
 - Dict unstructuring hook factories now inherit the converter's `omit_if_default` setting when `_cattrs_omit_if_default` is omitted. Explicit `True` or `False` values and per-attribute overrides retain their precedence.
   ([#238](https://github.com/python-attrs/cattrs/issues/238))
+- Support Python 3.15+ ([PEP 661](https://peps.python.org/pep-0661/)) sentinels, un/structured by name, including sentinel annotations and unions.
 - Support the [`frozendict`](https://docs.python.org/3.15/builtins/stdtypes.html#frozendict) built-in on Python 3.15+.
   ([#787](https://github.com/python-attrs/cattrs/pull/787))
 - Python 3.15 is now supported and part of the test matrix.
@@ -24,6 +26,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   [PEP 747](https://peps.python.org/pep-0747/) [`TypeForm`](https://typing.python.org/en/latest/spec/type-forms.html#type-forms) annotations,
   allowing type checkers to infer result types for unions, literals, type aliases and other non-trivial types.
   ([#786](https://github.com/python-attrs/cattrs/pull/786))
+- Correct the README filename in the contributor guide.
+  ([#802](https://github.com/python-attrs/cattrs/pull/802))
 
 ## 26.2.1 (2026-09-26)
 

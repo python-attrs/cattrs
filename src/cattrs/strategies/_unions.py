@@ -5,6 +5,7 @@ from attrs import NOTHING, NothingType
 
 from .. import BaseConverter
 from .._compat import get_newtype_base, is_literal, is_subclass, is_union_type
+from ..sentinels import is_sentinel
 from ..typealiases import get_type_alias_base, is_type_alias
 
 __all__ = [
@@ -175,6 +176,9 @@ def configure_union_passthrough(
         Introduced the `accept_ints_as_floats` parameter.
     .. versionchanged:: 26.2.0
         PEP 695 type aliases are now supported as union members.
+    .. versionchanged:: NEXT
+        Unions containing Python 3.15+ sentinels defer to sentinel handling,
+        matching sentinel names before passing through other values.
     """
 
     def get_passthrough_base(type: Any) -> Any:
@@ -269,6 +273,9 @@ def configure_union_passthrough(
         """Can we handle this type?"""
         if is_union_type(exact_type):
             type_args = set(exact_type.__args__)
+            # Sentinel names must be matched before passing through strings.
+            if any(is_sentinel(t) for t in type_args):
+                return False
             # We special case optionals, since they are very common
             # and are handled a little more efficiently by default.
             if len(type_args) == 2 and type(None) in type_args:
