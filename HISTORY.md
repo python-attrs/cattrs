@@ -26,6 +26,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
   [PEP 747](https://peps.python.org/pep-0747/) [`TypeForm`](https://typing.python.org/en/latest/spec/type-forms.html#type-forms) annotations,
   allowing type checkers to infer result types for unions, literals, type aliases and other non-trivial types.
   ([#786](https://github.com/python-attrs/cattrs/pull/786))
+- Correct the README filename in the contributor guide.
+  ([#802](https://github.com/python-attrs/cattrs/pull/802))
 
 ## 26.2.1 (2026-09-26)
 
