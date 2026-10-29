@@ -1,8 +1,10 @@
+from dataclasses import dataclass
 from typing import Optional, Sequence, Union
 
+import pytest
 from attrs import define
 
-from cattrs import BaseConverter, Converter
+from cattrs import BaseConverter, ClassValidationError, Converter
 from cattrs.strategies import configure_tagged_union
 
 
@@ -26,6 +28,47 @@ def test_defaults(converter: BaseConverter) -> None:
 
     assert converter.structure({"_type": "A", "a": 1}, union) == A(1)
     assert converter.structure({"_type": "B", "a": 1}, union) == B("1")
+
+
+@pytest.mark.parametrize("container_decorator", [define, dataclass])
+def test_nullable_union(converter: BaseConverter, container_decorator) -> None:
+    """Nullable tagged unions preserve tags in attrs and dataclass fields."""
+    union = Union[A, B, None]
+
+    @container_decorator
+    class Container:
+        value: Union[A, B, None]
+
+    configure_tagged_union(
+        union, converter, tag_name="kind", tag_generator={A: "a", B: "b"}.__getitem__
+    )
+
+    for value, expected in (
+        (None, None),
+        (A(1), {"kind": "a", "a": 1}),
+        (B("1"), {"kind": "b", "a": "1"}),
+    ):
+        data = converter.unstructure(value, union)
+        assert data == expected
+        assert converter.structure(data, union) == value
+        assert data == expected
+
+        instance = Container(value)
+        data = converter.unstructure(instance)
+        assert data == {"value": expected}
+        assert converter.structure(data, Container) == instance
+        assert data == {"value": expected}
+
+
+def test_optional_class(converter: BaseConverter) -> None:
+    """A tagged union may contain only one class alongside None."""
+    union = Optional[A]
+    configure_tagged_union(union, converter)
+
+    assert converter.unstructure(None, union) is None
+    assert converter.structure(None, union) is None
+    assert converter.unstructure(A(1), union) == {"_type": "A", "a": 1}
+    assert converter.structure({"_type": "A", "a": 1}, union) == A(1)
 
 
 def test_tag_name(converter: BaseConverter) -> None:
@@ -81,9 +124,10 @@ def test_tag_generator_dict(converter: BaseConverter) -> None:
     assert converter.structure({"_type": "type:B", "a": 1}, union) == B("1")
 
 
-def test_default_member(converter: BaseConverter) -> None:
+@pytest.mark.parametrize("nullable", [False, True])
+def test_default_member(converter: BaseConverter, nullable: bool) -> None:
     """Tagged unions can have default members."""
-    union = Union[A, B]
+    union = Union[A, B, None] if nullable else Union[A, B]
     configure_tagged_union(union, converter, default=A)
     assert converter.unstructure(A(1), union) == {"_type": "A", "a": 1}
     assert converter.unstructure(B("1"), union) == {"_type": "B", "a": "1"}
@@ -95,6 +139,10 @@ def test_default_member(converter: BaseConverter) -> None:
 
     assert converter.structure({"_type": "A", "a": 1}, union) == A(1)
     assert converter.structure({"_type": "B", "a": 1}, union) == B("1")
+
+    if nullable:
+        assert converter.unstructure(None, union) is None
+        assert converter.structure(None, union) is None
 
 
 def test_default_member_with_tag(converter: BaseConverter) -> None:
@@ -128,7 +176,8 @@ def test_default_member_validation(converter: BaseConverter) -> None:
     assert converter.structure({"_type": "A", "a": "1"}, union) == A(1)
 
 
-def test_forbid_extra_keys():
+@pytest.mark.parametrize("nullable", [False, True])
+def test_forbid_extra_keys(nullable: bool):
     """The strategy works when converters forbid extra keys."""
 
     @define
@@ -140,13 +189,25 @@ def test_forbid_extra_keys():
         pass
 
     c = Converter(forbid_extra_keys=True)
-    configure_tagged_union(Union[A, B], c)
+    union = Union[A, B, None] if nullable else Union[A, B]
+    configure_tagged_union(union, c)
 
-    data = c.unstructure(A(), Union[A, B])
-    c.structure(data, Union[A, B])
+    data = c.unstructure(A(), union)
+    assert c.structure(data, union) == A()
+    assert data == {"_type": "A"}
+
+    data = {"_type": "A", "extra": 1}
+    with pytest.raises(ClassValidationError):
+        c.structure(data, union)
+    assert data == {"_type": "A", "extra": 1}
+
+    if nullable:
+        assert c.unstructure(None, union) is None
+        assert c.structure(None, union) is None
 
 
-def test_forbid_extra_keys_default():
+@pytest.mark.parametrize("nullable", [False, True])
+def test_forbid_extra_keys_default(nullable: bool):
     """The strategy works when converters forbid extra keys."""
 
     @define
@@ -158,13 +219,30 @@ def test_forbid_extra_keys_default():
         pass
 
     c = Converter(forbid_extra_keys=True)
-    configure_tagged_union(Union[A, B], c, default=A)
+    union = Union[A, B, None] if nullable else Union[A, B]
+    configure_tagged_union(union, c, default=A)
 
-    data = c.unstructure(A(), Union[A, B])
-    assert c.structure(data, Union[A, B]) == A()
+    data = c.unstructure(A(), union)
+    assert c.structure(data, union) == A()
+    assert data == {"_type": "A"}
 
     data.pop("_type")
-    assert c.structure(data, Union[A, B]) == A()
+    assert c.structure(data, union) == A()
+    assert data == {}
+
+    data = {"_type": "unknown"}
+    assert c.structure(data, union) == A()
+    assert data == {"_type": "unknown"}
+
+    for data in ({"_type": "A", "extra": 1}, {"extra": 1}):
+        original = data.copy()
+        with pytest.raises(ClassValidationError):
+            c.structure(data, union)
+        assert data == original
+
+    if nullable:
+        assert c.unstructure(None, union) is None
+        assert c.structure(None, union) is None
 
 
 def test_nested_sequence_union():

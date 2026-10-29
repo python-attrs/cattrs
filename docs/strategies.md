@@ -37,7 +37,7 @@ A(a=1)
 By default, the tag field name is `_type` and the tag value is the class name of the union member.
 Both the field name and value can be overriden.
 
-The `tag_generator` parameter is a one-argument callable that will be called with every member of the union to generate a mapping of tag values to union members.
+The `tag_generator` parameter is a one-argument callable that will be called with every non-`None` member of the union to generate a mapping of tag values to union members.
 Here are some common `tag_generator` uses:
 
 | Tag info available in         | Recommended `tag_generator`                             |
@@ -69,6 +69,27 @@ This also means union members can be reused in multiple unions easily.
 
 ```{versionchanged} 25.1.0
 The strategy can also be called with a type alias of a union.
+```
+
+```{versionchanged} NEXT
+The strategy supports `None` as a union member. Previously, these unions required custom hooks to handle `None`.
+```
+
+To handle nullable tagged fields, configure their complete type, including `None`.
+`None` values pass through unchanged, while other values use the configured tags and default member:
+
+```{doctest} tagged_unions
+
+>>> nullable = A | B | None
+>>> configure_tagged_union(nullable, converter)
+>>> converter.unstructure(A(1), unstructure_as=nullable)
+{'a': 1, '_type': 'A'}
+>>> converter.structure({'a': 1, '_type': 'A'}, nullable)
+A(a=1)
+>>> converter.unstructure(None, unstructure_as=nullable) is None
+True
+>>> converter.structure(None, nullable) is None
+True
 ```
 
 ### Real-life Case Study
