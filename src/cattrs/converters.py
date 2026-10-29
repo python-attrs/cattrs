@@ -499,7 +499,7 @@ class BaseConverter:
         If no hook is registered, the converter unstructure fallback factory
         will be used to produce one.
 
-        :param cache: Whether to cache the returned hook.
+        :param cache_result: Whether to cache the returned hook.
 
         .. versionadded:: 24.1.0
         """
@@ -648,7 +648,7 @@ class BaseConverter:
         If no hook is registered, the converter structure fallback factory
         will be used to produce one.
 
-        :param cache: Whether to cache the returned hook.
+        :param cache_result: Whether to cache the returned hook.
 
         .. versionadded:: 24.1.0
 
