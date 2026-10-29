@@ -1,6 +1,7 @@
 # ruff: noqa: PLC0415
 import sys
 import time
+from base64 import b64encode, b85encode
 from collections.abc import Callable, Iterator, Set
 from datetime import date, datetime, timezone
 from enum import Enum, IntEnum, unique
@@ -34,7 +35,7 @@ from hypothesis.strategies import (
     text,
 )
 
-from cattrs import Converter
+from cattrs import BaseConverter, Converter
 from cattrs._compat import (
     Counter,
     FrozenSet,
@@ -47,11 +48,13 @@ from cattrs._compat import (
 )
 from cattrs.fns import identity
 from cattrs.preconf.bson import make_converter as bson_make_converter
+from cattrs.preconf.json import configure_converter as json_configure_converter
 from cattrs.preconf.json import make_converter as json_make_converter
 from cattrs.preconf.msgpack import make_converter as msgpack_make_converter
 from cattrs.preconf.pyyaml import make_converter as pyyaml_make_converter
 from cattrs.preconf.tomlkit import make_converter as tomlkit_make_converter
 from cattrs.preconf.tomllib import make_converter as tomllib_make_converter
+from cattrs.preconf.ujson import configure_converter as ujson_configure_converter
 from cattrs.preconf.ujson import make_converter as ujson_make_converter
 
 NO_MSGSPEC: Final = python_implementation() == "PyPy"
@@ -365,15 +368,89 @@ def native_unions(
     return Union[tuple(chosen_types)], draw(one_of(*[strats[t] for t in chosen_types]))
 
 
-@given(everythings())
-def test_stdlib_json(everything: Everything):
-    converter = json_make_converter()
+@pytest.mark.parametrize("bytes_encoding", ["base85", "base64"])
+@given(everything=everythings())
+def test_stdlib_json(everything: Everything, bytes_encoding):
+    converter = json_make_converter(bytes_encoding=bytes_encoding)
     assert (
         converter.structure(
             json_loads(json_dumps(converter.unstructure(everything))), Everything
         )
         == everything
     )
+
+
+@pytest.mark.parametrize("make_converter", [json_make_converter, ujson_make_converter])
+@pytest.mark.parametrize("bytes_encoding", [None, "base85", "base64"])
+@pytest.mark.parametrize("value", [b"", b"f", b"fo", b"foo", bytes(range(256))])
+def test_json_bytes_encoding(make_converter, bytes_encoding, value):
+    """Bytes use the selected wire format, including padding and empty inputs."""
+    converter = (
+        make_converter()
+        if bytes_encoding is None
+        else make_converter(bytes_encoding=bytes_encoding)
+    )
+    encode = b64encode if bytes_encoding == "base64" else b85encode
+    expected = encode(value).decode("ascii")
+    assert converter.unstructure(value) == expected
+    assert converter.structure(expected, bytes) == value
+    assert json_loads(converter.dumps(value)) == expected
+    assert converter.loads(json_dumps(expected), bytes) == value
+
+
+@pytest.mark.parametrize(
+    "configure_converter", [json_configure_converter, ujson_configure_converter]
+)
+@pytest.mark.parametrize("converter_cls", [BaseConverter, Converter])
+def test_configure_json_bytes_encoding(configure_converter, converter_cls):
+    """An existing converter can select base64 and return to the default base85."""
+    converter = converter_cls()
+    configure_converter(converter, bytes_encoding="base64")
+    assert converter.unstructure(b"hello") == "aGVsbG8="
+    assert converter.structure("aGVsbG8=", bytes) == b"hello"
+    configure_converter(converter)
+    assert converter.unstructure(b"hello") == "Xk~0{Zv"
+    assert converter.structure("Xk~0{Zv", bytes) == b"hello"
+
+
+@pytest.mark.parametrize(
+    "configure_converter", [json_configure_converter, ujson_configure_converter]
+)
+def test_configure_json_invalid_bytes_encoding(configure_converter):
+    """Invalid encodings fail before overwriting existing byte hooks."""
+    converter = Converter()
+    converter.register_unstructure_hook(bytes, lambda _: "custom")
+    with pytest.raises(ValueError, match="bytes_encoding must be 'base85' or 'base64'"):
+        configure_converter(converter, bytes_encoding="invalid")
+    assert converter.unstructure(b"hello") == "custom"
+
+
+@pytest.mark.parametrize("make_converter", [json_make_converter, ujson_make_converter])
+def test_make_json_invalid_bytes_encoding(make_converter):
+    with pytest.raises(ValueError, match="bytes_encoding must be 'base85' or 'base64'"):
+        make_converter(bytes_encoding="invalid")
+
+
+@pytest.mark.parametrize("make_converter", [json_make_converter, ujson_make_converter])
+def test_json_base64_converter_options(make_converter):
+    """Base64 coexists with converter options and collection overrides."""
+
+    @define
+    class Payload:
+        data: bytes
+        items: set[int]
+        optional: int = 0
+
+    converter = make_converter(
+        dict,
+        omit_if_default=True,
+        unstruct_collection_overrides={Set: sorted},
+        bytes_encoding="base64",
+    )
+    original = Payload(b"hello", {3, 1, 2})
+    expected = {"data": "aGVsbG8=", "items": [1, 2, 3]}
+    assert json_loads(converter.dumps(original)) == expected
+    assert converter.loads(json_dumps(expected), Payload) == original
 
 
 @given(everythings())
@@ -447,16 +524,17 @@ def test_stdlib_json_efficient_enum():
     assert converter.get_unstructure_hook(fields(Everything).a_literal) == identity
 
 
+@pytest.mark.parametrize("bytes_encoding", ["base85", "base64"])
 @given(
-    everythings(
+    everything=everythings(
         min_int=-9223372036854775808, max_int=9223372036854775807, allow_inf=False
     )
 )
-def test_ujson(everything: Everything):
+def test_ujson(everything: Everything, bytes_encoding):
     from ujson import dumps as ujson_dumps
     from ujson import loads as ujson_loads
 
-    converter = ujson_make_converter()
+    converter = ujson_make_converter(bytes_encoding=bytes_encoding)
     raw = ujson_dumps(converter.unstructure(everything))
     assert converter.structure(ujson_loads(raw), Everything) == everything
 

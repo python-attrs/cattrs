@@ -85,6 +85,8 @@ _cattrs_ comes with pre-configured converters for a number of serialization libr
 
 For details, see the [cattrs.preconf package](https://catt.rs/en/stable/preconf.html).
 
+The standard library JSON and UltraJSON converters support optional Base64 encoding for bytes with `make_converter(bytes_encoding="base64")`.
+
 
 ## Design Decisions
 
