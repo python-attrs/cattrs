@@ -2,6 +2,37 @@
 
 These tests exercise the static return types for the structuring APIs.
 
+## JSON converter factories accept the bytes encoding option
+
+```python
+from typing_extensions import assert_type
+
+from cattrs.preconf.json import JsonConverter, make_converter as json_make_converter
+from cattrs.preconf.ujson import UjsonConverter, make_converter as ujson_make_converter
+
+
+json_converter = json_make_converter(bytes_encoding="base64", omit_if_default=True)
+assert_type(json_converter, JsonConverter)
+assert_type(json_converter.loads('"aGVsbG8="', bytes), bytes)
+
+ujson_converter = ujson_make_converter(bytes_encoding="base64", detailed_validation=False)
+assert_type(ujson_converter, UjsonConverter)
+assert_type(ujson_converter.loads('"aGVsbG8="', bytes), bytes)
+
+# mypy-error: [arg-type]
+# pyrefly-error: [bad-argument-type]
+json_make_converter(bytes_encoding="hex")
+# mypy-error: [arg-type]
+# pyrefly-error: [bad-argument-type]
+ujson_make_converter(bytes_encoding="hex")
+# mypy-error: [arg-type]
+# pyrefly-error: [bad-argument-type]
+json_make_converter(bytes_encoding="base64", omit_if_default="yes")
+# mypy-error: [arg-type]
+# pyrefly-error: [bad-argument-type]
+ujson_make_converter(bytes_encoding="base64", detailed_validation="yes")
+```
+
 ## Global structure returns attrs instances
 
 ```python
