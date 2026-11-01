@@ -12,17 +12,17 @@ from threading import local
 from typing import Any, TypeVar, Union, get_type_hints
 
 from attrs import has as attrs_has
-from attrs import resolve_types
 from msgspec import Struct, convert, to_builtins
 from msgspec.json import Encoder, decode
 from typing_extensions import TypeForm
 
 from .._compat import (
-    fields,
+    adapted_fields,
     frozendict,
     get_args,
     get_origin,
     is_bare,
+    is_deque,
     is_mapping,
     is_sequence,
     is_subclass,
@@ -144,6 +144,9 @@ def configure_passthroughs(converter: Converter) -> None:
 
 def seq_unstructure_factory(type, converter: Converter) -> UnstructureHook:
     """The msgspec unstructure hook factory for sequences."""
+    if is_deque(type):
+        # msgspec cannot serialize deques directly.
+        return converter.gen_unstructure_iterable(type)
     if is_bare(type):
         type_arg = Any
     else:
@@ -195,10 +198,7 @@ def msgspec_attrs_unstructure_factory(
     """
     origin = get_origin(type)
     base = origin or type
-    attribs = fields(base)
-    if attrs_has(type) and any(isinstance(a.type, str) for a in attribs):
-        resolve_types(type)
-        attribs = fields(base)
+    attribs = adapted_fields(base)
 
     if msgspec_skips_private and any(attr.name.startswith("_") for attr in attribs):
         # Private attributes we have to do ourselves.
