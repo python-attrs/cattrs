@@ -107,7 +107,7 @@ Before you submit a pull request, check that it meets these guidelines:
 2. The pull request should include tests.
 3. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
-   feature to the list in README.rst.
+   feature to the list in README.md.
 4. The pull request should work for all supported Python versions. Check
    [https://github.com/python-attrs/cattrs/actions](https://github.com/python-attrs/cattrs/actions)
    and make sure that the tests pass for all supported Python versions.
