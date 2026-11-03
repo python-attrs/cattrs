@@ -67,7 +67,7 @@ def test_roundtrip(cl_and_vals):
     assert obj == loaded
 
 
-@given(simple_classes(kw_only=False))
+@given(simple_classes())
 def test_structure_tuple(cl_and_vals):
     """Test loading from a tuple, by registering the loader."""
     converter = BaseConverter()
