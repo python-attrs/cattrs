@@ -13,6 +13,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT
 
+- The json and pyyaml preconfigured converters now support `Decimal`, serializing it as a string so precision is preserved.
+  ([#761](https://github.com/python-attrs/cattrs/issues/761))
 - The msgspec converter now applies the same unstructuring hook to nested instances of recursive _attrs_ classes, so registered hooks and private attributes are no longer skipped below the top level.
   ([#803](https://github.com/python-attrs/cattrs/pull/803))
 - Dict unstructuring hook factories now inherit the converter's `omit_if_default` setting when `_cattrs_omit_if_default` is omitted. Explicit `True` or `False` values and per-attribute overrides retain their precedence.

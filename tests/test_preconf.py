@@ -3,6 +3,7 @@ import sys
 import time
 from collections.abc import Callable, Iterator, Set
 from datetime import date, datetime, timezone
+from decimal import Decimal
 from enum import Enum, IntEnum, unique
 from json import dumps as json_dumps
 from json import loads as json_loads
@@ -380,6 +381,44 @@ def test_stdlib_json(everything: Everything):
 def test_stdlib_json_converter(everything: Everything):
     converter = json_make_converter()
     assert converter.loads(converter.dumps(everything), Everything) == everything
+
+
+@pytest.mark.parametrize(
+    "amount", [Decimal("0.1"), Decimal("1234567890.12345678901234567890")]
+)
+def test_stdlib_json_decimal(amount: Decimal):
+    """Decimals are serialized as strings and retain their precision."""
+    converter = json_make_converter()
+
+    @define
+    class Account:
+        amount: Decimal
+
+    account = Account(amount)
+    raw = converter.dumps(account)
+    assert json_loads(raw) == {"amount": str(amount)}
+    assert converter.loads(raw, Account) == account
+    assert converter.structure(str(amount), Decimal) == amount
+    assert converter.unstructure(amount) == str(amount)
+
+
+@pytest.mark.parametrize(
+    "amount", [Decimal("0.1"), Decimal("1234567890.12345678901234567890")]
+)
+def test_pyyaml_decimal(amount: Decimal):
+    """Decimals are serialized as strings and retain their precision."""
+    from yaml import safe_load
+
+    converter = pyyaml_make_converter()
+
+    @define
+    class Account:
+        amount: Decimal
+
+    account = Account(amount)
+    raw = converter.dumps(account)
+    assert safe_load(raw) == {"amount": str(amount)}
+    assert converter.loads(raw, Account) == account
 
 
 @given(everythings())

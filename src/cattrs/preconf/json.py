@@ -3,6 +3,7 @@
 from base64 import b85decode, b85encode
 from collections.abc import Set
 from datetime import date, datetime
+from decimal import Decimal
 from json import dumps, loads
 from typing import Any, TypeVar, Union
 
@@ -40,6 +41,7 @@ def configure_converter(converter: BaseConverter) -> None:
 
     * bytes are serialized as base85 strings
     * datetimes are serialized as ISO 8601
+    * decimals are serialized as strings
     * counters are serialized as dicts
     * sets are serialized as lists
     * string and int enums are passed through when unstructuring
@@ -57,6 +59,8 @@ def configure_converter(converter: BaseConverter) -> None:
     converter.register_structure_hook(datetime, lambda v, _: datetime.fromisoformat(v))
     converter.register_unstructure_hook(date, lambda v: v.isoformat())
     converter.register_structure_hook(date, lambda v, _: date.fromisoformat(v))
+    converter.register_unstructure_hook(Decimal, str)
+    converter.register_structure_hook(Decimal, lambda v, _: Decimal(v))
     converter.register_unstructure_hook_factory(
         is_literal_containing_enums, literals_with_enums_unstructure_factory
     )
