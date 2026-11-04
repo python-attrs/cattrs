@@ -177,3 +177,48 @@ def test_nested_sequence_union():
 
     data = c.unstructure(Top(u=[B(a="")]), Top)
     c.structure(data, Top)
+
+
+def test_optional_union(converter: BaseConverter) -> None:
+    """The union extended with `None` is handled too.
+
+    Regression test for https://github.com/python-attrs/cattrs/issues/345
+    """
+    union = Union[A, B]
+    configure_tagged_union(union, converter)
+
+    optional = Optional[union]
+
+    assert converter.unstructure(A(1), optional) == {"_type": "A", "a": 1}
+    assert converter.unstructure(B("1"), optional) == {"_type": "B", "a": "1"}
+    assert converter.unstructure(None, optional) is None
+
+    assert converter.structure({"_type": "A", "a": 1}, optional) == A(1)
+    assert converter.structure({"_type": "B", "a": 1}, optional) == B("1")
+    assert converter.structure(None, optional) is None
+
+
+def test_optional_union_in_class(converter: BaseConverter) -> None:
+    """Optional tagged unions work as class fields, in both spellings."""
+    union = Union[A, B]
+    configure_tagged_union(union, converter)
+
+    @define
+    class Holder:
+        c: Union[A, B, None]
+
+    @define
+    class TypingHolder:
+        c: Optional[Union[A, B]]
+
+    assert converter.unstructure(Holder(B("1"))) == {"c": {"_type": "B", "a": "1"}}
+    assert converter.unstructure(Holder(None)) == {"c": None}
+    assert converter.structure({"c": {"_type": "B", "a": "1"}}, Holder) == Holder(
+        B("1")
+    )
+    assert converter.structure({"c": None}, Holder) == Holder(None)
+
+    assert converter.unstructure(TypingHolder(B("1"))) == {
+        "c": {"_type": "B", "a": "1"}
+    }
+    assert converter.structure({"c": None}, TypingHolder) == TypingHolder(None)

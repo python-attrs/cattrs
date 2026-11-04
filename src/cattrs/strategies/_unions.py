@@ -1,4 +1,5 @@
 from collections import defaultdict
+from types import NoneType
 from typing import Any, Callable, Union
 
 from attrs import NOTHING, NothingType
@@ -49,6 +50,10 @@ def configure_tagged_union(
 
     ..  versionchanged:: 25.1
         Type aliases of unions are now also supported.
+    ..  versionchanged:: NEXT
+        The union extended with `None` (for example a field typed
+        `Union[A, B] | None`) is now handled too, with `None` passing
+        through.
     """
     if is_type_alias(union):
         union = union.__value__
@@ -124,6 +129,33 @@ def configure_tagged_union(
 
     converter.register_unstructure_hook(union, unstructure_tagged_union)
     converter.register_structure_hook(union, structure_tagged_union)
+
+    if NoneType not in args:
+        # Also handle the union extended with `None`, so fields typed
+        # `Optional[Union[...]]` (or `Union[...] | None`) keep the tag and
+        # can be disambiguated, with `None` passing through untouched.
+        optional_union = Union[(*args, NoneType)]
+
+        def structure_optional_tagged_union(
+            val: dict | None, _, _h=structure_tagged_union
+        ) -> union:
+            if val is None:
+                return None
+            return _h(val, _)
+
+        def unstructure_optional_tagged_union(
+            val: union | None, _h=unstructure_tagged_union
+        ) -> dict | None:
+            if val is None:
+                return None
+            return _h(val)
+
+        converter.register_unstructure_hook(
+            optional_union, unstructure_optional_tagged_union
+        )
+        converter.register_structure_hook(
+            optional_union, structure_optional_tagged_union
+        )
 
     for cl in args:
         tag = tag_generator(cl)
