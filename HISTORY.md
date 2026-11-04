@@ -13,6 +13,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT
 
+- Quoted forward references nested inside other annotations (for example `Optional["SomeClass"]` without PEP 563) are now resolved when adapting attrs classes and dataclasses, instead of raising `StructureHandlerNotFoundError: Unsupported type: ForwardRef(...)`.
+  ([#201](https://github.com/python-attrs/cattrs/issues/201))
 - Fix the msgspec converter passing typed deques directly to the encoder, which cannot serialize them. Deques are now unstructured into lists, including when nested in attrs classes or dataclasses.
   ([#818](https://github.com/python-attrs/cattrs/issues/818) [#819](https://github.com/python-attrs/cattrs/pull/819))
 
