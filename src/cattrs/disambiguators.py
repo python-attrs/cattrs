@@ -55,6 +55,9 @@ def create_default_dis_func(
         Dataclasses are now supported.
     .. versionchanged:: NEXT
         Renaming overrides also apply to literal discriminator fields.
+    .. versionchanged:: NEXT
+        Unique fields with defaults are now used as a fallback signal when
+        not enough classes can be pinned by unique fields without defaults.
     """
     if len(classes) < 2:
         raise ValueError("At least two classes required.")
@@ -126,45 +129,24 @@ def create_default_dis_func(
         (cl, *_usable_attribute_names(cl, override))
         for cl, override in zip(classes, overrides)
     ]
-    # For each class, attempt to generate a single unique required field.
     uniq_attrs_dict: dict[str, type] = {}
 
     # We start from classes with the largest number of unique fields
     # so we can do easy picks first, making later picks easier.
     remaining = sorted(cls_and_attrs, key=lambda c_a: len(c_a[1]), reverse=True)
+    remaining = _pin_unique_fields(remaining, uniq_attrs_dict, defaulted=False)
 
-    # Iterate to a fixpoint. On each pass, pin every class that has a
-    # non-default field unique among the classes not yet pinned. Pinning a
-    # class removes its fields from consideration, which can make a previously
-    # ambiguous class uniquely identifiable, so we repeat until a pass pins
-    # nothing. A single pass in a fixed order would miss those later picks and
-    # fail to disambiguate valid unions depending on the class order.
-    made_progress = True
-    while made_progress:
-        made_progress = False
-        still_remaining = []
-        for entry in remaining:
-            cl, cl_reqs, back_map = entry
-            other_reqs = reduce(
-                or_, (c_a[1] for c_a in remaining if c_a[0] is not cl), set()
-            )
-            uniq = cl_reqs - other_reqs
+    # Classes whose distinguishing fields all carry defaults cannot be pinned
+    # by the pass above: a defaulted field may be absent from the payload, so
+    # it is only a signal when present. If more than one class is still
+    # unpinned, give those fields a chance too; cases that disambiguate today
+    # are unaffected, since this pass only runs where the first one failed.
+    if len(remaining) > 1:
+        remaining = _pin_unique_fields(remaining, uniq_attrs_dict, defaulted=True)
 
-            # We want a unique attribute with no default.
-            cl_fields = fields_dict(get_origin(cl) or cl)
-            for maybe_renamed_attr_name in uniq:
-                orig_name = back_map[maybe_renamed_attr_name]
-                if cl_fields[orig_name].default in (NOTHING, MISSING):
-                    uniq_attrs_dict[maybe_renamed_attr_name] = cl
-                    made_progress = True
-                    break
-            else:
-                still_remaining.append(entry)
-        remaining = still_remaining
-
-    # A class we could not pin to a unique non-default field can only be the
-    # single fallback (tried when no unique key matches). More than one such
-    # class is a genuine ambiguity.
+    # A class we could not pin to a unique field can only be the single
+    # fallback (tried when no unique key matches). More than one such class
+    # is a genuine ambiguity.
     if len(remaining) > 1:
         raise TypeError(
             "Could not disambiguate between "
@@ -197,6 +179,45 @@ def create_default_dis_func(
 
 
 create_uniq_field_dis_func = create_default_dis_func
+
+
+def _pin_unique_fields(
+    remaining: list, uniq_attrs_dict: dict[str, type], *, defaulted: bool
+) -> list:
+    """Pin classes to a field unique among the remaining ones, to a fixpoint.
+
+    With `defaulted=False` only fields without a default qualify; with
+    `defaulted=True` only fields with one do. Pinning a class removes its
+    fields from consideration, which can make a previously ambiguous class
+    uniquely identifiable, so passes repeat until one pins nothing. A single
+    pass in a fixed order would miss those later picks and fail to
+    disambiguate valid unions depending on the class order.
+
+    Return the classes that could not be pinned.
+    """
+    made_progress = True
+    while made_progress:
+        made_progress = False
+        still_remaining = []
+        for entry in remaining:
+            cl, cl_reqs, back_map = entry
+            other_reqs = reduce(
+                or_, (c_a[1] for c_a in remaining if c_a[0] is not cl), set()
+            )
+            uniq = cl_reqs - other_reqs
+
+            cl_fields = fields_dict(get_origin(cl) or cl)
+            for maybe_renamed_attr_name in uniq:
+                orig_name = back_map[maybe_renamed_attr_name]
+                has_default = cl_fields[orig_name].default not in (NOTHING, MISSING)
+                if has_default == defaulted:
+                    uniq_attrs_dict[maybe_renamed_attr_name] = cl
+                    made_progress = True
+                    break
+            else:
+                still_remaining.append(entry)
+        remaining = still_remaining
+    return remaining
 
 
 def _overriden_name(at: Attribute, override: AttributeOverride | None) -> str:

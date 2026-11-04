@@ -495,3 +495,67 @@ def test_dataclasses_literals(converter):
 
     assert converter.structure({"a": "a"}, Union[A, B]) == A()
     assert converter.structure({"b": "b"}, Union[A, B]) == B("b")
+
+
+def test_defaulted_unique_fields(converter: Converter):
+    """Classes told apart only by defaulted unique fields still disambiguate.
+
+    A defaulted field is a signal when present in the payload.
+    """
+
+    @define
+    class A:
+        a: str = ""
+
+    @define
+    class B:
+        b: str = ""
+
+    dis_func = create_default_dis_func(converter, A, B)
+
+    assert dis_func({"a": "x"}) is A
+    assert dis_func({"b": "x"}) is B
+    with pytest.raises(ValueError):
+        # Neither signal present; both classes would accept the payload.
+        dis_func({})
+
+    assert converter.structure({"a": "x"}, Union[A, B]) == A("x")
+    assert converter.structure({"b": "x"}, Union[A, B]) == B("x")
+
+
+def test_defaulted_unique_fields_chain(converter: Converter):
+    """A defaulted field can become unique only after another class is pinned."""
+
+    @define
+    class A:
+        shared: str = ""
+        only_a: str = ""
+
+    @define
+    class B:
+        shared: str = ""
+
+    @define
+    class C:
+        only_c: int
+
+    dis_func = create_default_dis_func(converter, A, B, C)
+
+    assert dis_func({"only_c": 1}) is C
+    assert dis_func({"only_a": "x"}) is A
+    assert dis_func({"shared": "x"}) is B
+
+
+def test_defaulted_fields_do_not_unblock_true_ambiguity(converter: Converter):
+    """Identically-shaped classes still cannot be disambiguated."""
+
+    @define
+    class A:
+        a: str = ""
+
+    @define
+    class B:
+        a: str = ""
+
+    with pytest.raises(TypeError):
+        create_default_dis_func(converter, A, B)

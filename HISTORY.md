@@ -13,6 +13,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT
 
+- The default union disambiguator now uses unique fields with defaults as a fallback signal when not enough classes can be told apart by unique fields without defaults, so unions of classes whose fields all carry defaults (for example two dataclasses with a differently-named field each) can be structured instead of failing with "no unique non-default attributes".
+  ([#521](https://github.com/python-attrs/cattrs/issues/521))
 - Fix the msgspec converter passing typed deques directly to the encoder, which cannot serialize them. Deques are now unstructured into lists, including when nested in attrs classes or dataclasses.
   ([#818](https://github.com/python-attrs/cattrs/issues/818) [#819](https://github.com/python-attrs/cattrs/pull/819))
 
