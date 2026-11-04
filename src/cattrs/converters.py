@@ -4,14 +4,14 @@ from collections import Counter, deque
 from collections.abc import Callable, Iterable
 from collections.abc import Mapping as AbcMapping
 from collections.abc import MutableMapping as AbcMutableMapping
-from dataclasses import Field
+from dataclasses import MISSING, Field
 from enum import Enum
 from inspect import Signature
 from inspect import signature as inspect_signature
 from pathlib import Path
 from typing import Any, Optional, Tuple, TypeVar, overload
 
-from attrs import Attribute, resolve_types
+from attrs import NOTHING, Attribute, resolve_types
 from attrs import has as attrs_has
 from typing_extensions import Self, TypeForm
 
@@ -39,6 +39,7 @@ from ._compat import (
     get_origin,
     has,
     has_with_generic,
+    includes_none_type,
     is_annotated,
     is_bare,
     is_counter,
@@ -183,6 +184,13 @@ def _is_extended_factory(factory: Callable) -> bool:
         len(sig.parameters) >= 2
         and (list(sig.parameters.values())[1]).default is Signature.empty
     )
+
+
+def _attribute_has_default(a: Attribute | Field) -> bool:
+    """Whether an attrs attribute or a dataclass field has a default."""
+    if isinstance(a, Field):
+        return a.default is not MISSING or a.default_factory is not MISSING
+    return a.default is not NOTHING
 
 
 class BaseConverter:
@@ -824,6 +832,17 @@ class BaseConverter:
             try:
                 val = obj[a.name]
             except KeyError:
+                # Fields of optional types without defaults treat a
+                # missing key as an explicit None, instead of being
+                # skipped (and failing when instantiating).
+                if (
+                    getattr(a, "init", True)
+                    and not _attribute_has_default(a)
+                    and includes_none_type(a.type)
+                ):
+                    conv_obj[getattr(a, "alias", a.name)] = self._structure_attribute(
+                        a, None
+                    )
                 continue
 
             # try .alias and .name because this code also supports dataclasses!

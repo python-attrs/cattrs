@@ -108,6 +108,16 @@ def is_optional(typ: Any) -> bool:
     return is_union_type(typ) and NoneType in typ.__args__ and len(typ.__args__) == 2
 
 
+def includes_none_type(typ: Any) -> bool:
+    """Whether *typ* is a union type which includes `None`, possibly annotated.
+
+    Unlike `is_optional`, unions of any arity are accepted.
+    """
+    if is_annotated(typ):
+        return includes_none_type(get_args(typ)[0])
+    return is_union_type(typ) and NoneType in get_args(typ)
+
+
 def is_typeddict(cls: Any):
     """Thin wrapper around typing(_extensions).is_typeddict"""
     return _is_typeddict(getattr(cls, "__origin__", cls))

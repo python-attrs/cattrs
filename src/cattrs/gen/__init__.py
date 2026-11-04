@@ -13,6 +13,7 @@ from .._compat import (
     adapted_fields,
     get_args,
     get_origin,
+    includes_none_type,
     is_annotated,
     is_bare,
     is_bare_final,
@@ -375,6 +376,10 @@ def make_dict_structure_fn_from_attrs(
     .. versionchanged:: 26.1.0
         `typing.Annotated[T, override()]` is now recognized and can be used to customize
         unstructuring.
+    .. versionchanged:: 26.3.0
+        Attributes of optional types (unions including `None`) without defaults
+        are structured as `None` when their key is missing from the input,
+        instead of raising an error.
     """
 
     cl_name = cl.__name__
@@ -473,6 +478,13 @@ def make_dict_structure_fn_from_attrs(
             allowed_fields.add(kn)
             i = "  "
 
+            # Optional fields without defaults treat a missing key as an
+            # explicit None, instead of raising a KeyError.
+            if a.default is NOTHING and includes_none_type(t):
+                access = f"o.get({kn!r})"
+            else:
+                access = f"o[{kn!r}]"
+
             if not a.init:
                 if a.default is not NOTHING:
                     pi_lines.append(f"{i}if {kn!r} in o:")
@@ -485,16 +497,16 @@ def make_dict_structure_fn_from_attrs(
                     if handler == converter._structure_call:
                         internal_arg_parts[struct_handler_name] = t
                         pi_lines.append(
-                            f"{i}instance.{an} = {struct_handler_name}(o[{kn!r}])"
+                            f"{i}instance.{an} = {struct_handler_name}({access})"
                         )
                     else:
                         tn = f"__c_type_{an}"
                         internal_arg_parts[tn] = t
                         pi_lines.append(
-                            f"{i}instance.{an} = {struct_handler_name}(o[{kn!r}], {tn})"
+                            f"{i}instance.{an} = {struct_handler_name}({access}, {tn})"
                         )
                 else:
-                    pi_lines.append(f"{i}instance.{an} = o[{kn!r}]")
+                    pi_lines.append(f"{i}instance.{an} = {access}")
                 i = i[:-2]
                 pi_lines.append(f"{i}except Exception as e:")
                 i = f"{i}  "
@@ -515,14 +527,14 @@ def make_dict_structure_fn_from_attrs(
                     if handler == converter._structure_call:
                         internal_arg_parts[struct_handler_name] = t
                         lines.append(
-                            f"{i}res['{ian}'] = {struct_handler_name}(o[{kn!r}])"
+                            f"{i}res['{ian}'] = {struct_handler_name}({access})"
                         )
                     else:
                         lines.append(
-                            f"{i}res['{ian}'] = {struct_handler_name}(o[{kn!r}], {type_name})"
+                            f"{i}res['{ian}'] = {struct_handler_name}({access}, {type_name})"
                         )
                 else:
-                    lines.append(f"{i}res['{ian}'] = o[{kn!r}]")
+                    lines.append(f"{i}res['{ian}'] = {access}")
                 i = i[:-2]
                 lines.append(f"{i}except Exception as e:")
                 i = f"{i}  "
@@ -610,21 +622,26 @@ def make_dict_structure_fn_from_attrs(
                 kn = override.rename
             allowed_fields.add(kn)
 
+            # Optional fields treat a missing key as an explicit None,
+            # instead of raising a KeyError. (Only fields without
+            # defaults reach this loop.)
+            access = f"o.get({kn!r})" if includes_none_type(t) else f"o[{kn!r}]"
+
             if not a.init:
                 if handler is not None:
                     struct_handler_name = f"__c_structure_{an}"
                     internal_arg_parts[struct_handler_name] = handler
                     if handler == converter._structure_call:
                         internal_arg_parts[struct_handler_name] = t
-                        pi_line = f"  instance.{an} = {struct_handler_name}(o[{kn!r}])"
+                        pi_line = f"  instance.{an} = {struct_handler_name}({access})"
                     else:
                         tn = f"__c_type_{an}"
                         internal_arg_parts[tn] = t
                         pi_line = (
-                            f"  instance.{an} = {struct_handler_name}(o[{kn!r}], {tn})"
+                            f"  instance.{an} = {struct_handler_name}({access}, {tn})"
                         )
                 else:
-                    pi_line = f"  instance.{an} = o[{kn!r}]"
+                    pi_line = f"  instance.{an} = {access}"
 
                 pi_lines.append(pi_line)
             else:
@@ -633,13 +650,13 @@ def make_dict_structure_fn_from_attrs(
                     internal_arg_parts[struct_handler_name] = handler
                     if handler == converter._structure_call:
                         internal_arg_parts[struct_handler_name] = t
-                        invocation_line = f"{struct_handler_name}(o[{kn!r}]),"
+                        invocation_line = f"{struct_handler_name}({access}),"
                     else:
                         tn = f"__c_type_{an}"
                         internal_arg_parts[tn] = t
-                        invocation_line = f"{struct_handler_name}(o[{kn!r}], {tn}),"
+                        invocation_line = f"{struct_handler_name}({access}, {tn}),"
                 else:
-                    invocation_line = f"o[{kn!r}],"
+                    invocation_line = f"{access},"
 
                 if a.kw_only:
                     invocation_line = f"{a.alias}={invocation_line}"
@@ -805,6 +822,10 @@ def make_dict_structure_fn(
     .. versionchanged:: 26.1.0
         `typing.Annotated[T, override()]` is now recognized and can be used to customize
         unstructuring.
+    .. versionchanged:: 26.3.0
+        Attributes of optional types (unions including `None`) without defaults
+        are structured as `None` when their key is missing from the input,
+        instead of raising an error.
     """
 
     mapping = {}
