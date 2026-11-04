@@ -6,6 +6,7 @@ from .errors import (
     ClassValidationError,
     ForbiddenExtraKeysError,
     IterableValidationError,
+    TypeValidationNote,
 )
 
 __all__ = ["format_exception", "transform_error"]
@@ -53,6 +54,14 @@ def format_exception(exc: BaseException, type: Union[type, None]) -> str:
     return res
 
 
+def _get_type_from_notes(exc: BaseException) -> Union[type, None]:
+    """Get the target type from an exception's type validation note, if any."""
+    for note in getattr(exc, "__notes__", []):
+        if note.__class__ is TypeValidationNote:
+            return note.type
+    return None
+
+
 def transform_error(
     exc: Union[ClassValidationError, IterableValidationError, BaseException],
     path: str = "$",
@@ -90,7 +99,9 @@ def transform_error(
             else:
                 errors.append(f"{format_exception(exc, note.type)} @ {p}")
         for exc in without:
-            errors.append(f"{format_exception(exc, None)} @ {path}")
+            errors.append(
+                f"{format_exception(exc, _get_type_from_notes(exc))} @ {path}"
+            )
     elif isinstance(exc, ClassValidationError):
         with_notes, without = exc.group_exceptions()
         for exc, note in with_notes:
@@ -100,7 +111,9 @@ def transform_error(
             else:
                 errors.append(f"{format_exception(exc, note.type)} @ {p}")
         for exc in without:
-            errors.append(f"{format_exception(exc, None)} @ {path}")
+            errors.append(
+                f"{format_exception(exc, _get_type_from_notes(exc))} @ {path}"
+            )
     else:
-        errors.append(f"{format_exception(exc, None)} @ {path}")
+        errors.append(f"{format_exception(exc, _get_type_from_notes(exc))} @ {path}")
     return errors

@@ -37,6 +37,20 @@ class BaseValidationError(ExceptionGroup, CattrsError):
         return self.__class__(self.message, excs, self.cl)
 
 
+class TypeValidationNote(str):
+    """Attached as a note to an exception when structuring a value fails, carrying the target type."""
+
+    type: Any
+
+    def __new__(cls, string: str, type: Any) -> Self:
+        instance = str.__new__(cls, string)
+        instance.type = type
+        return instance
+
+    def __getnewargs__(self) -> tuple[str, Any]:
+        return (str(self), self.type)
+
+
 class IterableValidationNote(str):
     """Attached as a note to an exception when an iterable element fails structuring."""
 

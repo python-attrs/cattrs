@@ -90,6 +90,7 @@ from .errors import (
     IterableValidationError,
     IterableValidationNote,
     StructureHandlerNotFoundError,
+    TypeValidationNote,
 )
 from .fns import Predicate, identity, raise_error
 from .gen import (
@@ -635,7 +636,13 @@ class BaseConverter:
             The target type is now annotated with ``TypeForm`` to support
             stronger type hints.
         """
-        return self._structure_func.dispatch(cl)(obj, cl)
+        try:
+            return self._structure_func.dispatch(cl)(obj, cl)
+        except Exception as exc:
+            if self.detailed_validation and not getattr(exc, "__notes__", []):
+                note = TypeValidationNote(f"Structuring {cl}", cl)
+                exc.__notes__ = [*getattr(exc, "__notes__", []), note]
+            raise
 
     def get_structure_hook(
         self, type: TypeForm[T], cache_result: bool = True
