@@ -253,7 +253,10 @@ def is_annotated(type) -> bool:
 def is_tuple(type):
     return (
         type in (Tuple, tuple)
-        or (type.__class__ is _GenericAlias and is_subclass(type.__origin__, Tuple))
+        or (
+            type.__class__ in (_GenericAlias, GenericAlias)
+            and is_subclass(type.__origin__, Tuple)
+        )
         or (getattr(type, "__origin__", None) is tuple)
     )
 
@@ -313,13 +316,14 @@ def is_mutable_sequence(type: Any) -> bool:
     return (
         type in (List, list, TypingMutableSequence, AbcMutableSequence, deque, Deque)
         or (
-            type.__class__ is _GenericAlias
+            type.__class__ in (_GenericAlias, GenericAlias)
             and (
                 ((origin is not tuple) and is_subclass(origin, TypingMutableSequence))
                 or (origin is tuple and type.__args__[1] is ...)
             )
         )
         or (origin in (list, deque, AbcMutableSequence))
+        or is_subclass(getattr(type, "__origin__", type), (list, deque))
     )
 
 
@@ -333,7 +337,7 @@ def is_sequence(type: Any) -> bool:
     return is_mutable_sequence(type) or (
         type in (TypingSequence, tuple, Tuple)
         or (
-            type.__class__ is _GenericAlias
+            type.__class__ in (_GenericAlias, GenericAlias)
             and (
                 ((origin is not tuple) and is_subclass(origin, TypingSequence))
                 or (origin is tuple and type.__args__[1] is ...)
@@ -347,7 +351,10 @@ def is_sequence(type: Any) -> bool:
 def is_deque(type):
     return (
         type in (deque, Deque)
-        or (type.__class__ is _GenericAlias and is_subclass(type.__origin__, deque))
+        or (
+            type.__class__ in (_GenericAlias, GenericAlias)
+            and is_subclass(type.__origin__, deque)
+        )
         or (getattr(type, "__origin__", None) is deque)
     )
 
@@ -360,10 +367,11 @@ def is_mutable_set(type: Any) -> bool:
     return (
         type in (TypingSet, TypingMutableSet, set)
         or (
-            type.__class__ is _GenericAlias
+            type.__class__ in (_GenericAlias, GenericAlias)
             and is_subclass(type.__origin__, TypingMutableSet)
         )
         or (getattr(type, "__origin__", None) in (set, AbcMutableSet, AbcSet))
+        or is_subclass(getattr(type, "__origin__", type), set)
     )
 
 
@@ -374,8 +382,12 @@ def is_frozenset(type: Any) -> bool:
     """
     return (
         type in (FrozenSet, frozenset)
-        or (type.__class__ is _GenericAlias and is_subclass(type.__origin__, FrozenSet))
+        or (
+            type.__class__ in (_GenericAlias, GenericAlias)
+            and is_subclass(type.__origin__, FrozenSet)
+        )
         or (getattr(type, "__origin__", None) is frozenset)
+        or is_subclass(getattr(type, "__origin__", type), frozenset)
     )
 
 
@@ -390,7 +402,7 @@ def is_mapping(type: Any) -> bool:
     return (
         type in (dict, Dict, TypingMapping, TypingMutableMapping, AbcMutableMapping)
         or (
-            type.__class__ is _GenericAlias
+            type.__class__ in (_GenericAlias, GenericAlias)
             and is_subclass(type.__origin__, TypingMapping)
         )
         or is_subclass(

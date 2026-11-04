@@ -13,6 +13,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT
 
+- Subclasses of built-in collections (`list`, `set` and `frozenset`) are now un/structured like their built-in counterparts, both when used bare and when subscripted (for example `MyList[Item]`), instead of being passed through unchanged.
+  ([#287](https://github.com/python-attrs/cattrs/issues/287))
 - Fix the msgspec converter passing typed deques directly to the encoder, which cannot serialize them. Deques are now unstructured into lists, including when nested in attrs classes or dataclasses.
   ([#818](https://github.com/python-attrs/cattrs/issues/818) [#819](https://github.com/python-attrs/cattrs/pull/819))
 

@@ -1,6 +1,6 @@
 """Test both structuring and unstructuring."""
 
-from typing import Optional, Union
+from typing import Optional, TypeVar, Union
 
 import pytest
 from attrs import define, fields, make_class
@@ -252,3 +252,54 @@ def test_310_optional_field_roundtrip(cl_and_vals):
     unstructured = converter.unstructure(inst)
 
     assert inst == converter.structure(unstructured, C)
+
+
+def test_unstructure_subclassed_list():
+    """Subclasses of `list` are unstructured like lists, including their elements.
+
+    Regression test for https://github.com/python-attrs/cattrs/issues/287
+    """
+    T = TypeVar("T")
+
+    @define
+    class A:
+        a: int
+
+    class MyList(list[T]):
+        pass
+
+    converter = BaseConverter()
+
+    # A bare instance, dispatched on its runtime class.
+    assert converter.unstructure(MyList([A(1)])) == [{"a": 1}]
+
+    @define
+    class Holder:
+        aliased: MyList[A]
+        bare: MyList
+
+    inst = Holder(aliased=MyList([A(1)]), bare=MyList([A(2)]))
+    assert converter.unstructure(inst) == {"aliased": [{"a": 1}], "bare": [{"a": 2}]}
+
+    @define
+    class AliasedHolder:
+        items: MyList[A]
+
+    assert converter.structure({"items": [{"a": 1}]}, AliasedHolder) == AliasedHolder(
+        items=MyList([A(1)])
+    )
+
+
+def test_unstructure_subclassed_sets():
+    """Subclasses of `set` and `frozenset` are unstructured like sets."""
+
+    class MySet(set):
+        pass
+
+    class MyFrozenSet(frozenset):
+        pass
+
+    converter = BaseConverter()
+
+    assert converter.unstructure(MySet([1, 2])) == {1, 2}
+    assert converter.unstructure(MyFrozenSet([1, 2])) == {1, 2}
