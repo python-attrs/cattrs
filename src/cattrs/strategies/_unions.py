@@ -2,9 +2,16 @@ from collections import defaultdict
 from typing import Any, Callable, Union
 
 from attrs import NOTHING, NothingType
+from attrs.exceptions import NotAnAttrsClassError
 
 from .. import BaseConverter
-from .._compat import get_newtype_base, is_literal, is_subclass, is_union_type
+from .._compat import (
+    adapted_fields,
+    get_newtype_base,
+    is_literal,
+    is_subclass,
+    is_union_type,
+)
 from ..sentinels import is_sentinel
 from ..typealiases import get_type_alias_base, is_type_alias
 
@@ -18,6 +25,18 @@ __all__ = [
 def default_tag_generator(typ: type) -> str:
     """Return the class name."""
     return typ.__name__
+
+
+def _class_consumes_key(cl: type, key: str) -> bool:
+    """Whether an init field consumes the key by name or private-field alias."""
+    try:
+        fields = adapted_fields(cl)
+    except (TypeError, NotAnAttrsClassError):
+        return False
+    return any(
+        field.init and (field.name == key or field.name.removeprefix("_") == key)
+        for field in fields
+    )
 
 
 def configure_tagged_union(
@@ -53,6 +72,7 @@ def configure_tagged_union(
     if is_type_alias(union):
         union = union.__value__
     args = union.__args__
+    forbid_extra_keys = getattr(converter, "forbid_extra_keys", False)
 
     tag_to_hook = {}
     exact_cl_unstruct_hooks = {}
@@ -67,7 +87,7 @@ def configure_tagged_union(
         tag_to_hook = defaultdict(lambda: structure_default)
         cl_to_tag = defaultdict(lambda: default)
 
-        if getattr(converter, "forbid_extra_keys", False):
+        if forbid_extra_keys:
 
             def structure_tagged_union(
                 val: dict,
@@ -78,8 +98,11 @@ def configure_tagged_union(
                 _default=default,
             ) -> union:
                 if _tag_name in val:
+                    tag = val[_tag_name]
+                    if tag in _tag_to_hook:
+                        return _tag_to_hook[tag](val)
                     val = val.copy()
-                    return _tag_to_hook[val.pop(_tag_name)](val)
+                    val.pop(_tag_name)
                 return _dh(val, _default)
 
         else:
@@ -97,20 +120,11 @@ def configure_tagged_union(
                 return _dh(val, _default)
 
     else:
-        if getattr(converter, "forbid_extra_keys", False):
 
-            def structure_tagged_union(
-                val: dict, _, _tag_to_cl=tag_to_hook, _tag_name=tag_name
-            ) -> union:
-                val = val.copy()
-                return _tag_to_cl[val.pop(_tag_name)](val)
-
-        else:
-
-            def structure_tagged_union(
-                val: dict, _, _tag_to_cl=tag_to_hook, _tag_name=tag_name
-            ) -> union:
-                return _tag_to_cl[val[_tag_name]](val)
+        def structure_tagged_union(
+            val: dict, _, _tag_to_cl=tag_to_hook, _tag_name=tag_name
+        ) -> union:
+            return _tag_to_cl[val[_tag_name]](val)
 
     def unstructure_tagged_union(
         val: union,
@@ -129,8 +143,19 @@ def configure_tagged_union(
         tag = tag_generator(cl)
         struct_handler = converter.get_structure_hook(cl)
         unstruct_handler = converter.get_unstructure_hook(cl)
+        consumes_tag = _class_consumes_key(cl, tag_name) if forbid_extra_keys else False
 
-        def structure_union_member(val: dict, _cl=cl, _h=struct_handler) -> cl:
+        def structure_union_member(
+            val: dict,
+            _cl=cl,
+            _h=struct_handler,
+            _consumes_tag=consumes_tag,
+            _forbid_extra_keys=forbid_extra_keys,
+            _tag_name=tag_name,
+        ) -> cl:
+            if _forbid_extra_keys and not _consumes_tag and _tag_name in val:
+                val = val.copy()
+                val.pop(_tag_name)
             return _h(val, _cl)
 
         def unstructure_union_member(val: union, _h=unstruct_handler) -> dict:

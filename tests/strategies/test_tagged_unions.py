@@ -1,6 +1,7 @@
 from typing import Optional, Sequence, Union
 
-from attrs import define
+import pytest
+from attrs import NOTHING, define, field
 
 from cattrs import BaseConverter, Converter
 from cattrs.strategies import configure_tagged_union
@@ -142,8 +143,11 @@ def test_forbid_extra_keys():
     c = Converter(forbid_extra_keys=True)
     configure_tagged_union(Union[A, B], c)
 
-    data = c.unstructure(A(), Union[A, B])
-    c.structure(data, Union[A, B])
+    for instance in (A(), B()):
+        data = c.unstructure(instance, Union[A, B])
+        original = data.copy()
+        assert c.structure(data, Union[A, B]) == instance
+        assert data == original
 
 
 def test_forbid_extra_keys_default():
@@ -160,11 +164,143 @@ def test_forbid_extra_keys_default():
     c = Converter(forbid_extra_keys=True)
     configure_tagged_union(Union[A, B], c, default=A)
 
-    data = c.unstructure(A(), Union[A, B])
-    assert c.structure(data, Union[A, B]) == A()
+    for instance in (A(), B()):
+        data = c.unstructure(instance, Union[A, B])
+        original = data.copy()
+        assert c.structure(data, Union[A, B]) == instance
+        assert data == original
+
+    data = {"_type": "unknown"}
+    # Repeated unknown tags must keep using the same fallback behavior.
+    for _ in range(2):
+        assert c.structure(data, Union[A, B]) == A()
+        assert data == {"_type": "unknown"}
 
     data.pop("_type")
     assert c.structure(data, Union[A, B]) == A()
+
+
+@pytest.mark.parametrize("use_default", [False, True])
+@pytest.mark.parametrize("forbid_extra_keys", [False, True])
+def test_tag_is_member_field(use_default, forbid_extra_keys):
+    """A tag that is also a member field survives structuring and round-trips."""
+
+    @define
+    class SpecialDevice:
+        hostname: str
+        port: int
+        type: str
+
+    @define
+    class StandardDevice:
+        hostname: str
+        type: str
+
+    union = SpecialDevice | StandardDevice
+
+    @define
+    class Settings:
+        device: union
+
+    c = Converter(forbid_extra_keys=forbid_extra_keys)
+    configure_tagged_union(
+        union,
+        c,
+        tag_name="type",
+        tag_generator={SpecialDevice: "special", StandardDevice: "standard"}.get,
+        default=StandardDevice if use_default else NOTHING,
+    )
+
+    for payload, expected in (
+        (
+            {"type": "special", "hostname": "hostname", "port": 1234},
+            SpecialDevice("hostname", 1234, "special"),
+        ),
+        (
+            {"type": "standard", "hostname": "hostname"},
+            StandardDevice("hostname", "standard"),
+        ),
+    ):
+        data = {"device": payload.copy()}
+        result = c.structure(data, Settings)
+        assert result == Settings(expected)
+        assert data == {"device": payload}
+        assert c.unstructure(result) == data
+
+
+@pytest.mark.parametrize("use_default", [False, True])
+@pytest.mark.parametrize("use_alias, tag_name", [(False, "_type"), (True, "type")])
+def test_forbid_extra_keys_mixed_members(use_default, use_alias, tag_name):
+    """Only members consuming the tag retain it, including private field aliases."""
+
+    @define
+    class C:
+        _type: str
+
+    union = C | A
+    c = Converter(forbid_extra_keys=True, use_alias=use_alias)
+    configure_tagged_union(
+        union, c, tag_name=tag_name, default=C if use_default else NOTHING
+    )
+
+    for data, expected in (({tag_name: "C"}, C("C")), ({tag_name: "A", "a": 1}, A(1))):
+        original = data.copy()
+        result = c.structure(data, union)
+        assert result == expected
+        assert data == original
+        assert c.unstructure(result, union) == data
+
+
+def test_forbid_extra_keys_init_false_tag():
+    """Fields excluded from init do not consume the tag."""
+
+    @define
+    class C:
+        type: str = field(init=False, default="unused")
+
+    union = C | A
+    c = Converter(forbid_extra_keys=True)
+    configure_tagged_union(union, c, tag_name="type")
+
+    assert c.structure({"type": "C"}, union) == C()
+
+
+def test_forbid_extra_keys_default_with_tag_field():
+    """Unknown tags are still removed before invoking the default handler."""
+
+    @define
+    class C:
+        type: str = "fallback"
+
+    union = C | A
+    c = Converter(forbid_extra_keys=True)
+    configure_tagged_union(union, c, tag_name="type", default=C)
+
+    assert c.structure({"type": "C"}, union) == C("C")
+    assert c.structure({}, union) == C()
+    data = {"type": "unknown"}
+    for _ in range(2):
+        assert c.structure(data, union) == C()
+        assert data == {"type": "unknown"}
+
+
+def test_forbid_extra_keys_custom_member():
+    """Members with custom hooks need not be attrs classes or dataclasses."""
+
+    class C:
+        pass
+
+    c = Converter(forbid_extra_keys=True)
+
+    @c.register_structure_hook
+    def structure_c(val, _) -> C:
+        assert val == {}
+        return C()
+
+    c.register_unstructure_hook(C, lambda _: {})
+    configure_tagged_union(C | A, c)
+
+    assert isinstance(c.structure({"_type": "C"}, C | A), C)
 
 
 def test_nested_sequence_union():
