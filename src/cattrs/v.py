@@ -3,9 +3,12 @@
 from typing import Callable, Union
 
 from .errors import (
+    AttributeValidationNote,
     ClassValidationError,
     ForbiddenExtraKeysError,
     IterableValidationError,
+    IterableValidationNote,
+    ValueValidationNote,
 )
 
 __all__ = ["format_exception", "transform_error"]
@@ -32,11 +35,10 @@ def format_exception(exc: BaseException, type: Union[type, None]) -> str:
         else:
             res = "invalid value"
     elif isinstance(exc, TypeError):
-        if type is None:
-            if exc.args[0].endswith("object is not iterable"):
-                res = "invalid value for type, expected an iterable"
-            else:
-                res = f"invalid type ({exc})"
+        if exc.args and exc.args[0].endswith("object is not iterable"):
+            res = "invalid value for type, expected an iterable"
+        elif type is None:
+            res = f"invalid type ({exc})"
         else:
             tn = type.__name__ if hasattr(type, "__name__") else repr(type)
             res = f"invalid value for type, expected {tn}"
@@ -79,6 +81,11 @@ def transform_error(
         string descriptions of errors.
 
     .. versionadded:: 23.1.0
+
+    .. versionchanged:: NEXT
+        The target type of a standalone value (for example a primitive type)
+        is now passed to ``format_exception``, using the validation note
+        attached by converters with detailed validation.
     """
     errors = []
     if isinstance(exc, IterableValidationError):
@@ -102,5 +109,12 @@ def transform_error(
         for exc in without:
             errors.append(f"{format_exception(exc, None)} @ {path}")
     else:
-        errors.append(f"{format_exception(exc, None)} @ {path}")
+        # A standalone failure (for example a primitive type at the top
+        # level) carries its target type in a validation note, if any.
+        type = None
+        for note in getattr(exc, "__notes__", ()):
+            if isinstance(note, (AttributeValidationNote, IterableValidationNote, ValueValidationNote)):
+                type = note.type
+                break
+        errors.append(f"{format_exception(exc, type)} @ {path}")
     return errors

@@ -53,6 +53,25 @@ class IterableValidationNote(str):
         return (str(self), self.index, self.type)
 
 
+class ValueValidationNote(str):
+    """Attached as a note to an exception when structuring a standalone value fails.
+
+    Used for failures outside of a class or iterable context, for example when
+    structuring a primitive type at the top level, where no attribute or
+    iterable note applies.
+    """
+
+    type: Any
+
+    def __new__(cls, string: str, type: Any) -> Self:
+        instance = str.__new__(cls, string)
+        instance.type = type
+        return instance
+
+    def __getnewargs__(self) -> tuple[str, Any]:
+        return (str(self), self.type)
+
+
 class IterableValidationError(BaseValidationError):
     """Raised when structuring an iterable."""
 

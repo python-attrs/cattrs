@@ -376,3 +376,34 @@ def test_typeddict_attribute_errors(c: Converter) -> None:
 def test_other_errors():
     """Errors without explicit support transform predictably."""
     assert format_exception(IndexError("Test"), List[int]) == "unknown error (Test)"
+
+
+def test_primitive_errors(c: Converter) -> None:
+    """Standalone primitive failures know their target type."""
+    with raises(ValueError) as exc_info:
+        c.structure("not-a-number", int)
+    assert transform_error(exc_info.value) == ["invalid value for type, expected int @ $"]
+
+    with raises(ValueError) as exc_info:
+        c.structure("not-a-number", float)
+    assert transform_error(exc_info.value) == ["invalid value for type, expected float @ $"]
+
+
+def test_primitive_errors_custom_formatter(c: Converter) -> None:
+    """A custom formatter receives the target type for primitive failures."""
+
+    def fmt(exc, type):
+        assert type is int
+        return "custom"
+
+    with raises(ValueError) as exc_info:
+        c.structure("not-a-number", int)
+    assert transform_error(exc_info.value, format_exception=fmt) == ["custom @ $"]
+
+
+def test_primitive_errors_no_detailed_validation() -> None:
+    """Without detailed validation, no target type is attached."""
+    converter = Converter(detailed_validation=False)
+    with raises(ValueError) as exc_info:
+        converter.structure("not-a-number", int)
+    assert transform_error(exc_info.value) == ["invalid value @ $"]

@@ -86,10 +86,13 @@ from .dispatch import (
 )
 from .enums import enum_structure_factory, enum_unstructure_factory
 from .errors import (
+    AttributeValidationNote,
+    BaseValidationError,
     CattrsError,
     IterableValidationError,
     IterableValidationNote,
     StructureHandlerNotFoundError,
+    ValueValidationNote,
 )
 from .fns import Predicate, identity, raise_error
 from .gen import (
@@ -634,8 +637,33 @@ class BaseConverter:
         .. versionchanged:: NEXT
             The target type is now annotated with ``TypeForm`` to support
             stronger type hints.
+
+        .. versionchanged:: NEXT
+            With detailed validation, a failure to structure a standalone
+            value (for example a primitive type) now carries a
+            :class:`ValueValidationNote <cattrs.ValueValidationNote>` with the
+            target type, so `transform_error` can pass it to the exception
+            formatter.
         """
-        return self._structure_func.dispatch(cl)(obj, cl)
+        if not self.detailed_validation:
+            return self._structure_func.dispatch(cl)(obj, cl)
+        try:
+            return self._structure_func.dispatch(cl)(obj, cl)
+        except Exception as exc:
+            # Failures inside classes and iterables are grouped and carry
+            # their own notes; a bare failure (for example a primitive type,
+            # or a custom hook raising directly) gets the target type
+            # attached so `transform_error` can use it, unless a more
+            # specific note is already there.
+            if not isinstance(exc, BaseValidationError) and not any(
+                isinstance(note, (AttributeValidationNote, IterableValidationNote, ValueValidationNote))
+                for note in getattr(exc, "__notes__", ())
+            ):
+                exc.__notes__ = [
+                    *getattr(exc, "__notes__", []),
+                    ValueValidationNote(f"Structuring {cl}", cl),
+                ]
+            raise
 
     def get_structure_hook(
         self, type: TypeForm[T], cache_result: bool = True
