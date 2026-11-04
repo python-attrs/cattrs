@@ -742,6 +742,77 @@ def test_structure_fallbacks(converter_cls: Type[BaseConverter]):
     assert isinstance(c.structure({}, Test), Test)
 
 
+def test_no_default_hook_factories_chained_converter(
+    converter_cls: Type[BaseConverter],
+):
+    """Issue #793: a converter without default hook factories lets its
+    fallback factories handle types the defaults would otherwise claim.
+
+    The parent's custom hook factory for an attrs class must win over the
+    child's built-in attrs handling, which a plain chained converter cannot
+    do because the default attrs factory matches first.
+    """
+
+    @define
+    class Foo:
+        value: int
+
+    parent = Converter()
+
+    @parent.register_structure_hook_factory(lambda val: val is Foo)
+    def structure_foo(cls):
+        return lambda obj, _: Foo(int(obj["value"]) + 100)
+
+    @parent.register_unstructure_hook_factory(lambda val: val is Foo)
+    def unstructure_foo(cls):
+        return lambda obj: {"value": str(obj.value)}
+
+    child = converter_cls(
+        structure_fallback_factory=parent.get_structure_hook,
+        unstructure_fallback_factory=parent.get_unstructure_hook,
+        use_default_hook_factories=False,
+    )
+    assert child.structure({"value": "1"}, Foo) == Foo(101)
+    assert child.unstructure(Foo(5)) == {"value": "5"}
+
+    # With the defaults on, the same chained converter structures Foo with
+    # its own attrs factory instead of the parent's custom hook.
+    defaulted = converter_cls(structure_fallback_factory=parent.get_structure_hook)
+    assert defaulted.structure({"value": "1"}, Foo) == Foo(1)
+
+
+def test_no_default_hook_factories_copy_keeps_fallback(
+    converter_cls: Type[BaseConverter],
+):
+    """A chained converter without default factories still delegates after copy."""
+
+    @define
+    class Foo:
+        value: int
+
+    parent = Converter()
+
+    @parent.register_structure_hook_factory(lambda val: val is Foo)
+    def structure_foo(cls):
+        return lambda obj, _: Foo(int(obj["value"]) + 100)
+
+    child = converter_cls(
+        structure_fallback_factory=parent.get_structure_hook,
+        use_default_hook_factories=False,
+    )
+    assert child.copy().structure({"value": "1"}, Foo) == Foo(101)
+
+
+def test_no_default_hook_factories_own_hooks_still_win(
+    converter_cls: Type[BaseConverter],
+):
+    """Turning the defaults off does not turn off hooks registered afterwards."""
+
+    child = converter_cls(use_default_hook_factories=False)
+    child.register_structure_hook(int, lambda v, _: int(v) * 2)
+    assert child.structure("21", int) == 42
+
+
 def test_legacy_structure_fallbacks(converter_cls: Type[BaseConverter]):
     """Restoring legacy behavior works."""
 

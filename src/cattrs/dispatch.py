@@ -82,7 +82,10 @@ class FunctionDispatch:
         return len(self._handler_pairs)
 
     def copy_to(self, other: FunctionDispatch, skip: int = 0) -> None:
-        other._handler_pairs = self._handler_pairs[:-skip] + other._handler_pairs
+        # skip == 0 means there are no default factories to leave behind, so
+        # every pair is a user-registered one ([ :-0] would wrongly be empty).
+        user_pairs = self._handler_pairs if skip == 0 else self._handler_pairs[:-skip]
+        other._handler_pairs = user_pairs + other._handler_pairs
 
 
 @define(init=False)
