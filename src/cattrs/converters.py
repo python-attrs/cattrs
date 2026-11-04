@@ -8,6 +8,7 @@ from dataclasses import Field
 from enum import Enum
 from inspect import Signature
 from inspect import signature as inspect_signature
+from os import PathLike, fsdecode
 from pathlib import Path
 from typing import Any, Optional, Tuple, TypeVar, overload
 
@@ -244,7 +245,7 @@ class BaseConverter:
             unstructure_fallback_factory, self
         )
         self._unstructure_func.register_cls_list(
-            [(bytes, identity), (str, identity), (Path, str)]
+            [(bytes, identity), (str, identity), (Path, str), (PathLike, fsdecode)]
         )
         self._unstructure_func.register_func_list(
             [

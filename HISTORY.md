@@ -13,6 +13,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT
 
+- Attributes annotated as `os.PathLike` are now unstructured using `os.fsdecode` (like `pathlib.Path` attributes), instead of being passed through unchanged.
+  ([#417](https://github.com/python-attrs/cattrs/issues/417))
 - Fix the msgspec converter passing typed deques directly to the encoder, which cannot serialize them. Deques are now unstructured into lists, including when nested in attrs classes or dataclasses.
   ([#818](https://github.com/python-attrs/cattrs/issues/818) [#819](https://github.com/python-attrs/cattrs/pull/819))
 
