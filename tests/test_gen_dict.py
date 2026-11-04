@@ -1,5 +1,6 @@
 """Tests for generated dict functions."""
 
+from collections import OrderedDict
 from dataclasses import dataclass
 from math import ceil
 from typing import Annotated, Dict, Literal, Type, Union
@@ -794,3 +795,36 @@ def test_fields_exception():
     """fields() raises on a non-attrs, non-dataclass class."""
     with pytest.raises(Exception):  # noqa: B017
         fields(int)
+
+
+def test_dict_factory_used_by_generated_hooks():
+    """Generated unstructure hooks honor the converter's `dict_factory`.
+
+    Regression test for https://github.com/python-attrs/cattrs/issues/228
+    """
+
+    @define
+    class Inner:
+        x: int
+
+    @define
+    class Outer:
+        inner: Inner
+        a: int = 1
+
+    converter = Converter(dict_factory=OrderedDict)
+
+    res = converter.unstructure(Outer(Inner(2)))
+    assert isinstance(res, OrderedDict)
+    assert isinstance(res["inner"], OrderedDict)
+    assert res == {"inner": {"x": 2}, "a": 1}
+
+    # Also through an explicitly generated hook.
+    hook = make_dict_unstructure_fn(Outer, converter)
+    assert isinstance(hook(Outer(Inner(2))), OrderedDict)
+
+    # And with a converter omitting defaults.
+    omitting = Converter(dict_factory=OrderedDict, omit_if_default=True)
+    res = omitting.unstructure(Outer(Inner(2)))
+    assert isinstance(res, OrderedDict)
+    assert res == {"inner": {"x": 2}}

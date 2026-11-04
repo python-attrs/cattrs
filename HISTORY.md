@@ -13,6 +13,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT
 
+- The generated unstructure hooks now honor the converter's `dict_factory` (for example `Converter(dict_factory=OrderedDict)`), like `BaseConverter.unstructure_attrs_asdict` already did.
+  ([#228](https://github.com/python-attrs/cattrs/issues/228))
 - Fix the msgspec converter passing typed deques directly to the encoder, which cannot serialize them. Deques are now unstructured into lists, including when nested in attrs classes or dataclasses.
   ([#818](https://github.com/python-attrs/cattrs/issues/818) [#819](https://github.com/python-attrs/cattrs/pull/819))
 

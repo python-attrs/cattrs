@@ -227,7 +227,15 @@ def make_dict_unstructure_fn_from_attrs(
 
         else:
             # No default or no override.
-            invocation_lines.append(f"{kn!r}: {invoke},")
+            invocation_lines.append((kn, invoke))
+
+    # If the converter has a custom dict factory, the result must be built
+    # using it (like `BaseConverter.unstructure_attrs_asdict` does) instead
+    # of a plain dict literal.
+    use_dict_factory = converter._dict_factory is not dict
+    if use_dict_factory:
+        globs["__c_dict_factory"] = converter._dict_factory
+        internal_arg_parts["__c_dict_factory"] = converter._dict_factory
 
     internal_arg_line = ", ".join([f"{i}={i}" for i in internal_arg_parts])
     if internal_arg_line:
@@ -235,14 +243,23 @@ def make_dict_unstructure_fn_from_attrs(
     for k, v in internal_arg_parts.items():
         globs[k] = v
 
-    total_lines = (
-        [f"def {fn_name}(instance{internal_arg_line}):"]
-        + ["  res = {"]
-        + [f"    {line}" for line in invocation_lines]
-        + ["  }"]
-        + lines
-        + ["  return res"]
-    )
+    if use_dict_factory:
+        total_lines = (
+            [f"def {fn_name}(instance{internal_arg_line}):"]
+            + ["  res = __c_dict_factory()"]
+            + [f"  res[{kn!r}] = {invoke}" for kn, invoke in invocation_lines]
+            + lines
+            + ["  return res"]
+        )
+    else:
+        total_lines = (
+            [f"def {fn_name}(instance{internal_arg_line}):"]
+            + ["  res = {"]
+            + [f"    {kn!r}: {invoke}," for kn, invoke in invocation_lines]
+            + ["  }"]
+            + lines
+            + ["  return res"]
+        )
     script = "\n".join(total_lines)
     fname = generate_unique_filename(
         cl, "unstructure", lines=total_lines if _cattrs_use_linecache else []
