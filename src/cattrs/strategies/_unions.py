@@ -49,6 +49,9 @@ def configure_tagged_union(
 
     ..  versionchanged:: 25.1
         Type aliases of unions are now also supported.
+    ..  versionchanged:: NEXT
+        Subsets of the configured union (optionally including `None`) now
+        use the tagged strategy too.
     """
     if is_type_alias(union):
         union = union.__value__
@@ -124,6 +127,35 @@ def configure_tagged_union(
 
     converter.register_unstructure_hook(union, unstructure_tagged_union)
     converter.register_structure_hook(union, structure_tagged_union)
+
+    def is_tagged_subset(t: Any) -> bool:
+        """A different union made up only of members of the configured union.
+
+        An additional `None` member is allowed, so optional subsets count too;
+        at least two real members are required, so a plain `Optional[member]`
+        is not claimed.
+        """
+        if not is_union_type(t):
+            return False
+        members = set(t.__args__) - {type(None)}
+        return len(members) >= 2 and members != set(args) and members.issubset(args)
+
+    def structure_tagged_subset(val: dict | None, _: Any) -> union:
+        return None if val is None else structure_tagged_union(val, _)
+
+    def unstructure_tagged_subset(val: union | None) -> dict | None:
+        return None if val is None else unstructure_tagged_union(val)
+
+    # Subsets of the configured union reuse the same hooks: the tag alone
+    # decides the member, and every member of a subset is in `tag_to_hook`.
+    # Direct registrations for a subset (for example, configuring it
+    # separately) take precedence over these factories.
+    converter.register_structure_hook_factory(
+        is_tagged_subset, lambda _: structure_tagged_subset
+    )
+    converter.register_unstructure_hook_factory(
+        is_tagged_subset, lambda _: unstructure_tagged_subset
+    )
 
     for cl in args:
         tag = tag_generator(cl)

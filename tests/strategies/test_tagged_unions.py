@@ -177,3 +177,29 @@ def test_nested_sequence_union():
 
     data = c.unstructure(Top(u=[B(a="")]), Top)
     c.structure(data, Top)
+
+
+def test_subset_union(converter: BaseConverter) -> None:
+    """Subsets of a configured union use the tagged strategy too."""
+
+    @define
+    class C:
+        a: list
+
+    @define
+    class Container:
+        u: Union[A, B]
+        opt: Optional[Union[A, B]] = None
+
+    configure_tagged_union(Union[A, B, C], converter)
+
+    assert converter.unstructure(B("1"), Union[A, B]) == {"_type": "B", "a": "1"}
+    assert converter.structure({"_type": "B", "a": 1}, Union[A, B]) == B("1")
+
+    assert converter.unstructure(Container(B("1"), A(1))) == {
+        "u": {"_type": "B", "a": "1"},
+        "opt": {"_type": "A", "a": 1},
+    }
+    assert converter.structure(
+        {"u": {"_type": "A", "a": 1}, "opt": None}, Container
+    ) == Container(A(1), None)

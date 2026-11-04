@@ -13,6 +13,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT
 
+- The tagged union strategy ({func}`configure_tagged_union <cattrs.strategies.configure_tagged_union>`) now also applies to subsets of the configured union, including subsets with an additional `None` member, instead of falling back to the default disambiguation for them.
+  ([#348](https://github.com/python-attrs/cattrs/issues/348))
 - Fix the msgspec converter passing typed deques directly to the encoder, which cannot serialize them. Deques are now unstructured into lists, including when nested in attrs classes or dataclasses.
   ([#818](https://github.com/python-attrs/cattrs/issues/818) [#819](https://github.com/python-attrs/cattrs/pull/819))
 
