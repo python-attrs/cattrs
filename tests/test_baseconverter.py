@@ -1,5 +1,7 @@
 """Test both structuring and unstructuring."""
 
+from os import PathLike
+from pathlib import Path
 from typing import Optional, Union
 
 import pytest
@@ -252,3 +254,39 @@ def test_310_optional_field_roundtrip(cl_and_vals):
     unstructured = converter.unstructure(inst)
 
     assert inst == converter.structure(unstructured, C)
+
+
+def test_unstructure_pathlike_attribute():
+    """Attributes annotated as `os.PathLike` are unstructured as strings.
+
+    Regression test for https://github.com/python-attrs/cattrs/issues/417
+    """
+
+    @define
+    class C:
+        a: PathLike = Path("/a")
+        b: Union[str, PathLike] = Path("/b")
+
+    for strat in UnstructureStrategy:
+        converter = BaseConverter(unstruct_strat=strat)
+        if strat is UnstructureStrategy.AS_DICT:
+            assert converter.unstructure(C()) == {"a": "/a", "b": "/b"}
+        else:
+            assert converter.unstructure(C()) == ("/a", "/b")
+
+
+def test_unstructure_custom_pathlike_attribute():
+    """Non-`Path` `os.PathLike` values are unstructured using `os.fspath`."""
+
+    class CustomPath(PathLike):
+        def __init__(self, path):
+            self._path = path
+
+        def __fspath__(self):
+            return self._path
+
+    @define
+    class C:
+        a: PathLike
+
+    assert BaseConverter().unstructure(C(a=CustomPath("/custom"))) == {"a": "/custom"}
