@@ -13,6 +13,9 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT
 
+- `BaseConverter` and `Converter` now accept `use_default_hook_factories=False`, which skips registering the built-in hook factories. A chained converter can then actually delegate to its parent through the fallback factories, instead of the built-in attrs handling claiming the type first. Copies of such converters keep their fallback factories.
+  ([#793](https://github.com/python-attrs/cattrs/issues/793))
+
 - Fix the msgspec converter passing typed deques directly to the encoder, which cannot serialize them. Deques are now unstructured into lists, including when nested in attrs classes or dataclasses.
   ([#818](https://github.com/python-attrs/cattrs/issues/818) [#819](https://github.com/python-attrs/cattrs/pull/819))
 

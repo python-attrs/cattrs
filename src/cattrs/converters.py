@@ -199,6 +199,7 @@ class BaseConverter:
         "_unstructure_attrs",
         "_unstructure_func",
         "detailed_validation",
+        "use_default_hook_factories",
     )
 
     def __init__(
@@ -211,6 +212,7 @@ class BaseConverter:
         structure_fallback_factory: HookFactory[StructureHook] = lambda t: raise_error(
             None, t
         ),
+        use_default_hook_factories: bool = True,
     ) -> None:
         """
         :param detailed_validation: Whether to use a slightly slower mode for detailed
@@ -225,11 +227,13 @@ class BaseConverter:
         ..  versionchanged:: 24.2.0
             The default `structure_fallback_factory` now raises errors for missing handlers
             more eagerly, surfacing problems earlier.
+        ..  versionadded:: NEXT *use_default_hook_factories*
         """
         unstruct_strat = UnstructureStrategy(unstruct_strat)
         self._prefer_attrib_converters = prefer_attrib_converters
 
         self.detailed_validation = detailed_validation
+        self.use_default_hook_factories = use_default_hook_factories
         self._union_struct_registry: dict[Any, Callable[[Any, type[T]], T]] = {}
 
         # Create a per-instance cache.
@@ -243,113 +247,126 @@ class BaseConverter:
         self._unstructure_func = MultiStrategyDispatch(
             unstructure_fallback_factory, self
         )
-        self._unstructure_func.register_cls_list(
-            [(bytes, identity), (str, identity), (Path, str)]
-        )
-        self._unstructure_func.register_func_list(
-            [
-                (
-                    lambda t: get_newtype_base(t) is not None,
-                    lambda o: self.unstructure(o, unstructure_as=o.__class__),
-                ),
-                (
-                    is_protocol,
-                    lambda o: self.unstructure(o, unstructure_as=o.__class__),
-                ),
-                (
-                    lambda t: get_final_base(t) is not None,
-                    lambda t: self.get_unstructure_hook(get_final_base(t)),
-                    True,
-                ),
-                (
-                    is_type_alias,
-                    lambda t: self.get_unstructure_hook(get_type_alias_base(t)),
-                    True,
-                ),
-                (is_mapping, self._unstructure_mapping),
-                (is_sequence, self._unstructure_seq),
-                (is_mutable_set, self._unstructure_seq),
-                (is_frozenset, self._unstructure_seq),
-                (is_literal_containing_enums, self.unstructure),
-                (lambda t: is_subclass(t, Enum), enum_unstructure_factory, "extended"),
-                (has, self._unstructure_attrs),
-                (is_union_type, self._unstructure_union),
-                (lambda t: t in ANIES, self.unstructure),
-                (is_sentinel, sentinel_unstructure),
-                (
-                    lambda t: sentinel is not None and t is sentinel,
-                    sentinel_class_unstructure_factory,
-                    "extended",
-                ),
-            ]
-        )
+        if use_default_hook_factories:
+            self._unstructure_func.register_cls_list(
+                [(bytes, identity), (str, identity), (Path, str)]
+            )
+            self._unstructure_func.register_func_list(
+                [
+                    (
+                        lambda t: get_newtype_base(t) is not None,
+                        lambda o: self.unstructure(o, unstructure_as=o.__class__),
+                    ),
+                    (
+                        is_protocol,
+                        lambda o: self.unstructure(o, unstructure_as=o.__class__),
+                    ),
+                    (
+                        lambda t: get_final_base(t) is not None,
+                        lambda t: self.get_unstructure_hook(get_final_base(t)),
+                        True,
+                    ),
+                    (
+                        is_type_alias,
+                        lambda t: self.get_unstructure_hook(get_type_alias_base(t)),
+                        True,
+                    ),
+                    (is_mapping, self._unstructure_mapping),
+                    (is_sequence, self._unstructure_seq),
+                    (is_mutable_set, self._unstructure_seq),
+                    (is_frozenset, self._unstructure_seq),
+                    (is_literal_containing_enums, self.unstructure),
+                    (
+                        lambda t: is_subclass(t, Enum),
+                        enum_unstructure_factory,
+                        "extended",
+                    ),
+                    (has, self._unstructure_attrs),
+                    (is_union_type, self._unstructure_union),
+                    (lambda t: t in ANIES, self.unstructure),
+                    (is_sentinel, sentinel_unstructure),
+                    (
+                        lambda t: sentinel is not None and t is sentinel,
+                        sentinel_class_unstructure_factory,
+                        "extended",
+                    ),
+                ]
+            )
 
-        # Per-instance register of to-attrs converters.
-        # Singledispatch dispatches based on the first argument, so we
-        # store the function and switch the arguments in self.loads.
+            # Per-instance register of to-attrs converters.
+            # Singledispatch dispatches based on the first argument, so we
+            # store the function and switch the arguments in self.loads.
         self._structure_func = MultiStrategyDispatch(structure_fallback_factory, self)
-        self._structure_func.register_func_list(
-            [
-                (
-                    lambda cl: cl in ANIES or cl is Optional or cl is None,
-                    lambda v, _: v,
-                ),
-                (is_generic_attrs, self._gen_structure_generic, True),
-                (lambda t: get_newtype_base(t) is not None, self._structure_newtype),
-                (is_type_alias, type_alias_structure_factory, "extended"),
-                (
-                    lambda t: get_final_base(t) is not None,
-                    self._structure_final_factory,
-                    True,
-                ),
-                (is_literal, self._structure_simple_literal),
-                (is_literal_containing_enums, self._structure_enum_literal),
-                (is_sequence, homogenous_tuple_structure_factory, "extended"),
-                (is_mutable_sequence, list_structure_factory, "extended"),
-                (is_deque, self._structure_deque),
-                (is_mutable_set, self._structure_set),
-                (is_abstract_set, self._structure_frozenset),
-                (is_frozenset, self._structure_frozenset),
-                (is_tuple, self._structure_tuple),
-                (is_namedtuple, namedtuple_structure_factory, "extended"),
-                (is_mapping, self._structure_dict),
-                *(
-                    [
-                        (
-                            lambda t: (get_origin(t) or t) is frozendict,
-                            lambda obj, cl: cl(self._structure_dict(obj, cl)),
-                        )
-                    ]
-                    if frozendict is not None
-                    else []
-                ),
-                *(
-                    [(is_supported_union, self._gen_attrs_union_structure, True)]
-                    if unstruct_strat is UnstructureStrategy.AS_DICT
-                    else []
-                ),
-                (is_optional, self._structure_optional),
-                (is_sentinel, sentinel_structure),
-                (is_sentinel_union, sentinel_union_structure_factory, "extended"),
-                (
-                    lambda t: is_union_type(t) and t in self._union_struct_registry,
-                    self._union_struct_registry.__getitem__,
-                    True,
-                ),
-                (lambda t: is_subclass(t, Enum), enum_structure_factory, "extended"),
-                (has, self._structure_attrs),
-            ]
-        )
-        # Strings are sequences.
-        self._structure_func.register_cls_list(
-            [
-                (str, self._structure_call),
-                (bytes, self._structure_call),
-                (int, self._structure_call),
-                (float, self._structure_call),
-                (Path, self._structure_call),
-            ]
-        )
+        if use_default_hook_factories:
+            self._structure_func.register_func_list(
+                [
+                    (
+                        lambda cl: cl in ANIES or cl is Optional or cl is None,
+                        lambda v, _: v,
+                    ),
+                    (is_generic_attrs, self._gen_structure_generic, True),
+                    (
+                        lambda t: get_newtype_base(t) is not None,
+                        self._structure_newtype,
+                    ),
+                    (is_type_alias, type_alias_structure_factory, "extended"),
+                    (
+                        lambda t: get_final_base(t) is not None,
+                        self._structure_final_factory,
+                        True,
+                    ),
+                    (is_literal, self._structure_simple_literal),
+                    (is_literal_containing_enums, self._structure_enum_literal),
+                    (is_sequence, homogenous_tuple_structure_factory, "extended"),
+                    (is_mutable_sequence, list_structure_factory, "extended"),
+                    (is_deque, self._structure_deque),
+                    (is_mutable_set, self._structure_set),
+                    (is_abstract_set, self._structure_frozenset),
+                    (is_frozenset, self._structure_frozenset),
+                    (is_tuple, self._structure_tuple),
+                    (is_namedtuple, namedtuple_structure_factory, "extended"),
+                    (is_mapping, self._structure_dict),
+                    *(
+                        [
+                            (
+                                lambda t: (get_origin(t) or t) is frozendict,
+                                lambda obj, cl: cl(self._structure_dict(obj, cl)),
+                            )
+                        ]
+                        if frozendict is not None
+                        else []
+                    ),
+                    *(
+                        [(is_supported_union, self._gen_attrs_union_structure, True)]
+                        if unstruct_strat is UnstructureStrategy.AS_DICT
+                        else []
+                    ),
+                    (is_optional, self._structure_optional),
+                    (is_sentinel, sentinel_structure),
+                    (is_sentinel_union, sentinel_union_structure_factory, "extended"),
+                    (
+                        lambda t: is_union_type(t) and t in self._union_struct_registry,
+                        self._union_struct_registry.__getitem__,
+                        True,
+                    ),
+                    (
+                        lambda t: is_subclass(t, Enum),
+                        enum_structure_factory,
+                        "extended",
+                    ),
+                    (has, self._structure_attrs),
+                ]
+            )
+            # Strings are sequences.
+            self._structure_func.register_cls_list(
+                [
+                    (str, self._structure_call),
+                    (bytes, self._structure_call),
+                    (int, self._structure_call),
+                    (float, self._structure_call),
+                    (Path, self._structure_call),
+                ]
+            )
 
         self._dict_factory = dict_factory
 
@@ -1063,6 +1080,7 @@ class BaseConverter:
         unstruct_strat: UnstructureStrategy | None = None,
         prefer_attrib_converters: bool | None = None,
         detailed_validation: bool | None = None,
+        use_default_hook_factories: bool | None = None,
     ) -> Self:
         """Create a copy of the converter, keeping all existing custom hooks.
 
@@ -1090,6 +1108,13 @@ class BaseConverter:
                 if detailed_validation is not None
                 else self.detailed_validation
             ),
+            use_default_hook_factories=(
+                use_default_hook_factories
+                if use_default_hook_factories is not None
+                else self.use_default_hook_factories
+            ),
+            unstructure_fallback_factory=self._unstructure_func._fallback_factory,
+            structure_fallback_factory=self._structure_func._fallback_factory,
         )
 
         self._unstructure_func.copy_to(res._unstructure_func, self._unstruct_copy_skip)
@@ -1124,6 +1149,7 @@ class Converter(BaseConverter):
             None, t
         ),
         use_alias: bool = False,
+        use_default_hook_factories: bool = True,
     ):
         """
         :param detailed_validation: Whether to use a slightly slower mode for detailed
@@ -1141,6 +1167,7 @@ class Converter(BaseConverter):
             The default `structure_fallback_factory` now raises errors for missing handlers
             more eagerly, surfacing problems earlier.
         ..  versionadded:: 25.2.0 *use_alias*
+        ..  versionadded:: NEXT *use_default_hook_factories*
         """
         super().__init__(
             dict_factory=dict_factory,
@@ -1149,6 +1176,7 @@ class Converter(BaseConverter):
             detailed_validation=detailed_validation,
             unstructure_fallback_factory=unstructure_fallback_factory,
             structure_fallback_factory=structure_fallback_factory,
+            use_default_hook_factories=use_default_hook_factories,
         )
         self.omit_if_default = omit_if_default
         self.forbid_extra_keys = forbid_extra_keys
@@ -1205,69 +1233,76 @@ class Converter(BaseConverter):
         if dict in co and Counter not in co:
             co[Counter] = co[dict]
 
-        if unstruct_strat is UnstructureStrategy.AS_DICT:
-            # Override the attrs handler.
+        if use_default_hook_factories:
+            if unstruct_strat is UnstructureStrategy.AS_DICT:
+                # Override the attrs handler.
+                self.register_unstructure_hook_factory(
+                    has_with_generic, self.gen_unstructure_attrs_fromdict
+                )
+                self.register_structure_hook_factory(
+                    has_with_generic, self.gen_structure_attrs_fromdict
+                )
             self.register_unstructure_hook_factory(
-                has_with_generic, self.gen_unstructure_attrs_fromdict
+                is_annotated, self.gen_unstructure_annotated
             )
-            self.register_structure_hook_factory(
-                has_with_generic, self.gen_structure_attrs_fromdict
-            )
-        self.register_unstructure_hook_factory(
-            is_annotated, self.gen_unstructure_annotated
-        )
-        self.register_unstructure_hook_factory(
-            is_hetero_tuple, self.gen_unstructure_hetero_tuple
-        )
-        self.register_unstructure_hook_factory(is_namedtuple)(
-            namedtuple_unstructure_factory
-        )
-        self.register_unstructure_hook_factory(
-            is_sequence, self.gen_unstructure_iterable
-        )
-        self.register_unstructure_hook_factory(is_mapping, self.gen_unstructure_mapping)
-        self.register_unstructure_hook_factory(
-            is_mutable_set,
-            lambda cl: self.gen_unstructure_iterable(cl, unstructure_to=set),
-        )
-        self.register_unstructure_hook_factory(
-            is_frozenset,
-            lambda cl: self.gen_unstructure_iterable(cl, unstructure_to=frozenset),
-        )
-        if AnnotationForwardRef is not None:
             self.register_unstructure_hook_factory(
-                lambda t: isinstance(t, AnnotationForwardRef),
-                lambda t: self.get_unstructure_hook(t.evaluate()),
+                is_hetero_tuple, self.gen_unstructure_hetero_tuple
             )
-        self.register_unstructure_hook_factory(
-            is_optional, self.gen_unstructure_optional
-        )
-        self.register_unstructure_hook_factory(
-            is_typeddict, self.gen_unstructure_typeddict
-        )
-        self.register_unstructure_hook_factory(
-            lambda t: get_newtype_base(t) is not None,
-            lambda t: self.get_unstructure_hook(get_newtype_base(t)),
-        )
+            self.register_unstructure_hook_factory(is_namedtuple)(
+                namedtuple_unstructure_factory
+            )
+            self.register_unstructure_hook_factory(
+                is_sequence, self.gen_unstructure_iterable
+            )
+            self.register_unstructure_hook_factory(
+                is_mapping, self.gen_unstructure_mapping
+            )
+            self.register_unstructure_hook_factory(
+                is_mutable_set,
+                lambda cl: self.gen_unstructure_iterable(cl, unstructure_to=set),
+            )
+            self.register_unstructure_hook_factory(
+                is_frozenset,
+                lambda cl: self.gen_unstructure_iterable(cl, unstructure_to=frozenset),
+            )
+            if AnnotationForwardRef is not None:
+                self.register_unstructure_hook_factory(
+                    lambda t: isinstance(t, AnnotationForwardRef),
+                    lambda t: self.get_unstructure_hook(t.evaluate()),
+                )
+            self.register_unstructure_hook_factory(
+                is_optional, self.gen_unstructure_optional
+            )
+            self.register_unstructure_hook_factory(
+                is_typeddict, self.gen_unstructure_typeddict
+            )
+            self.register_unstructure_hook_factory(
+                lambda t: get_newtype_base(t) is not None,
+                lambda t: self.get_unstructure_hook(get_newtype_base(t)),
+            )
 
-        self.register_structure_hook_factory(is_annotated, self.gen_structure_annotated)
-        self.register_structure_hook_factory(
-            is_hetero_tuple, self.gen_structure_hetero_tuple
-        )
-        self.register_structure_hook_factory(is_mapping, self.gen_structure_mapping)
-        self.register_structure_hook_factory(is_counter, self.gen_structure_counter)
-        self.register_structure_hook_factory(
-            is_defaultdict, defaultdict_structure_factory
-        )
-        self.register_structure_hook_factory(is_typeddict, self.gen_structure_typeddict)
-        if AnnotationForwardRef is not None:
             self.register_structure_hook_factory(
-                lambda t: isinstance(t, AnnotationForwardRef),
-                lambda t: self.get_structure_hook(t.evaluate()),
+                is_annotated, self.gen_structure_annotated
             )
-        self.register_structure_hook_factory(
-            lambda t: get_newtype_base(t) is not None, self.get_structure_newtype
-        )
+            self.register_structure_hook_factory(
+                is_hetero_tuple, self.gen_structure_hetero_tuple
+            )
+            self.register_structure_hook_factory(is_mapping, self.gen_structure_mapping)
+            self.register_structure_hook_factory(is_counter, self.gen_structure_counter)
+            self.register_structure_hook_factory(
+                is_defaultdict, defaultdict_structure_factory
+            )
+            self.register_structure_hook_factory(
+                is_typeddict, self.gen_structure_typeddict
+            )
+            if AnnotationForwardRef is not None:
+                self.register_structure_hook_factory(
+                    lambda t: isinstance(t, AnnotationForwardRef),
+                    lambda t: self.get_structure_hook(t.evaluate()),
+                )
+            self.register_structure_hook_factory(
+                lambda t: get_newtype_base(t) is not None, self.get_structure_newtype
+            )
 
         # We keep these so we can more correctly copy the hooks.
         self._struct_copy_skip = self._structure_func.get_num_fns()
@@ -1483,6 +1518,7 @@ class Converter(BaseConverter):
         prefer_attrib_converters: bool | None = None,
         detailed_validation: bool | None = None,
         use_alias: bool | None = None,
+        use_default_hook_factories: bool | None = None,
     ) -> Self:
         """Create a copy of the converter, keeping all existing custom hooks.
 
@@ -1523,6 +1559,13 @@ class Converter(BaseConverter):
                 else self.detailed_validation
             ),
             use_alias=(use_alias if use_alias is not None else self.use_alias),
+            use_default_hook_factories=(
+                use_default_hook_factories
+                if use_default_hook_factories is not None
+                else self.use_default_hook_factories
+            ),
+            unstructure_fallback_factory=self._unstructure_func._fallback_factory,
+            structure_fallback_factory=self._structure_func._fallback_factory,
         )
 
         self._unstructure_func.copy_to(

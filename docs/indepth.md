@@ -98,6 +98,13 @@ This also enables converters to be chained.
 ... )
 ```
 
+Note the chained converter above still structures _attrs_ classes itself: the
+built-in _attrs_ factories match before the fallback factories are consulted.
+Pass `use_default_hook_factories=False` to the child to skip the built-in
+factories entirely, so the parent's hooks (including custom hook factories)
+handle every type the child has no hook of its own for.
+
+
 ```{versionadded} 23.2.0
 
 ```
