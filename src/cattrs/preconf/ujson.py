@@ -1,18 +1,20 @@
 """Preconfigured converters for ujson."""
 
-from base64 import b85decode, b85encode
-from collections.abc import Set
+from base64 import b64decode, b64encode, b85decode, b85encode
+from collections.abc import Callable, Mapping, Set
 from datetime import date, datetime
-from typing import Any, AnyStr, TypeVar, Union
+from typing import Any, AnyStr, Literal, TypeVar, Union
 
 from typing_extensions import TypeForm
 from ujson import dumps, loads
 
-from ..converters import BaseConverter, Converter
-from ..fns import identity
+from ..converters import BaseConverter, Converter, UnstructureStrategy
+from ..dispatch import HookFactory, StructureHook, UnstructureHook
+from ..fns import identity, raise_error
+from ..gen._consts import AttributeOverride
 from ..literals import is_literal_containing_enums
 from ..strategies import configure_union_passthrough
-from . import is_primitive_enum, literals_with_enums_unstructure_factory, wrap
+from . import is_primitive_enum, literals_with_enums_unstructure_factory
 
 __all__ = ["UjsonConverter", "configure_converter", "make_converter"]
 
@@ -33,22 +35,33 @@ class UjsonConverter(Converter):
         return self.structure(loads(data, **kwargs), cl)
 
 
-def configure_converter(converter: BaseConverter):
+def configure_converter(
+    converter: BaseConverter, *, bytes_encoding: Literal["base85", "base64"] = "base85"
+) -> None:
     """
     Configure the converter for use with the ujson library.
 
-    * bytes are serialized as base64 strings
+    * bytes are serialized as base85 strings, or base64 if requested
     * datetimes are serialized as ISO 8601
     * sets are serialized as lists
     * string and int enums are passed through when unstructuring
 
     .. versionchanged:: 24.2.0
         Enums are left to the library to unstructure, speeding them up.
+
+    .. versionchanged:: NEXT
+        *bytes_encoding* selects base85 (the default) or base64 for bytes.
     """
-    converter.register_unstructure_hook(
-        bytes, lambda v: (b85encode(v) if v else b"").decode("utf8")
-    )
-    converter.register_structure_hook(bytes, lambda v, _: b85decode(v))
+    encode: Callable[[bytes], bytes]
+    decode: Callable[[Union[str, bytes]], bytes]
+    if bytes_encoding == "base85":
+        encode, decode = b85encode, b85decode
+    elif bytes_encoding == "base64":
+        encode, decode = b64encode, b64decode
+    else:
+        raise ValueError("bytes_encoding must be 'base85' or 'base64'")
+    converter.register_unstructure_hook(bytes, lambda v: encode(v).decode("ascii"))
+    converter.register_structure_hook(bytes, lambda v, _: decode(v))
 
     converter.register_unstructure_hook(datetime, lambda v: v.isoformat())
     converter.register_structure_hook(datetime, lambda v, _: datetime.fromisoformat(v))
@@ -61,13 +74,43 @@ def configure_converter(converter: BaseConverter):
     configure_union_passthrough(Union[str, bool, int, float, None], converter)
 
 
-@wrap(UjsonConverter)
-def make_converter(*args: Any, **kwargs: Any) -> UjsonConverter:
-    kwargs["unstruct_collection_overrides"] = {
-        Set: list,
-        **kwargs.get("unstruct_collection_overrides", {}),
-    }
-    res = UjsonConverter(*args, **kwargs)
-    configure_converter(res)
+def make_converter(
+    dict_factory: Callable[[], Any] = dict,
+    unstruct_strat: UnstructureStrategy = UnstructureStrategy.AS_DICT,
+    omit_if_default: bool = False,
+    forbid_extra_keys: bool = False,
+    type_overrides: Mapping[type, AttributeOverride] = {},
+    unstruct_collection_overrides: Mapping[type, UnstructureHook] = {},
+    prefer_attrib_converters: bool = False,
+    detailed_validation: bool = True,
+    unstructure_fallback_factory: HookFactory[UnstructureHook] = lambda _: identity,
+    structure_fallback_factory: HookFactory[StructureHook] = lambda t: raise_error(
+        None, t
+    ),
+    use_alias: bool = False,
+    *,
+    bytes_encoding: Literal["base85", "base64"] = "base85",
+) -> UjsonConverter:
+    """Create a ujson converter, optionally using base64 for bytes.
+
+    All other parameters are passed to :class:`cattrs.Converter`.
+
+    .. versionchanged:: NEXT
+        *bytes_encoding* selects base85 (the default) or base64 for bytes.
+    """
+    res = UjsonConverter(
+        dict_factory=dict_factory,
+        unstruct_strat=unstruct_strat,
+        omit_if_default=omit_if_default,
+        forbid_extra_keys=forbid_extra_keys,
+        type_overrides=type_overrides,
+        unstruct_collection_overrides={Set: list, **unstruct_collection_overrides},
+        prefer_attrib_converters=prefer_attrib_converters,
+        detailed_validation=detailed_validation,
+        unstructure_fallback_factory=unstructure_fallback_factory,
+        structure_fallback_factory=structure_fallback_factory,
+        use_alias=use_alias,
+    )
+    configure_converter(res, bytes_encoding=bytes_encoding)
 
     return res
