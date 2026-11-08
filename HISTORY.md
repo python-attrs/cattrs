@@ -13,6 +13,8 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT
 
+- The PyYAML preconf converter no longer fails with an `AttributeError` when unstructuring `str` subclasses that aren't enums (such as `markupsafe.Markup`); they are now unstructured into plain strings.
+  ([#804](https://github.com/python-attrs/cattrs/pull/804))
 - Fix the msgspec converter passing typed deques directly to the encoder, which cannot serialize them. Deques are now unstructured into lists, including when nested in attrs classes or dataclasses.
   ([#818](https://github.com/python-attrs/cattrs/issues/818) [#819](https://github.com/python-attrs/cattrs/pull/819))
 
