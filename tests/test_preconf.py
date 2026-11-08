@@ -1,4 +1,5 @@
 # ruff: noqa: PLC0415
+import sys
 import time
 from collections.abc import Callable, Iterator, Set
 from datetime import date, datetime, timezone
@@ -9,7 +10,7 @@ from platform import python_implementation
 from typing import Any, Dict, Final, List, Literal, NamedTuple, NewType, Union
 
 import pytest
-from attrs import define, fields
+from attrs import define, field, fields
 from bson import CodecOptions, ObjectId
 from hypothesis import given, settings
 from hypothesis.strategies import (
@@ -62,6 +63,79 @@ except ImportError:  # pragma: no cover
     NO_CBOR2 = True
 else:
     NO_CBOR2 = False
+
+if not NO_CBOR2:
+    from cattrs.preconf.cbor2 import make_converter as cbor2_make_converter
+if not NO_ORJSON:
+    from cattrs.preconf.orjson import make_converter as orjson_make_converter
+if not NO_MSGSPEC:
+    from cattrs.preconf.msgspec import make_converter as msgspec_make_converter
+
+
+@pytest.mark.skipif(sys.version_info < (3, 15), reason="sentinels require Python 3.15+")
+@pytest.mark.parametrize(
+    "converter_factory",
+    [
+        pytest.param(bson_make_converter, id="bson"),
+        pytest.param(json_make_converter, id="json"),
+        pytest.param(msgpack_make_converter, id="msgpack"),
+        pytest.param(pyyaml_make_converter, id="pyyaml"),
+        pytest.param(tomlkit_make_converter, id="tomlkit"),
+        pytest.param(tomllib_make_converter, id="tomllib"),
+        pytest.param(ujson_make_converter, id="ujson"),
+        pytest.param(
+            None if NO_CBOR2 else cbor2_make_converter,
+            marks=pytest.mark.skipif(NO_CBOR2, reason="cbor2 not available"),
+            id="cbor2",
+        ),
+        pytest.param(
+            None if NO_ORJSON else orjson_make_converter,
+            marks=pytest.mark.skipif(NO_ORJSON, reason="orjson not available"),
+            id="orjson",
+        ),
+        pytest.param(
+            None if NO_MSGSPEC else msgspec_make_converter,
+            marks=pytest.mark.skipif(NO_MSGSPEC, reason="msgspec not available"),
+            id="msgspec",
+        ),
+    ],
+)
+@pytest.mark.parametrize("detailed_validation", [True, False])
+def test_sentinels(
+    converter_factory: Callable[..., Converter], detailed_validation: bool
+):
+    """All backends serialize sentinel names and restore singleton fields and unions."""
+    from builtins import sentinel
+
+    missing = sentinel("MISSING")
+    unset = sentinel("UNSET")
+
+    @define
+    class Example:
+        single: missing = missing
+        number: int | missing = missing
+        text: str | missing = missing
+        multiple: missing | unset = unset
+        values: list[int | missing] = field(factory=lambda: [missing, 1])
+
+    converter = converter_factory(detailed_validation=detailed_validation)
+    assert converter.unstructure(missing) == "MISSING"
+    assert converter.structure("MISSING", missing) is missing
+
+    for original in (Example(), Example(number=1, text="other")):
+        unstructured = converter.unstructure(original)
+        assert unstructured == {
+            "single": "MISSING",
+            "number": "MISSING" if original.number is missing else 1,
+            "text": "MISSING" if original.text is missing else "other",
+            "multiple": "UNSET",
+            "values": ["MISSING", 1],
+        }
+        restored = converter.loads(converter.dumps(original), Example)
+        assert restored == original
+        assert restored.single is missing
+        assert restored.multiple is unset
+        assert restored.values[0] is missing
 
 
 @define

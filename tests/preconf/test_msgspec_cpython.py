@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from enum import Enum
 from typing import (
     Any,
     Callable,
+    Deque,
     Dict,
     List,
     Literal,
@@ -20,7 +23,7 @@ from typing import (
 from attrs import define
 from hypothesis import given
 from msgspec import Struct, to_builtins
-from pytest import fixture
+from pytest import fixture, mark
 
 from cattrs.fns import identity
 from cattrs.preconf.json import make_converter as make_json_converter
@@ -79,6 +82,28 @@ class NC(NamedTuple):
 
 class E(Enum):
     TEST = "test"
+
+
+@define
+class WithNC:
+    n: NC
+
+
+@define
+class Event:
+    at: datetime
+    children: list[Event]
+
+
+@define
+class MutualA:
+    bs: list[MutualB]
+
+
+@define
+class MutualB:
+    _secret: int
+    as_: list[MutualA]
 
 
 @fixture
@@ -185,3 +210,59 @@ def test_simple_classes(cls_and_vals):
     rebuilt_json = json.loads(json.dumps(inst), cl)
 
     assert rebuilt_msgspec == rebuilt_json
+
+
+def test_unstructure_recursive_hooks(converter: Conv):
+    """Nested instances of a recursive class use the same hook as the top level."""
+    converter.register_unstructure_hook(datetime, lambda d: int(d.timestamp()))
+    ts = datetime(2026, 1, 1, tzinfo=timezone.utc)
+
+    assert converter.unstructure(Event(ts, [Event(ts, [])])) == {
+        "at": 1767225600,
+        "children": [{"at": 1767225600, "children": []}],
+    }
+
+
+def test_unstructure_mutually_recursive_private(converter: Conv):
+    """Nested instances of mutually recursive classes keep private attributes."""
+    assert converter.unstructure(
+        MutualA([MutualB(1, [MutualA([MutualB(2, [])])])])
+    ) == {"bs": [{"_secret": 1, "as_": [{"bs": [{"_secret": 2, "as_": []}]}]}]}
+
+
+def test_unstructure_private_in_namedtuple(converter: Conv):
+    """A private class reached through a namedtuple during a probe gets a working hook."""
+    assert converter.unstructure(WithNC(NC(C(1)))) == {"n": ({"_a": 1},)}
+    assert converter.unstructure(C(2)) == {"_a": 2}
+
+
+@mark.parametrize("deque_type", [deque, Deque, deque[int], Deque[int]])
+@mark.parametrize("values", [[], [1, 2]])
+def test_deque_roundtrip(converter: Conv, deque_type, values):
+    """Deques must be converted before reaching the msgspec encoder."""
+    value = deque(values)
+    expected = b"[]" if not values else b"[1,2]"
+    assert converter.dumps(value, unstructure_as=deque_type) == expected
+    assert converter.get_dumps_hook(deque_type)(value) == expected
+    assert converter.loads(expected, deque_type) == value
+
+
+@mark.parametrize("class_decorator", [define, dataclass])
+def test_deque_field_roundtrip(converter: Conv, class_decorator):
+    """A deque field prevents its enclosing class from being passed through."""
+
+    @class_decorator
+    class Queue:
+        pending: deque[int]
+
+    value = Queue(deque([1, 2]))
+    expected = b'{"pending":[1,2]}'
+    assert converter.dumps(value) == expected
+    assert converter.get_dumps_hook(Queue)(value) == expected
+    assert converter.loads(expected, Queue) == value
+
+
+def test_deque_custom_hook(converter: Conv):
+    """Deque elements still use registered unstructuring hooks."""
+    converter.register_unstructure_hook(int, lambda value: str(value))
+    assert converter.dumps(deque([1, 2]), unstructure_as=deque[int]) == b'["1","2"]'

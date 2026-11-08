@@ -12,17 +12,17 @@ from threading import local
 from typing import Any, TypeVar, Union, get_type_hints
 
 from attrs import has as attrs_has
-from attrs import resolve_types
 from msgspec import Struct, convert, to_builtins
 from msgspec.json import Encoder, decode
 from typing_extensions import TypeForm
 
 from .._compat import (
-    fields,
+    adapted_fields,
     frozendict,
     get_args,
     get_origin,
     is_bare,
+    is_deque,
     is_mapping,
     is_sequence,
     is_subclass,
@@ -144,6 +144,9 @@ def configure_passthroughs(converter: Converter) -> None:
 
 def seq_unstructure_factory(type, converter: Converter) -> UnstructureHook:
     """The msgspec unstructure hook factory for sequences."""
+    if is_deque(type):
+        # msgspec cannot serialize deques directly.
+        return converter.gen_unstructure_iterable(type)
     if is_bare(type):
         type_arg = Any
     else:
@@ -195,14 +198,11 @@ def msgspec_attrs_unstructure_factory(
     """
     origin = get_origin(type)
     base = origin or type
-    attribs = fields(base)
-    if attrs_has(type) and any(isinstance(a.type, str) for a in attribs):
-        resolve_types(type)
-        attribs = fields(base)
+    attribs = adapted_fields(base)
 
     if msgspec_skips_private and any(attr.name.startswith("_") for attr in attribs):
         # Private attributes we have to do ourselves.
-        return converter.gen_unstructure_attrs_fromdict(type)
+        return _gen_attrs_hook(type, converter)
 
     try:
         working_set = _already_probing.working_set
@@ -214,18 +214,37 @@ def msgspec_attrs_unstructure_factory(
 
     try:
         working_set.add(base)
-        if any(
+        needs_hook = any(
             converter.get_unstructure_hook(attr.type, cache_result=False)
             not in (identity, to_builtins)
             for attr in attribs
-        ):
-            return converter.gen_unstructure_attrs_fromdict(type)
+        )
     finally:
         working_set.remove(base)
         if not working_set:
             del _already_probing.working_set
 
-    return to_builtins
+    return _gen_attrs_hook(type, converter) if needs_hook else to_builtins
+
+
+def _gen_attrs_hook(type: Any, converter: Converter) -> UnstructureHook:
+    """Generate the hook, deferring generation to the first call during a probe.
+
+    Hooks generated during a probe would bake in the `to_builtins` answers
+    the probe gives for classes it is still visiting.
+    """
+    if not hasattr(_already_probing, "working_set"):
+        return converter.gen_unstructure_attrs_fromdict(type)
+
+    hook = None
+
+    def unstructure_lazily(obj):
+        nonlocal hook
+        if hook is None:
+            hook = converter.gen_unstructure_attrs_fromdict(type)
+        return hook(obj)
+
+    return unstructure_lazily
 
 
 def namedtuple_unstructure_factory(
