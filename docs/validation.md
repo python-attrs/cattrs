@@ -13,7 +13,7 @@ In detailed validation mode, any structuring errors will be grouped and raised t
 ExceptionGroups are special exceptions which contain lists of other exceptions, which may themselves be other ExceptionGroups.
 In essence, ExceptionGroups are trees of exceptions.
 
-When structuring a class, _cattrs_ will gather any exceptions on a field-by-field basis and raise them as a {class}`cattrs.ClassValidationError`, which is a subclass of {class}`BaseValidationError <cattrs.BaseValidationError>`.
+When structuring a class, _cattrs_ will gather exceptions raised while structuring individual fields and raise them as a {class}`cattrs.ClassValidationError`, which is a subclass of {class}`BaseValidationError <cattrs.BaseValidationError>`.
 
 When structuring sequences and mappings, _cattrs_ will gather any exceptions on a key- or index-basis and raise them as a {class}`cattrs.IterableValidationError`, which is a subclass of {class}`BaseValidationError <cattrs.BaseValidationError>`.
 
@@ -66,6 +66,38 @@ class Class:
       | Structuring mapping value @ key 'str'
       +------------------------------------
 ```
+
+### attrs Validators and Class Initialization
+
+Detailed validation groups errors from structuring fields according to their types and registered hooks.
+It does not change how _attrs_ validators run.
+After structuring the fields, _cattrs_ calls the class constructor, which runs _attrs_ converters, validators and initialization hooks as usual.
+If an _attrs_ validator raises an exception, class initialization stops at that exception; _cattrs_ cannot collect failures from validators that have not run.
+
+For example, both values below are valid strings for structuring, but fail the _attrs_ length validator:
+
+```{doctest} attrs-validators
+>>> from attrs import define, field, validators
+>>> from cattrs import ClassValidationError, structure, transform_error
+>>> @define
+... class Names:
+...     first: str = field(validator=validators.min_len(3))
+...     last: str = field(validator=validators.min_len(3))
+>>> try:
+...     structure({"first": "a", "last": "b"}, Names)
+... except ClassValidationError as exc:
+...     print(len(exc.exceptions))
+...     print(exc.exceptions[0])
+...     print(transform_error(exc))
+1
+Length of 'first' must be >= 3: 1
+['invalid value @ $']
+```
+
+The constructor exception is wrapped in a `ClassValidationError`, but has no _cattrs_ field note.
+Consequently, `transform_error` reports the class path (`$` here), rather than a field path.
+This also applies to exceptions raised by class initialization hooks such as `__attrs_post_init__`.
+If input validation needs field-specific error paths and multiple errors, perform it in registered field structuring hooks, which participate in detailed validation.
 
 ### Transforming Exceptions into Error Messages
 
