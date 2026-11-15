@@ -115,9 +115,9 @@ from .sentinels import (
     sentinel_unstructure,
 )
 from .typealiases import (
-    get_type_alias_base,
     is_type_alias,
     type_alias_structure_factory,
+    type_alias_unstructure_factory,
 )
 from .types import SimpleStructureHook
 
@@ -261,11 +261,7 @@ class BaseConverter:
                     lambda t: self.get_unstructure_hook(get_final_base(t)),
                     True,
                 ),
-                (
-                    is_type_alias,
-                    lambda t: self.get_unstructure_hook(get_type_alias_base(t)),
-                    True,
-                ),
+                (is_type_alias, type_alias_unstructure_factory, "extended"),
                 (is_mapping, self._unstructure_mapping),
                 (is_sequence, self._unstructure_seq),
                 (is_mutable_set, self._unstructure_seq),

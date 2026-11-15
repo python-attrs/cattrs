@@ -13,6 +13,7 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT
 
+- Fix generic [PEP 695](https://peps.python.org/pep-0695/) type aliases (like `type Pair[T] = tuple[T, T]`) being unstructured without their type arguments, which left nested _attrs_ classes, dataclasses and values like datetimes unconverted (for example, `Pair[SomeClass]`). The type arguments are now applied before looking up the unstructure hook, matching what structuring already did.
 - Fix the msgspec converter passing typed deques directly to the encoder, which cannot serialize them. Deques are now unstructured into lists, including when nested in attrs classes or dataclasses.
   ([#818](https://github.com/python-attrs/cattrs/issues/818) [#819](https://github.com/python-attrs/cattrs/pull/819))
 
