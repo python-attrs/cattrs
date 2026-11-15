@@ -116,3 +116,36 @@ def test_generic_type_alias(converter: BaseConverter):
     type Gen2[K, V] = dict[K, V]
 
     assert converter.structure({"a": "1"}, Gen2[str, int]) == {"a": 1}
+
+
+def test_generic_type_alias_unstructure(converter: BaseConverter):
+    """Generic type aliases are unstructured using their type arguments."""
+
+    @define
+    class A:
+        a: int
+
+    type Gen1[T] = T
+    type Gen2[K, V] = dict[K, V]
+
+    assert converter.unstructure(A(1), Gen1[A]) == {"a": 1}
+    assert converter.unstructure({"a": A(1)}, Gen2[str, A]) == {"a": {"a": 1}}
+
+    if isinstance(converter, Converter):
+        # Heterogeneous tuples are only supported on a Converter
+        type Pair[T] = tuple[T, T]
+
+        assert converter.unstructure((A(1), A(2)), Pair[A]) == ({"a": 1}, {"a": 2})
+
+        @define
+        class B:
+            pair: Pair[A]
+            mapping: Gen2[str, A]
+
+        b = B((A(1), A(2)), {"a": A(3)})
+        unstructured = converter.unstructure(b)
+        assert unstructured == {
+            "pair": ({"a": 1}, {"a": 2}),
+            "mapping": {"a": {"a": 3}},
+        }
+        assert converter.structure(unstructured, B) == b
