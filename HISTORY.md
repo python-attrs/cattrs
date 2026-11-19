@@ -15,6 +15,9 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 - {func}`configure_union_passthrough <cattrs.strategies.configure_union_passthrough>` keeps PEP 695 type aliases that have a dedicated structure hook in spillover, so the hook still runs when the alias appears inside a passthrough union (for example ``Trimmed | int``).
   ([#797](https://github.com/python-attrs/cattrs/issues/797))
+- Fix the msgspec converter passing typed deques directly to the encoder, which cannot serialize them. Deques are now unstructured into lists, including when nested in attrs classes or dataclasses.
+  ([#818](https://github.com/python-attrs/cattrs/issues/818) [#819](https://github.com/python-attrs/cattrs/pull/819))
+
 - The msgspec converter now applies the same unstructuring hook to nested instances of recursive _attrs_ classes, so registered hooks and private attributes are no longer skipped below the top level.
   ([#803](https://github.com/python-attrs/cattrs/pull/803))
 - Dict unstructuring hook factories now inherit the converter's `omit_if_default` setting when `_cattrs_omit_if_default` is omitted. Explicit `True` or `False` values and per-attribute overrides retain their precedence.
