@@ -19,3 +19,32 @@ def test_type_alias_union_member(converter: BaseConverter) -> None:
     assert converter.structure({"field": "value"}, NewScalar | DataClass) == DataClass(
         "value"
     )
+
+
+def test_type_alias_dedicated_hook_in_passthrough_union(
+    converter: BaseConverter,
+) -> None:
+    """A dedicated structure hook on a PEP 695 alias runs inside a passthrough union."""
+    type Trimmed = str
+
+    configure_union_passthrough(str | int, converter)
+    converter.register_structure_hook_func(
+        lambda t: t is Trimmed, lambda v, _: v.strip()
+    )
+
+    assert converter.structure("  x  ", Trimmed) == "x"
+    assert converter.structure("  x  ", Trimmed | int) == "x"
+    assert converter.structure(1, Trimmed | int) == 1
+
+
+def test_type_alias_dedicated_hook_via_register_structure_hook(
+    converter: BaseConverter,
+) -> None:
+    """Same as above, but with register_structure_hook (direct dispatch)."""
+    type Trimmed = str
+
+    configure_union_passthrough(str | int, converter)
+    converter.register_structure_hook(Trimmed, lambda v, _: v.strip())
+
+    assert converter.structure("  y  ", Trimmed | int) == "y"
+    assert converter.structure(2, Trimmed | int) == 2
