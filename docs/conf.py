@@ -128,8 +128,8 @@ exclude_patterns = ["_build"]
 html_theme = "furo"
 html_theme_options = {
     "light_css_variables": {
-        "font-stack": "Inter,sans-serif",
-        "font-stack--monospace": "'Ubuntu Mono', monospace",
+        "font-stack": "MonoLisaText,sans-serif",
+        "font-stack--monospace": "MonoLisaCode,monospace",
         "code-font-size": "90%",
         "color-highlight-on-target": "transparent",
     },
