@@ -53,6 +53,9 @@ def configure_converter(converter: BaseConverter):
     converter.register_unstructure_hook(
         bytes, lambda v: (b85encode(v) if v else b"").decode("utf8")
     )
+    converter.register_unstructure_hook(
+        str, lambda v: v.value if isinstance(v, Enum) else v
+    )
 
     def gen_unstructure_mapping(cl: Any, unstructure_to=None):
         key_handler = str
