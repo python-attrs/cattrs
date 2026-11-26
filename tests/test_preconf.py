@@ -870,6 +870,35 @@ def test_tomlkit_date_strings():
     assert converter.loads(data, A) == A(date(2023, 1, 1))
 
 
+def test_tomlkit_string_enums():
+    """String enums serialize by value, including literals and collections."""
+    from tomlkit import dumps, loads, string
+
+    @define
+    class Example:
+        member: Everything.AStringEnum
+        literal: Literal[Everything.AStringEnum.A]
+        members: list[Everything.AStringEnum]
+        mapping: dict[Everything.AStringEnum, Everything.AStringEnum]
+
+    member = Everything.AStringEnum.A
+    original = Example(member, member, [member], {member: member})
+    converter = tomlkit_make_converter()
+
+    loaded = loads(dumps(converter.unstructure(original)))
+    assert loaded == {
+        "member": "a",
+        "literal": "a",
+        "members": ["a"],
+        "mapping": {"a": "a"},
+    }
+    assert converter.structure(loaded, Example) == original
+
+    # Preserve the existing passthrough for tomlkit string items.
+    item = string("plain text")
+    assert converter.unstructure(item) is item
+
+
 @given(
     everythings(
         allow_null_bytes_in_keys=False,
