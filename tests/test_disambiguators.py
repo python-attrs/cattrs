@@ -1,6 +1,7 @@
 """Tests for auto-disambiguators."""
 
 from dataclasses import dataclass
+from enum import Enum
 from functools import partial
 from itertools import permutations
 from typing import Literal, Union
@@ -284,6 +285,33 @@ def test_disambiguate_from_discriminated_enum():
     fn = create_default_dis_func(c, H, J, K)
     assert fn({"a": 1}) == Union[H, J]
     assert fn({"a": 0}) == Union[J, K]
+
+
+def test_disambiguate_from_enum_valued_literal():
+    """Enum members used as Literal discriminators are matched by value."""
+    c = Converter()
+
+    class Species(Enum):
+        CAT = "cat"
+        DOG = "dog"
+
+    @define
+    class Cat:
+        kind: Literal[Species.CAT]
+        meow: int = 1
+
+    @define
+    class Dog:
+        kind: Literal[Species.DOG]
+        woof: int = 2
+
+    fn = create_default_dis_func(c, Cat, Dog)
+    assert fn({"kind": "cat"}) is Cat
+    assert fn({"kind": "dog"}) is Dog
+
+    for v in (Cat(Species.CAT), Dog(Species.DOG)):
+        u = c.unstructure(v, unstructure_as=Union[Cat, Dog])
+        assert c.structure(u, Union[Cat, Dog]) == v
 
 
 def test_default_no_literals():

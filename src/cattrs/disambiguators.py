@@ -88,12 +88,16 @@ def create_default_dis_func(
         best_result = None
         best_discriminator = None
         for discriminator in discriminators:
-            # maps Literal values (strings, ints...) to classes
+            # maps Literal values (strings, ints, enums...) to classes
             mapping = defaultdict(list)
 
             for cl, candidates in zip(classes, cls_candidates):
                 for key in get_args(candidates[discriminator].type):
-                    mapping[key].append(cl)
+                    # A Literal value may be an enum member, which is serialized
+                    # to its value when unstructured. Key the mapping by the
+                    # unstructured form so lookups against the (already
+                    # unstructured) discriminator in the input data match.
+                    mapping[converter.unstructure(key)].append(cl)
 
             if best_result is None or max(len(v) for v in mapping.values()) <= max(
                 len(v) for v in best_result.values()
