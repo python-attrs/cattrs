@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache, singledispatch
+from threading import local
 from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, TypeVar
 
 from attrs import Factory, define
@@ -25,6 +26,40 @@ HookFactory: TypeAlias = Callable[[TargetType], Hook]
 @define
 class _DispatchNotFound:
     """A dummy object to help signify a dispatch not found."""
+
+
+_factory_state = local()
+"""Thread-local state for tracking in-progress hook factory invocations."""
+
+
+def _in_progress_factories() -> set:
+    """The set of hook factories currently being evaluated, as `(id, type)` pairs.
+
+    Used to detect re-entrant factory invocations for the same type; purely
+    observational, it does not change dispatching itself.
+    """
+    try:
+        return _factory_state.in_progress
+    except AttributeError:
+        res = set()
+        _factory_state.in_progress = res
+        return res
+
+
+def _factory_key(handler: Callable, typ: Any) -> tuple | None:
+    """A hashable key identifying a factory invocation, if possible."""
+    key = (id(handler), typ)
+    try:
+        hash(key)
+    except TypeError:
+        return None
+    return key
+
+
+def _is_factory_in_progress(handler: Callable, typ: Any) -> bool:
+    """Is `handler` currently being evaluated for `typ` on this thread?"""
+    key = _factory_key(handler, typ)
+    return key is not None and key in _in_progress_factories()
 
 
 @define
@@ -71,9 +106,17 @@ class FunctionDispatch:
                 continue
             if ch:
                 if is_generator:
-                    if takes_converter:
-                        return handler(typ, self._converter)
-                    return handler(typ)
+                    key = _factory_key(handler, typ)
+                    in_progress = _in_progress_factories() if key is not None else None
+                    if in_progress is not None:
+                        in_progress.add(key)
+                    try:
+                        if takes_converter:
+                            return handler(typ, self._converter)
+                        return handler(typ)
+                    finally:
+                        if in_progress is not None:
+                            in_progress.discard(key)
 
                 return handler
         return None
