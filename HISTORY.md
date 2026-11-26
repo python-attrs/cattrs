@@ -13,6 +13,9 @@ Our backwards-compatibility policy can be found [here](https://github.com/python
 
 ## NEXT
 
+- Fix the bson preconfigured converter structuring `TypedDict`s, `Counter`s and `defaultdict`s as plain dictionaries, skipping their specific hooks.
+  ([#836](https://github.com/python-attrs/cattrs/issues/836))
+
 - Fix the msgspec converter passing typed deques directly to the encoder, which cannot serialize them. Deques are now unstructured into lists, including when nested in attrs classes or dataclasses.
   ([#818](https://github.com/python-attrs/cattrs/issues/818) [#819](https://github.com/python-attrs/cattrs/pull/819))
 

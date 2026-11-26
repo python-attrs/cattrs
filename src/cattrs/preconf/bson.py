@@ -8,8 +8,8 @@ from typing import Any, TypeVar, Union
 from bson import DEFAULT_CODEC_OPTIONS, CodecOptions, Int64, ObjectId, decode, encode
 from typing_extensions import TypeForm
 
-from .._compat import is_mapping, is_subclass
-from ..cols import mapping_structure_factory
+from .._compat import is_counter, is_mapping, is_subclass, is_typeddict
+from ..cols import is_defaultdict, mapping_structure_factory
 from ..converters import BaseConverter, Converter
 from ..dispatch import StructureHook
 from ..fns import identity
@@ -95,9 +95,19 @@ def configure_converter(converter: BaseConverter):
             h = mapping_structure_factory(cl, converter)
         return h
 
+    def is_bson_mapping(cl: Any) -> bool:
+        # TypedDicts, Counters and defaultdicts have more specific structure
+        # hook factories; let them win over the bson mapping override.
+        return (
+            is_mapping(cl)
+            and not is_typeddict(cl)
+            and not is_counter(cl)
+            and not is_defaultdict(cl)
+        )
+
     converter.register_structure_hook(Base85Bytes, lambda v, _: b85decode(v))
     converter.register_unstructure_hook_factory(is_mapping, gen_unstructure_mapping)
-    converter.register_structure_hook_factory(is_mapping, gen_structure_mapping)
+    converter.register_structure_hook_factory(is_bson_mapping, gen_structure_mapping)
 
     converter.register_structure_hook(ObjectId, lambda v, _: ObjectId(v))
     configure_union_passthrough(

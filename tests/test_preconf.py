@@ -1,13 +1,24 @@
 # ruff: noqa: PLC0415
 import sys
 import time
+from collections import defaultdict
 from collections.abc import Callable, Iterator, Set
 from datetime import date, datetime, timezone
 from enum import Enum, IntEnum, unique
 from json import dumps as json_dumps
 from json import loads as json_loads
 from platform import python_implementation
-from typing import Any, Dict, Final, List, Literal, NamedTuple, NewType, Union
+from typing import (
+    Any,
+    Dict,
+    Final,
+    List,
+    Literal,
+    NamedTuple,
+    NewType,
+    TypedDict,
+    Union,
+)
 
 import pytest
 from attrs import define, field, fields
@@ -45,6 +56,7 @@ from cattrs._compat import (
     Sequence,
     TupleSubscriptable,
 )
+from cattrs.errors import ClassValidationError
 from cattrs.fns import identity
 from cattrs.preconf.bson import make_converter as bson_make_converter
 from cattrs.preconf.json import make_converter as json_make_converter
@@ -762,6 +774,50 @@ def test_bson_objectid():
     o = ObjectId()
     assert o == converter.structure(str(o), ObjectId)
     assert o == converter.structure(o, ObjectId)
+
+
+def test_bson_typeddict():
+    """BSON TypedDicts are structured using their field hooks."""
+
+    @define
+    class User:
+        name: str
+
+    class Event(TypedDict):
+        day: date
+        count: int
+        owner: User
+
+    converter = bson_make_converter()
+    doc = {"day": date(2026, 11, 10), "count": 3, "owner": User("ann")}
+
+    assert converter.loads(converter.dumps(doc, unstructure_as=Event), Event) == doc
+
+    with pytest.raises(ClassValidationError):
+        converter.structure({"count": 3}, Event)
+    with pytest.raises(ClassValidationError):
+        converter.structure({"day": "x", "count": "three", "owner": 1}, Event)
+
+
+def test_bson_counter():
+    """BSON Counters are structured into Counters."""
+    converter = bson_make_converter()
+
+    res = converter.structure({"a": "2"}, Counter[str])
+
+    assert isinstance(res, Counter)
+    assert res == Counter({"a": 2})
+
+
+def test_bson_defaultdict():
+    """BSON defaultdicts are structured into defaultdicts."""
+    converter = bson_make_converter()
+
+    res = converter.structure({"a": "2"}, defaultdict[str, int])
+
+    assert isinstance(res, defaultdict)
+    assert res == defaultdict(int, {"a": 2})
+    assert res["missing"] == 0
 
 
 def test_bson_native_enums():
