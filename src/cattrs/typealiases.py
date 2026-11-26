@@ -7,13 +7,18 @@ from typing import TYPE_CHECKING, Any
 
 from ._compat import is_generic
 from ._generics import deep_copy_with
-from .dispatch import StructureHook
+from .dispatch import StructureHook, UnstructureHook
 from .gen._generics import generate_mapping
 
 if TYPE_CHECKING:
     from .converters import BaseConverter
 
-__all__ = ["get_type_alias_base", "is_type_alias", "type_alias_structure_factory"]
+__all__ = [
+    "get_type_alias_base",
+    "is_type_alias",
+    "type_alias_structure_factory",
+    "type_alias_unstructure_factory",
+]
 
 if sys.version_info >= (3, 12):
     from types import GenericAlias
@@ -41,7 +46,8 @@ def get_type_alias_base(type: Any) -> Any:
     return type.__value__
 
 
-def type_alias_structure_factory(type: Any, converter: BaseConverter) -> StructureHook:
+def _get_parametrized_base(type: Any) -> Any:
+    """Get the base of a type alias, with type parameters applied."""
     base = get_type_alias_base(type)
     if is_generic(type):
         mapping = generate_mapping(type)
@@ -50,8 +56,23 @@ def type_alias_structure_factory(type: Any, converter: BaseConverter) -> Structu
             base = mapping[base.__name__]
         else:
             base = deep_copy_with(base, mapping)
+    return base
+
+
+def type_alias_structure_factory(type: Any, converter: BaseConverter) -> StructureHook:
+    base = _get_parametrized_base(type)
     res = converter.get_structure_hook(base)
     if res == converter._structure_call:
         # we need to replace the type arg of `structure_call`
         return lambda v, _, __base=base: __base(v)
     return lambda v, _, __base=base: res(v, __base)
+
+
+def type_alias_unstructure_factory(
+    type: Any, converter: BaseConverter
+) -> UnstructureHook:
+    """Unstructure a type alias using the hook of its base.
+
+    Type parameters of generic type aliases are applied to the base first.
+    """
+    return converter.get_unstructure_hook(_get_parametrized_base(type))
