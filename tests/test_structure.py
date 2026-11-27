@@ -21,7 +21,7 @@ from hypothesis.strategies import (
 )
 from pytest import raises
 
-from cattrs import BaseConverter
+from cattrs import BaseConverter, Converter
 from cattrs._compat import copy_with, is_bare, is_union_type
 from cattrs.errors import IterableValidationError, StructureHandlerNotFoundError
 
@@ -378,3 +378,34 @@ def test_structure_union_edge_case():
         A("foo"),
         B("bar"),
     ]
+
+
+@define
+class _ForwardRefInner:
+    a: int
+    b: float
+    y: Optional["_ForwardRefOuter"]
+
+
+@define
+class _ForwardRefOuter:
+    a: List[int]
+    x: _ForwardRefInner
+
+
+def test_structure_quoted_forward_refs():
+    """Quoted forward references nested in other annotations are resolved.
+
+    Regression test for https://github.com/python-attrs/cattrs/issues/201
+    """
+    converter = Converter()
+
+    data = {
+        "a": [1, 2, 3],
+        "x": {"a": 1, "b": 2.0, "y": {"a": [], "x": {"a": 5, "b": 3.1, "y": None}}},
+    }
+
+    assert converter.structure(data, _ForwardRefOuter) == _ForwardRefOuter(
+        [1, 2, 3],
+        _ForwardRefInner(1, 2.0, _ForwardRefOuter([], _ForwardRefInner(5, 3.1, None))),
+    )

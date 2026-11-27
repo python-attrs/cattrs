@@ -17,6 +17,7 @@ from typing import (
     Deque,
     Dict,
     Final,
+    ForwardRef,
     FrozenSet,
     Generic,
     List,
@@ -136,6 +137,13 @@ def fields_dict(type) -> dict[str, Union[Attribute, Field]]:
     return attrs_fields_dict(type)
 
 
+def _contains_forward_ref(type: Any) -> bool:
+    """Whether a type annotation contains an unresolved `ForwardRef`."""
+    if isinstance(type, (str, ForwardRef)):
+        return True
+    return any(_contains_forward_ref(arg) for arg in get_args(type))
+
+
 def adapted_fields(cl: type) -> list[Attribute]:
     """Return the attrs format of `fields()` for attrs and dataclasses.
 
@@ -143,7 +151,7 @@ def adapted_fields(cl: type) -> list[Attribute]:
     """
     if is_dataclass(cl):
         attrs = dataclass_fields(cl)
-        if any(isinstance(a.type, str) for a in attrs):
+        if any(_contains_forward_ref(a.type) for a in attrs):
             # Do this conditionally in case `get_type_hints` fails, so
             # users can resolve on their own first.
             type_hints = get_type_hints(cl)
@@ -174,8 +182,9 @@ def adapted_fields(cl: type) -> list[Attribute]:
             for attr in attrs
         ]
     attribs = attrs_fields(cl)
-    if any(isinstance(a.type, str) for a in attribs):
-        # PEP 563 annotations - need to be resolved.
+    if any(_contains_forward_ref(a.type) for a in attribs):
+        # PEP 563 annotations, or forward references nested in other
+        # annotations (for example `Optional["Y"]`) - need to be resolved.
         resolve_types(cl)
         attribs = attrs_fields(cl)
     return attribs
