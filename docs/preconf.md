@@ -72,6 +72,23 @@ Found at {mod}`cattrs.preconf.json`.
 
 Bytes are serialized as base 85 strings. Counters are serialized as dictionaries. Sets are serialized as lists, and deserialized back into sets. `datetime` s and `date` s are serialized as ISO 8601 strings.
 
+Pass `bytes_encoding="base64"` to {func}`cattrs.preconf.json.make_converter` or
+{func}`cattrs.preconf.json.configure_converter` to use standard Base64 instead.
+Use the same encoding when serializing and deserializing.
+
+```{doctest}
+>>> from cattrs.preconf.json import make_converter
+>>> converter = make_converter(bytes_encoding="base64")
+>>> converter.dumps(b"hello")
+'"aGVsbG8="'
+>>> converter.loads('"aGVsbG8="', bytes)
+b'hello'
+```
+
+```{versionadded} NEXT
+The `bytes_encoding` option accepts `"base85"` (the default) and `"base64"`.
+```
+
 
 ## _orjson_
 
@@ -155,6 +172,14 @@ On Python 3.10, the [_tomli_](https://pypi.org/project/tomli/) library is requir
 Found at {mod}`cattrs.preconf.ujson`.
 
 Bytes are serialized as base 85 strings. Sets are serialized as lists, and deserialized back into sets. `datetime` s and `date` s are serialized as ISO 8601 strings.
+
+Pass `bytes_encoding="base64"` to {func}`cattrs.preconf.ujson.make_converter` or
+{func}`cattrs.preconf.ujson.configure_converter` to use standard Base64 instead,
+as with the standard library JSON converter. Use the same encoding when serializing and deserializing.
+
+```{versionadded} NEXT
+The `bytes_encoding` option accepts `"base85"` (the default) and `"base64"`.
+```
 
 _ujson_ doesn't support integers less than -9223372036854775808, and greater than 9223372036854775807, nor does it support `float('inf')`.
 
