@@ -32,6 +32,46 @@ def test_structuring_invalid_tuples(converter: BaseConverter):
             converter.structure(["1", 2, "c"], tuple[int, int, int])
 
 
+def test_structure_hetero_tuple_from_iterable(genconverter: Converter):
+    """Heterogeneous tuples accept finite iterables, not only indexed inputs."""
+    assert genconverter.structure(iter(["1", 2]), tuple[int, str]) == (1, "2")
+    assert genconverter.structure((item for item in ["1", 2]), tuple[int, str]) == (
+        1,
+        "2",
+    )
+    assert genconverter.structure(iter([]), tuple[()]) == ()
+
+
+def test_structure_hetero_tuple_iterable_element_validation(genconverter: Converter):
+    """Iterable inputs retain element conversion validation."""
+    error = IterableValidationError if genconverter.detailed_validation else ValueError
+
+    with raises(error):
+        genconverter.structure((item for item in ["bad", 2]), tuple[int, str])
+
+
+def test_structure_hetero_tuple_iterable_length_validation(genconverter: Converter):
+    """Iterable inputs retain exact-length validation."""
+    error = IterableValidationError if genconverter.detailed_validation else ValueError
+
+    with raises(error):
+        genconverter.structure(iter(["1"]), tuple[int, str])
+
+    with raises(error):
+        genconverter.structure(iter(["1", 2, 3]), tuple[int, str])
+
+
+def test_structure_hetero_tuple_does_not_swallow_iteration_errors():
+    """Errors raised while consuming an iterable propagate unchanged."""
+
+    def failing_iterable():
+        yield 1
+        raise RuntimeError("iteration failed")
+
+    with raises(RuntimeError, match="iteration failed"):
+        Converter().structure(failing_iterable(), tuple[int, str])
+
+
 def test_type_names_with_quotes():
     """Types with quote characters in their reprs should work.
 
