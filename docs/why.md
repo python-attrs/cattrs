@@ -80,7 +80,7 @@ Finally, here's a much more complex example, involving _attrs_ classes where _ca
 >>> p
 [{'cuteness': 1, 'chip': {'chip_id': 1, 'time_chipped': 10.0}}, {'breed': 'maine_coon', 'names': ['Fluffly', 'Fluffer']}]
 >>> structure(p, list[Dog | Cat])
-[Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)), Cat(breed=<CatBreed.MAINE_COON: 'maine_coon'>, names=['Fluffly', 'Fluffer'])]
+[Dog(cuteness=1, chip=DogMicrochip(chip_id=1, time_chipped=10.0)), Cat(breed=<CatBreed.MAINE_COON: 'maine_coon'>, names=('Fluffly', 'Fluffer'))]
 
 ```
 
