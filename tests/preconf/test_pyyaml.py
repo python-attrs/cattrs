@@ -82,3 +82,21 @@ def test_pyyaml_dates(detailed_validation: bool):
         assert (
             repr(exc_info.value.exceptions[1]) == "ValueError('Expected date, got 1')"
         )
+
+
+def test_pyyaml_str_subclass():
+    """Non-enum str subclasses are dumped as plain strings."""
+
+    class MyStr(str):
+        pass
+
+    @define
+    class A:
+        a: str
+
+    converter = make_converter()
+
+    unstructured = converter.unstructure(A(MyStr("x")))
+    assert unstructured == {"a": "x"}
+    assert unstructured["a"].__class__ is str
+    assert converter.loads(converter.dumps(A(MyStr("x"))), A) == A("x")
